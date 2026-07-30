@@ -20,6 +20,7 @@ export type Categorie =
 
 export interface EffectDefinition {
   type: string;
+  resource?: ResourceType;
   waarde?: number;
   [key: string]: unknown;
 }
@@ -41,6 +42,9 @@ export interface Tile {
   improvement?: Improvement;
   status: "leeg" | "in_aanbouw" | "actief" | "ghost_town";
   beurtenTotUitputting?: number;
+  // Alleen aanwezig terwijl status "in_aanbouw" is (M3: productiewachtrij).
+  // Houdt bij hoeveel van elke grondstof nog geïnvesteerd moet worden.
+  bouwVoortgang?: Partial<Record<ResourceType, number>>;
 }
 
 export interface Layer {
@@ -81,4 +85,20 @@ export interface CampaignConfig {
     zeldzaamheidLegendarisch: number;
   }>;
   ankers?: StoryAnchor[]; // post-MVP
+}
+
+// Gedeelde-opslag-grondstoffen (hoofdstuk 5): hout, steen, erts, goud delen
+// samen één opslag-cap. Voedsel, cultuur en wetenschap zijn bewust geen
+// onderdeel van deze gedeelde pool (aparte voorraad resp. drempel-tellers).
+export type MateriaalType = "hout" | "steen" | "erts" | "goud";
+
+// Volledige spelstatus voor de MVP (één actieve stad, één band van 9 vakjes,
+// meerdere lagen). Zie hoofdstuk 13 voor de scope-afbakening.
+export interface GameState {
+  stad: City;
+  lagen: Layer[];
+  voorraad: Record<MateriaalType, number>;
+  opslagCap: number;
+  voedsel: number; // aparte voorraad, geen gedeelde cap (hoofdstuk 5 / 11)
+  beurt: number;
 }

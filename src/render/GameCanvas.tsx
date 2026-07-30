@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BAND_WIDTH_TILES, TUTORIAL_LAAG_AANTAL, maakInitieleWereld } from "@/game/world";
+import { Layer } from "@/game/types";
+import { BAND_WIDTH_TILES, TUTORIAL_LAAG_AANTAL } from "@/game/world";
 import { tekenWereld } from "./canvas";
 
 const TILE_SIZE = 64;
 
-export default function GameCanvas() {
+interface GameCanvasProps {
+  lagen: Layer[];
+}
+
+export default function GameCanvas({ lagen }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -16,9 +21,8 @@ export default function GameCanvas() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const wereld = maakInitieleWereld();
-    tekenWereld(ctx, canvas.width, canvas.height, wereld);
-  }, []);
+    tekenWereld(ctx, canvas.width, canvas.height, lagen);
+  }, [lagen]);
 
   return (
     <canvas
