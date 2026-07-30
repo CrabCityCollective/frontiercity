@@ -112,6 +112,14 @@ function tekenActieveTile(
     ctx.fillStyle = landImprovementKleur(tile.improvement.id);
     const padding = size * 0.22;
     ctx.fillRect(x + padding, y + padding, size - padding * 2, size - padding * 2);
+
+    if (tile.beurtenTotUitputting !== undefined) {
+      ctx.fillStyle = "#e8dcc8";
+      ctx.font = `${Math.floor(size * 0.22)}px sans-serif`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(String(tile.beurtenTotUitputting), x + size - 4, y + size - 4);
+    }
     return;
   }
 
