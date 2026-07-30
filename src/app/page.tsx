@@ -1,9 +1,9 @@
-import GameCanvas from "@/render/GameCanvas";
+import GameRoot from "@/render/GameRoot";
 
 export default function Home() {
   return (
     <main>
-      <GameCanvas />
+      <GameRoot />
     </main>
   );
 }

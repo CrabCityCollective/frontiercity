@@ -26,6 +26,19 @@ function terreinKleur(terreinType: string): string {
   return TERREIN_KLEUREN[terreinType] ?? "#6b5b3e";
 }
 
+// Simpele placeholder-kleur per land-improvement (M3) — losse tegel-assets
+// volgen later, zie hoofdstuk 12.
+const LAND_IMPROVEMENT_KLEUREN: Record<string, string> = {
+  houtkap: "#3f6b2f",
+  steengroeve: "#8a8577",
+  mijn: "#7a5a3a",
+  boerderij: "#c9a84a",
+};
+
+function landImprovementKleur(id: string): string {
+  return LAND_IMPROVEMENT_KLEUREN[id] ?? "#8a8a4a";
+}
+
 function tekenFogTile(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -92,6 +105,13 @@ function tekenActieveTile(
     ctx.strokeStyle = "#8a5a1a";
     ctx.lineWidth = 2;
     ctx.strokeRect(x + padding, y + padding, size - padding * 2, size - padding * 2);
+    return;
+  }
+
+  if (tile.status === "actief" && tile.improvement?.soort === "land") {
+    ctx.fillStyle = landImprovementKleur(tile.improvement.id);
+    const padding = size * 0.22;
+    ctx.fillRect(x + padding, y + padding, size - padding * 2, size - padding * 2);
     return;
   }
 
