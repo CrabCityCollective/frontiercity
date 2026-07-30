@@ -1,8 +1,9 @@
 // Pool van bouwbare land improvements voor de categorie-keuze-UI (M2) en de
-// productiewachtrij (M3). Economisch en Cultureel zijn gevuld: economisch
-// levert de drie bouwmaterialen en voedsel (M3), cultureel levert cultuur
-// voor laag-ontgrendeling (M5). Wetenschappelijk en militair krijgen hun
-// opties pas zodra die mechaniek aan de beurt is (M7+). Civiel blijft leeg:
+// productiewachtrij (M3). Economisch, Cultureel en Militair zijn gevuld:
+// economisch levert de drie bouwmaterialen en voedsel (M3), cultureel levert
+// cultuur voor laag-ontgrendeling (M5), militair levert de Wachttoren-
+// verdedigingsbonus voor militaire confrontaties (M7). Wetenschappelijk
+// krijgt zijn opties pas zodra die mechaniek aan de beurt is. Civiel blijft leeg:
 // de groei-tier-improvement (M6, zie WOONWIJK hieronder) is een stad-upgrade
 // buiten de tegel-band, en de overige civiele land-improvements (weg/brug)
 // vallen buiten de MVP-scope — zie hoofdstuk 3 en hoofdstuk 13 van het
@@ -73,6 +74,37 @@ export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
   },
 ];
 
+// Militair land improvement (hoofdstuk 3: "Wachttoren (beschermt lege lagen
+// tegen barbaren)"). Levert een passieve verdedigingsbonus zolang de tile
+// actief is — telt mee in `berekenLegerwaarde` in economie.ts (M7).
+export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
+  {
+    id: "wachttoren",
+    naam: "Wachttoren",
+    categorie: "militair",
+    soort: "land",
+    kosten: { hout: 3, steen: 2 },
+    bouwtijdBeurten: 2,
+    effect: { type: "verdediging", waarde: 3 },
+    uitputtingBeurten: 20,
+  },
+];
+
+// Militaire unit (hoofdstuk 3: "Soldaat, ruiter, artillerie" — de MVP beperkt
+// zich tot Soldaat, hoofdstuk 13: "eenvoudige militaire confrontatie"). Een
+// `soort: "unit"`-improvement, net als WOONWIJK geen land-vakje maar een
+// eigen rekruteringswachtrij (`legerInAanbouw` op City) — daarom geen
+// onderdeel van IMPROVEMENT_POOLS/beschikbareOpties.
+export const SOLDAAT: Improvement = {
+  id: "soldaat",
+  naam: "Soldaat",
+  categorie: "militair",
+  soort: "unit",
+  kosten: { erts: 2, hout: 1 },
+  bouwtijdBeurten: 2,
+  effect: { type: "leger", waarde: 4 },
+};
+
 // Stadsgroei-improvement (M6, hoofdstuk 3/4: "Aquaduct, riolering, woonwijk
 // (= groei-tiers)"). Dit is een `soort: "city"`-improvement die de stad zelf
 // upgradet, geen land-vakje — daarom geen onderdeel van IMPROVEMENT_POOLS/
@@ -94,7 +126,7 @@ export const WOONWIJK: Improvement = {
 const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   economisch: ECONOMISCH_LAND_IMPROVEMENTS,
   wetenschappelijk: [],
-  militair: [],
+  militair: MILITAIR_LAND_IMPROVEMENTS,
   civiel: [],
   cultureel: CULTUREEL_LAND_IMPROVEMENTS,
 };

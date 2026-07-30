@@ -34,6 +34,7 @@ const LAND_IMPROVEMENT_KLEUREN: Record<string, string> = {
   mijn: "#7a5a3a",
   boerderij: "#c9a84a",
   heiligdom: "#9a4a8a",
+  wachttoren: "#5a6b7a",
 };
 
 function landImprovementKleur(id: string): string {
