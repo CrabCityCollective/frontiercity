@@ -1,9 +1,12 @@
 // Pool van bouwbare land improvements voor de categorie-keuze-UI (M2) en de
 // productiewachtrij (M3). Economisch en Cultureel zijn gevuld: economisch
 // levert de drie bouwmaterialen en voedsel (M3), cultureel levert cultuur
-// voor laag-ontgrendeling (M5). De overige drie categorieën krijgen hun
-// opties pas zodra de mechaniek die ze ontsluiten aan de beurt is (groei:
-// M6, militair: M7) — zie hoofdstuk 3 en hoofdstuk 13 van het design-document.
+// voor laag-ontgrendeling (M5). Wetenschappelijk en militair krijgen hun
+// opties pas zodra die mechaniek aan de beurt is (M7+). Civiel blijft leeg:
+// de groei-tier-improvement (M6, zie WOONWIJK hieronder) is een stad-upgrade
+// buiten de tegel-band, en de overige civiele land-improvements (weg/brug)
+// vallen buiten de MVP-scope — zie hoofdstuk 3 en hoofdstuk 13 van het
+// design-document.
 
 import { Improvement } from "./types";
 
@@ -69,6 +72,24 @@ export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
     uitputtingBeurten: 16,
   },
 ];
+
+// Stadsgroei-improvement (M6, hoofdstuk 3/4: "Aquaduct, riolering, woonwijk
+// (= groei-tiers)"). Dit is een `soort: "city"`-improvement die de stad zelf
+// upgradet, geen land-vakje — daarom geen onderdeel van IMPROVEMENT_POOLS/
+// beschikbareOpties (die zijn voor land-improvements op de actieve laag) en
+// wordt in plaats daarvan rechtstreeks gebruikt door de startGroei-actie in
+// economie.ts en het groei-paneel. Weg/brug (de land-improvements onder
+// civiel) blijven, net als de rest van IMPROVEMENT_POOLS.civiel, buiten de
+// MVP-scope (hoofdstuk 13).
+export const WOONWIJK: Improvement = {
+  id: "woonwijk",
+  naam: "Woonwijk",
+  categorie: "civiel",
+  soort: "city",
+  kosten: { hout: 6, steen: 4 },
+  bouwtijdBeurten: 4,
+  effect: { type: "groei", naarGrootte: "middel" },
+};
 
 const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   economisch: ECONOMISCH_LAND_IMPROVEMENTS,

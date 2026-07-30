@@ -2,7 +2,7 @@
 // Losse placeholder-tegels per vakje, geen naadloos geschilderd tafereel —
 // zie frontier-city-design-doc.md hoofdstuk 12 (visuele stijl).
 
-import { Layer, Tile } from "@/game/types";
+import { City, Layer, Tile } from "@/game/types";
 import { BAND_WIDTH_TILES, isVooruitkijkLaag } from "@/game/world";
 
 export { BAND_WIDTH_TILES };
@@ -80,13 +80,29 @@ function tekenVooruitkijkTile(
   ctx.globalAlpha = 1;
 }
 
+// "Kritiek"-verval-indicator (M6, hoofdstuk 4/13: "1 'kritiek'-status-
+// indicator (overlay/icoon)") — een waarschuwingsdriehoek boven de stad-tegel.
+function tekenVervalIndicator(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number
+): void {
+  ctx.fillStyle = "#e0684a";
+  ctx.font = `${Math.floor(size * 0.3)}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillText("⚠", x + size / 2, y + size * 0.06);
+}
+
 function tekenActieveTile(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   size: number,
   tile: Tile,
-  terreinType: string
+  terreinType: string,
+  vervalStatus?: City["vervalStatus"]
 ): void {
   ctx.fillStyle = terreinKleur(terreinType);
   ctx.fillRect(x, y, size, size);
@@ -106,6 +122,10 @@ function tekenActieveTile(
     ctx.strokeStyle = "#8a5a1a";
     ctx.lineWidth = 2;
     ctx.strokeRect(x + padding, y + padding, size - padding * 2, size - padding * 2);
+
+    if (vervalStatus === "kritiek") {
+      tekenVervalIndicator(ctx, x, y, size);
+    }
     return;
   }
 
@@ -153,7 +173,8 @@ export function tekenWereld(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  lagen: Layer[]
+  lagen: Layer[],
+  stad: City
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalLagen = lagen.length;
@@ -175,7 +196,7 @@ export function tekenWereld(
       } else if (!laag.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTile(ctx, x, y, tileSize, laag.terreinType);
       } else {
-        tekenActieveTile(ctx, x, y, tileSize, laag.tiles[col], laag.terreinType);
+        tekenActieveTile(ctx, x, y, tileSize, laag.tiles[col], laag.terreinType, stad.vervalStatus);
       }
 
       tekenTileGrid(ctx, x, y, tileSize);

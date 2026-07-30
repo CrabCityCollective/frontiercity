@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { maakInitieleSpelStatus, startBouw as startBouwActie, volgendeBeurt as volgendeBeurtActie } from "./economie";
+import {
+  maakInitieleSpelStatus,
+  startBouw as startBouwActie,
+  startGroei as startGroeiActie,
+  volgendeBeurt as volgendeBeurtActie,
+} from "./economie";
 import { Improvement } from "./types";
 
 // React-hook rond de spelstatus (M3). Geen aparte state-library nodig voor
@@ -17,5 +22,9 @@ export function useGameEngine() {
     setState((huidig) => startBouwActie(huidig, laagHoogte, improvement));
   }, []);
 
-  return { state, volgendeBeurt, startBouw };
+  const startGroei = useCallback(() => {
+    setState((huidig) => startGroeiActie(huidig));
+  }, []);
+
+  return { state, volgendeBeurt, startBouw, startGroei };
 }
