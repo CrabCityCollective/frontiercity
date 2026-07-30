@@ -2,6 +2,7 @@
 
 import CategoriePicker from "@/components/CategoriePicker";
 import GroeiPaneel from "@/components/GroeiPaneel";
+import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import MilitairPaneel from "@/components/MilitairPaneel";
 import ResourceHud from "@/components/ResourceHud";
 import { berekenLegerwaarde } from "@/game/economie";
@@ -10,8 +11,8 @@ import { hoogsteOntgrendeldeLaag } from "@/game/world";
 import GameCanvas from "./GameCanvas";
 
 // Verbindt de spelstatus (M3: resource-economie) met de HUD, de
-// categorie-keuze-UI, het groei/verval-paneel (M6), het militair-paneel (M7)
-// en de canvas-rendering.
+// tutorial-flavor (M8), de categorie-keuze-UI, het groei/verval-paneel (M6),
+// het militair-paneel (M7) en de canvas-rendering.
 export default function GameRoot() {
   const { state, volgendeBeurt, startBouw, startGroei, startRecrutering, confrontatie } =
     useGameEngine();
@@ -24,6 +25,7 @@ export default function GameRoot() {
   return (
     <div>
       <ResourceHud state={state} onVolgendeBeurt={volgendeBeurt} />
+      <LaagIntroPaneel lagen={state.lagen} />
       <GroeiPaneel state={state} onStartGroei={startGroei} />
       <MilitairPaneel
         state={state}
