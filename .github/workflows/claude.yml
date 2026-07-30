@@ -35,6 +35,8 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: |
+            --allowedTools "Bash(npm audit),Bash(npm audit fix),Bash(npm outdated),Bash(npm view),Bash(npm install),Bash(npm run install),Bash(npm run build),Bash(npm run test:*),Bash(npm test),Bash(npm run lint:*),Bash(npm run typecheck:*),Bash(node --test:*)"
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
