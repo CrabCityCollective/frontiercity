@@ -8,6 +8,11 @@
 
 import { Improvement } from "./types";
 
+// `uitputtingBeurten` (hoofdstuk 4/14: exacte cijfers nog niet vastgelegd in
+// het design-document — dit zijn bewuste MVP-placeholders) bepaalt hoeveel
+// beurten een land-improvement actief blijft voordat het een permanente
+// ghost-town-tile wordt (M4). Mijnen putten het snelst uit (erts is het
+// zeldzaamst), boerderijen het langzaamst.
 export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
   {
     id: "houtkap",
@@ -17,6 +22,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     kosten: { steen: 3 },
     bouwtijdBeurten: 2,
     effect: { type: "productie", resource: "hout", waarde: 3 },
+    uitputtingBeurten: 14,
   },
   {
     id: "steengroeve",
@@ -26,6 +32,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     kosten: { hout: 3 },
     bouwtijdBeurten: 2,
     effect: { type: "productie", resource: "steen", waarde: 2 },
+    uitputtingBeurten: 10,
   },
   {
     id: "mijn",
@@ -35,6 +42,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     kosten: { hout: 4, steen: 2 },
     bouwtijdBeurten: 3,
     effect: { type: "productie", resource: "erts", waarde: 2 },
+    uitputtingBeurten: 6,
   },
   {
     id: "boerderij",
@@ -44,6 +52,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     kosten: { hout: 2 },
     bouwtijdBeurten: 2,
     effect: { type: "productie", resource: "voedsel", waarde: 4 },
+    uitputtingBeurten: 18,
   },
 ];
 

@@ -3,9 +3,13 @@
 // bouwmateriaal verbruikt tot een improvement voltooid is. Zie
 // frontier-city-design-doc.md hoofdstuk 5.
 //
-// Exacte getallen (opslag-cap, kosten, productiesnelheden) zijn nog niet
-// vastgelegd in het design-document (hoofdstuk 14) — de waarden hieronder
-// zijn bewuste MVP-placeholders, geen definitieve balans.
+// Uitputting & ghost towns (M4): elke actieve land-improvement telt af vanaf
+// `uitputtingBeurten` (hoofdstuk 4/7). Bij nul wordt de tile een permanente,
+// onbebouwbare ghost-town-tile die niet meer produceert.
+//
+// Exacte getallen (opslag-cap, kosten, productiesnelheden, uitputtingssnelheid)
+// zijn nog niet vastgelegd in het design-document (hoofdstuk 14) — de waarden
+// hieronder zijn bewuste MVP-placeholders, geen definitieve balans.
 
 import { GameState, Improvement, MateriaalType, Tile } from "./types";
 import { maakInitieleWereld } from "./world";
@@ -101,10 +105,40 @@ function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number
 
   const voltooid = (Object.values(nieuweVoortgang) as number[]).every((rest) => rest <= 0);
   if (voltooid) {
-    return { ...tile, status: "actief", bouwVoortgang: undefined };
+    return {
+      ...tile,
+      status: "actief",
+      bouwVoortgang: undefined,
+      beurtenTotUitputting: improvement.uitputtingBeurten,
+    };
   }
 
   return { ...tile, bouwVoortgang: nieuweVoortgang };
+}
+
+// Telt de resterende levensduur van elke actieve land-improvement af. Bij nul
+// wordt de tile een permanente ghost-town-tile: onbebouwbaar en stopt met
+// produceren (zie verwerkProductie, die alleen "actief"-tiles meetelt).
+// City-tiles en tiles zonder `uitputtingBeurten` slaan we over (hoofdstuk 4:
+// alleen land-improvements putten uit).
+function verwerkUitputting(state: GameState): GameState {
+  const lagen = state.lagen.map((laag) => ({
+    ...laag,
+    tiles: laag.tiles.map((tile) => {
+      if (tile.status !== "actief" || tile.beurtenTotUitputting === undefined) {
+        return tile;
+      }
+
+      const resterend = tile.beurtenTotUitputting - 1;
+      if (resterend <= 0) {
+        return { ...tile, status: "ghost_town" as const, beurtenTotUitputting: undefined };
+      }
+
+      return { ...tile, beurtenTotUitputting: resterend };
+    }),
+  }));
+
+  return { ...state, lagen };
 }
 
 function verwerkBouwwachtrij(state: GameState): GameState {
@@ -150,9 +184,12 @@ export function startBouw(
 }
 
 // Verwerkt één spelbeurt: eerst productie van actieve improvements, dan
-// verbruik/voortgang van de bouwwachtrij, dan de beurtteller ophogen.
+// uitputting van diezelfde tiles (M4), dan verbruik/voortgang van de
+// bouwwachtrij, dan de beurtteller ophogen. Een tile die deze beurt net
+// voltooid wordt, begint pas volgende beurt met aftellen.
 export function volgendeBeurt(state: GameState): GameState {
   const naProductie = verwerkProductie(state);
-  const naBouw = verwerkBouwwachtrij(naProductie);
+  const naUitputting = verwerkUitputting(naProductie);
+  const naBouw = verwerkBouwwachtrij(naUitputting);
   return { ...naBouw, beurt: naBouw.beurt + 1 };
 }
