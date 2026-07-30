@@ -52,6 +52,9 @@ export interface Layer {
   ontgrendeld: boolean;
   tiles: Tile[]; // lengte 9
   terreinType: string;
+  // Sterkte van de tegenstander bij een militaire confrontatie op deze laag
+  // (M7, hoofdstuk 6). Was al als optioneel veld voorbereid; vanaf M7
+  // daadwerkelijk gevuld (zie wereld.ts) en dus niet meer ongebruikt.
   dreigingsniveau?: number;
 }
 
@@ -75,6 +78,30 @@ export interface City {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
+  // Opgebouwde legerwaarde (M7, hoofdstuk 6: "vergelijking van totale
+  // legerwaarde") uit gerekruteerde Soldaat-eenheden. Net als `grootte` en
+  // `relics` een resultaat van keuzes over de tijd, dus ook onderdeel van het
+  // permadeath-verval-risico (hoofdstuk 4).
+  leger: number;
+  // Lopende rekrutering, zelfde queue-patroon als `groeiInAanbouw` (los van
+  // de tegel-band omdat een unit geen land-vakje inneemt).
+  legerInAanbouw?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+  };
+}
+
+// Uitkomst van een militaire confrontatie (M7, hoofdstuk 6): een vergelijking
+// van eigen legerwaarde tegen de dreiging op de actieve laag, met een
+// winkans in plaats van een gegarandeerde uitkomst. Bewaard in GameState
+// zodat de UI het laatste resultaat kan tonen na `volgendeBeurt`/interactie.
+export interface ConfrontatieResultaat {
+  winkans: number; // 0-1, berekend vóór het gevecht
+  gewonnen: boolean;
+  eigenLegerwaarde: number;
+  tegenstanderSterkte: number;
+  buitGoud?: number; // alleen bij winst (hoofdstuk 6: "mogelijk buit")
+  geraakteTiles?: number; // alleen bij verlies (hoofdstuk 6: "schade ... aan getroffen tiles")
 }
 
 export interface StoryAnchor {
@@ -113,4 +140,7 @@ export interface GameState {
   // zie hoofdstuk 5, "Voortgangs-valuta".
   cultuur: number;
   beurt: number;
+  // Resultaat van de laatst afgehandelde militaire confrontatie (M7), voor
+  // de UI. `undefined` zolang er nog geen confrontatie heeft plaatsgevonden.
+  laatsteConfrontatie?: ConfrontatieResultaat;
 }

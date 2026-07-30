@@ -28,6 +28,16 @@ function terreinTypeVoorLaag(hoogte: number): string {
   return TUTORIAL_TERREINTYPES[hoogte - 1] ?? "onbekend";
 }
 
+// Dreigingsniveau per laag (M7, hoofdstuk 6): de tegenstandersterkte bij een
+// militaire confrontatie op die laag, gebruikt door `confrontatie` in
+// economie.ts. Vastgelegde tutorial-waarden, oplopend met de hoogte — net
+// als cultuurKostenVoorLaag een bewuste MVP-placeholder (hoofdstuk 14: de
+// exacte winkans-formule ligt nog niet vast). Laag 1 is de startlaag en dus
+// dreigingsvrij.
+function dreigingsniveauVoorLaag(hoogte: number): number {
+  return Math.max(0, (hoogte - 1) * 2);
+}
+
 function maakLegeTiles(): Tile[] {
   return Array.from({ length: BAND_WIDTH_TILES }, (_, positieInLaag) => ({
     positieInLaag,
@@ -56,6 +66,7 @@ function maakStartLaag(): Layer {
     ontgrendeld: true,
     tiles,
     terreinType: terreinTypeVoorLaag(1),
+    dreigingsniveau: dreigingsniveauVoorLaag(1),
   };
 }
 
@@ -65,6 +76,7 @@ function maakVergrendeldeLaag(hoogte: number): Layer {
     ontgrendeld: false,
     tiles: maakLegeTiles(),
     terreinType: terreinTypeVoorLaag(hoogte),
+    dreigingsniveau: dreigingsniveauVoorLaag(hoogte),
   };
 }
 

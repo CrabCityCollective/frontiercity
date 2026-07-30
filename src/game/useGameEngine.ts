@@ -2,9 +2,11 @@
 
 import { useCallback, useState } from "react";
 import {
+  confrontatie as confrontatieActie,
   maakInitieleSpelStatus,
   startBouw as startBouwActie,
   startGroei as startGroeiActie,
+  startRecrutering as startRecruteringActie,
   volgendeBeurt as volgendeBeurtActie,
 } from "./economie";
 import { Improvement } from "./types";
@@ -26,5 +28,13 @@ export function useGameEngine() {
     setState((huidig) => startGroeiActie(huidig));
   }, []);
 
-  return { state, volgendeBeurt, startBouw, startGroei };
+  const startRecrutering = useCallback(() => {
+    setState((huidig) => startRecruteringActie(huidig));
+  }, []);
+
+  const confrontatie = useCallback(() => {
+    setState((huidig) => confrontatieActie(huidig));
+  }, []);
+
+  return { state, volgendeBeurt, startBouw, startGroei, startRecrutering, confrontatie };
 }

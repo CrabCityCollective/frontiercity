@@ -20,12 +20,21 @@
 // en gaan de groei-tier en alle relics verloren (permadeath-risico op
 // stadsniveau, hoofdstuk 4).
 //
-// Exacte getallen (opslag-cap, kosten, productiesnelheden, uitputtingssnelheid)
-// zijn nog niet vastgelegd in het design-document (hoofdstuk 14) — de waarden
-// hieronder zijn bewuste MVP-placeholders, geen definitieve balans.
+// Militair (M7, hoofdstuk 6): Soldaat-eenheden rekruteren (zelfde
+// wachtrij-patroon als groei) bouwt legerwaarde op, samen met de passieve
+// verdedigingsbonus van actieve Wachttoren-tiles. Een confrontatie vergelijkt
+// die legerwaarde met de dreiging op de actieve laag via een winkans-formule
+// (geen gegarandeerde uitkomst) — winst levert buit op, verlies versnelt de
+// uitputting van een deel van de actieve land-tiles (schade, geen
+// instant-verlies van de stad zelf).
+//
+// Exacte getallen (opslag-cap, kosten, productiesnelheden, uitputtingssnelheid,
+// winkans-formule) zijn nog niet vastgelegd in het design-document
+// (hoofdstuk 14) — de waarden hieronder zijn bewuste MVP-placeholders, geen
+// definitieve balans.
 
-import { WOONWIJK } from "./improvements";
-import { GameState, Improvement, MateriaalType, ResourceType, Tile } from "./types";
+import { SOLDAAT, WOONWIJK } from "./improvements";
+import { ConfrontatieResultaat, GameState, Improvement, MateriaalType, ResourceType, Tile } from "./types";
 import {
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
@@ -43,6 +52,15 @@ const KRITIEK_MIN_UITGEPUTTE_TILES = 3;
 const KRITIEK_UITPUTTINGSRATIO = 0.6;
 const VERVAL_BEURTEN = 5;
 
+// Militair-tuning (M7, hoofdstuk 6/14): net als de verval-tuning bewuste
+// MVP-placeholders. `WINKANS_MIN`/`WINKANS_MAX` zorgen dat een confrontatie
+// nooit een gegarandeerde uitkomst is, ook bij extreme krachtsverschillen.
+const WINKANS_MIN = 0.05;
+const WINKANS_MAX = 0.95;
+const BUIT_GOUD_FACTOR = 0.5;
+const SCHADE_TILES_AANTAL = 2;
+const SCHADE_BEURTEN = 3;
+
 const STARTVOORRAAD: Record<MateriaalType, number> = {
   hout: 8,
   steen: 6,
@@ -57,6 +75,7 @@ export function maakInitieleSpelStatus(): GameState {
       grootte: "klein",
       relics: [],
       vervalStatus: "gezond",
+      leger: 0,
     },
     lagen: maakInitieleWereld(),
     voorraad: { ...STARTVOORRAAD },
@@ -288,6 +307,8 @@ function verwerkVerval(state: GameState): GameState {
       grootte: "klein",
       relics: [],
       groeiInAanbouw: undefined,
+      leger: 0,
+      legerInAanbouw: undefined,
       vervalStatus: "gezond",
       vervalBeurtenResterend: undefined,
     },
@@ -322,6 +343,39 @@ function verwerkGroei(state: GameState): GameState {
   };
 }
 
+// Betaalt de bouwkosten van een lopende Soldaat-rekrutering (M7). Zelfde
+// wachtrij-patroon als verwerkGroei, los van de land-tile-bouwwachtrij omdat
+// een unit geen land-vakje inneemt.
+function verwerkRecrutering(state: GameState): GameState {
+  const legerInAanbouw = state.stad.legerInAanbouw;
+  if (!legerInAanbouw) return state;
+
+  const voorraad = { ...state.voorraad };
+  const resultaat = investeerInBouwkosten(legerInAanbouw.improvement, legerInAanbouw.voortgang, voorraad);
+  if (!resultaat) return state;
+
+  if (resultaat.voltooid) {
+    return {
+      ...state,
+      voorraad,
+      stad: {
+        ...state.stad,
+        leger: state.stad.leger + (legerInAanbouw.improvement.effect.waarde ?? 0),
+        legerInAanbouw: undefined,
+      },
+    };
+  }
+
+  return {
+    ...state,
+    voorraad,
+    stad: {
+      ...state.stad,
+      legerInAanbouw: { ...legerInAanbouw, voortgang: resultaat.nieuweVoortgang },
+    },
+  };
+}
+
 // Start de groei-tier klein→middel (M6), als de voedseldrempel gehaald is en
 // er niet al een groei loopt. Dit is een bewuste spelerskeuze, geen
 // automatische ontgrendeling zoals cultuur (M5) — hoofdstuk 11: "doorgroeien
@@ -344,6 +398,108 @@ export function startGroei(state: GameState): GameState {
       groeiInAanbouw: { improvement: WOONWIJK, voortgang: { ...WOONWIJK.kosten } },
     },
   };
+}
+
+// Start het rekruteren van een Soldaat (M7), als er niet al een rekrutering
+// loopt. Net als startGroei een bewuste spelerskeuze via een wachtrij, geen
+// eigen valuta (hoofdstuk 5: "Militair heeft bewust géén eigen valuta: puur
+// directe krachtsvergelijking op het moment zelf" — die krachtsvergelijking
+// gebeurt in `confrontatie` hieronder, dit start alleen de opbouw ervan).
+export function startRecrutering(state: GameState): GameState {
+  if (state.stad.legerInAanbouw) return state;
+
+  return {
+    ...state,
+    stad: {
+      ...state.stad,
+      legerInAanbouw: { improvement: SOLDAAT, voortgang: { ...SOLDAAT.kosten } },
+    },
+  };
+}
+
+// Totale legerwaarde (hoofdstuk 6: "units + muur/wachttoren-bonus"): opgebouwde
+// Soldaat-eenheden plus de passieve verdedigingsbonus van elke actieve
+// Wachttoren-tile, ongeacht op welke laag die staat (er is in de MVP maar
+// één actieve stad, hoofdstuk 13).
+export function berekenLegerwaarde(state: GameState): number {
+  let waarde = state.stad.leger;
+
+  for (const laag of state.lagen) {
+    for (const tile of laag.tiles) {
+      const effect = tile.improvement?.effect;
+      if (tile.status === "actief" && effect?.type === "verdediging" && effect.waarde) {
+        waarde += effect.waarde;
+      }
+    }
+  }
+
+  return waarde;
+}
+
+function berekenWinkans(eigenLegerwaarde: number, tegenstanderSterkte: number): number {
+  const totaal = eigenLegerwaarde + tegenstanderSterkte;
+  const ruweKans = totaal === 0 ? 0.5 : eigenLegerwaarde / totaal;
+  return Math.min(WINKANS_MAX, Math.max(WINKANS_MIN, ruweKans));
+}
+
+// Militaire confrontatie (M7, hoofdstuk 6): vergelijkt de eigen legerwaarde
+// met de dreiging op de actieve (hoogst ontgrendelde) laag via een winkans —
+// nooit een gegarandeerde uitkomst (WINKANS_MIN/MAX). Winst levert direct
+// buit (goud) op. Verlies is geen instant game-over: het versnelt de
+// uitputting van een beperkt aantal actieve land-tiles (schade), wat de
+// bestaande verval-cyclus (M6) dichterbij kan brengen in plaats van de stad
+// meteen te laten instorten.
+export function confrontatie(state: GameState): GameState {
+  const actieveLaag = state.lagen.find(
+    (laag) => laag.hoogte === hoogsteOntgrendeldeLaag(state.lagen)
+  );
+  const tegenstanderSterkte = actieveLaag?.dreigingsniveau ?? 0;
+  const eigenLegerwaarde = berekenLegerwaarde(state);
+  const winkans = berekenWinkans(eigenLegerwaarde, tegenstanderSterkte);
+  const gewonnen = Math.random() < winkans;
+
+  if (gewonnen) {
+    const buitGoud = Math.round(tegenstanderSterkte * BUIT_GOUD_FACTOR);
+    const voorraad = {
+      ...state.voorraad,
+      goud: Math.min(state.opslagCap, state.voorraad.goud + buitGoud),
+    };
+    const laatsteConfrontatie: ConfrontatieResultaat = {
+      winkans,
+      gewonnen,
+      eigenLegerwaarde,
+      tegenstanderSterkte,
+      buitGoud,
+    };
+    return { ...state, voorraad, laatsteConfrontatie };
+  }
+
+  let geraakt = 0;
+  const lagen = state.lagen.map((laag) => ({
+    ...laag,
+    tiles: laag.tiles.map((tile) => {
+      if (
+        geraakt >= SCHADE_TILES_AANTAL ||
+        tile.status !== "actief" ||
+        tile.improvement?.soort !== "land" ||
+        tile.beurtenTotUitputting === undefined
+      ) {
+        return tile;
+      }
+
+      geraakt += 1;
+      return { ...tile, beurtenTotUitputting: Math.max(1, tile.beurtenTotUitputting - SCHADE_BEURTEN) };
+    }),
+  }));
+
+  const laatsteConfrontatie: ConfrontatieResultaat = {
+    winkans,
+    gewonnen,
+    eigenLegerwaarde,
+    tegenstanderSterkte,
+    geraakteTiles: geraakt,
+  };
+  return { ...state, lagen, laatsteConfrontatie };
 }
 
 // Start de bouw van een land improvement op de eerstvolgende lege tile van
@@ -378,9 +534,10 @@ export function startBouw(
 // Verwerkt één spelbeurt: eerst productie van actieve improvements (incl.
 // cultuur), dan laag-ontgrendeling op basis van die cultuur (M5), dan
 // uitputting van de actieve tiles (M4), dan verval op basis van die
-// uitputting (M6), dan verbruik/voortgang van de land-tile-bouwwachtrij en de
-// stadsgroei-bouwwachtrij (M6), dan de beurtteller ophogen. Een tile die deze
-// beurt net voltooid wordt, begint pas volgende beurt met aftellen.
+// uitputting (M6), dan verbruik/voortgang van de land-tile-bouwwachtrij, de
+// stadsgroei-bouwwachtrij (M6) en de Soldaat-rekruteringswachtrij (M7), dan
+// de beurtteller ophogen. Een tile die deze beurt net voltooid wordt, begint
+// pas volgende beurt met aftellen.
 export function volgendeBeurt(state: GameState): GameState {
   const naProductie = verwerkProductie(state);
   const naOntgrendeling = verwerkLaagOntgrendeling(naProductie);
@@ -388,5 +545,6 @@ export function volgendeBeurt(state: GameState): GameState {
   const naVerval = verwerkVerval(naUitputting);
   const naBouw = verwerkBouwwachtrij(naVerval);
   const naGroei = verwerkGroei(naBouw);
-  return { ...naGroei, beurt: naGroei.beurt + 1 };
+  const naRecrutering = verwerkRecrutering(naGroei);
+  return { ...naRecrutering, beurt: naRecrutering.beurt + 1 };
 }
