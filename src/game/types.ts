@@ -100,5 +100,9 @@ export interface GameState {
   voorraad: Record<MateriaalType, number>;
   opslagCap: number;
   voedsel: number; // aparte voorraad, geen gedeelde cap (hoofdstuk 5 / 11)
+  // Voortgangs-valuta richting laag-ontgrendeling (M5): geen opslag-cap, blijft
+  // cumulatief oplopen (ook voorbij de drempel van de eerstvolgende laag) —
+  // zie hoofdstuk 5, "Voortgangs-valuta".
+  cultuur: number;
   beurt: number;
 }

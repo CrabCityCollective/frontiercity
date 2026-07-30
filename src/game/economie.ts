@@ -7,12 +7,17 @@
 // `uitputtingBeurten` (hoofdstuk 4/7). Bij nul wordt de tile een permanente,
 // onbebouwbare ghost-town-tile die niet meer produceert.
 //
+// Cultuur & laag-ontgrendeling (M5): cultuur is een voortgangs-valuta zonder
+// opslag-cap (hoofdstuk 5). Zodra de cumulatieve cultuur de drempel van de
+// eerstvolgende vergrendelde laag haalt, ontgrendelt die laag automatisch
+// (fog of war verdwijnt — hoofdstuk 2).
+//
 // Exacte getallen (opslag-cap, kosten, productiesnelheden, uitputtingssnelheid)
 // zijn nog niet vastgelegd in het design-document (hoofdstuk 14) — de waarden
 // hieronder zijn bewuste MVP-placeholders, geen definitieve balans.
 
 import { GameState, Improvement, MateriaalType, Tile } from "./types";
-import { maakInitieleWereld } from "./world";
+import { cultuurKostenVoorLaag, hoogsteOntgrendeldeLaag, maakInitieleWereld } from "./world";
 
 export const OPSLAG_CAP = 30;
 
@@ -35,6 +40,7 @@ export function maakInitieleSpelStatus(): GameState {
     voorraad: { ...STARTVOORRAAD },
     opslagCap: OPSLAG_CAP,
     voedsel: 0,
+    cultuur: 0,
     beurt: 1,
   };
 }
@@ -50,6 +56,7 @@ type ResourceKey = keyof Improvement["kosten"];
 function verwerkProductie(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
   let voedsel = state.voedsel;
+  let cultuur = state.cultuur;
 
   for (const laag of state.lagen) {
     for (const tile of laag.tiles) {
@@ -60,6 +67,8 @@ function verwerkProductie(state: GameState): GameState {
 
       if (effect.resource === "voedsel") {
         voedsel += effect.waarde;
+      } else if (effect.resource === "cultuur") {
+        cultuur += effect.waarde;
       } else if (isMateriaalType(effect.resource)) {
         voorraad[effect.resource] = Math.min(
           state.opslagCap,
@@ -69,7 +78,28 @@ function verwerkProductie(state: GameState): GameState {
     }
   }
 
-  return { ...state, voorraad, voedsel };
+  return { ...state, voorraad, voedsel, cultuur };
+}
+
+// Ontgrendelt de eerstvolgende vergrendelde laag zodra de cumulatieve cultuur
+// de drempel haalt (M5, hoofdstuk 2/5). Cultuur wordt niet "uitgegeven" —
+// het blijft een oplopende teller, dus bij een grote overschot ontgrendelen
+// meteen meerdere lagen na elkaar in dezelfde beurt.
+function verwerkLaagOntgrendeling(state: GameState): GameState {
+  let lagen = state.lagen;
+  let volgendeHoogte = hoogsteOntgrendeldeLaag(lagen) + 1;
+
+  while (
+    volgendeHoogte <= lagen.length &&
+    state.cultuur >= cultuurKostenVoorLaag(volgendeHoogte)
+  ) {
+    lagen = lagen.map((laag) =>
+      laag.hoogte === volgendeHoogte ? { ...laag, ontgrendeld: true } : laag
+    );
+    volgendeHoogte += 1;
+  }
+
+  return lagen === state.lagen ? state : { ...state, lagen };
 }
 
 // Investeert dit beurt-aandeel van de kosten van een tile-in-aanbouw, als er
@@ -183,13 +213,15 @@ export function startBouw(
   return { ...state, lagen };
 }
 
-// Verwerkt één spelbeurt: eerst productie van actieve improvements, dan
-// uitputting van diezelfde tiles (M4), dan verbruik/voortgang van de
+// Verwerkt één spelbeurt: eerst productie van actieve improvements (incl.
+// cultuur), dan laag-ontgrendeling op basis van die cultuur (M5), dan
+// uitputting van de actieve tiles (M4), dan verbruik/voortgang van de
 // bouwwachtrij, dan de beurtteller ophogen. Een tile die deze beurt net
 // voltooid wordt, begint pas volgende beurt met aftellen.
 export function volgendeBeurt(state: GameState): GameState {
   const naProductie = verwerkProductie(state);
-  const naUitputting = verwerkUitputting(naProductie);
+  const naOntgrendeling = verwerkLaagOntgrendeling(naProductie);
+  const naUitputting = verwerkUitputting(naOntgrendeling);
   const naBouw = verwerkBouwwachtrij(naUitputting);
   return { ...naBouw, beurt: naBouw.beurt + 1 };
 }

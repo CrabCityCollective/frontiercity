@@ -1,10 +1,9 @@
 // Pool van bouwbare land improvements voor de categorie-keuze-UI (M2) en de
-// productiewachtrij (M3). Alleen de Economische categorie is voor nu gevuld:
-// dat is de categorie die de drie bouwmaterialen en voedsel oplevert, en dus
-// nodig is om de resource-economie (M3) daadwerkelijk te kunnen testen. De
-// overige vier categorieën krijgen hun opties pas zodra de mechaniek die ze
-// ontsluiten aan de beurt is (wetenschap/cultuur: M5, groei: M6, militair:
-// M7) — zie hoofdstuk 3 en hoofdstuk 13 van het design-document.
+// productiewachtrij (M3). Economisch en Cultureel zijn gevuld: economisch
+// levert de drie bouwmaterialen en voedsel (M3), cultureel levert cultuur
+// voor laag-ontgrendeling (M5). De overige drie categorieën krijgen hun
+// opties pas zodra de mechaniek die ze ontsluiten aan de beurt is (groei:
+// M6, militair: M7) — zie hoofdstuk 3 en hoofdstuk 13 van het design-document.
 
 import { Improvement } from "./types";
 
@@ -56,12 +55,27 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
   },
 ];
 
+// Cultureel land improvement (hoofdstuk 3: "Heiligdom") — de eerste optie in
+// deze categorie, nodig om cultuur te produceren voor laag-ontgrendeling (M5).
+export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
+  {
+    id: "heiligdom",
+    naam: "Heiligdom",
+    categorie: "cultureel",
+    soort: "land",
+    kosten: { hout: 2, steen: 2 },
+    bouwtijdBeurten: 2,
+    effect: { type: "productie", resource: "cultuur", waarde: 2 },
+    uitputtingBeurten: 16,
+  },
+];
+
 const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   economisch: ECONOMISCH_LAND_IMPROVEMENTS,
   wetenschappelijk: [],
   militair: [],
   civiel: [],
-  cultureel: [],
+  cultureel: CULTUREEL_LAND_IMPROVEMENTS,
 };
 
 // Opties voor de categorie-keuze-UI (hoofdstuk 11: eerst categorie, dan 2-3

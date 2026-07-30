@@ -88,3 +88,12 @@ export function hoogsteOntgrendeldeLaag(lagen: Layer[]): number {
 export function isVooruitkijkLaag(laag: Layer, lagen: Layer[]): boolean {
   return laag.hoogte === hoogsteOntgrendeldeLaag(lagen) + 1;
 }
+
+// Cultuurdrempel om laag `hoogte` te ontgrendelen (M5, hoofdstuk 5: "cultuur →
+// laag-ontgrendeling"). Loopt op naarmate je hoger komt. Exacte cijfers zijn
+// nog niet vastgelegd in het design-document (hoofdstuk 14) — dit is een
+// bewuste MVP-placeholder, geen definitieve balans. Laag 1 is de startlaag en
+// heeft dus geen drempel.
+export function cultuurKostenVoorLaag(hoogte: number): number {
+  return 10 + (hoogte - 2) * 6;
+}

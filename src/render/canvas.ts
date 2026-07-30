@@ -33,6 +33,7 @@ const LAND_IMPROVEMENT_KLEUREN: Record<string, string> = {
   steengroeve: "#8a8577",
   mijn: "#7a5a3a",
   boerderij: "#c9a84a",
+  heiligdom: "#9a4a8a",
 };
 
 function landImprovementKleur(id: string): string {
