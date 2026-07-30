@@ -97,3 +97,13 @@ export function isVooruitkijkLaag(laag: Layer, lagen: Layer[]): boolean {
 export function cultuurKostenVoorLaag(hoogte: number): number {
   return 10 + (hoogte - 2) * 6;
 }
+
+// Voedseldrempel om de groei-tier klein→middel te mogen starten (M6,
+// hoofdstuk 4/5: "voedsel verzameld richting groei-drempels"). Bereiken van
+// de drempel ontgrendelt alleen de keuze — groei start pas als de speler dit
+// bewust kiest (hoofdstuk 11: "een bewuste gok, geen gratis extra beloning"),
+// in tegenstelling tot de automatische laag-ontgrendeling bij cultuur (M5).
+// Net als cultuurKostenVoorLaag een bewuste MVP-placeholder (hoofdstuk 14);
+// de MVP-scope beperkt zich tot deze ene groei-stap (hoofdstuk 13), dus geen
+// aparte formule per grootte-tier nodig.
+export const VOEDSEL_DREMPEL_GROEI = 40;

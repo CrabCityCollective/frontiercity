@@ -67,6 +67,14 @@ export interface City {
   relics: Relic[];
   vervalStatus: "gezond" | "kritiek";
   vervalBeurtenResterend?: number;
+  // Lopende groei-tier-bouw (M6, hoofdstuk 4: "kost een civiel improvement +
+  // rijptijd"). Net als een tile-in-aanbouw (M3) een per-beurt investering
+  // van bouwmateriaal, maar los van de tegel-band omdat groei de stad zelf
+  // upgradet, geen land-vakje inneemt.
+  groeiInAanbouw?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+  };
 }
 
 export interface StoryAnchor {
