@@ -22,22 +22,20 @@ export default function LaagIntroPaneel({ lagen }: LaagIntroPaneelProps) {
 
   return (
     <div
+      className="fc-paneel"
       style={{
         display: "flex",
         flexDirection: "column",
         gap: "0.3rem",
         padding: "0.75rem 1rem",
-        background: "#241a12",
-        color: "#e8dcc8",
-        fontFamily: "sans-serif",
         fontSize: "0.9rem",
-        borderBottom: "1px solid #3a2f22",
+        margin: "0.5rem",
       }}
     >
-      <strong>
+      <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
         Laag {hoogte} — {content.naam}
       </strong>
-      <span style={{ fontStyle: "italic", color: "#b7a888" }}>Nieuw: {content.mechaniek}</span>
+      <span style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>Nieuw: {content.mechaniek}</span>
       <p style={{ margin: 0 }}>{content.flavorTekst}</p>
       {isLaatsteLaag && <p style={{ margin: 0 }}>{AFSLUITENDE_SCENE}</p>}
     </div>

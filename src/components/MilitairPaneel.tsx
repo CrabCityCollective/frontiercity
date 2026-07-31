@@ -31,15 +31,14 @@ export default function MilitairPaneel({
 
   return (
     <div
+      className="fc-paneel"
       style={{
         display: "flex",
         flexDirection: "column",
         gap: "0.4rem",
         padding: "0.75rem 1rem",
-        background: "#20180f",
-        color: "#e8dcc8",
-        fontFamily: "sans-serif",
         fontSize: "0.9rem",
+        margin: "0.5rem",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -51,17 +50,17 @@ export default function MilitairPaneel({
         {stad.legerInAanbouw ? (
           <span>Soldaat in opleiding…</span>
         ) : (
-          <button onClick={onStartRecrutering} style={{ padding: "0.35rem 0.75rem" }}>
+          <button className="fc-knop" onClick={onStartRecrutering} style={{ padding: "0.35rem 0.75rem" }}>
             Soldaat rekruteren ({formatteerKosten(SOLDAAT.kosten)}, {SOLDAAT.bouwtijdBeurten} beurten)
           </button>
         )}
-        <button onClick={onConfrontatie} style={{ padding: "0.35rem 0.75rem" }}>
+        <button className="fc-knop" onClick={onConfrontatie} style={{ padding: "0.35rem 0.75rem" }}>
           Confrontatie aangaan
         </button>
       </div>
 
       {laatsteConfrontatie && (
-        <p style={{ margin: 0, color: laatsteConfrontatie.gewonnen ? "#8fc97a" : "#e0684a" }}>
+        <p style={{ margin: 0, color: laatsteConfrontatie.gewonnen ? "var(--kleur-mos)" : "var(--kleur-gevaar)" }}>
           {laatsteConfrontatie.gewonnen ? "Overwinning" : "Verlies"} (winkans was{" "}
           {Math.round(laatsteConfrontatie.winkans * 100)}%)
           {laatsteConfrontatie.gewonnen && `, buit: ${laatsteConfrontatie.buitGoud} goud`}

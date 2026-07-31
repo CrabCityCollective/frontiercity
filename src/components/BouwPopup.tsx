@@ -125,27 +125,26 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
       }}
     >
       <div
+        className="fc-paneel"
         style={{
           display: "flex",
           flexDirection: "column",
           gap: "0.75rem",
           padding: "1rem 1.25rem",
-          background: "#20180f",
-          color: "#e8dcc8",
-          fontFamily: "sans-serif",
           fontSize: "0.9rem",
-          border: "1px solid #3a2f22",
-          borderRadius: "6px",
           minWidth: "min(28rem, 100%)",
         }}
       >
         {gekozenCategorie === null && (
           <>
-            <strong>Kies een categorie om deze beurt in te bouwen</strong>
+            <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
+              Kies een categorie om deze beurt in te bouwen
+            </strong>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
               {CATEGORIEEN.map((categorie) => (
                 <button
                   key={categorie}
+                  className="fc-knop"
                   onClick={() => kiesCategorie(categorie)}
                   style={{
                     display: "flex",
@@ -159,7 +158,7 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
                 </button>
               ))}
             </div>
-            <button onClick={onSluiten} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
+            <button className="fc-knop" onClick={onSluiten} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
               Deze beurt niet bouwen
             </button>
           </>
@@ -167,7 +166,9 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
 
         {gekozenCategorie !== null && (
           <>
-            <strong>{CATEGORIE_LABELS[gekozenCategorie]}</strong>
+            <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
+              {CATEGORIE_LABELS[gekozenCategorie]}
+            </strong>
 
             {legeTilesResterend === 0 && <p style={{ margin: 0 }}>Geen lege vakjes meer op deze laag.</p>}
 
@@ -180,7 +181,7 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
             {legeTilesResterend > 0 && opties.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                 {opties.map((improvement) => (
-                  <button key={improvement.id} onClick={() => onBouwStarten(improvement)}>
+                  <button key={improvement.id} className="fc-knop" onClick={() => onBouwStarten(improvement)}>
                     {improvement.naam} ({formatteerKosten(improvement)}, {improvement.bouwtijdBeurten}{" "}
                     beurten)
                   </button>
@@ -189,10 +190,10 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
             )}
 
             <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button onClick={() => setGekozenCategorie(null)} style={{ padding: "0.35rem 0.75rem" }}>
+              <button className="fc-knop" onClick={() => setGekozenCategorie(null)} style={{ padding: "0.35rem 0.75rem" }}>
                 Terug naar categorieën
               </button>
-              <button onClick={onSluiten} style={{ padding: "0.35rem 0.75rem" }}>
+              <button className="fc-knop" onClick={onSluiten} style={{ padding: "0.35rem 0.75rem" }}>
                 Deze beurt niet bouwen
               </button>
             </div>

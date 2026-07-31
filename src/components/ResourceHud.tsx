@@ -31,11 +31,11 @@ export default function ResourceHud({ state, onVolgendeBeurt }: ResourceHudProps
         alignItems: "center",
         gap: "1.25rem",
         padding: "0.75rem 1rem",
-        background: "#1a1410",
-        color: "#e8dcc8",
-        fontFamily: "sans-serif",
+        background: "linear-gradient(180deg, var(--kleur-aarde-paneel), var(--kleur-aarde-donker))",
+        color: "var(--kleur-tekst)",
         fontSize: "0.9rem",
-        borderBottom: "1px solid #3a2f22",
+        borderTop: "3px solid var(--kleur-oker)",
+        boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.45)",
       }}
     >
       {(Object.keys(MATERIAAL_LABELS) as MateriaalType[]).map((type) => (
@@ -46,7 +46,7 @@ export default function ResourceHud({ state, onVolgendeBeurt }: ResourceHudProps
       <span>Voedsel: {state.voedsel}</span>
       <span>{cultuurLabel}</span>
       <span style={{ marginLeft: "auto" }}>Beurt: {state.beurt}</span>
-      <button onClick={onVolgendeBeurt} style={{ padding: "0.35rem 0.75rem" }}>
+      <button className="fc-knop" onClick={onVolgendeBeurt} style={{ padding: "0.35rem 0.75rem" }}>
         Volgende beurt
       </button>
     </div>
