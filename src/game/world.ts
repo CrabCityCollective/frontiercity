@@ -1,7 +1,7 @@
 // Bouwt de initiële wereldstaat voor de tutorial ("De Eerste Vuren", lagen 1-12).
 // Zie frontier-city-design-doc.md hoofdstuk 2 (ruimtelijk model) en hoofdstuk 10 (tutorial-opzet).
 
-import { Layer, Tile } from "./types";
+import { Layer, TerreinType, Tile } from "./types";
 
 export const BAND_WIDTH_TILES = 9;
 export const STAD_POSITIE = 4; // middelste vakje van de band = stad
@@ -28,6 +28,35 @@ function terreinTypeVoorLaag(hoogte: number): string {
   return TUTORIAL_TERREINTYPES[hoogte - 1] ?? "onbekend";
 }
 
+// Vast terrein-subtype per vakje binnen elke laag (issue: "grotere
+// verscheidenheid van tiles per laag" + terreinEisen op Improvement) — net
+// als TUTORIAL_TERREINTYPES hierboven vastgelegde tutorial-inhoud, geen
+// random worldgen. Index = `positieInLaag` (0-8); index 4 (het stad-vakje)
+// krijgt een placeholder-waarde die nooit voor plaatsingslogica gebruikt
+// wordt. Elke laag houdt bewust minstens één vakje van elk van `bos`,
+// `heuvel`/`berg` en `vlak` aan, zodat geen enkele laag houtkap, mijn of
+// boerderij helemaal onmogelijk maakt — de mix verschuift wel duidelijk met
+// de hoogte (bv. geen bos meer op de kale hoogvlakte/bergkam, op één
+// eenzame boom na) zodat de terreinkeuze voelbaar blijft.
+const TUTORIAL_TILE_TERREIN: Record<number, TerreinType[]> = {
+  1: ["vlak", "vlak", "bos", "vlak", "vlak", "vlak", "heuvel", "vlak", "vlak"],
+  2: ["vlak", "bos", "vlak", "heuvel", "vlak", "vlak", "vlak", "bos", "vlak"],
+  3: ["bos", "vlak", "bos", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
+  4: ["bos", "bos", "vlak", "bos", "vlak", "heuvel", "bos", "vlak", "bos"],
+  5: ["heuvel", "vlak", "heuvel", "vlak", "vlak", "bos", "heuvel", "vlak", "vlak"],
+  6: ["heuvel", "heuvel", "vlak", "heuvel", "vlak", "bos", "heuvel", "vlak", "heuvel"],
+  7: ["berg", "heuvel", "berg", "bos", "vlak", "heuvel", "berg", "vlak", "heuvel"],
+  8: ["berg", "berg", "heuvel", "bos", "vlak", "berg", "heuvel", "vlak", "berg"],
+  9: ["bos", "bos", "heuvel", "bos", "vlak", "vlak", "bos", "heuvel", "bos"],
+  10: ["vlak", "heuvel", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
+  11: ["berg", "heuvel", "berg", "heuvel", "vlak", "vlak", "bos", "vlak", "heuvel"],
+  12: ["berg", "berg", "heuvel", "berg", "vlak", "vlak", "bos", "heuvel", "berg"],
+};
+
+function terreinVoorTile(hoogte: number, positieInLaag: number): TerreinType {
+  return TUTORIAL_TILE_TERREIN[hoogte]?.[positieInLaag] ?? "vlak";
+}
+
 // Dreigingsniveau per laag (M7, hoofdstuk 6): de tegenstandersterkte bij een
 // militaire confrontatie op die laag, gebruikt door `confrontatie` in
 // economie.ts. Vastgelegde tutorial-waarden, oplopend met de hoogte — net
@@ -38,17 +67,19 @@ function dreigingsniveauVoorLaag(hoogte: number): number {
   return Math.max(0, (hoogte - 1) * 2);
 }
 
-function maakLegeTiles(): Tile[] {
+function maakLegeTiles(hoogte: number): Tile[] {
   return Array.from({ length: BAND_WIDTH_TILES }, (_, positieInLaag) => ({
     positieInLaag,
+    terrein: terreinVoorTile(hoogte, positieInLaag),
     status: "leeg" as const,
   }));
 }
 
 function maakStartLaag(): Layer {
-  const tiles = maakLegeTiles();
+  const tiles = maakLegeTiles(1);
   tiles[STAD_POSITIE] = {
     positieInLaag: STAD_POSITIE,
+    terrein: terreinVoorTile(1, STAD_POSITIE),
     status: "actief",
     improvement: {
       id: "holenrots",
@@ -74,7 +105,7 @@ function maakVergrendeldeLaag(hoogte: number): Layer {
   return {
     hoogte,
     ontgrendeld: false,
-    tiles: maakLegeTiles(),
+    tiles: maakLegeTiles(hoogte),
     terreinType: terreinTypeVoorLaag(hoogte),
     dreigingsniveau: dreigingsniveauVoorLaag(hoogte),
   };

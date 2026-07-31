@@ -9,7 +9,7 @@
 // vallen buiten de MVP-scope — zie hoofdstuk 3 en hoofdstuk 13 van het
 // design-document.
 
-import { Categorie, Improvement } from "./types";
+import { Categorie, Improvement, Layer, TerreinType } from "./types";
 
 // Nederlandse labels per categorie, gedeeld tussen de bouw-pop-up (M2) en de
 // tile-info-pop-up (klik-op-tile) zodat beide dezelfde terminologie tonen.
@@ -20,6 +20,31 @@ export const CATEGORIE_LABELS: Record<Categorie, string> = {
   civiel: "Civiel",
   cultureel: "Cultureel",
 };
+
+// Nederlandse labels per vakje-terreinsubtype (issue: "grotere verscheidenheid
+// van tiles"), gedeeld tussen de bouw-pop-up, de tile-info-pop-up en de
+// canvas-rendering zodat overal dezelfde terminologie gebruikt wordt.
+export const TERREIN_LABELS: Record<TerreinType, string> = {
+  vlak: "vlakke grond",
+  bos: "bos",
+  heuvel: "heuvel",
+  berg: "berg",
+};
+
+// Of `improvement` op een vakje met dit terrein geplaatst mag worden (issue:
+// "houtkap alleen op bos", "mijn alleen op heuvel/berg", "boerderij alleen op
+// vlakke grond"). Geen `terreinEisen` = geen beperking.
+export function improvementPastOpTerrein(improvement: Improvement, terrein: TerreinType): boolean {
+  return !improvement.terreinEisen || improvement.terreinEisen.includes(terrein);
+}
+
+// Leesbare beschrijving van de terrein-eis van een improvement, voor gebruik
+// in de bouw-pop-up/uitleg (bv. "bos" of "heuvel of berg"). `undefined` als er
+// geen eis is.
+export function terreinEisenBeschrijving(improvement: Improvement): string | undefined {
+  if (!improvement.terreinEisen || improvement.terreinEisen.length === 0) return undefined;
+  return improvement.terreinEisen.map((terrein) => TERREIN_LABELS[terrein]).join(" of ");
+}
 
 // `uitputtingBeurten` (hoofdstuk 4/14: exacte cijfers nog niet vastgelegd in
 // het design-document — dit zijn bewuste MVP-placeholders) bepaalt hoeveel
@@ -36,6 +61,9 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     bouwtijdBeurten: 2,
     effect: { type: "productie", resource: "hout", waarde: 3 },
     uitputtingBeurten: 14,
+    // Alleen op bos-vakjes: je kapt geen bomen op vlakke grond of een kale
+    // heuvel (issue: "een houtkap alleen maar op een bos zetten").
+    terreinEisen: ["bos"],
   },
   {
     id: "steengroeve",
@@ -56,6 +84,9 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     bouwtijdBeurten: 3,
     effect: { type: "productie", resource: "erts", waarde: 2 },
     uitputtingBeurten: 6,
+    // Alleen op heuvel/berg (issue: "een mijn kun je alleen op een heuvel of
+    // berg zetten").
+    terreinEisen: ["heuvel", "berg"],
   },
   {
     id: "boerderij",
@@ -66,6 +97,9 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     bouwtijdBeurten: 2,
     effect: { type: "productie", resource: "voedsel", waarde: 4 },
     uitputtingBeurten: 18,
+    // Alleen op vlakke grond (issue: "boerderij kun je juist niet op bergen
+    // en bossen zetten, alleen op vlakke grond").
+    terreinEisen: ["vlak"],
   },
 ];
 
@@ -142,13 +176,22 @@ const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
 };
 
 // Opties voor de categorie-keuze-UI (hoofdstuk 11: eerst categorie, dan 2-3
-// concrete opties). Sluit improvements uit die al op deze laag gebouwd zijn.
-export function beschikbareOpties(
-  categorie: Improvement["categorie"],
-  reedsGebouwdeIds: string[]
-): Improvement[] {
+// concrete opties). Sluit improvements uit die al op deze laag gebouwd zijn,
+// én improvements met een terrein-eis (zie `Improvement.terreinEisen`) die
+// geen enkel leeg vakje op deze laag kan plaatsen — anders zou de speler een
+// optie kunnen kiezen die nergens neergezet kan worden.
+export function beschikbareOpties(categorie: Improvement["categorie"], laag: Layer): Improvement[] {
+  const reedsGebouwdeIds = laag.tiles
+    .map((tile) => tile.improvement?.id)
+    .filter((id): id is string => Boolean(id));
+  const legeTerreinen = laag.tiles
+    .filter((tile) => tile.status === "leeg")
+    .map((tile) => tile.terrein);
+
   return IMPROVEMENT_POOLS[categorie].filter(
-    (improvement) => !reedsGebouwdeIds.includes(improvement.id)
+    (improvement) =>
+      !reedsGebouwdeIds.includes(improvement.id) &&
+      legeTerreinen.some((terrein) => improvementPastOpTerrein(improvement, terrein))
   );
 }
 
@@ -164,11 +207,8 @@ function shuffle<T>(items: T[]): T[] {
 // Willekeurige subset van 2 of 3 concrete opties binnen een categorie
 // (hoofdstuk 11: eerst categorie, dán 2-3 willekeurige opties). Geeft minder
 // terug als de categorie nog geen 2 beschikbare opties heeft.
-export function willekeurigeOpties(
-  categorie: Improvement["categorie"],
-  reedsGebouwdeIds: string[]
-): Improvement[] {
-  const beschikbaar = beschikbareOpties(categorie, reedsGebouwdeIds);
+export function willekeurigeOpties(categorie: Improvement["categorie"], laag: Layer): Improvement[] {
+  const beschikbaar = beschikbareOpties(categorie, laag);
   const aantal = Math.random() < 0.5 ? 2 : 3;
   return shuffle(beschikbaar).slice(0, aantal);
 }

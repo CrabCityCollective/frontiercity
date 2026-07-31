@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { beschikbareOpties, CATEGORIE_LABELS, willekeurigeOpties } from "@/game/improvements";
+import {
+  beschikbareOpties,
+  CATEGORIE_LABELS,
+  terreinEisenBeschrijving,
+  willekeurigeOpties,
+} from "@/game/improvements";
 import { Categorie, Improvement, Layer } from "@/game/types";
 
 const CATEGORIEEN = Object.keys(CATEGORIE_LABELS) as Categorie[];
@@ -102,13 +107,10 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
   if (!zichtbaar) return null;
 
   const legeTilesResterend = laag.tiles.filter((tile) => tile.status === "leeg").length;
-  const reedsGebouwdeIds = laag.tiles
-    .map((tile) => tile.improvement?.id)
-    .filter((id): id is string => Boolean(id));
 
   function kiesCategorie(categorie: Categorie) {
     setGekozenCategorie(categorie);
-    setOpties(willekeurigeOpties(categorie, reedsGebouwdeIds));
+    setOpties(willekeurigeOpties(categorie, laag));
   }
 
   return (
@@ -149,8 +151,7 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
                 // uitgegrijsd") als er geen lege vakjes meer zijn, of als deze
                 // categorie geen nog-niet-gebouwde improvements meer heeft op
                 // deze laag.
-                const kanBouwen =
-                  legeTilesResterend > 0 && beschikbareOpties(categorie, reedsGebouwdeIds).length > 0;
+                const kanBouwen = legeTilesResterend > 0 && beschikbareOpties(categorie, laag).length > 0;
                 return (
                   <button
                     key={categorie}
@@ -192,12 +193,20 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
 
             {legeTilesResterend > 0 && opties.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                {opties.map((improvement) => (
-                  <button key={improvement.id} className="fc-knop" onClick={() => onBouwStarten(improvement)}>
-                    {improvement.naam} ({formatteerKosten(improvement)}, {improvement.bouwtijdBeurten}{" "}
-                    beurten)
-                  </button>
-                ))}
+                {opties.map((improvement) => {
+                  const terreinEis = terreinEisenBeschrijving(improvement);
+                  return (
+                    <button key={improvement.id} className="fc-knop" onClick={() => onBouwStarten(improvement)}>
+                      {improvement.naam} ({formatteerKosten(improvement)}, {improvement.bouwtijdBeurten}{" "}
+                      beurten)
+                      {terreinEis && (
+                        <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                          Alleen op {terreinEis}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
 

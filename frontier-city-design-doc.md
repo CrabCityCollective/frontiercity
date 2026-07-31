@@ -20,6 +20,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - **Fog of war** boven je huidige ontgrendelde grens; wordt weggehaald door cultuur te verzamelen.
 - **Vooruitkijken**: je ziet standaard 1 laag verder dan je ontgrendelde grens (terreintype + vage dreigingsindicatie, geen exacte details). Uitbreidbaar via wetenschap-drempels (permanent, tot een max van 3-4 lagen) en via de Verkenner-unit (tijdelijke, gerichte blik verder).
 - Elke laag heeft **9 bouwvakken**: middelste = stad (max 1 stad per laag), overige 8 = land improvements.
+- Naast het terreintype van de hele laag (bv. "loofbos", zie hoofdstuk 8) heeft elk los vakje ook een eigen **terrein-subtype** (vlak/bos/heuvel/berg) — een laag is dus geen uniform blok, maar een mix. Dit subtype bepaalt of een specifiek land improvement er neergezet mag worden (zie hoofdstuk 3 en hoofdstuk 11, "Terrein-eisen per land improvement").
 - Je speelt met **1 actieve frontier-stad** tegelijk. Sticht je een nieuwe stad (op een geschikte locatie, verderop), dan schuift het scherm op — je nieuwe stad begint onderaan, als nieuwe frontier.
 - Niet-volledig bebouwde lagen **sluiten permanent** zodra je een nieuwe stad start.
 - Oudere, achtergelaten steden leveren **geen** lopende resource-inkomsten meer (bewust, voor het frontier-gevoel) — hun waarde zit in de specialisatie-relics die ze hebben opgeleverd voor je vertrok.
@@ -38,6 +39,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 
 - Pool-grootte per categorie (basisversie): 6-8 city improvements, 4-6 land improvement-types, 2-3 units.
 - Latere campagnes vervangen een deel van de generieke opties door thema-specifieke varianten.
+- **Terrein-eisen**: sommige land improvements zijn beperkt tot een vakje-terreinsubtype (hoofdstuk 2) — houtkap alleen op **bos**, mijn alleen op **heuvel of berg**, boerderij alleen op **vlakke grond**. Overige land improvements (steengroeve, heiligdom, wachttoren) hebben geen terrein-eis. Zie hoofdstuk 11 voor de reden achter deze keuze.
 
 ---
 
@@ -225,6 +227,9 @@ Er is bewust gekozen om echte historische volken en leiders te gebruiken als ins
 **Neolithische tutorial als neutrale sfeer, campagnes met eigen toon**
 Door de tutorial in een fictieve, mythische neolithische setting te plaatsen (in plaats van er meteen een historische campagne van te maken), kan de speler alle kernmechanieken leren zonder dat dit de toon van latere, thematisch zwaardere campagnes (zoals de sombere Amerikaanse frontier) alvast kleurt of verwatert.
 
+**Terrein-eisen per land improvement, met een gegarandeerd minimum per laag**
+Zonder terrein-eisen voelen alle 8 land-vakjes van een laag inwisselbaar aan: elke improvement past overal, dus de keuze wáár je bouwt heeft geen betekenis. Door improvements te binden aan een vakje-terreinsubtype (houtkap → bos, mijn → heuvel/berg, boerderij → vlak) wordt plaatsing zelf een keuze in plaats van een formaliteit, en oogt elke laag ook visueel gevarieerder dan één herhaald terreintype. Om te voorkomen dat dit té restrictief wordt, houdt elke (tutorial-)laag bewust minstens één vakje van elk relevant subtype aan — een laag kan dus wél duidelijk overhellen naar bijvoorbeeld bos of gebergte (en zo de hoogte voelbaar maken, bv. geen bos meer boven de boomgrens), maar sluit nooit een hele economische optie helemaal uit. Terrein-subtypes liggen, net als de laag-terreintypes zelf, vast per tutorial-laag (geen random worldgen, hoofdstuk 8) — bij latere procedurele campagnes kan dit alsnog random gegenereerd worden binnen dezelfde regel (minstens één vakje per relevant subtype).
+
 ---
 
 ## 12. Visuele stijl
@@ -282,6 +287,10 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 ```typescript
 type ResourceType = "hout" | "steen" | "erts" | "goud" | "voedsel" | "cultuur" | "wetenschap";
 
+// Terrein-subtype van een los vakje binnen een laag (hoofdstuk 2/3/11) — los
+// van het terreintype van de hele laag (Layer.terreinType hieronder).
+type TerreinType = "vlak" | "bos" | "heuvel" | "berg";
+
 interface Improvement {
   id: string;
   naam: string;
@@ -292,10 +301,12 @@ interface Improvement {
   effect: EffectDefinition; // resource-productie, unlock, bonus, etc.
   zeldzaamheid?: "gewoon" | "rijk" | "legendarisch"; // alleen relevant voor land-improvements, post-MVP
   uitputtingBeurten?: number; // alleen land-improvements
+  terreinEisen?: TerreinType[]; // alleen land-improvements; geen eis = overal plaatsbaar (hoofdstuk 3/11)
 }
 
 interface Tile {
   positieInLaag: number; // 0-8, 4 = centrum/stad
+  terrein: TerreinType; // vast vakje-terrein-subtype (hoofdstuk 2/11)
   improvement?: Improvement;
   status: "leeg" | "in_aanbouw" | "actief" | "ghost_town";
   beurtenTotUitputting?: number;

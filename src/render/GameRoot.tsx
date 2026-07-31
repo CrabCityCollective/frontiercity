@@ -17,6 +17,7 @@ import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
 import UitlegPopup from "@/components/UitlegPopup";
 import { berekenHistorieStatistieken, berekenLegerwaarde } from "@/game/economie";
+import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
@@ -152,11 +153,25 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
         ? beschrijfTile(geselecteerdeLaag, state.lagen, state.stad, geselecteerdeTile.positieInLaag)
         : null;
 
-  const isGeldigPlaatsingsDoel =
+  // De tile die de speler heeft aangeklikt terwijl er een improvement klaar
+  // staat om geplaatst te worden — alleen gezet als die klik ook op de
+  // actieve (bouwbare) laag viel.
+  const doelTileVoorPlaatsing =
+    plaatsingsImprovement && geselecteerdeTile && geselecteerdeTile.hoogte === actieveLaag.hoogte
+      ? actieveLaag.tiles[geselecteerdeTile.positieInLaag]
+      : undefined;
+
+  // Terrein-eis (issue: "houtkap alleen op bos" e.d.): een leeg vakje met het
+  // verkeerde terrein is geen geldig plaatsingsdoel, maar verdient wel een
+  // duidelijke reden in plaats van stilzwijgend niets te doen.
+  const terreinMismatch =
+    plaatsingsImprovement !== undefined &&
     plaatsingsImprovement !== null &&
-    geselecteerdeTile !== null &&
-    geselecteerdeTile.hoogte === actieveLaag.hoogte &&
-    actieveLaag.tiles[geselecteerdeTile.positieInLaag]?.status === "leeg";
+    doelTileVoorPlaatsing?.status === "leeg" &&
+    !improvementPastOpTerrein(plaatsingsImprovement, doelTileVoorPlaatsing.terrein);
+
+  const isGeldigPlaatsingsDoel =
+    plaatsingsImprovement !== null && doelTileVoorPlaatsing?.status === "leeg" && !terreinMismatch;
 
   function bevestigBouw() {
     if (!plaatsingsImprovement || !geselecteerdeTile) return;
@@ -248,6 +263,11 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
         <TileInfoPopup
           tileInfo={tileInfo}
           bouwVraag={isGeldigPlaatsingsDoel ? { improvementNaam: plaatsingsImprovement!.naam } : undefined}
+          terreinWaarschuwing={
+            terreinMismatch
+              ? `${plaatsingsImprovement!.naam} kan hier niet gebouwd worden — vereist ${terreinEisenBeschrijving(plaatsingsImprovement!)}.`
+              : undefined
+          }
           onBevestigBouw={bevestigBouw}
           onAnnuleerBouw={() => setGeselecteerdeTile(null)}
           onSluiten={() => setGeselecteerdeTile(null)}
