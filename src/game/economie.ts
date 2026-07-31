@@ -16,9 +16,11 @@
 // bewust de groei-tier klein→middel starten (geen automatische ontgrendeling
 // zoals cultuur, hoofdstuk 11), die net als een land-improvement een aantal
 // beurten rijptijd kost. Raakt het gebouwde land grotendeels uitgeput, dan
-// verschijnt een "kritiek"-waarschuwing; blijft dat zo, dan stort de stad in
-// en gaan de groei-tier en alle relics verloren (permadeath-risico op
-// stadsniveau, hoofdstuk 4).
+// verschijnt een "kritiek"-waarschuwing; blijft dat zo, dan stort de stad in.
+// In de MVP (hoofdstuk 13: één stad, nog geen frontier-verplaatsing) is er
+// geen volgende stad om naartoe te gaan, dus eindigt een volledige
+// ineenstorting de hele run: de speler begint de tutorial opnieuw
+// (hoofdstuk 4/11, permadeath-risico op run-niveau i.p.v. alleen stadsniveau).
 //
 // Militair (M7, hoofdstuk 6): Soldaat-eenheden rekruteren (zelfde
 // wachtrij-patroon als groei) bouwt legerwaarde op, samen met de passieve
@@ -271,9 +273,10 @@ function telLandTiles(state: GameState): { totaal: number; ghostTowns: number } 
 // Reageert de speler op tijd (bijv. nieuw land ontsluiten door een laag te
 // ontgrendelen, wat de uitputtingsratio weer verlaagt) dan wordt de stad
 // weer "gezond" en blijft alles behouden. Blijft de ratio kritiek tot de
-// aftelling nul bereikt, dan stort de stad in: de groei-tier en alle relics
-// gaan verloren (permadeath-risico op stadsniveau) — de centrale
-// risk/reward-gok van elke stad-episode.
+// aftelling nul bereikt, dan stort de stad in — de centrale risk/reward-gok
+// van elke stad-episode. Omdat de MVP maar één stad kent (hoofdstuk 13), is
+// er geen volgende stad om de run mee door te laten lopen: de hele run
+// eindigt en de tutorial herstart vanaf een verse spelstatus (hoofdstuk 4/11).
 function verwerkVerval(state: GameState): GameState {
   const { totaal, ghostTowns } = telLandTiles(state);
   const isKritiekeUitputting =
@@ -301,25 +304,20 @@ function verwerkVerval(state: GameState): GameState {
     return { ...state, stad: { ...state.stad, vervalBeurtenResterend: resterend } };
   }
 
+  // Volledige ineenstorting (issue: "run eindigen wanneer stad uitgeput is"):
+  // de run zelf eindigt hier, niet alleen de groei-tier/relics van de stad —
+  // een verse spelstatus, met de ineenstortingsvlag erbovenop zodat de UI het
+  // game-over-scherm toont tot de speler bevestigt.
   return {
-    ...state,
+    ...maakInitieleSpelStatus(),
     laatsteIneenstorting: true,
-    stad: {
-      ...state.stad,
-      grootte: "klein",
-      relics: [],
-      groeiInAanbouw: undefined,
-      leger: 0,
-      legerInAanbouw: undefined,
-      vervalStatus: "gezond",
-      vervalBeurtenResterend: undefined,
-    },
   };
 }
 
 // Sluit het ineenstortingsscherm (issue: "intro en game over scherm"). Puur
-// een UI-bevestiging — de daadwerkelijke gevolgen van de ineenstorting zijn
-// al door `verwerkVerval` toegepast op het moment dat de vlag gezet werd.
+// een UI-bevestiging — de daadwerkelijke gevolgen van de ineenstorting (de
+// volledige run-reset) zijn al door `verwerkVerval` toegepast op het moment
+// dat de vlag gezet werd.
 export function bevestigIneenstorting(state: GameState): GameState {
   return { ...state, laatsteIneenstorting: false };
 }
@@ -561,11 +559,18 @@ export function sluitBouwKeuze(state: GameState): GameState {
 // pas volgende beurt met aftellen. Zet ook de bouwkeuze-vlag (hoofdstuk 11)
 // weer terug, zodat de bouw-pop-up bij het begin van de nieuwe beurt weer
 // verschijnt.
+//
+// Stort de stad deze beurt volledig in, dan geeft `verwerkVerval` al een
+// verse, gereset spelstatus terug (issue: "run eindigen wanneer stad
+// uitgeput is") — de resterende stappen (bouwwachtrijen, beurtteller) slaan
+// we dan over, anders zou de net herstarte tutorial meteen op beurt 2 beginnen.
 export function volgendeBeurt(state: GameState): GameState {
   const naProductie = verwerkProductie(state);
   const naOntgrendeling = verwerkLaagOntgrendeling(naProductie);
   const naUitputting = verwerkUitputting(naOntgrendeling);
   const naVerval = verwerkVerval(naUitputting);
+  if (naVerval.laatsteIneenstorting) return naVerval;
+
   const naBouw = verwerkBouwwachtrij(naVerval);
   const naGroei = verwerkGroei(naBouw);
   const naRecrutering = verwerkRecrutering(naGroei);

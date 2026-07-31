@@ -20,6 +20,8 @@ interface GameCanvasProps {
 // Zet een klik-event op de canvas om naar de (laag-hoogte, positie-in-laag)
 // van de aangeklikte tile, met dezelfde tile-geometrie als `tekenWereld`. Houdt
 // rekening met een eventueel afwijkende CSS-grootte van het canvas-element.
+// Hoogte 0 is de oceaan-rij onder laag 1 (hoofdstuk 2) — geen echte `Layer`,
+// maar wel een geldig, klikbaar doel (zie GameRoot: oceaan-tile-info).
 function bepaalAangeklikteTile(
   canvas: HTMLCanvasElement,
   event: MouseEvent<HTMLCanvasElement>,
@@ -36,7 +38,7 @@ function bepaalAangeklikteTile(
   const rijIndex = Math.floor(y / tileSize);
   const hoogte = aantalLagen - rijIndex;
 
-  if (positieInLaag < 0 || positieInLaag >= BAND_WIDTH_TILES || hoogte < 1 || hoogte > aantalLagen) {
+  if (positieInLaag < 0 || positieInLaag >= BAND_WIDTH_TILES || hoogte < 0 || hoogte > aantalLagen) {
     return null;
   }
 
@@ -68,7 +70,8 @@ export default function GameCanvas({ lagen, stad, plaatsingsLaagHoogte, onTileCl
     <canvas
       ref={canvasRef}
       width={TILE_SIZE * BAND_WIDTH_TILES}
-      height={TILE_SIZE * TUTORIAL_LAAG_AANTAL}
+      // +1 rij voor de klikbare oceaan onder laag 1 (hoofdstuk 2).
+      height={TILE_SIZE * (TUTORIAL_LAAG_AANTAL + 1)}
       onClick={handleClick}
       style={{ display: "block", background: "#1a1410", cursor: "pointer" }}
     />

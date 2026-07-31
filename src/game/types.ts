@@ -148,10 +148,12 @@ export interface GameState {
   // bouwen, en door `volgendeBeurt` weer teruggezet — een echte spelregel
   // die ook na een refresh/reload geldt, geen losse UI-vlag.
   bouwKeuzeGedaanDitBeurt: boolean;
-  // Gezet zodra de stad instort (M6, hoofdstuk 4: hard verval — de groei-tier
-  // en relics gaan verloren, de run zelf loopt door). Blijft `true` tot de
-  // speler het ineenstortingsscherm sluit (zie `bevestigIneenstorting` in
-  // economie.ts), net als `laatsteConfrontatie` hierboven een resultaat-vlag
-  // voor de UI, geen los systeem.
+  // Gezet zodra de stad volledig instort (M6, hoofdstuk 4: hard verval). In de
+  // MVP (één stad, geen frontier-verplaatsing) betekent dat het einde van de
+  // run — de rest van deze `GameState` is dan al een verse tutorial-start
+  // (zie `verwerkVerval` in economie.ts). Blijft `true` tot de speler het
+  // ineenstortingsscherm sluit (zie `bevestigIneenstorting`), net als
+  // `laatsteConfrontatie` hierboven een resultaat-vlag voor de UI, geen los
+  // systeem.
   laatsteIneenstorting?: boolean;
 }

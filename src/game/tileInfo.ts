@@ -89,3 +89,14 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
     tekst: "Hier kun je een improvement bouwen. Kies een categorie in de bouw-pop-up (economisch, cultureel of militair) om te zien wat je hier kunt neerzetten.",
   };
 }
+
+// Info voor de klikbare oceaan-rij onder laag 1 (hoofdstuk 2: "Onderste laag
+// = startstad, begint aan een oceaan"). Puur sfeer/flavor — er is hier niets
+// te bouwen, dus geen `Layer`/`Tile` nodig zoals bij `beschrijfTile`.
+export function beschrijfOceaanTile(): TileInfo {
+  return {
+    titel: "De oceaan",
+    ondertitel: "Waar het Hertenpad-volk aankwam",
+    tekst: "Het water strekt zich uit voorbij het zicht. Hier is niets te bouwen — het kamp begon aan deze rand.",
+  };
+}
