@@ -1,21 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BouwPopup from "@/components/BouwPopup";
 import GroeiPaneel from "@/components/GroeiPaneel";
+import HistoriePaneel from "@/components/HistoriePaneel";
+import HoofdMenu from "@/components/HoofdMenu";
 import IneenstortingScherm from "@/components/IneenstortingScherm";
 import IntroScherm from "@/components/IntroScherm";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import MilitairPaneel from "@/components/MilitairPaneel";
 import ResourceHud from "@/components/ResourceHud";
+import SpelActiesMenu from "@/components/SpelActiesMenu";
 import TileInfoPopup from "@/components/TileInfoPopup";
-import { berekenLegerwaarde } from "@/game/economie";
-import { heeftIntroGezien, markeerIntroGezien } from "@/game/save";
+import { berekenHistorieStatistieken, berekenLegerwaarde } from "@/game/economie";
+import { heeftIntroGezien, heeftOpgeslagenSpel, markeerIntroGezien } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { useGameEngine } from "@/game/useGameEngine";
-import { hoogsteOntgrendeldeLaag } from "@/game/world";
+import { hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
 import GameCanvas from "./GameCanvas";
+
+interface GameRootProps {
+  // Terug naar het startscherm (issue: "spel verlaten, waarmee je weer naar
+  // het start scherm gaat") — navigatie zelf blijft bij AppRoot, GameRoot
+  // roept dit alleen aan.
+  onVerlaten: () => void;
+}
 
 // Verbindt de spelstatus (M3: resource-economie) met de HUD, de
 // tutorial-flavor (M8), de bouw-pop-up, het groei/verval-paneel (M6), het
@@ -26,7 +36,7 @@ import GameCanvas from "./GameCanvas";
 // grondstoffenbalk als vaste footer eronder — die scrolt dus nooit mee weg en
 // de stad staat meteen in beeld zonder te scrollen (issue: sticky
 // grondstoffenbalk onderaan, stad direct zichtbaar).
-export default function GameRoot() {
+export default function GameRoot({ onVerlaten }: GameRootProps) {
   const {
     state,
     volgendeBeurt,
@@ -36,7 +46,16 @@ export default function GameRoot() {
     startRecrutering,
     confrontatie,
     bevestigIneenstorting,
+    opslaan,
+    laden,
   } = useGameEngine();
+
+  // Militair-paneel hoeft niet constant in beeld (issue: "spel-icoontje ...
+  // militaire onderdeel openen, dit hoeft niet constant in beeld") — uit
+  // totdat de speler het bewust opent via SpelActiesMenu. Historiescherm is
+  // een losse volledig-schermige pop-up, geen aan/uit-paneel.
+  const [toonMilitair, setToonMilitair] = useState(false);
+  const [toonHistorie, setToonHistorie] = useState(false);
 
   // Introscherm (issue: "intro en game over scherm"): start op `true` zodat
   // server- en eerste client-render gelijk blijven (geen hydration mismatch,
@@ -85,6 +104,22 @@ export default function GameRoot() {
     ? state.lagen.find((laag) => laag.hoogte === geselecteerdeTile.hoogte)
     : undefined;
 
+  // Alleen de relevante lagen op de canvas (issue: "onderkant altijd in
+  // view" + "onontdekte tegels weg") — zie world.ts: `zichtbareLagen`.
+  const zichtbareLagenState = zichtbareLagen(state.lagen);
+
+  // Scrolt de kaart standaard naar onderaan (de stad, issue: "onderkant van
+  // het scherm altijd standaard in view") zodra het aantal zichtbare lagen
+  // verandert (nieuwe laag ontgrendeld) — de stad staat door de vaste
+  // tegel-geometrie in canvas.ts altijd precies één rij boven de onderkant
+  // van de canvas, dus "helemaal naar onderen scrollen" laat 'm altijd zien,
+  // ongeacht hoeveel lagen er inmiddels ontgrendeld zijn.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [zichtbareLagenState.length]);
+
   // Hoogte 0 is de klikbare oceaan-rij onder laag 1 (geen echte `Layer`, zie
   // GameCanvas: `bepaalAangeklikteTile`) — puur sfeer-tekst, nooit bebouwbaar.
   const tileInfo =
@@ -112,27 +147,35 @@ export default function GameRoot() {
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
   if (toonIntro) return <IntroScherm onBeginnen={bevestigIntro} />;
   if (state.laatsteIneenstorting) {
-    return <IneenstortingScherm onDoorgaan={bevestigIneenstorting} />;
+    return <IneenstortingScherm onDoorgaan={bevestigIneenstorting} statistieken={state.laatsteRunStatistieken} />;
   }
 
   return (
     <div className="game-viewport">
-      <div className="game-scroll-area">
+      <HoofdMenu onOpslaan={opslaan} onLaden={laden} kanLaden={heeftOpgeslagenSpel()} onVerlaten={onVerlaten} />
+      <SpelActiesMenu
+        toonMilitair={toonMilitair}
+        onToggleMilitair={() => setToonMilitair((huidig) => !huidig)}
+        onToonHistorie={() => setToonHistorie(true)}
+      />
+      <div className="game-scroll-area" ref={scrollRef}>
         <GameCanvas
-          lagen={state.lagen}
+          lagen={zichtbareLagenState}
           stad={state.stad}
           plaatsingsLaagHoogte={plaatsingsImprovement ? actieveLaag.hoogte : undefined}
           onTileClick={(hoogte, positieInLaag) => setGeselecteerdeTile({ hoogte, positieInLaag })}
         />
         <LaagIntroPaneel lagen={state.lagen} />
         <GroeiPaneel state={state} onStartGroei={startGroei} />
-        <MilitairPaneel
-          state={state}
-          legerwaarde={berekenLegerwaarde(state)}
-          tegenstanderSterkte={actieveLaag.dreigingsniveau ?? 0}
-          onStartRecrutering={startRecrutering}
-          onConfrontatie={confrontatie}
-        />
+        {toonMilitair && (
+          <MilitairPaneel
+            state={state}
+            legerwaarde={berekenLegerwaarde(state)}
+            tegenstanderSterkte={actieveLaag.dreigingsniveau ?? 0}
+            onStartRecrutering={startRecrutering}
+            onConfrontatie={confrontatie}
+          />
+        )}
         <BouwPopup
           laag={actieveLaag}
           zichtbaar={!state.bouwKeuzeGedaanDitBeurt && !plaatsingsImprovement}
@@ -146,6 +189,13 @@ export default function GameRoot() {
           onAnnuleerBouw={() => setGeselecteerdeTile(null)}
           onSluiten={() => setGeselecteerdeTile(null)}
         />
+        {toonHistorie && (
+          <HistoriePaneel
+            lagen={state.lagen}
+            statistieken={berekenHistorieStatistieken(state)}
+            onSluiten={() => setToonHistorie(false)}
+          />
+        )}
       </div>
       <ResourceHud state={state} onVolgendeBeurt={volgendeBeurt} />
     </div>

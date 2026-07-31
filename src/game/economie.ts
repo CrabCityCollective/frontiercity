@@ -36,7 +36,7 @@
 // definitieve balans.
 
 import { SOLDAAT, WOONWIJK } from "./improvements";
-import { ConfrontatieResultaat, GameState, Improvement, MateriaalType, ResourceType, Tile } from "./types";
+import { City, ConfrontatieResultaat, GameState, Improvement, MateriaalType, ResourceType, Tile } from "./types";
 import {
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
@@ -307,10 +307,18 @@ function verwerkVerval(state: GameState): GameState {
   // Volledige ineenstorting (issue: "run eindigen wanneer stad uitgeput is"):
   // de run zelf eindigt hier, niet alleen de groei-tier/relics van de stad —
   // een verse spelstatus, met de ineenstortingsvlag erbovenop zodat de UI het
-  // game-over-scherm toont tot de speler bevestigt.
+  // game-over-scherm toont tot de speler bevestigt. `laatsteRunStatistieken`
+  // is een momentopname van de net geëindigde run (issue: "beurten/steden/
+  // lagen tonen op het game-over-scherm") — moet vóór de reset genomen
+  // worden, anders is er niets meer over om te tonen.
   return {
     ...maakInitieleSpelStatus(),
     laatsteIneenstorting: true,
+    laatsteRunStatistieken: {
+      beurten: state.beurt,
+      stedenGebouwd: 1, // MVP: precies 1 stad per run (hoofdstuk 13, geen frontier-verplaatsing)
+      hoogsteLaag: hoogsteOntgrendeldeLaag(state.lagen),
+    },
   };
 }
 
@@ -319,7 +327,27 @@ function verwerkVerval(state: GameState): GameState {
 // volledige run-reset) zijn al door `verwerkVerval` toegepast op het moment
 // dat de vlag gezet werd.
 export function bevestigIneenstorting(state: GameState): GameState {
-  return { ...state, laatsteIneenstorting: false };
+  return { ...state, laatsteIneenstorting: false, laatsteRunStatistieken: undefined };
+}
+
+// Statistieken voor het historiescherm van de lopende run (issue:
+// "spel-icoontje ... historie van deze run ... aantal improvements gebouwd,
+// hoeveel vervallen, hoeveel steden, en je grootste stad"). Hergebruikt
+// `telLandTiles` (M6) — "gebouwd" telt hier voltooide land-tiles
+// (actief + ghost_town), dezelfde definitie als de verval-drempel gebruikt.
+export function berekenHistorieStatistieken(state: GameState): {
+  improvementenGebouwd: number;
+  vervallen: number;
+  steden: number;
+  grootsteStad: City["grootte"];
+} {
+  const { totaal, ghostTowns } = telLandTiles(state);
+  return {
+    improvementenGebouwd: totaal,
+    vervallen: ghostTowns,
+    steden: 1, // MVP: precies 1 stad per run (hoofdstuk 13)
+    grootsteStad: state.stad.grootte,
+  };
 }
 
 // Betaalt de bouwkosten van een lopende stadsgroei (M6). Los van de

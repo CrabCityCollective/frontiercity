@@ -2,12 +2,15 @@
 
 import { MouseEvent, useEffect, useRef } from "react";
 import { City, Layer } from "@/game/types";
-import { BAND_WIDTH_TILES, TUTORIAL_LAAG_AANTAL } from "@/game/world";
+import { BAND_WIDTH_TILES } from "@/game/world";
 import { tekenWereld } from "./canvas";
 
 const TILE_SIZE = 64;
 
 interface GameCanvasProps {
+  // Alleen de tegenwoordig relevante lagen (zie world.ts: `zichtbareLagen`) —
+  // niet per se alle 12 tutorial-lagen. Bepaalt zowel de canvas-hoogte als de
+  // klik-geometrie hieronder, dus renderen en klikken blijven altijd in sync.
   lagen: Layer[];
   stad: City;
   // Hoogte van de laag waarop een gekozen improvement geplaatst mag worden
@@ -70,8 +73,10 @@ export default function GameCanvas({ lagen, stad, plaatsingsLaagHoogte, onTileCl
     <canvas
       ref={canvasRef}
       width={TILE_SIZE * BAND_WIDTH_TILES}
-      // +1 rij voor de klikbare oceaan onder laag 1 (hoofdstuk 2).
-      height={TILE_SIZE * (TUTORIAL_LAAG_AANTAL + 1)}
+      // +1 rij voor de klikbare oceaan onder laag 1 (hoofdstuk 2). Hoogte
+      // volgt het aantal daadwerkelijk meegegeven (zichtbare) lagen, niet het
+      // vaste tutorial-totaal (issue: "onontdekte tegels weg" hierboven).
+      height={TILE_SIZE * (lagen.length + 1)}
       onClick={handleClick}
       style={{ display: "block", background: "#1a1410", cursor: "pointer" }}
     />

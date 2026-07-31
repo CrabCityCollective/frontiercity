@@ -156,4 +156,13 @@ export interface GameState {
   // `laatsteConfrontatie` hierboven een resultaat-vlag voor de UI, geen los
   // systeem.
   laatsteIneenstorting?: boolean;
+  // Momentopname van de zojuist geëindigde run (issue: "game-over-scherm
+  // met beurten/steden/lagen"), genomen vlak vóór `verwerkVerval` de status
+  // terugzet naar een verse start. Alleen relevant zolang
+  // `laatsteIneenstorting` `true` is; puur UI-weergave, geen spelregel.
+  laatsteRunStatistieken?: {
+    beurten: number;
+    stedenGebouwd: number;
+    hoogsteLaag: number;
+  };
 }

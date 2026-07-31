@@ -114,14 +114,17 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
   return (
     <div
       style={{
-        position: "absolute",
+        // `fixed` i.p.v. `absolute` (issue: "popups altijd in view") — zo
+        // blijft de pop-up gecentreerd op het volledige scherm, ongeacht hoe
+        // ver de speler in `.game-scroll-area` gescrold heeft.
+        position: "fixed",
         inset: 0,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         background: "rgba(10, 8, 6, 0.72)",
         padding: "1rem",
-        zIndex: 10,
+        zIndex: 20,
       }}
     >
       <div

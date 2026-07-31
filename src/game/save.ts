@@ -32,6 +32,17 @@ export function laadSpel(): GameState | null {
   }
 }
 
+// Of er iets te laden valt (issue: "menu-icoontje ... opslaan en oudere
+// games ... inladen") — gebruikt om de "Laden"-knop uit te schakelen zolang
+// de speler nog niets bewust heeft opgeslagen.
+export function heeftOpgeslagenSpel(): boolean {
+  try {
+    return window.localStorage.getItem(SAVE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
 // Onthoudt of het introscherm (issue: "intro en game over scherm") al
 // getoond is, los van de spelstatus zelf — dit hoort niet bij `GameState`
 // (geen speldata, puur "heeft deze browser de opening al gezien").

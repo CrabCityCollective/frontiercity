@@ -4,6 +4,15 @@ import { INEENSTORTING_FLAVOR_TEKST, INEENSTORTING_TITEL } from "@/game/tutorial
 
 interface IneenstortingSchermProps {
   onDoorgaan: () => void;
+  // Momentopname van de geëindigde run (zie economie.ts: `verwerkVerval`).
+  // Optioneel omdat dit scherm ook zou moeten kunnen renderen zonder
+  // statistieken (nooit in de praktijk, maar voorkomt een harde crash als
+  // een oude save toevallig `laatsteIneenstorting` zonder statistieken bevat).
+  statistieken?: {
+    beurten: number;
+    stedenGebouwd: number;
+    hoogsteLaag: number;
+  };
 }
 
 // Ineenstortingsscherm (issue: "intro en game over scherm"), getoond zodra de
@@ -12,7 +21,7 @@ interface IneenstortingSchermProps {
 // tutorial herstart vanaf het begin (issue: "run eindigen wanneer stad
 // uitgeput is", hoofdstuk 4/11). Blokkeert de rest van de UI tot de speler
 // bevestigt, net als het introscherm.
-export default function IneenstortingScherm({ onDoorgaan }: IneenstortingSchermProps) {
+export default function IneenstortingScherm({ onDoorgaan, statistieken }: IneenstortingSchermProps) {
   return (
     <div
       style={{
@@ -47,6 +56,24 @@ export default function IneenstortingScherm({ onDoorgaan }: IneenstortingSchermP
           {INEENSTORTING_TITEL}
         </h1>
         <p style={{ margin: 0, whiteSpace: "pre-line", lineHeight: 1.6 }}>{INEENSTORTING_FLAVOR_TEKST}</p>
+
+        {statistieken && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "1.5rem",
+              margin: "1rem 0 0",
+              fontSize: "0.9rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <span>Beurten gespeeld: {statistieken.beurten}</span>
+            <span>Steden gebouwd: {statistieken.stedenGebouwd}</span>
+            <span>Hoogste laag bereikt: {statistieken.hoogsteLaag}</span>
+          </div>
+        )}
+
         <p style={{ margin: "1rem 0 0", fontSize: "0.85rem", color: "var(--kleur-tekst-gedempt)" }}>
           Deze run is voorbij. Het Hertenpad-volk begint opnieuw bij de rivier.
         </p>

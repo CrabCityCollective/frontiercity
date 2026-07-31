@@ -101,6 +101,28 @@ export function isVooruitkijkLaag(laag: Layer, lagen: Layer[]): boolean {
   return laag.hoogte === hoogsteOntgrendeldeLaag(lagen) + 1;
 }
 
+// Hoeveel nog-onontdekte mist-lagen we, naast de ene vooruitkijk-laag, boven
+// de frontier tonen (issue: "haal een paar onontdekte tegels weg, die zijn
+// voor nu niet relevant"). Zonder deze grens rendert de canvas alle 12
+// tutorial-lagen vanaf het begin, wat de stad onderaan ver buiten beeld
+// scrollt — met deze grens blijft de zichtbare kaart beperkt tot wat relevant
+// is: de ontgrendelde lagen, de vooruitkijk-laag, en een klein stukje mist
+// erboven zodat de kaart niet abrupt afgesneden oogt.
+const ZICHTBARE_MIST_LAGEN_BOVEN_VOORUITKIJK = 2;
+
+// Het deel van `lagen` dat daadwerkelijk op de canvas gerenderd wordt (zie
+// GameCanvas/tekenWereld). Snijdt simpelweg de bovenste, (nog) niet-relevante
+// mist-lagen af — de resterende hoogtes blijven 1..N zonder gaten, dus de
+// bestaande rij-geometrie (hoogte → canvas-rij) blijft ongewijzigd werken.
+export function zichtbareLagen(lagen: Layer[]): Layer[] {
+  const frontier = hoogsteOntgrendeldeLaag(lagen);
+  const maxHoogte = Math.min(
+    lagen.length,
+    frontier + 1 + ZICHTBARE_MIST_LAGEN_BOVEN_VOORUITKIJK
+  );
+  return lagen.filter((laag) => laag.hoogte <= maxHoogte);
+}
+
 // Cultuurdrempel om laag `hoogte` te ontgrendelen (M5, hoofdstuk 5: "cultuur →
 // laag-ontgrendeling"). Loopt op naarmate je hoger komt. Exacte cijfers zijn
 // nog niet vastgelegd in het design-document (hoofdstuk 14) — dit is een
