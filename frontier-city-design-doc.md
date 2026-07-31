@@ -16,7 +16,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 ## 2. Ruimtelijk model
 
 - Bovenaanzicht zoals klassieke Civilization, maar beperkt tot een **verticale band van 9 vakjes breed**.
-- Onderste laag = startstad (begint aan een oceaan). Daarboven telkens nieuwe lagen.
+- Onderste laag = startstad (begint aan een oceaan). Daarboven telkens nieuwe lagen. Onder die onderste laag toont het scherm een rij klikbare oceaan-tegels, zodat meteen duidelijk is waar de reis begint — puur sfeer/flavor-tekst bij een klik, niet bebouwbaar.
 - **Fog of war** boven je huidige ontgrendelde grens; wordt weggehaald door cultuur te verzamelen.
 - **Vooruitkijken**: je ziet standaard 1 laag verder dan je ontgrendelde grens (terreintype + vage dreigingsindicatie, geen exacte details). Uitbreidbaar via wetenschap-drempels (permanent, tot een max van 3-4 lagen) en via de Verkenner-unit (tijdelijke, gerichte blik verder).
 - Elke laag heeft **9 bouwvakken**: middelste = stad (max 1 stad per laag), overige 8 = land improvements.
@@ -49,6 +49,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - Als het omliggende land grotendeels is uitgeput, verschijnt een **zichtbare waarschuwingsstatus** ("kritiek", voor meerdere beurten) voordat een stad kan instorten.
 - **Reageer je op tijd** (vertrekken/relics oogsten): je behoudt alles wat je tot dan toe hebt verdiend.
 - **Negeer je het**: kans op volledige ineenstorting — **ook de relics van eerder voltooide tiers gaan dan verloren** (permadeath-risico op stadsniveau). Dit is de centrale risk/reward-gok van elke stad-episode.
+- **In de huidige MVP-scope** (hoofdstuk 13: één stad, nog geen meerdere steden/frontier-verplaatsing) is er geen volgende stad om de run mee door te laten lopen: een volledige ineenstorting **eindigt de run** en start de tutorial opnieuw (nieuwe kleine stad, lege lagen, beurt 1). Zodra meerdere steden/frontier-verplaatsing bestaat, kan dit weer een puur stads-niveau-permadeath worden terwijl de run zelf naar de volgende stad doorloopt.
 - Bewust **geen kunstmatige tijdsdruk/klok** — de druk komt volledig uit uitputting en schaarste, niet uit een aftellende timer.
 
 ---
@@ -199,6 +200,9 @@ Dit is een bewuste keuze om het "frontier"-gevoel scherp te houden: als oude ste
 **Hard verval (permadeath van relics) i.p.v. zachte aftakeling**
 Zachte aftakeling (een stad die langzaam minder oplevert tot je vertrekt) is altijd veilig zolang je op tijd weggaat — er is dan geen echt risico. Hard verval, waarbij ook al verdiende relics verloren kunnen gaan bij een misrekening, geeft een echt risk/reward-moment: doorgroeien voor een extra relic-slot is een bewuste gok, geen gratis extra beloning. Het zichtbare waarschuwingssignaal zorgt ervoor dat dit risico eerlijk aanvoelt (voorspelbaar te vermijden) in plaats van willekeurig.
 
+**Volledige ineenstorting eindigt in de MVP de hele run**
+Zolang er maar één stad is (hoofdstuk 13), heeft een ineenstorting geen "volgende stad" om naar door te schuiven — de stad die instort, is de enige stad. Een stad laten voortbestaan in verzwakte vorm (geen relics, kleine tier) zou het permadeath-risico uit hoofdstuk 4 juist ondermijnen: de speler kan dan gewoon doorspelen alsof er niets gebeurd is. Door de run in dat geval echt te beëindigen en de tutorial opnieuw te starten, blijft de inzet van "doorgroeien voor een extra relic-slot" reëel, ook zonder dat er al een frontier-verplaatsing naar een nieuwe stad bestaat.
+
 **Geen kunstmatige tijdsdruk/klok**
 Een oprukkende dreigingstimer (zoals in veel rogue-likes) werd bewust weggelaten omdat de vergelijkbare historische frontier-situaties ook geen "klok" kenden — en omdat schaarste (uitputting van land, uitputting van vooruitzicht op groei) al een intrinsieke, thematisch passende reden geeft om door te bewegen. Een extra klok erbovenop zou dubbelop en kunstmatig aanvoelen.
 
@@ -258,7 +262,7 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 - Drie bouwmaterialen (hout/steen/erts) + gedeelde opslag-cap, losstaande voedselvoorraad
 - Uitputting van land improvements → permanente ghost-town-tiles
 - Cultuur → laag ontgrendelen; fog of war
-- Eén groei-tier-stap (klein→middel), met het zichtbare waarschuwingssignaal en het permadeath-verval-risico
+- Eén groei-tier-stap (klein→middel), met het zichtbare waarschuwingssignaal en het permadeath-verval-risico (volledige ineenstorting eindigt de run en herstart de tutorial, zie hoofdstuk 4/11)
 - Eenvoudige militaire confrontatie (winkans-formule)
 - Placeholder-tegels (simpele, consistente stijl — geen definitieve pre-rendered assets nodig om te testen)
 - Alléén de tutorial-content (Het Hertenpad-volk, lagen 1-12) als speelbare inhoud
@@ -341,7 +345,7 @@ interface CampaignConfig {
 | M3 | Resource-economie | 3 materialen + opslag-cap, voedsel, productiewachtrij |
 | M4 | Uitputting & ghost towns | Land improvements putten uit, worden ghost-town-tiles |
 | M5 | Cultuur & laag-ontgrendeling | Cultuur verzamelen, nieuwe laag ontgrendelen |
-| M6 | Groei & verval | Klein→middel groei-tier, waarschuwingssignaal, permadeath-verval |
+| M6 | Groei & verval | Klein→middel groei-tier, waarschuwingssignaal, permadeath-verval (ineenstorting eindigt de run) |
 | M7 | Militair (basis) | Eenvoudige confrontatie met winkans-formule |
 | M8 | Tutorial-content | Lagen 1-12 met de vastgelegde mechaniek-volgorde en flavor-teksten |
 | M9 | Save/load | Eén actieve run lokaal opslaan en hervatten |

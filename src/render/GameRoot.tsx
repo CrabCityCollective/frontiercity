@@ -11,7 +11,7 @@ import ResourceHud from "@/components/ResourceHud";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import { berekenLegerwaarde } from "@/game/economie";
 import { heeftIntroGezien, markeerIntroGezien } from "@/game/save";
-import { beschrijfTile } from "@/game/tileInfo";
+import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { useGameEngine } from "@/game/useGameEngine";
 import { hoogsteOntgrendeldeLaag } from "@/game/world";
@@ -85,10 +85,14 @@ export default function GameRoot() {
     ? state.lagen.find((laag) => laag.hoogte === geselecteerdeTile.hoogte)
     : undefined;
 
+  // Hoogte 0 is de klikbare oceaan-rij onder laag 1 (geen echte `Layer`, zie
+  // GameCanvas: `bepaalAangeklikteTile`) — puur sfeer-tekst, nooit bebouwbaar.
   const tileInfo =
-    geselecteerdeTile && geselecteerdeLaag
-      ? beschrijfTile(geselecteerdeLaag, state.lagen, state.stad, geselecteerdeTile.positieInLaag)
-      : null;
+    geselecteerdeTile?.hoogte === 0
+      ? beschrijfOceaanTile()
+      : geselecteerdeTile && geselecteerdeLaag
+        ? beschrijfTile(geselecteerdeLaag, state.lagen, state.stad, geselecteerdeTile.positieInLaag)
+        : null;
 
   const isGeldigPlaatsingsDoel =
     plaatsingsImprovement !== null &&

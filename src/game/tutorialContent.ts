@@ -105,10 +105,11 @@ export const INTRO_FLAVOR_TEKST =
   "Boven hen wachten twaalf lagen, nog in mist.";
 
 // Ineenstortingsscherm, getoond zodra de stad instort (M6, hoofdstuk 4: hard
-// verval van de groei-tier en relics — niet het einde van de run, zie
-// economie.ts `verwerkVerval`).
+// verval). In de MVP (één stad, geen frontier-verplaatsing, hoofdstuk 13)
+// eindigt dit de hele run en herstart de tutorial (issue: "run eindigen
+// wanneer stad uitgeput is", zie economie.ts `verwerkVerval`).
 export const INEENSTORTING_TITEL = "Het vuur dooft";
 export const INEENSTORTING_FLAVOR_TEKST =
   "Niemand voedt het meer. Het valt terug tot as.\n" +
   "Wat gebouwd was, wordt weer land.\n" +
-  "De rivier buigt nog steeds hetzelfde.";
+  "De rivier buigt nog steeds hetzelfde. Een nieuw vuur wacht op dezelfde oever.";

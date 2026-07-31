@@ -386,6 +386,50 @@ function tekenLandImprovement(
   ctx.fillRect(x + padding, y + padding, size - padding * 2, size - padding * 2);
 }
 
+// --- Oceaan --------------------------------------------------------------
+
+// Rij oceaan-tegels onder de onderste laag (hoofdstuk 2: "Onderste laag =
+// startstad, begint aan een oceaan") — puur sfeer zodat meteen duidelijk is
+// waar de reis begint, geen bebouwbare tiles. Zelfde geschilderde
+// verloop+textuur-aanpak als `tekenTerreinOndergrond`, maar met een
+// blauw/groen waterpalet en golflijnen in plaats van verfvlekken.
+const OCEAAN_BASIS = "#2e4a52";
+
+export function tekenOceaanTile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  seed: number
+): void {
+  const verloop = ctx.createLinearGradient(x, y, x, y + size);
+  verloop.addColorStop(0, rgbNaarCss(tint(OCEAAN_BASIS, 0.18)));
+  verloop.addColorStop(0.6, OCEAAN_BASIS);
+  verloop.addColorStop(1, rgbNaarCss(tint(OCEAAN_BASIS, -0.3)));
+  ctx.fillStyle = verloop;
+  ctx.fillRect(x, y, size, size);
+
+  const rng = maakSeededRandom(seed);
+  ctx.strokeStyle = "rgba(220, 235, 235, 0.22)";
+  ctx.lineWidth = Math.max(1, size * 0.025);
+  for (let i = 0; i < 3; i++) {
+    const wy = y + size * (0.25 + i * 0.24 + rng() * 0.06);
+    ctx.beginPath();
+    ctx.moveTo(x, wy);
+    ctx.quadraticCurveTo(x + size * 0.5, wy + size * 0.05, x + size, wy);
+    ctx.stroke();
+  }
+
+  const glinster = ctx.createRadialGradient(
+    x + size * (0.3 + rng() * 0.4), y + size * (0.3 + rng() * 0.3), 0,
+    x + size * (0.3 + rng() * 0.4), y + size * (0.3 + rng() * 0.3), size * 0.35
+  );
+  glinster.addColorStop(0, "rgba(230, 240, 235, 0.14)");
+  glinster.addColorStop(1, "rgba(230, 240, 235, 0)");
+  ctx.fillStyle = glinster;
+  ctx.fillRect(x, y, size, size);
+}
+
 // --- Stad, ghost town, fog en statusiconen -------------------------------
 
 function tekenTent(ctx: CanvasRenderingContext2D, cx: number, baseY: number, h: number, kleur: string): void {
@@ -732,5 +776,15 @@ export function tekenWereld(
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
       }
     }
+  }
+
+  // Rij oceaan-tegels vlak onder laag 1 (hoofdstuk 2: startstad begint aan een
+  // oceaan) — één extra rij, klikbaar via dezelfde tile-geometrie als de
+  // overige lagen (zie GameCanvas: `bepaalAangeklikteTile`, hoogte 0).
+  const oceaanY = totaalLagen * tileSize;
+  for (let col = 0; col < BAND_WIDTH_TILES; col++) {
+    const x = col * tileSize;
+    tekenOceaanTile(ctx, x, oceaanY, tileSize, tileSeed(col, 0));
+    tekenTileGrid(ctx, x, oceaanY, tileSize);
   }
 }

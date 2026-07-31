@@ -9,10 +9,10 @@ interface IneenstortingSchermProps {
 }
 
 // Ineenstortingsscherm (issue: "intro en game over scherm"), getoond zodra de
-// stad instort (M6, hoofdstuk 4). Geen echt game-over: het is het bestaande
-// "hard verval"-risico uit het design-document — de groei-tier en relics
-// gaan verloren, maar de run zelf loopt door (hoofdstuk 11: "Hard verval
-// i.p.v. zachte aftakeling"). Blokkeert de rest van de UI tot de speler
+// stad instort (M6, hoofdstuk 4). In de MVP (één stad, geen
+// frontier-verplaatsing) is dit een echt game-over: de run eindigt en de
+// tutorial herstart vanaf het begin (issue: "run eindigen wanneer stad
+// uitgeput is", hoofdstuk 4/11). Blokkeert de rest van de UI tot de speler
 // bevestigt, net als het introscherm.
 export default function IneenstortingScherm({ onDoorgaan }: IneenstortingSchermProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,11 +51,11 @@ export default function IneenstortingScherm({ onDoorgaan }: IneenstortingSchermP
         <h1 style={{ margin: "0 0 1rem", fontSize: "1.6rem" }}>{INEENSTORTING_TITEL}</h1>
         <p style={{ margin: 0, whiteSpace: "pre-line", lineHeight: 1.6 }}>{INEENSTORTING_FLAVOR_TEKST}</p>
         <p style={{ margin: "1rem 0 0", fontSize: "0.85rem", color: "#b7a888" }}>
-          De groei-tier en alle relics zijn verloren gegaan. Het kamp gaat verder.
+          Deze run is voorbij. Het Hertenpad-volk begint opnieuw bij de rivier.
         </p>
       </div>
       <button onClick={onDoorgaan} style={{ padding: "0.6rem 1.5rem", fontSize: "1rem" }}>
-        Doorgaan
+        Opnieuw beginnen
       </button>
     </div>
   );
