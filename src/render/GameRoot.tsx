@@ -13,10 +13,12 @@ import MilitairPaneel from "@/components/MilitairPaneel";
 import ResourceHud from "@/components/ResourceHud";
 import SpelActiesMenu from "@/components/SpelActiesMenu";
 import TileInfoPopup from "@/components/TileInfoPopup";
+import UitlegPopup from "@/components/UitlegPopup";
 import { berekenHistorieStatistieken, berekenLegerwaarde } from "@/game/economie";
 import { heeftOpgeslagenSpel } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
+import { AFSLUITENDE_UITLEG_BEURT } from "@/game/uitlegContent";
 import { useGameEngine } from "@/game/useGameEngine";
 import { hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
 import GameCanvas from "./GameCanvas";
@@ -75,6 +77,14 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // speler 'm wegklikt. Begint op 1 (de startlaag, al geïntroduceerd via
   // IntroScherm) zodat hij niet meteen bij de eerste laag verschijnt.
   const [laatstBevestigdeLaag, setLaatstBevestigdeLaag] = useState(1);
+
+  // Uitleg-pop-up (issue: "meer uitleg"): los van de laag-popup hierboven,
+  // toont dit de basisbegrippen-uitleg (grondstoffen/improvements) in de
+  // eerste paar beurten, en daarna één keer de afsluitende "verder op eigen
+  // kracht"-pop-up. `laatstBevestigdeUitlegBeurt` volgt hetzelfde patroon als
+  // `laatstBevestigdeLaag`: zodra de speler doorklikt, staat de huidige beurt
+  // vast als bevestigd zodat dezelfde pop-up niet nogmaals verschijnt.
+  const [laatstBevestigdeUitlegBeurt, setLaatstBevestigdeUitlegBeurt] = useState(0);
   // Bouwen gebeurt op de huidige frontier-laag: de hoogste ontgrendelde laag
   // (M5: welke laag dat is, verandert zodra cultuur een nieuwe laag ontgrendelt).
   const actieveLaag = state.lagen.find(
@@ -147,6 +157,8 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   }
 
   const toonLaagPopup = actieveLaag.hoogte > laatstBevestigdeLaag;
+  const toonUitlegPopup =
+    !toonLaagPopup && state.beurt > laatstBevestigdeUitlegBeurt && state.beurt <= AFSLUITENDE_UITLEG_BEURT;
 
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
@@ -185,9 +197,12 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
         {toonLaagPopup && (
           <LaagPopup hoogte={actieveLaag.hoogte} onDoorgaan={() => setLaatstBevestigdeLaag(actieveLaag.hoogte)} />
         )}
+        {toonUitlegPopup && (
+          <UitlegPopup beurt={state.beurt} onDoorgaan={() => setLaatstBevestigdeUitlegBeurt(state.beurt)} />
+        )}
         <BouwPopup
           laag={actieveLaag}
-          zichtbaar={!toonLaagPopup && !state.bouwKeuzeGedaanDitBeurt && !plaatsingsImprovement}
+          zichtbaar={!toonLaagPopup && !toonUitlegPopup && !state.bouwKeuzeGedaanDitBeurt && !plaatsingsImprovement}
           onBouwStarten={(improvement) => setPlaatsingsImprovement(improvement)}
           onSluiten={sluitBouwKeuze}
         />
