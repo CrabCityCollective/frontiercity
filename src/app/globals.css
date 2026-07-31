@@ -86,6 +86,59 @@ main {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* De tegel-band en panelen schalen mee naar de viewportbreedte (zie
+     GameCanvas), maar dit is een extra vangnet zodat er nooit per ongeluk
+     zijwaarts gescrold kan worden (issue: tiles die "buiten beeld" schuiven
+     op mobiel). */
+  overflow-x: hidden;
+}
+
+/* Grondstoffenbalk (zie ResourceHud): rij van materiaal/voedsel/cultuur-
+   labels plus de beurtteller en -knop. Wrapt op smalle (mobiele) schermen
+   i.p.v. buiten beeld te schuiven (issue: "balk met resources is niet
+   responsive"), de beurt+knop-groep krijgt dan een eigen volle rij. */
+.resource-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(180deg, var(--kleur-aarde-paneel), var(--kleur-aarde-donker));
+  color: var(--kleur-tekst);
+  font-size: 0.9rem;
+  border-top: 3px solid var(--kleur-oker);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.resource-hud__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.1rem;
+}
+
+.resource-hud__beurt {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+@media (max-width: 520px) {
+  .resource-hud {
+    font-size: 0.78rem;
+    padding: 0.5rem 0.6rem;
+    gap: 0.35rem 0.6rem;
+  }
+
+  .resource-hud__items {
+    gap: 0.3rem 0.6rem;
+  }
+
+  .resource-hud__beurt {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 /* --- Gedeeld "aardse, versierde" ontwerpsysteem -------------------------
