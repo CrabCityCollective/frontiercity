@@ -143,4 +143,9 @@ export interface GameState {
   // Resultaat van de laatst afgehandelde militaire confrontatie (M7), voor
   // de UI. `undefined` zolang er nog geen confrontatie heeft plaatsgevonden.
   laatsteConfrontatie?: ConfrontatieResultaat;
+  // Spelregel (hoofdstuk 11): hoogstens 1 bouwkeuze per beurt. Wordt gezet
+  // zodra de speler een improvement kiest óf de bouw-pop-up sluit zonder te
+  // bouwen, en door `volgendeBeurt` weer teruggezet — een echte spelregel
+  // die ook na een refresh/reload geldt, geen losse UI-vlag.
+  bouwKeuzeGedaanDitBeurt: boolean;
 }

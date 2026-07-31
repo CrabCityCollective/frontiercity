@@ -83,6 +83,7 @@ export function maakInitieleSpelStatus(): GameState {
     voedsel: 0,
     cultuur: 0,
     beurt: 1,
+    bouwKeuzeGedaanDitBeurt: false,
   };
 }
 
@@ -504,6 +505,9 @@ export function confrontatie(state: GameState): GameState {
 
 // Start de bouw van een land improvement op de eerstvolgende lege tile van
 // de gegeven laag. Geeft de ongewijzigde status terug als er geen lege tile is.
+// Verbruikt altijd de bouwkeuze van deze beurt (hoofdstuk 11: hoogstens 1
+// bouwkeuze per beurt) — dit is de enige manier waarop de speler via de
+// bouw-pop-up een improvement kiest.
 export function startBouw(
   state: GameState,
   laagHoogte: number,
@@ -528,7 +532,14 @@ export function startBouw(
     return { ...laag, tiles };
   });
 
-  return { ...state, lagen };
+  return { ...state, lagen, bouwKeuzeGedaanDitBeurt: true };
+}
+
+// Sluit de bouw-pop-up zonder te bouwen (hoofdstuk 11: de speler mag een
+// beurt ook overslaan) — verbruikt, net als `startBouw`, de bouwkeuze van
+// deze beurt.
+export function sluitBouwKeuze(state: GameState): GameState {
+  return { ...state, bouwKeuzeGedaanDitBeurt: true };
 }
 
 // Verwerkt één spelbeurt: eerst productie van actieve improvements (incl.
@@ -537,7 +548,9 @@ export function startBouw(
 // uitputting (M6), dan verbruik/voortgang van de land-tile-bouwwachtrij, de
 // stadsgroei-bouwwachtrij (M6) en de Soldaat-rekruteringswachtrij (M7), dan
 // de beurtteller ophogen. Een tile die deze beurt net voltooid wordt, begint
-// pas volgende beurt met aftellen.
+// pas volgende beurt met aftellen. Zet ook de bouwkeuze-vlag (hoofdstuk 11)
+// weer terug, zodat de bouw-pop-up bij het begin van de nieuwe beurt weer
+// verschijnt.
 export function volgendeBeurt(state: GameState): GameState {
   const naProductie = verwerkProductie(state);
   const naOntgrendeling = verwerkLaagOntgrendeling(naProductie);
@@ -546,5 +559,5 @@ export function volgendeBeurt(state: GameState): GameState {
   const naBouw = verwerkBouwwachtrij(naVerval);
   const naGroei = verwerkGroei(naBouw);
   const naRecrutering = verwerkRecrutering(naGroei);
-  return { ...naRecrutering, beurt: naRecrutering.beurt + 1 };
+  return { ...naRecrutering, beurt: naRecrutering.beurt + 1, bouwKeuzeGedaanDitBeurt: false };
 }

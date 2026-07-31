@@ -141,3 +141,24 @@ export function beschikbareOpties(
     (improvement) => !reedsGebouwdeIds.includes(improvement.id)
   );
 }
+
+function shuffle<T>(items: T[]): T[] {
+  const kopie = [...items];
+  for (let i = kopie.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [kopie[i], kopie[j]] = [kopie[j], kopie[i]];
+  }
+  return kopie;
+}
+
+// Willekeurige subset van 2 of 3 concrete opties binnen een categorie
+// (hoofdstuk 11: eerst categorie, dán 2-3 willekeurige opties). Geeft minder
+// terug als de categorie nog geen 2 beschikbare opties heeft.
+export function willekeurigeOpties(
+  categorie: Improvement["categorie"],
+  reedsGebouwdeIds: string[]
+): Improvement[] {
+  const beschikbaar = beschikbareOpties(categorie, reedsGebouwdeIds);
+  const aantal = Math.random() < 0.5 ? 2 : 3;
+  return shuffle(beschikbaar).slice(0, aantal);
+}
