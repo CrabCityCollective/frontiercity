@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { INEENSTORTING_FLAVOR_TEKST, INEENSTORTING_TITEL } from "@/game/tutorialContent";
-import { SFEER_BREEDTE, SFEER_HOOGTE, tekenIneenstortingSfeer } from "@/render/sfeerScenes";
 
 interface IneenstortingSchermProps {
   onDoorgaan: () => void;
@@ -15,15 +13,6 @@ interface IneenstortingSchermProps {
 // uitgeput is", hoofdstuk 4/11). Blokkeert de rest van de UI tot de speler
 // bevestigt, net als het introscherm.
 export default function IneenstortingScherm({ onDoorgaan }: IneenstortingSchermProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!ctx || !canvas) return;
-    tekenIneenstortingSfeer(ctx, canvas.width, canvas.height);
-  }, []);
-
   return (
     <div
       style={{
@@ -41,10 +30,10 @@ export default function IneenstortingScherm({ onDoorgaan }: IneenstortingSchermP
         zIndex: 100,
       }}
     >
-      <canvas
-        ref={canvasRef}
-        width={SFEER_BREEDTE}
-        height={SFEER_HOOGTE}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/scenes/game-over.jpg"
+        alt=""
         style={{ width: "100%", maxWidth: "720px", height: "auto", display: "block" }}
       />
       <div style={{ textAlign: "center", maxWidth: "540px" }}>
