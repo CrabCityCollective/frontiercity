@@ -73,7 +73,7 @@ const STARTVOORRAAD: Record<MateriaalType, number> = {
 export function maakInitieleSpelStatus(): GameState {
   return {
     stad: {
-      naam: "Het Hertenpad-kamp",
+      naam: "Holenrots",
       grootte: "klein",
       relics: [],
       vervalStatus: "gezond",
