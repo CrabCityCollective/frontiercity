@@ -11,9 +11,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="nl">
       <head>
-        {/* Sancreek (titels/UI-chrome) + Vollkorn (leestekst): zie
-            globals.css voor waarom dit (nog) de vervanger is voor het
-            gevraagde Bradrock-font. */}
+        {/* Sancreek (titels/UI-chrome) + Vollkorn (leestekst). */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

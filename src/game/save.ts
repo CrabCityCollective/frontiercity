@@ -42,24 +42,3 @@ export function heeftOpgeslagenSpel(): boolean {
     return false;
   }
 }
-
-// Onthoudt of het introscherm (issue: "intro en game over scherm") al
-// getoond is, los van de spelstatus zelf — dit hoort niet bij `GameState`
-// (geen speldata, puur "heeft deze browser de opening al gezien").
-const INTRO_GEZIEN_KEY = "frontier-city:tutorial-intro-gezien";
-
-export function heeftIntroGezien(): boolean {
-  try {
-    return window.localStorage.getItem(INTRO_GEZIEN_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-export function markeerIntroGezien(): void {
-  try {
-    window.localStorage.setItem(INTRO_GEZIEN_KEY, "1");
-  } catch {
-    // Zie saveSpel hierboven: bewust genegeerd.
-  }
-}

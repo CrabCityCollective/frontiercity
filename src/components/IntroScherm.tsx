@@ -9,8 +9,9 @@ interface IntroSchermProps {
 // Introscherm (issue: "intro en game over scherm"), getoond vóór de speler
 // iets van de tutorial ziet: sfeerbeeld + flavor-tekst uit hoofdstuk 10, in de
 // Riven/Myst-stijl van hoofdstuk 12/13. Blokkeert de rest van de UI tot de
-// speler bevestigt — daarna blijft dat bevestigd (zie save.ts
-// `markeerIntroGezien`), zodat een reload niet elke keer opnieuw opent.
+// speler bevestigt — dat gebeurt bij elke start van de tutorial opnieuw (zie
+// GameRoot: `toonIntro`), niet slechts één keer per browser (issue: "als ik
+// de tutorial aanklik vanuit het menu, zie ik het introscherm niet meer").
 export default function IntroScherm({ onBeginnen }: IntroSchermProps) {
   return (
     <div
