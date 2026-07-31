@@ -303,6 +303,7 @@ function verwerkVerval(state: GameState): GameState {
 
   return {
     ...state,
+    laatsteIneenstorting: true,
     stad: {
       ...state.stad,
       grootte: "klein",
@@ -314,6 +315,13 @@ function verwerkVerval(state: GameState): GameState {
       vervalBeurtenResterend: undefined,
     },
   };
+}
+
+// Sluit het ineenstortingsscherm (issue: "intro en game over scherm"). Puur
+// een UI-bevestiging — de daadwerkelijke gevolgen van de ineenstorting zijn
+// al door `verwerkVerval` toegepast op het moment dat de vlag gezet werd.
+export function bevestigIneenstorting(state: GameState): GameState {
+  return { ...state, laatsteIneenstorting: false };
 }
 
 // Betaalt de bouwkosten van een lopende stadsgroei (M6). Los van de

@@ -94,3 +94,21 @@ export const AFSLUITENDE_SCENE =
 export function laagContent(hoogte: number): LaagContent | undefined {
   return TUTORIAL_LAAG_CONTENT[hoogte];
 }
+
+// Introscherm (issue: "intro en game over scherm"), getoond vóór laag 1 —
+// zet de tutorial-sfeer neer voordat er iets van de mechaniek in beeld komt.
+export const INTRO_TITEL = "De Eerste Vuren";
+export const INTRO_SUBTITEL = "Het Hertenpad-volk";
+export const INTRO_FLAVOR_TEKST =
+  "De rivier buigt. Het gras wordt water, dan weer gras.\n" +
+  "Hier zet het Hertenpad-volk de eerste palen in de grond.\n" +
+  "Boven hen wachten twaalf lagen, nog in mist.";
+
+// Ineenstortingsscherm, getoond zodra de stad instort (M6, hoofdstuk 4: hard
+// verval van de groei-tier en relics — niet het einde van de run, zie
+// economie.ts `verwerkVerval`).
+export const INEENSTORTING_TITEL = "Het vuur dooft";
+export const INEENSTORTING_FLAVOR_TEKST =
+  "Niemand voedt het meer. Het valt terug tot as.\n" +
+  "Wat gebouwd was, wordt weer land.\n" +
+  "De rivier buigt nog steeds hetzelfde.";
