@@ -9,7 +9,17 @@
 // vallen buiten de MVP-scope — zie hoofdstuk 3 en hoofdstuk 13 van het
 // design-document.
 
-import { Improvement } from "./types";
+import { Categorie, Improvement } from "./types";
+
+// Nederlandse labels per categorie, gedeeld tussen de bouw-pop-up (M2) en de
+// tile-info-pop-up (klik-op-tile) zodat beide dezelfde terminologie tonen.
+export const CATEGORIE_LABELS: Record<Categorie, string> = {
+  economisch: "Economisch",
+  wetenschappelijk: "Wetenschappelijk",
+  militair: "Militair",
+  civiel: "Civiel",
+  cultureel: "Cultureel",
+};
 
 // `uitputtingBeurten` (hoofdstuk 4/14: exacte cijfers nog niet vastgelegd in
 // het design-document — dit zijn bewuste MVP-placeholders) bepaalt hoeveel
