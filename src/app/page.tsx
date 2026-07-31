@@ -1,9 +1,9 @@
-import GameRoot from "@/render/GameRoot";
+import AppRoot from "@/render/AppRoot";
 
 export default function Home() {
   return (
     <main>
-      <GameRoot />
+      <AppRoot />
     </main>
   );
 }

@@ -29,19 +29,18 @@ export default function GroeiPaneel({ state, onStartGroei }: GroeiPaneelProps) {
 
   return (
     <div
+      className="fc-paneel"
       style={{
         display: "flex",
         flexDirection: "column",
         gap: "0.4rem",
         padding: "0.75rem 1rem",
-        background: "#20180f",
-        color: "#e8dcc8",
-        fontFamily: "sans-serif",
         fontSize: "0.9rem",
+        margin: "0.5rem",
       }}
     >
       {stad.vervalStatus === "kritiek" && (
-        <p style={{ color: "#e0684a", fontWeight: "bold", margin: 0 }}>
+        <p style={{ color: "var(--kleur-gevaar)", fontWeight: "bold", margin: 0 }}>
           ⚠ Kritiek: het omliggende land is grotendeels uitgeput. Instorting over{" "}
           {stad.vervalBeurtenResterend} beurten als dit niet afneemt.
         </p>
@@ -52,7 +51,7 @@ export default function GroeiPaneel({ state, onStartGroei }: GroeiPaneelProps) {
       )}
 
       {!stad.groeiInAanbouw && voedsel >= VOEDSEL_DREMPEL_GROEI && (
-        <button onClick={onStartGroei} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
+        <button className="fc-knop" onClick={onStartGroei} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
           Start groei naar middel ({formatteerKosten(WOONWIJK)}, {WOONWIJK.bouwtijdBeurten} beurten)
         </button>
       )}

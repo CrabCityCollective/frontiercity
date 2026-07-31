@@ -41,23 +41,21 @@ export default function TileInfoPopup({
       }}
     >
       <div
+        className="fc-paneel"
         style={{
           display: "flex",
           flexDirection: "column",
           gap: "0.5rem",
           padding: "1rem 1.25rem",
-          background: "#20180f",
-          color: "#e8dcc8",
-          fontFamily: "sans-serif",
           fontSize: "0.9rem",
-          border: "1px solid #3a2f22",
-          borderRadius: "6px",
           minWidth: "min(24rem, 100%)",
         }}
       >
-        <strong>{tileInfo.titel}</strong>
+        <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
+          {tileInfo.titel}
+        </strong>
         {tileInfo.ondertitel && (
-          <span style={{ color: "#c9a876", fontSize: "0.8rem" }}>{tileInfo.ondertitel}</span>
+          <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>{tileInfo.ondertitel}</span>
         )}
         <p style={{ margin: 0 }}>{tileInfo.tekst}</p>
 
@@ -67,10 +65,10 @@ export default function TileInfoPopup({
               {bouwVraag.improvementNaam} hier bouwen?
             </p>
             <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button onClick={onBevestigBouw} style={{ padding: "0.35rem 0.75rem" }}>
+              <button className="fc-knop" onClick={onBevestigBouw} style={{ padding: "0.35rem 0.75rem" }}>
                 Okee
               </button>
-              <button onClick={onAnnuleerBouw} style={{ padding: "0.35rem 0.75rem" }}>
+              <button className="fc-knop" onClick={onAnnuleerBouw} style={{ padding: "0.35rem 0.75rem" }}>
                 Annuleren
               </button>
             </div>
@@ -78,7 +76,7 @@ export default function TileInfoPopup({
         )}
 
         {!bouwVraag && (
-          <button onClick={onSluiten} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
+          <button className="fc-knop" onClick={onSluiten} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
             Sluiten
           </button>
         )}
