@@ -1,16 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { willekeurigeOpties } from "@/game/improvements";
+import { CATEGORIE_LABELS, willekeurigeOpties } from "@/game/improvements";
 import { Categorie, Improvement, Layer } from "@/game/types";
-
-const CATEGORIE_LABELS: Record<Categorie, string> = {
-  economisch: "Economisch",
-  wetenschappelijk: "Wetenschappelijk",
-  militair: "Militair",
-  civiel: "Civiel",
-  cultureel: "Cultureel",
-};
 
 const CATEGORIEEN = Object.keys(CATEGORIE_LABELS) as Categorie[];
 
@@ -89,11 +81,11 @@ interface BouwPopupProps {
 // Bouw-pop-up (hoofdstuk 11): verschijnt over de kaart bij het begin van elke
 // beurt en dwingt de vaste twee-staps-keuze af — eerst een categorie, dan 2-3
 // willekeurige concrete opties binnen die categorie. De speler kiest
-// hoogstens 1 improvement per beurt (of sluit de pop-up zonder te bouwen);
-// daarna verdwijnt hij tot de volgende beurt (zie `bouwKeuzeGedaanDitBeurt`
-// in GameState). Plaatst de gekozen improvement automatisch op de
-// eerstvolgende lege tile van de actieve laag — tile-selectie op het canvas
-// zelf valt buiten de scope van deze taak.
+// hoogstens 1 improvement per beurt (of sluit de pop-up zonder te bouwen).
+// Na het kiezen van een concrete improvement neemt GameRoot het over: de
+// pop-up verdwijnt (zie `plaatsingsImprovement` in GameRoot) en de speler
+// wijst zelf een lege tile op de kaart aan om hem neer te zetten — pas dan
+// wordt `bouwKeuzeGedaanDitBeurt` gezet.
 export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }: BouwPopupProps) {
   const [gekozenCategorie, setGekozenCategorie] = useState<Categorie | null>(null);
   const [opties, setOpties] = useState<Improvement[]>([]);

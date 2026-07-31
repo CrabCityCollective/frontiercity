@@ -41,9 +41,12 @@ export function useGameEngine() {
     setState((huidig) => volgendeBeurtActie(huidig));
   }, []);
 
-  const startBouw = useCallback((laagHoogte: number, improvement: Improvement) => {
-    setState((huidig) => startBouwActie(huidig, laagHoogte, improvement));
-  }, []);
+  const startBouw = useCallback(
+    (laagHoogte: number, improvement: Improvement, positieInLaag: number) => {
+      setState((huidig) => startBouwActie(huidig, laagHoogte, improvement, positieInLaag));
+    },
+    []
+  );
 
   const sluitBouwKeuze = useCallback(() => {
     setState((huidig) => sluitBouwKeuzeActie(huidig));

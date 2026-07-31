@@ -503,24 +503,26 @@ export function confrontatie(state: GameState): GameState {
   return { ...state, lagen, laatsteConfrontatie };
 }
 
-// Start de bouw van een land improvement op de eerstvolgende lege tile van
-// de gegeven laag. Geeft de ongewijzigde status terug als er geen lege tile is.
-// Verbruikt altijd de bouwkeuze van deze beurt (hoofdstuk 11: hoogstens 1
-// bouwkeuze per beurt) — dit is de enige manier waarop de speler via de
-// bouw-pop-up een improvement kiest.
+// Start de bouw van een land improvement op de tile die de speler zelf heeft
+// aangewezen (klik-op-tile plaatsing, zie GameRoot: `plaatsingsImprovement`).
+// Geeft de ongewijzigde status terug als die tile niet (meer) leeg is — de
+// aanroeper controleert dit al vóór het tonen van de "hier bouwen?"-vraag,
+// dit is een tweede, veilige check. Verbruikt altijd de bouwkeuze van deze
+// beurt (hoofdstuk 11: hoogstens 1 bouwkeuze per beurt).
 export function startBouw(
   state: GameState,
   laagHoogte: number,
-  improvement: Improvement
+  improvement: Improvement,
+  positieInLaag: number
 ): GameState {
   const lagen = state.lagen.map((laag) => {
     if (laag.hoogte !== laagHoogte) return laag;
 
-    const legeTileIndex = laag.tiles.findIndex((tile) => tile.status === "leeg");
-    if (legeTileIndex === -1) return laag;
+    const doelTile = laag.tiles[positieInLaag];
+    if (!doelTile || doelTile.status !== "leeg") return laag;
 
     const tiles = laag.tiles.map((tile, index) => {
-      if (index !== legeTileIndex) return tile;
+      if (index !== positieInLaag) return tile;
       return {
         ...tile,
         status: "in_aanbouw" as const,

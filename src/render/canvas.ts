@@ -627,6 +627,23 @@ function tekenTileGrid(
   ctx.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
 }
 
+// Markeert een lege tile als geldig plaatsingsdoel tijdens het kiezen van een
+// plek voor een gekozen improvement (klik-op-tile-plaatsing, zie GameRoot:
+// `plaatsingsImprovement`) — een gouden rand zodat duidelijk is waar je nog
+// mag klikken, zonder de tile-tekening zelf aan te passen.
+function tekenBeschikbaarMarkering(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number
+): void {
+  ctx.save();
+  ctx.strokeStyle = "rgba(230, 190, 90, 0.85)";
+  ctx.lineWidth = Math.max(2, size * 0.045);
+  ctx.strokeRect(x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, size - ctx.lineWidth, size - ctx.lineWidth);
+  ctx.restore();
+}
+
 function tekenActieveTile(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -683,7 +700,8 @@ export function tekenWereld(
   width: number,
   height: number,
   lagen: Layer[],
-  stad: City
+  stad: City,
+  plaatsingsLaagHoogte?: number
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalLagen = lagen.length;
@@ -709,6 +727,10 @@ export function tekenWereld(
       }
 
       tekenTileGrid(ctx, x, y, tileSize);
+
+      if (laag.hoogte === plaatsingsLaagHoogte && laag.tiles[col].status === "leeg") {
+        tekenBeschikbaarMarkering(ctx, x, y, tileSize);
+      }
     }
   }
 }

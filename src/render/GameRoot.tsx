@@ -1,11 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import BouwPopup from "@/components/BouwPopup";
 import GroeiPaneel from "@/components/GroeiPaneel";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import MilitairPaneel from "@/components/MilitairPaneel";
 import ResourceHud from "@/components/ResourceHud";
+import TileInfoPopup from "@/components/TileInfoPopup";
 import { berekenLegerwaarde } from "@/game/economie";
+import { beschrijfTile } from "@/game/tileInfo";
+import { Improvement } from "@/game/types";
 import { useGameEngine } from "@/game/useGameEngine";
 import { hoogsteOntgrendeldeLaag } from "@/game/world";
 import GameCanvas from "./GameCanvas";
@@ -28,10 +32,60 @@ export default function GameRoot() {
     (laag) => laag.hoogte === hoogsteOntgrendeldeLaag(state.lagen)
   )!;
 
+  // Alle tiles zijn klikbaar (issue: "alle tiles klikbaar"): een klik zet de
+  // aangeklikte tile hier, en TileInfoPopup toont er de naam/soort/korte
+  // bouwmogelijkheden van via `beschrijfTile`.
+  const [geselecteerdeTile, setGeselecteerdeTile] = useState<{
+    hoogte: number;
+    positieInLaag: number;
+  } | null>(null);
+
+  // Twee-staps bouwplaatsing: eerst kiest de speler een concrete improvement
+  // in de bouw-pop-up (BouwPopup roept `onBouwStarten` daarvoor aan), daarna
+  // wijst hij zelf een lege tile aan door erop te klikken — de daadwerkelijke
+  // plaatsing (`startBouw`) gebeurt pas als hij dat bevestigt met "Okee".
+  const [plaatsingsImprovement, setPlaatsingsImprovement] = useState<Improvement | null>(null);
+
+  // Een onafgeronde plaatsing (improvement gekozen, nog geen tile bevestigd)
+  // hoort niet de volgende beurt te overleven — anders zou de speler een
+  // improvement uit een vorige beurt op een nieuwe frontier-laag kunnen
+  // neerzetten.
+  useEffect(() => {
+    setPlaatsingsImprovement(null);
+    setGeselecteerdeTile(null);
+  }, [state.beurt]);
+
+  const geselecteerdeLaag = geselecteerdeTile
+    ? state.lagen.find((laag) => laag.hoogte === geselecteerdeTile.hoogte)
+    : undefined;
+
+  const tileInfo =
+    geselecteerdeTile && geselecteerdeLaag
+      ? beschrijfTile(geselecteerdeLaag, state.lagen, state.stad, geselecteerdeTile.positieInLaag)
+      : null;
+
+  const isGeldigPlaatsingsDoel =
+    plaatsingsImprovement !== null &&
+    geselecteerdeTile !== null &&
+    geselecteerdeTile.hoogte === actieveLaag.hoogte &&
+    actieveLaag.tiles[geselecteerdeTile.positieInLaag]?.status === "leeg";
+
+  function bevestigBouw() {
+    if (!plaatsingsImprovement || !geselecteerdeTile) return;
+    startBouw(geselecteerdeTile.hoogte, plaatsingsImprovement, geselecteerdeTile.positieInLaag);
+    setPlaatsingsImprovement(null);
+    setGeselecteerdeTile(null);
+  }
+
   return (
     <div className="game-viewport">
       <div className="game-scroll-area">
-        <GameCanvas lagen={state.lagen} stad={state.stad} />
+        <GameCanvas
+          lagen={state.lagen}
+          stad={state.stad}
+          plaatsingsLaagHoogte={plaatsingsImprovement ? actieveLaag.hoogte : undefined}
+          onTileClick={(hoogte, positieInLaag) => setGeselecteerdeTile({ hoogte, positieInLaag })}
+        />
         <LaagIntroPaneel lagen={state.lagen} />
         <GroeiPaneel state={state} onStartGroei={startGroei} />
         <MilitairPaneel
@@ -43,9 +97,16 @@ export default function GameRoot() {
         />
         <BouwPopup
           laag={actieveLaag}
-          zichtbaar={!state.bouwKeuzeGedaanDitBeurt}
-          onBouwStarten={(improvement) => startBouw(actieveLaag.hoogte, improvement)}
+          zichtbaar={!state.bouwKeuzeGedaanDitBeurt && !plaatsingsImprovement}
+          onBouwStarten={(improvement) => setPlaatsingsImprovement(improvement)}
           onSluiten={sluitBouwKeuze}
+        />
+        <TileInfoPopup
+          tileInfo={tileInfo}
+          bouwVraag={isGeldigPlaatsingsDoel ? { improvementNaam: plaatsingsImprovement!.naam } : undefined}
+          onBevestigBouw={bevestigBouw}
+          onAnnuleerBouw={() => setGeselecteerdeTile(null)}
+          onSluiten={() => setGeselecteerdeTile(null)}
         />
       </div>
       <ResourceHud state={state} onVolgendeBeurt={volgendeBeurt} />
