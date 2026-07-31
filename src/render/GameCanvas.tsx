@@ -78,7 +78,21 @@ export default function GameCanvas({ lagen, stad, plaatsingsLaagHoogte, onTileCl
       // vaste tutorial-totaal (issue: "onontdekte tegels weg" hierboven).
       height={TILE_SIZE * (lagen.length + 1)}
       onClick={handleClick}
-      style={{ display: "block", background: "#1a1410", cursor: "pointer" }}
+      // width/height hierboven blijven de canvas-resolutie (en dus de
+      // klik-geometrie in `bepaalAangeklikteTile`, die zelf al corrigeert
+      // voor een afwijkende CSS-grootte). De CSS-grootte hieronder schaalt de
+      // band mee naar smalle (mobiele) viewports i.p.v. buiten beeld te
+      // schuiven — `maxWidth` voorkomt alleen dat 'm op brede schermen
+      // wazig wordt opgerekt.
+      style={{
+        display: "block",
+        background: "#1a1410",
+        cursor: "pointer",
+        width: "100%",
+        height: "auto",
+        maxWidth: `${TILE_SIZE * BAND_WIDTH_TILES}px`,
+        margin: "0 auto",
+      }}
     />
   );
 }

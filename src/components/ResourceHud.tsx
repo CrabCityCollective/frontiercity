@@ -25,30 +25,22 @@ export default function ResourceHud({ state, onVolgendeBeurt }: ResourceHudProps
       : `Cultuur: ${state.cultuur} (alle lagen ontgrendeld)`;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "1.25rem",
-        padding: "0.75rem 1rem",
-        background: "linear-gradient(180deg, var(--kleur-aarde-paneel), var(--kleur-aarde-donker))",
-        color: "var(--kleur-tekst)",
-        fontSize: "0.9rem",
-        borderTop: "3px solid var(--kleur-oker)",
-        boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.45)",
-      }}
-    >
-      {(Object.keys(MATERIAAL_LABELS) as MateriaalType[]).map((type) => (
-        <span key={type}>
-          {MATERIAAL_LABELS[type]}: {state.voorraad[type]} / {state.opslagCap}
-        </span>
-      ))}
-      <span>Voedsel: {state.voedsel}</span>
-      <span>{cultuurLabel}</span>
-      <span style={{ marginLeft: "auto" }}>Beurt: {state.beurt}</span>
-      <button className="fc-knop" onClick={onVolgendeBeurt} style={{ padding: "0.35rem 0.75rem" }}>
-        Volgende beurt
-      </button>
+    <div className="resource-hud">
+      <div className="resource-hud__items">
+        {(Object.keys(MATERIAAL_LABELS) as MateriaalType[]).map((type) => (
+          <span key={type}>
+            {MATERIAAL_LABELS[type]}: {state.voorraad[type]} / {state.opslagCap}
+          </span>
+        ))}
+        <span>Voedsel: {state.voedsel}</span>
+        <span>{cultuurLabel}</span>
+      </div>
+      <div className="resource-hud__beurt">
+        <span>Beurt: {state.beurt}</span>
+        <button className="fc-knop" onClick={onVolgendeBeurt} style={{ padding: "0.35rem 0.75rem" }}>
+          Volgende beurt
+        </button>
+      </div>
     </div>
   );
 }
