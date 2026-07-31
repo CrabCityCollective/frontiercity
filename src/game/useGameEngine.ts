@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   bevestigIneenstorting as bevestigIneenstortingActie,
   confrontatie as confrontatieActie,
@@ -18,19 +18,15 @@ import { Improvement } from "./types";
 // de MVP-omvang — één useState met pure update-functies uit economie.ts.
 //
 // Save/load (M9, hoofdstuk 13; issue: "niet automatisch opslaan, maar bewust
-// via een menu"): de initiële render start altijd met een verse spelstatus,
-// óók in de browser — zo blijft server- en client-render identiek (geen
-// hydration mismatch). Pas ná mount wordt, uitsluitend op de client, een
-// eventuele bewaarde run ingeladen (hervatten waar je gebleven was). Daarna
-// gebeurt opslaan/laden alleen nog bewust via `opslaan`/`laden` hieronder —
-// geen autosave-effect meer dat bij elke state-wijziging wegschrijft.
+// via een menu"): elke keer dat de tutorial start (GameRoot mount, zie
+// AppRoot) begint de run bij het begin, met een verse spelstatus — ook als er
+// een bewaarde run klaarstaat (issue: "als je op SpelVerlaten hebt geklikt en
+// daarna opnieuw de tutorial begint, dat je dan helemaal bij het begin
+// begint"). Een bewaarde run wordt uitsluitend teruggehaald als de speler
+// zelf bewust op "Spel laden" drukt (`laden` hieronder) — geen automatisch
+// laden bij mount.
 export function useGameEngine() {
   const [state, setState] = useState(maakInitieleSpelStatus);
-
-  useEffect(() => {
-    const opgeslagenStatus = laadSpel();
-    if (opgeslagenStatus) setState(opgeslagenStatus);
-  }, []);
 
   const opslaan = useCallback(() => {
     saveSpel(state);
