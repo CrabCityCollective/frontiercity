@@ -3,7 +3,7 @@
 // verandert geen spelstatus, dus hoort hier naast de andere pure
 // game-logica-modules in plaats van in een component.
 
-import { CATEGORIE_LABELS } from "./improvements";
+import { CATEGORIE_LABELS, TERREIN_LABELS } from "./improvements";
 import { City, Improvement, Layer } from "./types";
 import { isVooruitkijkLaag } from "./world";
 
@@ -85,8 +85,9 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
 
   return {
     titel: "Leeg vakje",
-    ondertitel: laag.terreinType,
-    tekst: "Hier kun je een improvement bouwen. Kies een categorie in de bouw-pop-up (economisch, cultureel of militair) om te zien wat je hier kunt neerzetten.",
+    ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
+    tekst:
+      "Hier kun je een improvement bouwen. Kies een categorie in de bouw-pop-up (economisch, cultureel of militair) om te zien wat je hier kunt neerzetten. Sommige improvements hebben een terrein-eis: houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond.",
   };
 }
 

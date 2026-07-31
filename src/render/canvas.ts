@@ -8,7 +8,7 @@
 // canvas-renderpijplijn, maar met gelaagde, geschilderde texturen in plaats
 // van platte kleurvlakken.
 
-import { City, Layer, Tile } from "@/game/types";
+import { City, Layer, TerreinType, Tile } from "@/game/types";
 import { BAND_WIDTH_TILES, isVooruitkijkLaag } from "@/game/world";
 
 export { BAND_WIDTH_TILES };
@@ -660,6 +660,46 @@ function tekenBouwSteiger(ctx: CanvasRenderingContext2D, x: number, y: number, s
   }
 }
 
+// Zachte hint van het vakje-terreinsubtype op een nog onbebouwd vakje (issue:
+// "grotere verscheidenheid van tiles per laag") — laat vóór het bouwen al
+// zien of een vakje bos/heuvel/berg/vlak is, zodat de terrein-eis van een
+// improvement (zie improvements.ts: `terreinEisen`) ook zonder de tile-info-
+// pop-up herkenbaar is. `vlak` krijgt bewust geen extra vorm: dat is de
+// neutrale ondergrond zonder afwijkend silhouet.
+function tekenTerreinHint(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  terrein: TerreinType,
+  seed: number
+): void {
+  if (terrein === "vlak") return;
+
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+
+  if (terrein === "bos") {
+    const rng = maakSeededRandom(seed);
+    tekenBoom(ctx, x + size * 0.5, y + size * 0.74, size * 0.36, rng() > 0.5);
+  } else {
+    const baseY = y + size * 0.78;
+    const h = size * (terrein === "berg" ? 0.36 : 0.24);
+    ctx.fillStyle = terrein === "berg" ? "#8f8f88" : "#7a6a4a";
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.5, baseY - h);
+    ctx.lineTo(x + size * 0.74, baseY);
+    ctx.lineTo(x + size * 0.26, baseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(40, 34, 24, 0.4)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 function tekenTileGrid(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -734,6 +774,11 @@ function tekenActieveTile(
 
   if (tile.status === "in_aanbouw") {
     tekenBouwSteiger(ctx, x, y, size);
+    return;
+  }
+
+  if (tile.status === "leeg") {
+    tekenTerreinHint(ctx, x, y, size, tile.terrein, seed);
   }
 }
 

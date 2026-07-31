@@ -8,6 +8,11 @@ interface TileInfoPopupProps {
   // geldig doel voor is, tonen we naast de tile-info ook de "hier bouwen?"
   // bevestigingsvraag (zie GameRoot: `plaatsingsImprovement`).
   bouwVraag?: { improvementNaam: string };
+  // Gezet in plaats van `bouwVraag` als de aangeklikte tile leeg is maar niet
+  // aan de terrein-eis van de gekozen improvement voldoet (issue: "houtkap
+  // alleen op bos" e.d.) — legt uit waarom hier niet gebouwd kan worden i.p.v.
+  // stilzwijgend de bevestigingsvraag weg te laten.
+  terreinWaarschuwing?: string;
   onBevestigBouw: () => void;
   onAnnuleerBouw: () => void;
   onSluiten: () => void;
@@ -21,6 +26,7 @@ interface TileInfoPopupProps {
 export default function TileInfoPopup({
   tileInfo,
   bouwVraag,
+  terreinWaarschuwing,
   onBevestigBouw,
   onAnnuleerBouw,
   onSluiten,
@@ -78,7 +84,20 @@ export default function TileInfoPopup({
           </>
         )}
 
-        {!bouwVraag && (
+        {!bouwVraag && terreinWaarschuwing && (
+          <>
+            <p style={{ margin: "0.25rem 0 0", color: "var(--kleur-oker)" }}>{terreinWaarschuwing}</p>
+            <button
+              className="fc-knop"
+              onClick={onAnnuleerBouw}
+              style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+            >
+              Ander vakje kiezen
+            </button>
+          </>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && (
           <button className="fc-knop" onClick={onSluiten} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
             Sluiten
           </button>

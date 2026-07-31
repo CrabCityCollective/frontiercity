@@ -26,7 +26,7 @@ const BEURT_UITLEG: Record<number, UitlegContent> = {
   3: {
     titel: "Waar improvements voor dienen",
     tekst:
-      "Land-improvements op de vakjes rond de stad leveren elke beurt grondstoffen, voedsel of cultuur op, zolang de grond niet uitgeput raakt. Improvements in de stad zelf werken anders: zij geven de stad blijvende voordelen.",
+      "Land-improvements op de vakjes rond de stad leveren elke beurt grondstoffen, voedsel of cultuur op, zolang de grond niet uitgeput raakt. Improvements in de stad zelf werken anders: zij geven de stad blijvende voordelen. Niet elk vakje is hetzelfde: houtkap kan alleen op bos, een mijn alleen op heuvel of berg, en een boerderij alleen op vlakke grond.",
   },
 };
 

@@ -35,7 +35,7 @@
 // (hoofdstuk 14) — de waarden hieronder zijn bewuste MVP-placeholders, geen
 // definitieve balans.
 
-import { SOLDAAT, WOONWIJK } from "./improvements";
+import { improvementPastOpTerrein, SOLDAAT, WOONWIJK } from "./improvements";
 import { City, ConfrontatieResultaat, GameState, Improvement, MateriaalType, ResourceType, Tile } from "./types";
 import {
   cultuurKostenVoorLaag,
@@ -539,10 +539,11 @@ export function confrontatie(state: GameState): GameState {
 
 // Start de bouw van een land improvement op de tile die de speler zelf heeft
 // aangewezen (klik-op-tile plaatsing, zie GameRoot: `plaatsingsImprovement`).
-// Geeft de ongewijzigde status terug als die tile niet (meer) leeg is — de
-// aanroeper controleert dit al vóór het tonen van de "hier bouwen?"-vraag,
-// dit is een tweede, veilige check. Verbruikt altijd de bouwkeuze van deze
-// beurt (hoofdstuk 11: hoogstens 1 bouwkeuze per beurt).
+// Geeft de ongewijzigde status terug als die tile niet (meer) leeg is, of als
+// het terrein niet aan de eis van de improvement voldoet (issue: "houtkap
+// alleen op bos" e.d.) — de aanroeper controleert dit al vóór het tonen van
+// de "hier bouwen?"-vraag, dit is een tweede, veilige check. Verbruikt altijd
+// de bouwkeuze van deze beurt (hoofdstuk 11: hoogstens 1 bouwkeuze per beurt).
 export function startBouw(
   state: GameState,
   laagHoogte: number,
@@ -554,6 +555,7 @@ export function startBouw(
 
     const doelTile = laag.tiles[positieInLaag];
     if (!doelTile || doelTile.status !== "leeg") return laag;
+    if (!improvementPastOpTerrein(improvement, doelTile.terrein)) return laag;
 
     const tiles = laag.tiles.map((tile, index) => {
       if (index !== positieInLaag) return tile;

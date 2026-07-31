@@ -18,6 +18,14 @@ export type Categorie =
   | "civiel"
   | "cultureel";
 
+// Terrein-subtype van een los vakje binnen een laag (issue: "grotere
+// verscheidenheid van tiles per laag"). Een laag heeft daarnaast nog steeds
+// een eigen `terreinType`-label (hieronder, op `Layer`) voor de sfeer/flavor
+// (bv. "loofbos"), maar de 9 losse vakjes binnen die laag kunnen onderling
+// verschillen — dat verschil bepaalt welke land improvements er geplaatst
+// mogen worden (zie `Improvement.terreinEisen`).
+export type TerreinType = "vlak" | "bos" | "heuvel" | "berg";
+
 export interface EffectDefinition {
   type: string;
   resource?: ResourceType;
@@ -35,10 +43,21 @@ export interface Improvement {
   effect: EffectDefinition;
   zeldzaamheid?: "gewoon" | "rijk" | "legendarisch";
   uitputtingBeurten?: number;
+  // Welke vakje-terreintypes deze (land-)improvement toestaan (issue:
+  // "houtkap alleen op bos", "mijn alleen op heuvel/berg", "boerderij alleen
+  // op vlakke grond"). `undefined`/leeg = geen terrein-eis, overal plaatsbaar
+  // (bv. de meeste city/unit-improvements). Alleen relevant voor
+  // `soort: "land"`.
+  terreinEisen?: TerreinType[];
 }
 
 export interface Tile {
   positieInLaag: number; // 0-8, 4 = centrum/stad
+  // Vast, niet-procedureel terrein-subtype van dit specifieke vakje (zie
+  // `TerreinType` hierboven) — bepaalt welke land improvements hier geplaatst
+  // mogen worden. Elk vakje heeft er één, ook het stad-vakje (ongebruikt voor
+  // plaatsingslogica, maar houdt het veld overal aanwezig i.p.v. optioneel).
+  terrein: TerreinType;
   improvement?: Improvement;
   status: "leeg" | "in_aanbouw" | "actief" | "ghost_town";
   beurtenTotUitputting?: number;
