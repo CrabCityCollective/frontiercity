@@ -10,17 +10,19 @@ import IntroScherm from "@/components/IntroScherm";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import LaagPopup from "@/components/LaagPopup";
 import MilitairPaneel from "@/components/MilitairPaneel";
+import MilitairUitlegPopup from "@/components/MilitairUitlegPopup";
 import ResourceHud from "@/components/ResourceHud";
 import SpelActiesMenu from "@/components/SpelActiesMenu";
 import TileInfoPopup from "@/components/TileInfoPopup";
+import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
 import UitlegPopup from "@/components/UitlegPopup";
 import { berekenHistorieStatistieken, berekenLegerwaarde } from "@/game/economie";
-import { heeftOpgeslagenSpel } from "@/game/save";
+import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { AFSLUITENDE_UITLEG_BEURT } from "@/game/uitlegContent";
 import { useGameEngine } from "@/game/useGameEngine";
-import { hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
+import { TUTORIAL_LAAG_AANTAL, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
 import GameCanvas from "./GameCanvas";
 
 interface GameRootProps {
@@ -85,6 +87,13 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // `laatstBevestigdeLaag`: zodra de speler doorklikt, staat de huidige beurt
   // vast als bevestigd zodat dezelfde pop-up niet nogmaals verschijnt.
   const [laatstBevestigdeUitlegBeurt, setLaatstBevestigdeUitlegBeurt] = useState(0);
+
+  // Militaire-uitleg-pop-up en tutorial-voltooid-pop-up (issue: "pop-up met
+  // uitleg over de militaire confrontatie" + "pop-up met summary na het
+  // halen ervan"): allebei eenmalige confirm-vlaggen per sessie, zelfde
+  // patroon als `laatstBevestigdeLaag` hierboven.
+  const [militairUitlegBevestigd, setMilitairUitlegBevestigd] = useState(false);
+  const [tutorialVoltooidBevestigd, setTutorialVoltooidBevestigd] = useState(false);
   // Bouwen gebeurt op de huidige frontier-laag: de hoogste ontgrendelde laag
   // (M5: welke laag dat is, verandert zodra cultuur een nieuwe laag ontgrendelt).
   const actieveLaag = state.lagen.find(
@@ -159,6 +168,20 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   const toonLaagPopup = actieveLaag.hoogte > laatstBevestigdeLaag;
   const toonUitlegPopup =
     !toonLaagPopup && state.beurt > laatstBevestigdeUitlegBeurt && state.beurt <= AFSLUITENDE_UITLEG_BEURT;
+  // Militaire-uitleg direct na de laag-pop-up van laag 12 (issue: "als je op
+  // het laatst in de tutorial bij de militaire confrontatie bent, uitleg
+  // over hoe je het moet aanpakken").
+  const toonMilitairUitlegPopup =
+    !toonLaagPopup && !toonUitlegPopup && actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL && !militairUitlegBevestigd;
+  // Tutorial-voltooid-samenvatting zodra de confrontatie op laag 12 gewonnen
+  // is (issue: "pop-up met summary wat je geleerd hebt").
+  const toonTutorialVoltooidPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonMilitairUitlegPopup &&
+    actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
+    state.laatsteConfrontatie?.gewonnen === true &&
+    !tutorialVoltooidBevestigd;
 
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
@@ -197,12 +220,28 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
         {toonLaagPopup && (
           <LaagPopup hoogte={actieveLaag.hoogte} onDoorgaan={() => setLaatstBevestigdeLaag(actieveLaag.hoogte)} />
         )}
+        {toonMilitairUitlegPopup && <MilitairUitlegPopup onDoorgaan={() => setMilitairUitlegBevestigd(true)} />}
         {toonUitlegPopup && (
           <UitlegPopup beurt={state.beurt} onDoorgaan={() => setLaatstBevestigdeUitlegBeurt(state.beurt)} />
         )}
+        {toonTutorialVoltooidPopup && (
+          <TutorialVoltooidPopup
+            onDoorgaan={() => {
+              markeerTutorialVoltooid();
+              setTutorialVoltooidBevestigd(true);
+            }}
+          />
+        )}
         <BouwPopup
           laag={actieveLaag}
-          zichtbaar={!toonLaagPopup && !toonUitlegPopup && !state.bouwKeuzeGedaanDitBeurt && !plaatsingsImprovement}
+          zichtbaar={
+            !toonLaagPopup &&
+            !toonUitlegPopup &&
+            !toonMilitairUitlegPopup &&
+            !toonTutorialVoltooidPopup &&
+            !state.bouwKeuzeGedaanDitBeurt &&
+            !plaatsingsImprovement
+          }
           onBouwStarten={(improvement) => setPlaatsingsImprovement(improvement)}
           onSluiten={sluitBouwKeuze}
         />

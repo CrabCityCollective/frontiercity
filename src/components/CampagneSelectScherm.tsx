@@ -1,5 +1,7 @@
 "use client";
 
+import { heeftTutorialVoltooid } from "@/game/save";
+
 interface Campagne {
   naam: string;
   ondertitel: string;
@@ -72,6 +74,15 @@ export default function CampagneSelectScherm({ onKiesTutorial }: CampagneSelectS
           >
             <strong className="fc-heading" style={{ fontSize: "1.1rem" }}>
               {campagne.naam}
+              {campagne.beschikbaar && heeftTutorialVoltooid() && (
+                <span
+                  aria-label="Voltooid"
+                  title="Voltooid — nog altijd opnieuw te spelen"
+                  style={{ marginLeft: "0.5rem", color: "var(--kleur-mos)" }}
+                >
+                  ✓
+                </span>
+              )}
             </strong>
             <div style={{ color: "var(--kleur-tekst-gedempt)", marginTop: "0.25rem" }}>
               {campagne.ondertitel}
