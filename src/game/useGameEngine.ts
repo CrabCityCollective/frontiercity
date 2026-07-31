@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   confrontatie as confrontatieActie,
   maakInitieleSpelStatus,
+  sluitBouwKeuze as sluitBouwKeuzeActie,
   startBouw as startBouwActie,
   startGroei as startGroeiActie,
   startRecrutering as startRecruteringActie,
@@ -44,6 +45,10 @@ export function useGameEngine() {
     setState((huidig) => startBouwActie(huidig, laagHoogte, improvement));
   }, []);
 
+  const sluitBouwKeuze = useCallback(() => {
+    setState((huidig) => sluitBouwKeuzeActie(huidig));
+  }, []);
+
   const startGroei = useCallback(() => {
     setState((huidig) => startGroeiActie(huidig));
   }, []);
@@ -56,5 +61,13 @@ export function useGameEngine() {
     setState((huidig) => confrontatieActie(huidig));
   }, []);
 
-  return { state, volgendeBeurt, startBouw, startGroei, startRecrutering, confrontatie };
+  return {
+    state,
+    volgendeBeurt,
+    startBouw,
+    sluitBouwKeuze,
+    startGroei,
+    startRecrutering,
+    confrontatie,
+  };
 }

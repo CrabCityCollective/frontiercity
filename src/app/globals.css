@@ -6,16 +6,30 @@ html,
 body {
   margin: 0;
   padding: 0;
+  height: 100%;
   background: #100d0a;
   color: #c9b896;
   font-family: system-ui, sans-serif;
 }
 
 main {
-  min-height: 100vh;
+  height: 100vh;
+  display: block;
+  overflow: hidden;
+}
+
+/* Schermvullende kolom (zie GameRoot): scrollend speelveld erboven, de
+   grondstoffenbalk als vaste footer eronder, zodat de stad meteen in beeld
+   staat en de balk nooit wegscrollt. */
+.game-viewport {
+  height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: auto;
-  padding: 16px;
+  flex-direction: column;
+}
+
+.game-scroll-area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
