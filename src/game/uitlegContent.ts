@@ -14,14 +14,14 @@ export interface UitlegContent {
 
 const BEURT_UITLEG: Record<number, UitlegContent> = {
   1: {
-    titel: "Grondstoffen",
-    tekst:
-      "Onderaan het scherm staat de voorraad van het Hertenpad-volk: hout, steen en erts om mee te bouwen, voedsel om te groeien, cultuur om nieuwe grond te ontgrendelen. Alles wat je bouwt, kost een deel van die voorraad.",
-  },
-  2: {
     titel: "Improvements bouwen",
     tekst:
       "Elke beurt kies je eerst een categorie, dan één concrete improvement uit twee of drie opties. Bouwen kost grondstoffen en een aantal beurten voordat hij klaar is. Daarna wijs je zelf een leeg vakje aan om hem neer te zetten.",
+  },
+  2: {
+    titel: "Grondstoffen",
+    tekst:
+      "Onderaan het scherm staat de voorraad van het Hertenpad-volk: hout, steen en erts om mee te bouwen, voedsel om te groeien, cultuur om nieuwe grond te ontgrendelen. Alles wat je bouwt, kost een deel van die voorraad.",
   },
   3: {
     titel: "Waar improvements voor dienen",
