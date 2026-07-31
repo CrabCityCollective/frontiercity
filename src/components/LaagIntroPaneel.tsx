@@ -10,11 +10,12 @@ interface LaagIntroPaneelProps {
 
 // Tutorial-content (M8, hoofdstuk 10): toont de naam van de huidige
 // frontier-laag (de hoogst ontgrendelde), plus welk mechaniek deze laag in de
-// vastgelegde volgorde introduceert. De flavor-tekst zelf staat alleen nog in
-// LaagPopup (issue: popup bij een nieuwe laag bevat de flavor-tekst, dit
-// blokje onderaan alleen de laag en wat er nieuw is). Zodra laag 12
-// ontgrendeld is, komt de afsluitende scène erbij (hoofdstuk 10: "Na laag 12:
-// afsluitende scène"). Puur placeholder-styling — geen definitieve UI.
+// vastgelegde volgorde introduceert. De flavor-tekst zelf staat uitsluitend
+// in LaagPopup (issue: popup bij een nieuwe laag bevat laag/naam, wat er
+// nieuw is én de flavor-tekst; dit blokje onderaan herhaalt alleen de laag en
+// wat er nieuw is, zonder flavor-tekst). Zodra laag 12 ontgrendeld is, komt
+// de afsluitende scène erbij (hoofdstuk 10: "Na laag 12: afsluitende
+// scène"). Puur placeholder-styling — geen definitieve UI.
 export default function LaagIntroPaneel({ lagen }: LaagIntroPaneelProps) {
   const hoogte = hoogsteOntgrendeldeLaag(lagen);
   const content = laagContent(hoogte);
