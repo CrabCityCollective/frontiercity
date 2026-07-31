@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { INTRO_FLAVOR_TEKST, INTRO_SUBTITEL, INTRO_TITEL } from "@/game/tutorialContent";
-import { SFEER_BREEDTE, SFEER_HOOGTE, tekenIntroSfeer } from "@/render/sfeerScenes";
 
 interface IntroSchermProps {
   onBeginnen: () => void;
@@ -14,15 +12,6 @@ interface IntroSchermProps {
 // speler bevestigt — daarna blijft dat bevestigd (zie save.ts
 // `markeerIntroGezien`), zodat een reload niet elke keer opnieuw opent.
 export default function IntroScherm({ onBeginnen }: IntroSchermProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!ctx || !canvas) return;
-    tekenIntroSfeer(ctx, canvas.width, canvas.height);
-  }, []);
-
   return (
     <div
       style={{
@@ -40,10 +29,10 @@ export default function IntroScherm({ onBeginnen }: IntroSchermProps) {
         zIndex: 100,
       }}
     >
-      <canvas
-        ref={canvasRef}
-        width={SFEER_BREEDTE}
-        height={SFEER_HOOGTE}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/scenes/intro.jpg"
+        alt=""
         style={{ width: "100%", maxWidth: "720px", height: "auto", display: "block" }}
       />
       <div style={{ textAlign: "center", maxWidth: "540px" }}>
