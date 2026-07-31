@@ -8,12 +8,13 @@ import HoofdMenu from "@/components/HoofdMenu";
 import IneenstortingScherm from "@/components/IneenstortingScherm";
 import IntroScherm from "@/components/IntroScherm";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
+import LaagPopup from "@/components/LaagPopup";
 import MilitairPaneel from "@/components/MilitairPaneel";
 import ResourceHud from "@/components/ResourceHud";
 import SpelActiesMenu from "@/components/SpelActiesMenu";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import { berekenHistorieStatistieken, berekenLegerwaarde } from "@/game/economie";
-import { heeftIntroGezien, heeftOpgeslagenSpel, markeerIntroGezien } from "@/game/save";
+import { heeftOpgeslagenSpel } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { useGameEngine } from "@/game/useGameEngine";
@@ -57,20 +58,23 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   const [toonMilitair, setToonMilitair] = useState(false);
   const [toonHistorie, setToonHistorie] = useState(false);
 
-  // Introscherm (issue: "intro en game over scherm"): start op `true` zodat
-  // server- en eerste client-render gelijk blijven (geen hydration mismatch,
-  // zelfde reden als de save/load-aanpak in useGameEngine), en wordt pas ná
-  // mount verlaagd als deze browser de intro al eerder bevestigd heeft.
+  // Introscherm (issue: "intro en game over scherm"): getoond bij elke start
+  // van de tutorial vanuit het menu — niet slechts één keer per browser, zodat
+  // de speler 'm ook ziet als hij de tutorial via het campagnemenu opnieuw
+  // opstart (issue: "als ik de tutorial aanklik vanuit het menu, zie ik het
+  // introscherm niet meer").
   const [toonIntro, setToonIntro] = useState(true);
 
-  useEffect(() => {
-    if (heeftIntroGezien()) setToonIntro(false);
-  }, []);
-
   function bevestigIntro() {
-    markeerIntroGezien();
     setToonIntro(false);
   }
+
+  // Laag-popup (issue: "als je naar een nieuwe laag gaat, een popup vóór het
+  // bouwcategorie-schermpje"): zodra de hoogst ontgrendelde laag verder komt
+  // dan de laatst bevestigde, blokkeert deze popup de bouw-pop-up totdat de
+  // speler 'm wegklikt. Begint op 1 (de startlaag, al geïntroduceerd via
+  // IntroScherm) zodat hij niet meteen bij de eerste laag verschijnt.
+  const [laatstBevestigdeLaag, setLaatstBevestigdeLaag] = useState(1);
   // Bouwen gebeurt op de huidige frontier-laag: de hoogste ontgrendelde laag
   // (M5: welke laag dat is, verandert zodra cultuur een nieuwe laag ontgrendelt).
   const actieveLaag = state.lagen.find(
@@ -142,6 +146,8 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     setGeselecteerdeTile(null);
   }
 
+  const toonLaagPopup = actieveLaag.hoogte > laatstBevestigdeLaag;
+
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -176,9 +182,12 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
             onConfrontatie={confrontatie}
           />
         )}
+        {toonLaagPopup && (
+          <LaagPopup hoogte={actieveLaag.hoogte} onDoorgaan={() => setLaatstBevestigdeLaag(actieveLaag.hoogte)} />
+        )}
         <BouwPopup
           laag={actieveLaag}
-          zichtbaar={!state.bouwKeuzeGedaanDitBeurt && !plaatsingsImprovement}
+          zichtbaar={!toonLaagPopup && !state.bouwKeuzeGedaanDitBeurt && !plaatsingsImprovement}
           onBouwStarten={(improvement) => setPlaatsingsImprovement(improvement)}
           onSluiten={sluitBouwKeuze}
         />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CATEGORIE_LABELS, willekeurigeOpties } from "@/game/improvements";
+import { beschikbareOpties, CATEGORIE_LABELS, willekeurigeOpties } from "@/game/improvements";
 import { Categorie, Improvement, Layer } from "@/game/types";
 
 const CATEGORIEEN = Object.keys(CATEGORIE_LABELS) as Categorie[];
@@ -144,22 +144,31 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
               Kies een categorie om deze beurt in te bouwen
             </strong>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-              {CATEGORIEEN.map((categorie) => (
-                <button
-                  key={categorie}
-                  className="fc-knop"
-                  onClick={() => kiesCategorie(categorie)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.4rem",
-                    padding: "0.35rem 0.75rem",
-                  }}
-                >
-                  <CategorieIcoon categorie={categorie} />
-                  {CATEGORIE_LABELS[categorie]}
-                </button>
-              ))}
+              {CATEGORIEEN.map((categorie) => {
+                // Uitgegrijsd (issue: "categorieën waarin je niks kunt bouwen
+                // uitgegrijsd") als er geen lege vakjes meer zijn, of als deze
+                // categorie geen nog-niet-gebouwde improvements meer heeft op
+                // deze laag.
+                const kanBouwen =
+                  legeTilesResterend > 0 && beschikbareOpties(categorie, reedsGebouwdeIds).length > 0;
+                return (
+                  <button
+                    key={categorie}
+                    className="fc-knop"
+                    disabled={!kanBouwen}
+                    onClick={() => kiesCategorie(categorie)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.4rem",
+                      padding: "0.35rem 0.75rem",
+                    }}
+                  >
+                    <CategorieIcoon categorie={categorie} />
+                    {CATEGORIE_LABELS[categorie]}
+                  </button>
+                );
+              })}
             </div>
             <button className="fc-knop" onClick={onSluiten} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
               Deze beurt niet bouwen
