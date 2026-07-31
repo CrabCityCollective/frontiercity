@@ -181,6 +181,7 @@ Na laag 12: afsluitende scène, opent het campagnemenu (alleen Amerikaanse front
 - Hoofdstuktitel: **"De Eerste Vuren"**
 - Stam van de speler: **Het Hertenpad-volk**
 - Mogelijke NPC-stam (indien nodig): Het Steenhoorn-volk / De Rivierwakers
+- Steden hebben, net als tribes, een eigen naam (los van de stam die er woont) — zichtbaar zodra je op de stad-tile klikt, en waar relevant terug te laten komen in flavor-teksten. Prehistorisch klinkende voorbeeldnamen, in de stijl van *De Stam van de Holenbeer*: **Holenrots**, **Vuurbron**, **Asvallei**. De eerste stad (het startkamp van het Hertenpad-volk) heet **Holenrots**. In de MVP is dit de enige stad; zodra meerdere steden/frontier-verplaatsing bestaat (post-MVP, hoofdstuk 13), kunnen de overige namen als volgende stadsnamen dienen — `City.naam` (hoofdstuk 13) ondersteunt dit al.
 
 ---
 
@@ -266,6 +267,7 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 - Eenvoudige militaire confrontatie (winkans-formule)
 - Placeholder-tegels (simpele, consistente stijl — geen definitieve pre-rendered assets nodig om te testen)
 - Alléén de tutorial-content (Het Hertenpad-volk, lagen 1-12) als speelbare inhoud
+- De stad heeft een zichtbare naam (**Holenrots**, zie hoofdstuk 10), te zien via een klik op de stad-tile — geen naam-generator voor toekomstige steden, dat komt pas met meerdere-steden-support
 
 **Nog niet in de MVP** (bewust uitgesteld tot de kernloop staat):
 - Meerdere steden/frontier-verplaatsing

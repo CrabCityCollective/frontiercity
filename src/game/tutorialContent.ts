@@ -24,7 +24,7 @@ export const TUTORIAL_LAAG_CONTENT: Record<number, LaagContent> = {
     naam: "De Oevervlakte",
     mechaniek: "Land improvement bouwen",
     flavorTekst:
-      "Water aan de ene kant, gras aan de andere. Hier zet het Hertenpad-volk de eerste palen in de grond.",
+      "Water aan de ene kant, gras aan de andere. Hier zet het Hertenpad-volk de eerste palen in de grond. Ze noemen de plek Holenrots.",
   },
   2: {
     naam: "Het Rietmoeras",
@@ -89,7 +89,7 @@ export const TUTORIAL_LAAG_CONTENT: Record<number, LaagContent> = {
 // tutorial-content is speelbaar, hoofdstuk 13) — deze tekst sluit de
 // tutorial-run zelf af, zonder naar een systeem te verwijzen dat nog niet bestaat.
 export const AFSLUITENDE_SCENE =
-  "Twaalf lagen boven de rivier staat het kamp waar het begon nog overeind. De vuren branden. Verder is er, voor nu, niets te zeggen.";
+  "Twaalf lagen boven de rivier staat Holenrots nog overeind. De vuren branden. Verder is er, voor nu, niets te zeggen.";
 
 export function laagContent(hoogte: number): LaagContent | undefined {
   return TUTORIAL_LAAG_CONTENT[hoogte];

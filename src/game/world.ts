@@ -51,8 +51,8 @@ function maakStartLaag(): Layer {
     positieInLaag: STAD_POSITIE,
     status: "actief",
     improvement: {
-      id: "hertenpad-kamp",
-      naam: "Het Hertenpad-kamp",
+      id: "holenrots",
+      naam: "Holenrots",
       categorie: "civiel",
       soort: "city",
       kosten: {},
