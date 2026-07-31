@@ -17,26 +17,29 @@ import { Improvement } from "./types";
 // React-hook rond de spelstatus (M3). Geen aparte state-library nodig voor
 // de MVP-omvang — één useState met pure update-functies uit economie.ts.
 //
-// Save/load (M9, hoofdstuk 13): de initiële render start altijd met een
-// verse spelstatus, óók in de browser — zo blijft server- en client-render
-// identiek (geen hydration mismatch). Pas ná mount wordt, uitsluitend op de
-// client, een eventuele bewaarde run ingeladen. `geladen` voorkomt dat de
-// autosave-effect hieronder die controle vóór is en de bestaande save
-// overschrijft met de verse status.
+// Save/load (M9, hoofdstuk 13; issue: "niet automatisch opslaan, maar bewust
+// via een menu"): de initiële render start altijd met een verse spelstatus,
+// óók in de browser — zo blijft server- en client-render identiek (geen
+// hydration mismatch). Pas ná mount wordt, uitsluitend op de client, een
+// eventuele bewaarde run ingeladen (hervatten waar je gebleven was). Daarna
+// gebeurt opslaan/laden alleen nog bewust via `opslaan`/`laden` hieronder —
+// geen autosave-effect meer dat bij elke state-wijziging wegschrijft.
 export function useGameEngine() {
   const [state, setState] = useState(maakInitieleSpelStatus);
-  const [geladen, setGeladen] = useState(false);
 
   useEffect(() => {
     const opgeslagenStatus = laadSpel();
     if (opgeslagenStatus) setState(opgeslagenStatus);
-    setGeladen(true);
   }, []);
 
-  useEffect(() => {
-    if (!geladen) return;
+  const opslaan = useCallback(() => {
     saveSpel(state);
-  }, [state, geladen]);
+  }, [state]);
+
+  const laden = useCallback(() => {
+    const opgeslagenStatus = laadSpel();
+    if (opgeslagenStatus) setState(opgeslagenStatus);
+  }, []);
 
   const volgendeBeurt = useCallback(() => {
     setState((huidig) => volgendeBeurtActie(huidig));
@@ -78,5 +81,7 @@ export function useGameEngine() {
     startRecrutering,
     confrontatie,
     bevestigIneenstorting,
+    opslaan,
+    laden,
   };
 }

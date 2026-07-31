@@ -16,5 +16,5 @@ export default function AppRoot() {
 
   if (scherm === "titel") return <TitelScherm onStart={() => setScherm("campagne")} />;
   if (scherm === "campagne") return <CampagneSelectScherm onKiesTutorial={() => setScherm("spel")} />;
-  return <GameRoot />;
+  return <GameRoot onVerlaten={() => setScherm("titel")} />;
 }
