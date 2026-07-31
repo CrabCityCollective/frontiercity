@@ -350,11 +350,71 @@ Elke milestone is bewust klein genoeg om als losse Claude Code-taak opgepakt te 
 
 ---
 
-## 14. Openstaande ontwerpvragen (nog te bepalen)
+## 14. Aanvullende uitwerkingen
 
-- Continent-lengte: exacte randomisatie-ranges per moeilijkheidsgraad.
-- Precieze cijfers: uitputtingssnelheid per land improvement-type, cultuurkosten per laag, opslag-cap-waarden, groei-tier-kosten.
-- Exacte kans-op-winst-formule voor militaire confrontaties.
-- Concrete mechanica van de "lange mars"-variant (Anker 3, na Terugvechten).
-- Volgorde/unlock-logica van de overige campagnes na de Amerikaanse frontier.
-- Ankerpunten en vertakkingen voor de overige campagne-ideeën (Mongools, Hellenistisch, Romeins, Bantu, Viking, Spaans, VOC, Siberisch).
+**Concrete balanscijfers (startpunt, te testen/tunen tijdens ontwikkeling)**
+
+*Continent-lengte (lagen oceaan-tot-oceaan), per moeilijkheidsgraad:*
+
+| Moeilijkheid | Lengte |
+|---|---|
+| Makkelijk | 20-25 lagen |
+| Normaal | 30-40 lagen |
+| Moeilijk | 45-60 lagen |
+
+Binnen de gekozen range wordt random getrokken; een bergengte/obstakel-zone wordt geplaatst tussen 40-70% van de lengte.
+
+*Uitputtingssnelheid (beurten tot volledig uitgeput):*
+
+| Type | Gewoon | Rijk | Legendarisch |
+|---|---|---|---|
+| Mijn (erts) | 8-12 | 5-8 | 20-25 (+ oogstvenster) |
+| Boerderij (voedsel) | 15-20 | 10-14 | 30-35 |
+| Houtkap (hout) | 12-16 (nooit volledig 0, wel afnemend) | 8-11 | 25-30 |
+| Steengroeve (steen) | 10-14 | 7-10 | 22-27 |
+
+*Cultuurkosten*: basis 50 punten voor laag 2, ×1,15 per volgende laag. Culturele pushback-lagen: ×2 van het normale bedrag.
+
+*Opslag-cap*: start op 30 (gedeeld voor hout/steen/erts/goud), elke opslagplaats-improvement +20, praktisch maximum ~3-4 opslagplaatsen per stad (~110 totaal).
+
+*Groei-tier kosten (voedsel)*: klein→middel = 100 voedsel + 5 beurten rijptijd; middel→groot = 250 voedsel + 8 beurten rijptijd.
+
+*Winkans-formule militaire confrontaties*:
+> Winkans = eigen legerwaarde / (eigen legerwaarde + vijand legerwaarde), geclampt tussen 10% en 90%.
+
+**Lange mars (Anker 3, na Terugvechten — Amerikaanse campagne)**
+- Uitgestrekt over 3-4 opeenvolgende lagen in plaats van één piekmoment.
+- Vooruitkijk-bereik tijdelijk teruggezet naar 0 extra lagen tijdens deze reeks.
+- Alle land improvements in deze lagen hebben standaard verlaagde opbrengst (het beschadigde land werkt door).
+- Geen nieuwe stad te stichten binnen deze reeks.
+- Zichtbare voorraadmeter (materiaal tegenover resterende lagen) i.p.v. een harde timer.
+- Bij te weinig voorraad aan het einde: geen instant game-over, maar een verzwakte aankomst (kleinere stad-status bij de oceaan, beïnvloedt slotscène/flavor) — consistent met "hard maar eerlijk" bij nederlagen.
+
+**Volgorde/unlock-logica overige campagnes**
+Na het voltooien van de Amerikaanse frontier-campagne worden alle overige campagnes **in één keer ontgrendeld** — geen verdere gedwongen volgorde, omdat er geen inhoudelijke leercurve-afhankelijkheid tussen de latere campagnes bestaat (in tegenstelling tot tutorial → Amerika). **Besloten: geen cross-campagne relic-bonussen of ander meta-progressiesysteem tussen campagnes** — elke campagne staat op zichzelf, om de rogue-like puurheid (elke run is een eigen uitdaging, zonder consolatieprijzen of stapelende voordelen) niet te verwateren.
+
+**Herbruikbaar ankersjabloon voor overige campagnes**
+Gebaseerd op hetzelfde 3-anker-ritme als de Amerikaanse campagne, generiek te vullen per campagne:
+
+| Anker | Universele functie | Toe te passen op |
+|---|---|---|
+| 1 (laag 8-10) | Eerste contact/keuze die een "spoor" achterlaat | Historisch passend eerste-contact-moment |
+| 2 (laag 16-18) | Escalatie op basis van Anker 1 | Twee vertakkende gevolgen, elk met een ander lange-termijn-effect |
+| 3 (eindspel) | Gedeelde slotscène met tonale varianten per pad | Thematisch passend obstakel — niet per se militair; kan bestuurlijk, economisch of anderszins zijn |
+
+Voorbeeldinvulling (Mongoolse campagne, ter illustratie van het sjabloon):
+- Anker 1: een steppevolk kruist je pad — toenadering voor ruiter-technologie, of onderwerping voor direct gebied.
+- Anker 2: bij toenadering → bondgenootschap (hogere mobiliteit, tragere civiele groei, passend bij het Mongoolse thema "verovering makkelijk, behoud moeilijk"); bij onderwerping → georganiseerd verzet richting Anker 3.
+- Anker 3: obstakel draait om een overspannen, moeilijk te behouden gebied, in plaats van een fysieke horde.
+
+Dit sjabloon, met bijpassende historische invulling, dient als basis voor de resterende campagnes: Hellenistisch, Romeins, Bantu, Vikings, Spaanse conquista, VOC, Siberisch/Tataars.
+
+---
+
+## 15. Huidige prioriteit & later op te pakken
+
+**Nu**: alleen de tutorial ("De Eerste Vuren", Het Hertenpad-volk) bouwen volgens de MVP-scope in hoofdstuk 13.
+
+**Daarna**: de Amerikaanse frontier-campagne inhoudelijk en technisch volledig uitwerken (ankers staan al beschreven in hoofdstuk 9; nog te doen: implementatie, resterende content zoals zeldzaamheid en pushback-diplomatie die in de MVP bewust zijn uitgesteld).
+
+**Later, nog te bepalen**: of en welke overige campagnes (Mongools, Hellenistisch, Romeins, Bantu, Vikings, Spaanse conquista, VOC, Siberisch/Tataars) worden uitgewerkt, met het herbruikbare ankersjabloon uit hoofdstuk 14 als basis. Geen cross-campagne bonussen tussen deze campagnes (zie hoofdstuk 14).
