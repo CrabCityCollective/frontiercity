@@ -42,3 +42,30 @@ export function heeftOpgeslagenSpel(): boolean {
     return false;
   }
 }
+
+// Losse sleutel (issue: "vinkje bij de tutorial als teken dat je hem gehaald
+// hebt") — een bewuste tweede vlag naast `SAVE_KEY`: de tutorial blijft
+// altijd opnieuw speelbaar (dus geen deel van de op-te-slaan `GameState`),
+// maar of hij ooit gehaald is, moet een herstart/nieuwe run overleven.
+const TUTORIAL_VOLTOOID_KEY = "frontier-city:tutorial-voltooid";
+
+// Gezet zodra de speler de afsluitende samenvatting op laag 12 wegklikt (zie
+// TutorialVoltooidPopup/GameRoot). Fouten worden net als bij `saveSpel`
+// bewust genegeerd — een ontbrekend vinkje breekt de speelsessie niet.
+export function markeerTutorialVoltooid(): void {
+  try {
+    window.localStorage.setItem(TUTORIAL_VOLTOOID_KEY, "1");
+  } catch {
+    // Zie hierboven: bewust genegeerd.
+  }
+}
+
+// Of de tutorial ooit voltooid is — gebruikt door CampagneSelectScherm om
+// het vinkje te tonen.
+export function heeftTutorialVoltooid(): boolean {
+  try {
+    return window.localStorage.getItem(TUTORIAL_VOLTOOID_KEY) === "1";
+  } catch {
+    return false;
+  }
+}

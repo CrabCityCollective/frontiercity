@@ -95,6 +95,23 @@ export function laagContent(hoogte: number): LaagContent | undefined {
   return TUTORIAL_LAAG_CONTENT[hoogte];
 }
 
+// Militaire-uitleg-pop-up (issue: "pop-up met uitleg hoe je de militaire
+// confrontatie moet aanpakken"), getoond zodra laag 12 bereikt is, direct na
+// de gewone laag-pop-up hierboven. Militair is de enige tutorial-mechaniek
+// met een voorbereidingsstap (rekruteren) vóór de speler kan handelen, vandaar
+// een gerichte extra uitleg naast de algemene laag-flavor.
+export const MILITAIR_UITLEG_TITEL = "Hoe pak je dit aan?";
+export const MILITAIR_UITLEG_TEKST =
+  "Open het militaire paneel via het menu-icoon. Rekruteer een Soldaat zolang de legerwaarde onder de dreiging op de bergkam ligt — dat kost grondstoffen en een paar beurten. Ga de confrontatie pas aan zodra de winkans je bevalt. Verlies is geen einde: één vakje raakt beschadigd, maar het Hertenpad-volk mag het opnieuw proberen.";
+
+// Tutorial-voltooid-pop-up (issue: "pop-up met een summary van wat je
+// geleerd hebt"), getoond zodra de confrontatie op laag 12 gewonnen is. De
+// samenvatting zelf doorloopt `TUTORIAL_LAAG_CONTENT` hierboven in plaats van
+// een tweede laag→mechaniek-lijst bij te houden die uit de pas kan lopen.
+export const TUTORIAL_VOLTOOID_TITEL = "De Eerste Vuren — voltooid";
+export const TUTORIAL_VOLTOOID_INTRO =
+  "Het Hertenpad-volk staat op de bergkam. Onderweg hierheen is geleerd:";
+
 // Introscherm (issue: "intro en game over scherm"), getoond vóór laag 1 —
 // zet de tutorial-sfeer neer voordat er iets van de mechaniek in beeld komt.
 export const INTRO_TITEL = "De Eerste Vuren";
