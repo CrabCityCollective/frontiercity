@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  bevestigIneenstorting as bevestigIneenstortingActie,
   confrontatie as confrontatieActie,
   maakInitieleSpelStatus,
   sluitBouwKeuze as sluitBouwKeuzeActie,
@@ -64,6 +65,10 @@ export function useGameEngine() {
     setState((huidig) => confrontatieActie(huidig));
   }, []);
 
+  const bevestigIneenstorting = useCallback(() => {
+    setState((huidig) => bevestigIneenstortingActie(huidig));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -72,5 +77,6 @@ export function useGameEngine() {
     startGroei,
     startRecrutering,
     confrontatie,
+    bevestigIneenstorting,
   };
 }

@@ -15,7 +15,7 @@ export { BAND_WIDTH_TILES };
 
 // --- Kleur-hulpfuncties -----------------------------------------------
 
-function hexNaarRgb(hex: string): [number, number, number] {
+export function hexNaarRgb(hex: string): [number, number, number] {
   const schoon = hex.replace("#", "");
   const volledig =
     schoon.length === 3
@@ -28,14 +28,14 @@ function hexNaarRgb(hex: string): [number, number, number] {
   return [(getal >> 16) & 255, (getal >> 8) & 255, getal & 255];
 }
 
-function rgbNaarCss([r, g, b]: [number, number, number], alpha = 1): string {
+export function rgbNaarCss([r, g, b]: [number, number, number], alpha = 1): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 // Verlicht (percentage > 0) of verdonkert (percentage < 0) een hex-kleur.
 // Gebruikt om uit één basiskleur per terreintype een schilderachtig
 // licht/donker-verloop te halen zonder elke tint met de hand vast te leggen.
-function tint(hex: string, percentage: number): [number, number, number] {
+export function tint(hex: string, percentage: number): [number, number, number] {
   const [r, g, b] = hexNaarRgb(hex);
   const doel = percentage > 0 ? 255 : 0;
   const p = Math.abs(percentage);
@@ -46,7 +46,7 @@ function tint(hex: string, percentage: number): [number, number, number] {
 // schilderachtige textuurdetails stabiel blijven tussen re-renders — een
 // echte Math.random() zou bij elke state-update (nieuwe beurt, bouwactie)
 // opnieuw schudden en de tegel laten "flikkeren".
-function maakSeededRandom(seed: number): () => number {
+export function maakSeededRandom(seed: number): () => number {
   let s = seed % 2147483647;
   if (s <= 0) s += 2147483646;
   return () => {

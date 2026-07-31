@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 import BouwPopup from "@/components/BouwPopup";
 import GroeiPaneel from "@/components/GroeiPaneel";
+import IneenstortingScherm from "@/components/IneenstortingScherm";
+import IntroScherm from "@/components/IntroScherm";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import MilitairPaneel from "@/components/MilitairPaneel";
 import ResourceHud from "@/components/ResourceHud";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import { berekenLegerwaarde } from "@/game/economie";
+import { heeftIntroGezien, markeerIntroGezien } from "@/game/save";
 import { beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { useGameEngine } from "@/game/useGameEngine";
@@ -24,8 +27,31 @@ import GameCanvas from "./GameCanvas";
 // de stad staat meteen in beeld zonder te scrollen (issue: sticky
 // grondstoffenbalk onderaan, stad direct zichtbaar).
 export default function GameRoot() {
-  const { state, volgendeBeurt, startBouw, sluitBouwKeuze, startGroei, startRecrutering, confrontatie } =
-    useGameEngine();
+  const {
+    state,
+    volgendeBeurt,
+    startBouw,
+    sluitBouwKeuze,
+    startGroei,
+    startRecrutering,
+    confrontatie,
+    bevestigIneenstorting,
+  } = useGameEngine();
+
+  // Introscherm (issue: "intro en game over scherm"): start op `true` zodat
+  // server- en eerste client-render gelijk blijven (geen hydration mismatch,
+  // zelfde reden als de save/load-aanpak in useGameEngine), en wordt pas ná
+  // mount verlaagd als deze browser de intro al eerder bevestigd heeft.
+  const [toonIntro, setToonIntro] = useState(true);
+
+  useEffect(() => {
+    if (heeftIntroGezien()) setToonIntro(false);
+  }, []);
+
+  function bevestigIntro() {
+    markeerIntroGezien();
+    setToonIntro(false);
+  }
   // Bouwen gebeurt op de huidige frontier-laag: de hoogste ontgrendelde laag
   // (M5: welke laag dat is, verandert zodra cultuur een nieuwe laag ontgrendelt).
   const actieveLaag = state.lagen.find(
@@ -75,6 +101,14 @@ export default function GameRoot() {
     startBouw(geselecteerdeTile.hoogte, plaatsingsImprovement, geselecteerdeTile.positieInLaag);
     setPlaatsingsImprovement(null);
     setGeselecteerdeTile(null);
+  }
+
+  // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
+  // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
+  // aangeroepen, alleen de uiteindelijke JSX wisselt.
+  if (toonIntro) return <IntroScherm onBeginnen={bevestigIntro} />;
+  if (state.laatsteIneenstorting) {
+    return <IneenstortingScherm onDoorgaan={bevestigIneenstorting} />;
   }
 
   return (
