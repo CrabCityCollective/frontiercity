@@ -20,6 +20,7 @@ import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
 import UitlegPopup from "@/components/UitlegPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
+import VolgendeBeurtWaarschuwingPopup from "@/components/VolgendeBeurtWaarschuwingPopup";
 import { berekenHistorieStatistieken, berekenLegerwaarde } from "@/game/economie";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
@@ -58,6 +59,8 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     confrontatie,
     verplaatsSettlerNaar,
     legWegAan,
+    jaag,
+    hakHout,
     sluitIndringersMelding,
     geefTribuut,
     weigerTribuut,
@@ -118,6 +121,14 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   useEffect(() => {
     if (state.stad.vervalStatus === "gezond") setVoedselWaarschuwingBevestigd(false);
   }, [state.stad.vervalStatus]);
+  // "Volgende beurt"-waarschuwing (issue: "als je op volgende beurt drukt,
+  // dan moet er eerst gecheckt worden of je settler nog mag lopen of iets
+  // mag doen die beurt ... en of je nog een improvement mocht neerzetten"):
+  // een klik op de knop roept niet meteen `volgendeBeurt` aan zolang de
+  // settler nog een actie heeft of er nog een bouwkeuze openstaat — die
+  // gevallen tonen eerst deze pop-up. "Terug" sluit 'm weer (de speler kan
+  // dan alsnog handelen); "Toch doorgaan" roept alsnog `volgendeBeurt` aan.
+  const [toonVolgendeBeurtWaarschuwing, setToonVolgendeBeurtWaarschuwing] = useState(false);
   // Bouwen gebeurt op de huidige frontier-laag: de hoogste ontgrendelde laag
   // (M5: welke laag dat is, verandert zodra cultuur een nieuwe laag ontgrendelt).
   const actieveLaag = state.lagen.find(
@@ -145,6 +156,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   useEffect(() => {
     setPlaatsingsImprovement(null);
     setGeselecteerdeTile(null);
+    setToonVolgendeBeurtWaarschuwing(false);
   }, [state.beurt]);
 
   const geselecteerdeLaag = geselecteerdeTile
@@ -275,6 +287,28 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // voor een save van vóór dit veld bestond.
   const kanBouwen = state.beurt >= (state.volgendeBouwBeurt ?? 1);
 
+  // "Volgende beurt"-waarschuwing (issue: "eerst gecheckt worden of je
+  // settler nog mag lopen of iets mag doen die beurt" / "ook als een
+  // improvement mocht neerzetten die beurt"): dezelfde vlaggen die de
+  // settler-knoppen en de bouw-pop-up zelf al sturen, hergebruikt om te
+  // bepalen of de waarschuwing nodig is vóór `volgendeBeurt` echt aangeroepen
+  // wordt.
+  const settlerHeeftNogActie = Boolean(state.settler) && !state.settlerActieGedaanDitBeurt;
+  const magNogBouwen = kanBouwen && !state.bouwKeuzeGedaanDitBeurt;
+
+  function klikVolgendeBeurt() {
+    if (settlerHeeftNogActie || magNogBouwen) {
+      setToonVolgendeBeurtWaarschuwing(true);
+      return;
+    }
+    volgendeBeurt();
+  }
+
+  function tochDoorgaanNaVolgendeBeurtWaarschuwing() {
+    setToonVolgendeBeurtWaarschuwing(false);
+    volgendeBeurt();
+  }
+
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -307,7 +341,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
           onTileClick={handleTileClick}
         />
         <LaagIntroPaneel lagen={state.lagen} />
-        <SettlerPaneel state={state} onLegWegAan={legWegAan} />
+        <SettlerPaneel state={state} onLegWegAan={legWegAan} onJaag={jaag} onHakHout={hakHout} />
         <GroeiPaneel state={state} onStartGroei={startGroei} />
         {toonMilitair && (
           <MilitairPaneel
@@ -339,6 +373,14 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
           <VoedselWaarschuwingPopup
             beurtenResterend={state.stad.vervalBeurtenResterend}
             onDoorgaan={() => setVoedselWaarschuwingBevestigd(true)}
+          />
+        )}
+        {toonVolgendeBeurtWaarschuwing && (
+          <VolgendeBeurtWaarschuwingPopup
+            settlerHeeftNogActie={settlerHeeftNogActie}
+            magNogBouwen={magNogBouwen}
+            onTochDoorgaan={tochDoorgaanNaVolgendeBeurtWaarschuwing}
+            onTerug={() => setToonVolgendeBeurtWaarschuwing(false)}
           />
         )}
         {toonTutorialVoltooidPopup && (
@@ -386,7 +428,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
           />
         )}
       </div>
-      <ResourceHud state={state} onVolgendeBeurt={volgendeBeurt} />
+      <ResourceHud state={state} onVolgendeBeurt={klikVolgendeBeurt} />
     </div>
   );
 }

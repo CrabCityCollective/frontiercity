@@ -69,6 +69,14 @@ export interface Tile {
   // verbonden is met de stad (zie game/wegen.ts). Geen bouwkosten/-tijd —
   // wordt in één keer gezet zodra de settler de aanleg-actie uitvoert.
   heeftWeg?: boolean;
+  // Wilde kudde (hoofdstuk 16/17, issue: "kuddes met dieren waar je op kunt
+  // jagen voor voedsel"): kan vanaf laag 4 op een leeg vakje verschijnen. De
+  // settler kan er `jaag` (economie.ts) op uitvoeren zolang
+  // `beurtenResterend` boven nul staat; daarna is de kudde uitgeput en
+  // verdwijnt dit veld weer.
+  kudde?: {
+    beurtenResterend: number;
+  };
 }
 
 // Positie van de settler-eenheid (M10, hoofdstuk 16). Bestaat pas vanaf beurt
