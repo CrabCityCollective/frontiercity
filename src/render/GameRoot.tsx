@@ -27,6 +27,7 @@ import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { LAATSTE_UITLEG_BEURT } from "@/game/uitlegContent";
 import { useGameEngine } from "@/game/useGameEngine";
+import { bereikbarePosities } from "@/game/wegen";
 import { TUTORIAL_LAAG_AANTAL, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
 import GameCanvas from "./GameCanvas";
 
@@ -55,7 +56,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     startGroei,
     startRecrutering,
     confrontatie,
-    verplaatsSettler,
+    verplaatsSettlerNaar,
     legWegAan,
     sluitIndringersMelding,
     geefTribuut,
@@ -195,6 +196,27 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   const isGeldigPlaatsingsDoel =
     plaatsingsImprovement !== null && doelTileVoorPlaatsing?.status === "leeg" && !terreinMismatch;
 
+  // Settler actief zodra de beurt begint (issue: "de settler unit is actief
+  // als je aan je beurt begint, de tegels waar je heen kunt lichten op, door
+  // te klikken op een tegel ga je er naar toe") — alleen buiten een lopende
+  // bouwplaatsing, zodat een tile-klik nooit tussen twee betekenissen kan
+  // zweven. De bereikbare vakjes lichten op via GameCanvas/canvas.ts; een
+  // klik erop verplaatst de settler meteen in plaats van de tile-info-popup
+  // te openen (zie `handleTileClick` hieronder).
+  const settlerKanBewegen = Boolean(state.settler) && !state.settlerActieGedaanDitBeurt && !plaatsingsImprovement;
+  const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.lagen, state.settler!) : [];
+
+  function handleTileClick(hoogte: number, positieInLaag: number) {
+    const isSettlerDoel = settlerBereikbarePosities.some(
+      (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
+    );
+    if (settlerKanBewegen && isSettlerDoel) {
+      verplaatsSettlerNaar(hoogte, positieInLaag);
+      return;
+    }
+    setGeselecteerdeTile({ hoogte, positieInLaag });
+  }
+
   function bevestigBouw() {
     if (!plaatsingsImprovement || !geselecteerdeTile) return;
     startBouw(geselecteerdeTile.hoogte, plaatsingsImprovement, geselecteerdeTile.positieInLaag);
@@ -281,10 +303,11 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
           stad={state.stad}
           plaatsingsLaagHoogte={plaatsingsImprovement ? actieveLaag.hoogte : undefined}
           settler={state.settler}
-          onTileClick={(hoogte, positieInLaag) => setGeselecteerdeTile({ hoogte, positieInLaag })}
+          settlerBereikbarePosities={settlerBereikbarePosities}
+          onTileClick={handleTileClick}
         />
         <LaagIntroPaneel lagen={state.lagen} />
-        <SettlerPaneel state={state} onVerplaats={verplaatsSettler} onLegWegAan={legWegAan} />
+        <SettlerPaneel state={state} onLegWegAan={legWegAan} />
         <GroeiPaneel state={state} onStartGroei={startGroei} />
         {toonMilitair && (
           <MilitairPaneel

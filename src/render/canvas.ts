@@ -822,6 +822,25 @@ function tekenBeschikbaarMarkering(
   ctx.restore();
 }
 
+// Markeert een vakje waar de settler deze beurt direct naartoe kan (issue:
+// "de tegels waar je heen kunt lichten op") — een koele blauwe gloed +
+// rand, bewust een andere kleur dan de gouden bouwplaatsings-markering
+// hierboven zodat de twee klik-modi nooit door elkaar lopen.
+function tekenSettlerBereikbaarMarkering(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number
+): void {
+  ctx.save();
+  ctx.fillStyle = "rgba(120, 200, 220, 0.16)";
+  ctx.fillRect(x, y, size, size);
+  ctx.strokeStyle = "rgba(140, 210, 230, 0.85)";
+  ctx.lineWidth = Math.max(2, size * 0.045);
+  ctx.strokeRect(x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, size - ctx.lineWidth, size - ctx.lineWidth);
+  ctx.restore();
+}
+
 function tekenActieveTile(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -897,7 +916,8 @@ export function tekenWereld(
   lagen: Layer[],
   stad: City,
   plaatsingsLaagHoogte?: number,
-  settler?: Settler
+  settler?: Settler,
+  settlerBereikbarePosities?: Settler[]
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalLagen = lagen.length;
@@ -927,6 +947,10 @@ export function tekenWereld(
 
       if (laag.hoogte === plaatsingsLaagHoogte && laag.tiles[col].status === "leeg") {
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
+      }
+
+      if (settlerBereikbarePosities?.some((positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col)) {
+        tekenSettlerBereikbaarMarkering(ctx, x, y, tileSize);
       }
     }
   }
