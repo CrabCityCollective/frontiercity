@@ -1,7 +1,7 @@
 "use client";
 
 import { MouseEvent, useEffect, useRef } from "react";
-import { City, Layer } from "@/game/types";
+import { City, Layer, Settler } from "@/game/types";
 import { BAND_WIDTH_TILES } from "@/game/world";
 import { tekenWereld } from "./canvas";
 
@@ -17,6 +17,9 @@ interface GameCanvasProps {
   // (klik-op-tile-plaatsing) — zolang dit gezet is markeert de canvas de
   // lege tiles op die laag en stuurt elke klik naar `onTileClick`.
   plaatsingsLaagHoogte?: number;
+  // Positie van de settler-eenheid (M10, hoofdstuk 16) — `undefined` tot
+  // beurt 2, zie economie.ts `volgendeBeurt`.
+  settler?: Settler;
   onTileClick: (hoogte: number, positieInLaag: number) => void;
 }
 
@@ -48,7 +51,7 @@ function bepaalAangeklikteTile(
   return { hoogte, positieInLaag };
 }
 
-export default function GameCanvas({ lagen, stad, plaatsingsLaagHoogte, onTileClick }: GameCanvasProps) {
+export default function GameCanvas({ lagen, stad, plaatsingsLaagHoogte, settler, onTileClick }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -58,8 +61,8 @@ export default function GameCanvas({ lagen, stad, plaatsingsLaagHoogte, onTileCl
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    tekenWereld(ctx, canvas.width, canvas.height, lagen, stad, plaatsingsLaagHoogte);
-  }, [lagen, stad, plaatsingsLaagHoogte]);
+    tekenWereld(ctx, canvas.width, canvas.height, lagen, stad, plaatsingsLaagHoogte, settler);
+  }, [lagen, stad, plaatsingsLaagHoogte, settler]);
 
   function handleClick(event: MouseEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;

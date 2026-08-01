@@ -5,6 +5,7 @@
 
 import { CATEGORIE_LABELS, TERREIN_LABELS } from "./improvements";
 import { City, Improvement, Layer } from "./types";
+import { isTileVerbondenMetStad } from "./wegen";
 import { isVooruitkijkLaag } from "./world";
 
 export interface TileInfo {
@@ -76,10 +77,18 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
       tile.beurtenTotUitputting !== undefined
         ? ` Nog ${tile.beurtenTotUitputting} beurten actief voordat het uitgeput raakt.`
         : "";
+    // Wegverbinding (M10, hoofdstuk 16): alleen relevant voor land
+    // improvements — de stad zelf heeft geen wegverbinding nodig.
+    const wegStatus =
+      tile.improvement.soort === "land"
+        ? isTileVerbondenMetStad(lagen, laag.hoogte, positieInLaag)
+          ? " Verbonden met de stad via een weg."
+          : " Nog niet verbonden met de stad — legt pas iets af zodra de settler hier een weg naartoe heeft aangelegd."
+        : "";
     return {
       titel: tile.improvement.naam,
       ondertitel: CATEGORIE_LABELS[tile.improvement.categorie],
-      tekst: `${effectBeschrijving(tile.improvement)}${uitputting}`.trim(),
+      tekst: `${effectBeschrijving(tile.improvement)}${wegStatus}${uitputting}`.trim(),
     };
   }
 

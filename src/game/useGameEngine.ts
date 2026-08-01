@@ -4,15 +4,18 @@ import { useCallback, useState } from "react";
 import {
   bevestigIneenstorting as bevestigIneenstortingActie,
   confrontatie as confrontatieActie,
+  legWegAan as legWegAanActie,
   maakInitieleSpelStatus,
   sluitBouwKeuze as sluitBouwKeuzeActie,
   startBouw as startBouwActie,
   startGroei as startGroeiActie,
   startRecrutering as startRecruteringActie,
+  verplaatsSettler as verplaatsSettlerActie,
   volgendeBeurt as volgendeBeurtActie,
 } from "./economie";
 import { laadSpel, saveSpel } from "./save";
 import { Improvement } from "./types";
+import { SettlerRichting } from "./wegen";
 
 // React-hook rond de spelstatus (M3). Geen aparte state-library nodig voor
 // de MVP-omvang — één useState met pure update-functies uit economie.ts.
@@ -68,6 +71,14 @@ export function useGameEngine() {
     setState((huidig) => bevestigIneenstortingActie(huidig));
   }, []);
 
+  const verplaatsSettler = useCallback((richting: SettlerRichting) => {
+    setState((huidig) => verplaatsSettlerActie(huidig, richting));
+  }, []);
+
+  const legWegAan = useCallback(() => {
+    setState((huidig) => legWegAanActie(huidig));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -77,6 +88,8 @@ export function useGameEngine() {
     startRecrutering,
     confrontatie,
     bevestigIneenstorting,
+    verplaatsSettler,
+    legWegAan,
     opslaan,
     laden,
   };

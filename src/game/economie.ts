@@ -41,10 +41,17 @@ import {
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
   maakInitieleWereld,
+  STAD_POSITIE,
   VOEDSEL_DREMPEL_GROEI,
 } from "./world";
+import { isTileVerbondenMetStad, magSettlerNaar, SettlerRichting, volgendePositie } from "./wegen";
 
 export const OPSLAG_CAP = 30;
+
+// Bouw-ritme (M10, hoofdstuk 16): na een bouwkeuze (of het bewust overslaan
+// ervan) mag pas na zoveel beurten weer een nieuw bouwproject gestart worden
+// — de tussenliggende beurten zijn voor de settler (wegen aanleggen).
+const BOUW_RITME_BEURTEN = 3;
 
 // Verval-tuning (M6, hoofdstuk 4/14): bewuste MVP-placeholders, net als de
 // overige nog niet vastgelegde balansgetallen. Een minimum-aantal ghost towns
@@ -86,6 +93,8 @@ export function maakInitieleSpelStatus(): GameState {
     cultuur: 0,
     beurt: 1,
     bouwKeuzeGedaanDitBeurt: false,
+    settlerActieGedaanDitBeurt: false,
+    volgendeBouwBeurt: 1,
   };
 }
 
@@ -106,6 +115,14 @@ function verwerkProductie(state: GameState): GameState {
     for (const tile of laag.tiles) {
       const effect = tile.improvement?.effect;
       if (tile.status !== "actief" || effect?.type !== "productie" || !effect.resource || !effect.waarde) {
+        continue;
+      }
+
+      // Wegverbinding (M10, hoofdstuk 16): een land improvement produceert
+      // pas zodra zijn vakje via een wegennetwerk met de stad verbonden is —
+      // de stad zelf heeft geen `soort: "land"`-improvement, dus die blijft
+      // hierdoor ongemoeid.
+      if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)) {
         continue;
       }
 
@@ -570,14 +587,52 @@ export function startBouw(
     return { ...laag, tiles };
   });
 
-  return { ...state, lagen, bouwKeuzeGedaanDitBeurt: true };
+  return {
+    ...state,
+    lagen,
+    bouwKeuzeGedaanDitBeurt: true,
+    volgendeBouwBeurt: state.beurt + BOUW_RITME_BEURTEN,
+  };
 }
 
 // Sluit de bouw-pop-up zonder te bouwen (hoofdstuk 11: de speler mag een
 // beurt ook overslaan) — verbruikt, net als `startBouw`, de bouwkeuze van
-// deze beurt.
+// deze beurt én het eerstvolgende bouwmoment (hoofdstuk 16: bouw-ritme).
 export function sluitBouwKeuze(state: GameState): GameState {
-  return { ...state, bouwKeuzeGedaanDitBeurt: true };
+  return { ...state, bouwKeuzeGedaanDitBeurt: true, volgendeBouwBeurt: state.beurt + BOUW_RITME_BEURTEN };
+}
+
+// Verplaatst de settler één vakje (hoofdstuk 16), als er niet al een
+// settler-actie deze beurt gebruikt is en het doelvakje binnen ontgrendeld
+// gebied ligt. Negeert de aanroep stilzwijgend bij een ongeldige zet — de UI
+// (SettlerPaneel) controleert dit al vóór het tonen van de knop, dit is een
+// tweede, veilige check (zelfde patroon als `startBouw`/terrein-eisen).
+export function verplaatsSettler(state: GameState, richting: SettlerRichting): GameState {
+  if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
+
+  const doel = volgendePositie(state.settler, richting);
+  if (!magSettlerNaar(state.lagen, doel)) return state;
+
+  return { ...state, settler: doel, settlerActieGedaanDitBeurt: true };
+}
+
+// Legt een weg aan op het vakje waar de settler nu staat (hoofdstuk 16): geen
+// grondstoffen, alleen de settler-actie van deze beurt. Geen effect als er
+// al een weg ligt of de settler deze beurt al gehandeld heeft.
+export function legWegAan(state: GameState): GameState {
+  if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
+
+  const { hoogte, positieInLaag } = state.settler;
+  const laag = state.lagen.find((l) => l.hoogte === hoogte);
+  if (!laag || laag.tiles[positieInLaag]?.heeftWeg) return state;
+
+  const lagen = state.lagen.map((l) => {
+    if (l.hoogte !== hoogte) return l;
+    const tiles = l.tiles.map((tile, index) => (index === positieInLaag ? { ...tile, heeftWeg: true } : tile));
+    return { ...l, tiles };
+  });
+
+  return { ...state, lagen, settlerActieGedaanDitBeurt: true };
 }
 
 // Verwerkt één spelbeurt: eerst productie van actieve improvements (incl.
@@ -604,5 +659,18 @@ export function volgendeBeurt(state: GameState): GameState {
   const naBouw = verwerkBouwwachtrij(naVerval);
   const naGroei = verwerkGroei(naBouw);
   const naRecrutering = verwerkRecrutering(naGroei);
-  return { ...naRecrutering, beurt: naRecrutering.beurt + 1, bouwKeuzeGedaanDitBeurt: false };
+  const nieuweBeurt = naRecrutering.beurt + 1;
+
+  // De settler verschijnt bij de stad zodra beurt 2 begint (hoofdstuk 16) —
+  // en blijft daarna gewoon staan waar de speler 'm laatst neerzette.
+  const settler =
+    naRecrutering.settler ?? (nieuweBeurt >= 2 ? { hoogte: 1, positieInLaag: STAD_POSITIE } : undefined);
+
+  return {
+    ...naRecrutering,
+    beurt: nieuweBeurt,
+    bouwKeuzeGedaanDitBeurt: false,
+    settlerActieGedaanDitBeurt: false,
+    settler,
+  };
 }

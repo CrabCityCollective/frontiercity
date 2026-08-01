@@ -104,6 +104,13 @@ export const MILITAIR_UITLEG_TITEL = "Hoe pak je dit aan?";
 export const MILITAIR_UITLEG_TEKST =
   "Open het militaire paneel via het menu-icoon. Rekruteer een Soldaat zolang de legerwaarde onder de dreiging op de bergkam ligt — dat kost grondstoffen en een paar beurten. Ga de confrontatie pas aan zodra de winkans je bevalt. Verlies is geen einde: één vakje raakt beschadigd, maar het Hertenpad-volk mag het opnieuw proberen.";
 
+// Settler-uitleg-pop-up (M10, hoofdstuk 16: settler-mechaniek + bouw-ritme),
+// getoond zodra de settler in beurt 2 verschijnt. Zelfde eenmalige-confirm-
+// patroon als MILITAIR_UITLEG_* hierboven.
+export const SETTLER_UITLEG_TITEL = "De settler";
+export const SETTLER_UITLEG_TEKST =
+  "Er staat een huifkar bij Holenrots: de settler. Verplaats 'm elke beurt één vakje — vooruit, achteruit of opzij — of laat 'm een weg aanleggen. Een weg kost geen grondstoffen, alleen die ene beurt. Land-improvements leveren pas grondstoffen op zodra er een wegverbinding met de stad is — een mijn zonder weg blijft stil liggen. Nieuwe bouwprojecten kun je voortaan om de drie beurten starten; gebruik de tussenliggende beurten om wegen aan te leggen.";
+
 // Tutorial-voltooid-pop-up (issue: "pop-up met een summary van wat je
 // geleerd hebt"), getoond zodra de confrontatie op laag 12 gewonnen is. De
 // samenvatting zelf doorloopt `TUTORIAL_LAAG_CONTENT` hierboven in plaats van

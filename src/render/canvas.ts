@@ -8,7 +8,8 @@
 // canvas-renderpijplijn, maar met gelaagde, geschilderde texturen in plaats
 // van platte kleurvlakken.
 
-import { City, Layer, TerreinType, Tile } from "@/game/types";
+import { City, Layer, Settler, TerreinType, Tile } from "@/game/types";
+import { isTileVerbondenMetStad } from "@/game/wegen";
 import { BAND_WIDTH_TILES, isVooruitkijkLaag } from "@/game/world";
 
 export { BAND_WIDTH_TILES };
@@ -130,6 +131,99 @@ function tekenContactschaduw(
   ctx.ellipse(cx, groundY, breedte / 2, breedte * 0.16, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
+}
+
+// --- Wegen & settler (M10, hoofdstuk 16) --------------------------------
+
+// Door de settler aangelegde weg: een verweerd karrenspoor, getekend vóór het
+// eventuele improvement-icoon op hetzelfde vakje (zie tekenActieveTile) zodat
+// een weg en een improvement samen op één vakje kunnen staan.
+function tekenWeg(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  ctx.save();
+  ctx.strokeStyle = "rgba(196, 168, 120, 0.55)";
+  ctx.lineWidth = Math.max(2, size * 0.14);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.06, y + size * (0.82 + (rng() - 0.5) * 0.08));
+  ctx.quadraticCurveTo(
+    x + size * 0.5,
+    y + size * (0.62 + (rng() - 0.5) * 0.1),
+    x + size * 0.94,
+    y + size * (0.82 + (rng() - 0.5) * 0.08)
+  );
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(90, 68, 40, 0.5)";
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.12, y + size * 0.85);
+  ctx.lineTo(x + size * 0.88, y + size * 0.79);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Badge voor een actief, maar (nog) niet met de stad verbonden land
+// improvement (hoofdstuk 16: "levert nog niks op") — een gedempte waas plus
+// een "geen doorgang"-icoontje linksboven, los van de uitputtingsteller
+// rechtsonder (tekenActieveTile) zodat de twee elkaar nooit overlappen.
+function tekenNietVerbondenIndicator(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  ctx.save();
+  ctx.fillStyle = "rgba(16, 14, 12, 0.38)";
+  ctx.fillRect(x, y, size, size);
+
+  const cx = x + size * 0.18;
+  const cy = y + size * 0.18;
+  const r = size * 0.09;
+  ctx.strokeStyle = "#e8dcc8";
+  ctx.lineWidth = Math.max(1.2, size * 0.025);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.moveTo(cx - r * 0.85, cy - r * 0.85);
+  ctx.lineTo(cx + r * 0.85, cy + r * 0.85);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// De settler-eenheid (hoofdstuk 16): een huifkar, in lijn met de
+// MVP-plaatshouderstijl (hoofdstuk 13: "grove/simpele placeholders zijn
+// prima") — geen los afbeeldingsbestand, zelfde vector-aanpak als de rest van
+// deze tekenpijplijn.
+export function tekenSettler(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.6);
+
+  ctx.fillStyle = "#3a2a18";
+  ctx.beginPath();
+  ctx.arc(x + size * 0.35, baseY - size * 0.05, size * 0.09, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.65, baseY - size * 0.05, size * 0.09, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#8a6a3a";
+  ctx.beginPath();
+  ctx.arc(x + size * 0.35, baseY - size * 0.05, size * 0.03, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.65, baseY - size * 0.05, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#6b4a2c";
+  ctx.fillRect(x + size * 0.27, baseY - size * 0.3, size * 0.46, size * 0.2);
+  ctx.strokeStyle = "#3a2a18";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + size * 0.27, baseY - size * 0.3, size * 0.46, size * 0.2);
+
+  ctx.fillStyle = "#e8dcc0";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.22, baseY - size * 0.3);
+  ctx.quadraticCurveTo(x + size * 0.5, baseY - size * 0.74, x + size * 0.78, baseY - size * 0.3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(90, 76, 50, 0.6)";
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.35, baseY - size * 0.3);
+  ctx.quadraticCurveTo(x + size * 0.5, baseY - size * 0.6, x + size * 0.65, baseY - size * 0.3);
+  ctx.stroke();
 }
 
 // --- Land-improvement iconografie ---------------------------------------
@@ -737,10 +831,15 @@ function tekenActieveTile(
   terreinType: string,
   stad: City,
   col: number,
-  hoogte: number
+  hoogte: number,
+  verbondenMetStad: boolean
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrond(ctx, x, y, size, terreinType, seed);
+
+  if (tile.heeftWeg) {
+    tekenWeg(ctx, x, y, size, seed);
+  }
 
   if (tile.status === "ghost_town") {
     tekenGhostTown(ctx, x, y, size, seed);
@@ -769,6 +868,13 @@ function tekenActieveTile(
       ctx.textBaseline = "bottom";
       ctx.fillText(String(tile.beurtenTotUitputting), x + size - 6, y + size - 5);
     }
+
+    // Wegverbinding (M10, hoofdstuk 16): een gebouwd, actief land improvement
+    // zonder wegverbinding produceert nog niks — zichtbaar gemaakt met een
+    // gedempte waas i.p.v. stilzwijgend niets te tonen.
+    if (!verbondenMetStad) {
+      tekenNietVerbondenIndicator(ctx, x, y, size);
+    }
     return;
   }
 
@@ -790,7 +896,8 @@ export function tekenWereld(
   height: number,
   lagen: Layer[],
   stad: City,
-  plaatsingsLaagHoogte?: number
+  plaatsingsLaagHoogte?: number,
+  settler?: Settler
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalLagen = lagen.length;
@@ -812,7 +919,8 @@ export function tekenWereld(
       } else if (!laag.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTile(ctx, x, y, tileSize, laag.terreinType);
       } else {
-        tekenActieveTile(ctx, x, y, tileSize, laag.tiles[col], laag.terreinType, stad, col, laag.hoogte);
+        const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
+        tekenActieveTile(ctx, x, y, tileSize, laag.tiles[col], laag.terreinType, stad, col, laag.hoogte, verbonden);
       }
 
       tekenTileGrid(ctx, x, y, tileSize);
@@ -820,6 +928,16 @@ export function tekenWereld(
       if (laag.hoogte === plaatsingsLaagHoogte && laag.tiles[col].status === "leeg") {
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
       }
+    }
+  }
+
+  // De settler wordt als laatste getekend (hoofdstuk 16), boven op de tile
+  // waar hij op dat moment staat, zodat hij nooit onder een improvement-icoon
+  // verdwijnt.
+  if (settler) {
+    const rijIndex = totaalLagen - settler.hoogte;
+    if (rijIndex >= 0 && rijIndex < totaalLagen) {
+      tekenSettler(ctx, settler.positieInLaag * tileSize, rijIndex * tileSize, tileSize);
     }
   }
 

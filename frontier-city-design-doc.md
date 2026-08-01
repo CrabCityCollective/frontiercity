@@ -37,6 +37,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 | **Civiel** | Aquaduct, riolering, woonwijk (= groei-tiers) | Weg, brug | Ingenieur (versnelt bouw) | Snellere groei-rijptijd in volgende steden |
 | **Cultureel** | Tempel, amfitheater, monument | Heiligdom | Missionaris/diplomaat (voor pushback) | Korting op cultuurkosten voor nieuwe lagen |
 
+- "Weg" uit de tabel hierboven is voor de MVP geen gewone, met een categorie-keuze te bouwen land improvement meer, maar een apart settler-mechanisme — zie hoofdstuk 16. "Brug" blijft, net als de rest van de post-MVP-scope, voorlopig ongebouwd.
 - Pool-grootte per categorie (basisversie): 6-8 city improvements, 4-6 land improvement-types, 2-3 units.
 - Latere campagnes vervangen een deel van de generieke opties door thema-specifieke varianten.
 - **Terrein-eisen**: sommige land improvements zijn beperkt tot een vakje-terreinsubtype (hoofdstuk 2) — houtkap alleen op **bos**, mijn alleen op **heuvel of berg**, boerderij alleen op **vlakke grond**. Overige land improvements (steengroeve, heiligdom, wachttoren) hebben geen terrein-eis. Zie hoofdstuk 11 voor de reden achter deze keuze.
@@ -227,6 +228,9 @@ Er is bewust gekozen om echte historische volken en leiders te gebruiken als ins
 **Neolithische tutorial als neutrale sfeer, campagnes met eigen toon**
 Door de tutorial in een fictieve, mythische neolithische setting te plaatsen (in plaats van er meteen een historische campagne van te maken), kan de speler alle kernmechanieken leren zonder dat dit de toon van latere, thematisch zwaardere campagnes (zoals de sombere Amerikaanse frontier) alvast kleurt of verwatert.
 
+**Settler en bouw-ritme i.p.v. een bouwkeuze bij elke beurt**
+Een nieuwe bouwkeuze op elke beurt aanbieden liet het bouwen te snel aanvoelen: er was geen andere handeling tussen twee bouwmomenten in. Door nieuwe bouwprojecten voortaan om de 3 beurten aan te bieden (hoofdstuk 16) ontstaat er ruimte, en die ruimte wordt gevuld met een actieve, ruimtelijke taak: de settler-eenheid verplaatsen en wegen aanleggen. Door land improvements pas daadwerkelijk te laten produceren zodra ze via zo'n weg met de stad verbonden zijn, is wegenaanleg geen losstaand extraatje maar een voorwaarde voor de economie zelf — precies zoals uitgeputte grond (hoofdstuk 4) en verval al zorgen dat de speler iets te doen heeft tussen bouwmomenten door.
+
 **Terrein-eisen per land improvement, met een gegarandeerd minimum per laag**
 Zonder terrein-eisen voelen alle 8 land-vakjes van een laag inwisselbaar aan: elke improvement past overal, dus de keuze wáár je bouwt heeft geen betekenis. Door improvements te binden aan een vakje-terreinsubtype (houtkap → bos, mijn → heuvel/berg, boerderij → vlak) wordt plaatsing zelf een keuze in plaats van een formaliteit, en oogt elke laag ook visueel gevarieerder dan één herhaald terreintype. Om te voorkomen dat dit té restrictief wordt, houdt elke (tutorial-)laag bewust minstens één vakje van elk relevant subtype aan — een laag kan dus wél duidelijk overhellen naar bijvoorbeeld bos of gebergte (en zo de hoogte voelbaar maken, bv. geen bos meer boven de boomgrens), maar sluit nooit een hele economische optie helemaal uit. Terrein-subtypes liggen, net als de laag-terreintypes zelf, vast per tutorial-laag (geen random worldgen, hoofdstuk 8) — bij latere procedurele campagnes kan dit alsnog random gegenereerd worden binnen dezelfde regel (minstens één vakje per relevant subtype).
 
@@ -270,6 +274,7 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 - Cultuur → laag ontgrendelen; fog of war
 - Eén groei-tier-stap (klein→middel), met het zichtbare waarschuwingssignaal en het permadeath-verval-risico (volledige ineenstorting eindigt de run en herstart de tutorial, zie hoofdstuk 4/11)
 - Eenvoudige militaire confrontatie (winkans-formule)
+- Settler-eenheid en wegen (hoofdstuk 16): de settler start beurt 2 in de stad en verplaatst 1 vakje per beurt (voor/achter/zijwaarts); hij legt kosteloos wegen aan (kost enkel die beurt). Een land improvement produceert pas zodra zijn vakje via zo'n wegverbinding aan de stad hangt. Nieuwe bouwprojecten kun je hierdoor nog maar om de 3 beurten starten (de eerste beurt telt al als bouwmoment)
 - Placeholder-tegels (simpele, consistente stijl — geen definitieve pre-rendered assets nodig om te testen)
 - Alléén de tutorial-content (Het Hertenpad-volk, lagen 1-12) als speelbare inhoud
 - De stad heeft een zichtbare naam (**Holenrots**, zie hoofdstuk 10), te zien via een klik op de stad-tile — geen naam-generator voor toekomstige steden, dat komt pas met meerdere-steden-support
@@ -310,6 +315,13 @@ interface Tile {
   improvement?: Improvement;
   status: "leeg" | "in_aanbouw" | "actief" | "ghost_town";
   beurtenTotUitputting?: number;
+  heeftWeg?: boolean; // door de settler aangelegd (hoofdstuk 16)
+}
+
+// Positie van de settler-eenheid (hoofdstuk 16) — bestaat pas vanaf beurt 2.
+interface Settler {
+  hoogte: number;
+  positieInLaag: number;
 }
 
 interface Layer {
@@ -327,6 +339,12 @@ interface City {
   vervalStatus: "gezond" | "kritiek";
   vervalBeurtenResterend?: number;
 }
+
+// GameState (hoofdstuk 16) krijgt naast bovenstaande er ook nog een optionele
+// `settler` bij (afwezig tot beurt 2), een `settlerActieGedaanDitBeurt`-vlag
+// (net als `bouwKeuzeGedaanDitBeurt`, maar dan voor de settler) en
+// `volgendeBouwBeurt` (de eerstvolgende beurt waarop weer een nieuw
+// bouwproject gestart mag worden — het bouw-ritme van hoofdstuk 16).
 
 interface CampaignConfig {
   id: string;
@@ -362,6 +380,7 @@ interface CampaignConfig {
 | M7 | Militair (basis) | Eenvoudige confrontatie met winkans-formule |
 | M8 | Tutorial-content | Lagen 1-12 met de vastgelegde mechaniek-volgorde en flavor-teksten |
 | M9 | Save/load | Eén actieve run lokaal opslaan en hervatten |
+| M10 | Wegen & settler | Settler-eenheid + verplaatsing, wegen aanleggen, bouw-ritme (1 nieuw project per 3 beurten), resource-activatie via wegverbinding, uitleg-pop-up bij beurt 2 (hoofdstuk 16) |
 
 Elke milestone is bewust klein genoeg om als losse Claude Code-taak opgepakt te worden.
 
@@ -435,3 +454,29 @@ Dit sjabloon, met bijpassende historische invulling, dient als basis voor de res
 **Daarna**: de Amerikaanse frontier-campagne inhoudelijk en technisch volledig uitwerken (ankers staan al beschreven in hoofdstuk 9; nog te doen: implementatie, resterende content zoals zeldzaamheid en pushback-diplomatie die in de MVP bewust zijn uitgesteld).
 
 **Later, nog te bepalen**: of en welke overige campagnes (Mongools, Hellenistisch, Romeins, Bantu, Vikings, Spaanse conquista, VOC, Siberisch/Tataars) worden uitgewerkt, met het herbruikbare ankersjabloon uit hoofdstuk 14 als basis. Geen cross-campagne bonussen tussen deze campagnes (zie hoofdstuk 14).
+
+---
+
+## 16. Wegen & de settler (bouw-ritme)
+
+Nieuw spelmechanisme (in de MVP, zie hoofdstuk 13): het bouwen van improvements voelde te snel aan zonder iets actiefs ertussen. De oplossing bestaat uit twee met elkaar verbonden regels: bouwprojecten worden schaarser, en er komt een aparte, actieve eenheid — de settler — om de tussenliggende beurten te vullen. Zie hoofdstuk 11 ("Settler en bouw-ritme...") voor de reden achter deze keuze.
+
+**Bouw-ritme**
+- De eerste bouw-pop-up (beurt 1) blijft ongewijzigd: de speler mag meteen iets bouwen.
+- Daarna mag een nieuw bouwproject nog maar **om de 3 beurten** gestart worden (beurt 1, 4, 7, 10, ...) — ongeacht of de speler op een eerder bouwmoment daadwerkelijk iets koos of de pop-up sloot zonder te bouwen.
+- Dit geldt alleen voor het starten van een *nieuw* bouwproject; een improvement die al "in_aanbouw" is, blijft gewoon doorbouwen via de bestaande productiewachtrij (hoofdstuk 5).
+
+**De settler**
+- Verschijnt aan het begin van **beurt 2**, startend op de stad-tile.
+- Verplaatst **1 vakje per beurt**: vooruit/achteruit (een laag omhoog/omlaag, dezelfde positie in de band) of zijwaarts (dezelfde laag, één positie links/rechts) — nooit diagonaal, en nooit buiten al ontgrendeld gebied.
+- Kan in plaats van bewegen ook een **weg aanleggen** op het vakje waar hij staat. Dat kost geen grondstoffen, alleen die ene beurt (geen meerdere-beurten-wachtrij zoals bij improvements, hoofdstuk 5).
+- Eén actie (bewegen óf een weg aanleggen) per beurt — de speler hoeft de settler niet elke beurt te gebruiken.
+- Visueel: een huifkar, in lijn met de MVP-plaatshouderstijl (hoofdstuk 13: "grove/simpele placeholders zijn prima").
+
+**Wegen activeren resource-productie**
+- Een land improvement (mijn, boerderij, houtkap, steengroeve, heiligdom, wachttoren) is pas **actief-producerend** zodra zijn vakje via een aaneengesloten keten van wegen verbonden is met de stad-tile — de weg hoeft niet over het improvement-vakje zelf te lopen, alleen ertoe te leiden (aangrenzend aan het wegennetwerk volstaat).
+- Zonder verbinding blijft de improvement gewoon gebouwd en zichtbaar (en telt gewoon mee voor uitputting, hoofdstuk 4), maar levert hij niets op totdat de wegverbinding er is.
+- Dit maakt wegenaanleg geen losstaand extraatje maar een echte voorwaarde voor de economie — de actieve handeling die de rustigere bouw-ritme hierboven opvult.
+
+**Tutorial**
+- Bij beurt 2 (zodra de settler verschijnt) krijgt de speler een eenmalige uitleg-pop-up over de settler, wegen en het nieuwe bouw-ritme — los van, en aanvullend op, de bestaande per-beurt basisbegrippen-uitleg (grondstoffen/improvements) uit de eerste beurten.

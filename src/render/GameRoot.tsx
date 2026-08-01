@@ -12,6 +12,8 @@ import LaagPopup from "@/components/LaagPopup";
 import MilitairPaneel from "@/components/MilitairPaneel";
 import MilitairUitlegPopup from "@/components/MilitairUitlegPopup";
 import ResourceHud from "@/components/ResourceHud";
+import SettlerPaneel from "@/components/SettlerPaneel";
+import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
 import SpelActiesMenu from "@/components/SpelActiesMenu";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
@@ -52,6 +54,8 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     startRecrutering,
     confrontatie,
     bevestigIneenstorting,
+    verplaatsSettler,
+    legWegAan,
     opslaan,
     laden,
   } = useGameEngine();
@@ -95,6 +99,9 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // patroon als `laatstBevestigdeLaag` hierboven.
   const [militairUitlegBevestigd, setMilitairUitlegBevestigd] = useState(false);
   const [tutorialVoltooidBevestigd, setTutorialVoltooidBevestigd] = useState(false);
+  // Settler-uitleg-pop-up (M10, hoofdstuk 16): zelfde eenmalige-confirm-vlag
+  // als de twee hierboven, getoond zodra de settler in beurt 2 verschijnt.
+  const [settlerUitlegBevestigd, setSettlerUitlegBevestigd] = useState(false);
   // Bouwen gebeurt op de huidige frontier-laag: de hoogste ontgrendelde laag
   // (M5: welke laag dat is, verandert zodra cultuur een nieuwe laag ontgrendelt).
   const actieveLaag = state.lagen.find(
@@ -183,20 +190,33 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   const toonLaagPopup = actieveLaag.hoogte > laatstBevestigdeLaag;
   const toonUitlegPopup =
     !toonLaagPopup && state.beurt > laatstBevestigdeUitlegBeurt && state.beurt <= AFSLUITENDE_UITLEG_BEURT;
+  // Settler-uitleg direct nadat de settler in beurt 2 verschijnt (hoofdstuk
+  // 16) — gekoppeld aan `state.settler` zelf i.p.v. een los beurtnummer, dus
+  // hij verschijnt op precies hetzelfde moment als de settler zelf.
+  const toonSettlerUitlegPopup = !toonLaagPopup && !toonUitlegPopup && Boolean(state.settler) && !settlerUitlegBevestigd;
   // Militaire-uitleg direct na de laag-pop-up van laag 12 (issue: "als je op
   // het laatst in de tutorial bij de militaire confrontatie bent, uitleg
   // over hoe je het moet aanpakken").
   const toonMilitairUitlegPopup =
-    !toonLaagPopup && !toonUitlegPopup && actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL && !militairUitlegBevestigd;
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
+    !militairUitlegBevestigd;
   // Tutorial-voltooid-samenvatting zodra de confrontatie op laag 12 gewonnen
   // is (issue: "pop-up met summary wat je geleerd hebt").
   const toonTutorialVoltooidPopup =
     !toonLaagPopup &&
     !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
     !toonMilitairUitlegPopup &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     state.laatsteConfrontatie?.gewonnen === true &&
     !tutorialVoltooidBevestigd;
+  // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
+  // worden vanaf `volgendeBouwBeurt` — de `?? 1` is puur een veilige default
+  // voor een save van vóór dit veld bestond.
+  const kanBouwen = state.beurt >= (state.volgendeBouwBeurt ?? 1);
 
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
@@ -219,9 +239,11 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
           lagen={zichtbareLagenState}
           stad={state.stad}
           plaatsingsLaagHoogte={plaatsingsImprovement ? actieveLaag.hoogte : undefined}
+          settler={state.settler}
           onTileClick={(hoogte, positieInLaag) => setGeselecteerdeTile({ hoogte, positieInLaag })}
         />
         <LaagIntroPaneel lagen={state.lagen} />
+        <SettlerPaneel state={state} onVerplaats={verplaatsSettler} onLegWegAan={legWegAan} />
         <GroeiPaneel state={state} onStartGroei={startGroei} />
         {toonMilitair && (
           <MilitairPaneel
@@ -239,6 +261,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
         {toonUitlegPopup && (
           <UitlegPopup beurt={state.beurt} onDoorgaan={() => setLaatstBevestigdeUitlegBeurt(state.beurt)} />
         )}
+        {toonSettlerUitlegPopup && <SettlerUitlegPopup onDoorgaan={() => setSettlerUitlegBevestigd(true)} />}
         {toonTutorialVoltooidPopup && (
           <TutorialVoltooidPopup
             onDoorgaan={() => {
@@ -252,10 +275,12 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
           zichtbaar={
             !toonLaagPopup &&
             !toonUitlegPopup &&
+            !toonSettlerUitlegPopup &&
             !toonMilitairUitlegPopup &&
             !toonTutorialVoltooidPopup &&
             !state.bouwKeuzeGedaanDitBeurt &&
-            !plaatsingsImprovement
+            !plaatsingsImprovement &&
+            kanBouwen
           }
           onBouwStarten={(improvement) => setPlaatsingsImprovement(improvement)}
           onSluiten={sluitBouwKeuze}
