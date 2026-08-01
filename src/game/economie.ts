@@ -36,13 +36,22 @@
 // uitputting van een deel van de actieve land-tiles (schade, geen
 // instant-verlies van de stad zelf).
 //
+// Wachttoren & indringers (hoofdstuk 6): naast de verdedigingsbonus hierboven
+// beschermt een actieve Wachttoren ook de hele laag waarop hij staat tegen
+// indringers — een los, per-beurt risico (`verwerkIndringers` hieronder,
+// gebruikt door `volgendeBeurt`). Zonder wachttoren op de frontier-laag eisen
+// indringers tribuut uit de gedeelde opslag; de speler kiest geven
+// (`geefTribuut`) of weigeren (`weigerTribuut`). Heiligdom en Wachttoren
+// putten (hoofdstuk 4) bewust niet uit — zie improvements.ts.
+//
 // Exacte getallen (opslag-cap, kosten, productiesnelheden, uitputtingssnelheid,
 // winkans-formule) zijn nog niet vastgelegd in het design-document
 // (hoofdstuk 14) — de waarden hieronder zijn bewuste MVP-placeholders, geen
 // definitieve balans.
 
 import { improvementPastOpTerrein, SOLDAAT, WOONWIJK } from "./improvements";
-import { City, ConfrontatieResultaat, GameState, Improvement, MateriaalType, ResourceType, Tile } from "./types";
+import { INDRINGERS_STAMMEN } from "./tutorialContent";
+import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, Layer, MateriaalType, ResourceType, Tile } from "./types";
 import {
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
@@ -173,10 +182,17 @@ function berekenVoedselNetto(state: GameState): number {
 // voorraad kan dus, anders dan bouwmateriaal, ook weer afnemen. Nooit onder
 // nul: zodra de voorraad nul bereikt, ziet `verwerkVerval` dat als een
 // voedseltekort.
+//
+// Heiligdom & de frontier (hoofdstuk 6): cultuurproductie telt voluit mee op
+// de frontier-laag (de hoogst ontgrendelde laag) zelf, en voor de helft op
+// elke laag daaronder — uitbeelding van een Heiligdom dat vooral nabije,
+// nog niet "eigen" stammen omtovert, een effect dat afneemt naarmate de laag
+// verder van het actieve grensgebied ligt.
 function verwerkProductie(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
   let voedsel = state.voedsel;
   let cultuur = state.cultuur;
+  const frontierHoogte = hoogsteOntgrendeldeLaag(state.lagen);
 
   for (const laag of state.lagen) {
     for (const tile of laag.tiles) {
@@ -194,7 +210,7 @@ function verwerkProductie(state: GameState): GameState {
       }
 
       if (effect.resource === "cultuur") {
-        cultuur += effect.waarde;
+        cultuur += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
       } else if (isMateriaalType(effect.resource)) {
         voorraad[effect.resource] = Math.min(
           state.opslagCap,
@@ -619,6 +635,103 @@ export function confrontatie(state: GameState): GameState {
   return { ...state, lagen, laatsteConfrontatie };
 }
 
+// Kans per beurt dat indringers de frontier-laag binnendringen (hoofdstuk 6).
+// Bewuste MVP-placeholder, net als de overige tuning-getallen in dit bestand
+// (hoofdstuk 14) — expliciet tunebaar genoemd in het issue dat deze feature
+// aanvroeg.
+const INDRINGERS_KANS = 0.5;
+
+function heeftActieveWachttoren(laag: Layer): boolean {
+  return laag.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "wachttoren");
+}
+
+// Het grondstof-type waar de speler op dit moment het meest van heeft, met
+// ongeveer de helft daarvan als tribuut-eis (hoofdstuk 6: "iets specifieks...
+// ongeveer de helft van datgene wat je op dat moment het meest op voorraad
+// hebt"). Geeft `null` als er niets in voorraad is — het spel eist dan geen
+// tribuut dat er niet is (issue: "het spel kijkt wel of je het hebt").
+function kiesTribuut(voorraad: Record<MateriaalType, number>): IndringersTribuut | null {
+  let grootsteType: MateriaalType | null = null;
+  let grootsteWaarde = 0;
+
+  for (const type of Object.keys(voorraad) as MateriaalType[]) {
+    if (voorraad[type] > grootsteWaarde) {
+      grootsteWaarde = voorraad[type];
+      grootsteType = type;
+    }
+  }
+
+  if (!grootsteType) return null;
+  return { resource: grootsteType, aantal: Math.max(1, Math.round(grootsteWaarde / 2)) };
+}
+
+// Indringers & tribuut (nieuwe Wachttoren-functie, hoofdstuk 6): elke beurt
+// een kans dat een tribe de frontier-laag (de hoogst ontgrendelde laag)
+// binnendringt. Een actieve Wachttoren op die laag verdedigt de hele laag —
+// er gebeurt dan niets, alleen een meldings-pop-up. Zonder wachttoren eist de
+// tribe tribuut (zie `kiesTribuut`); de speler lost dit verder zelf op via
+// `geefTribuut`/`weigerTribuut` hieronder. Rolt geen nieuwe gebeurtenis zolang
+// een vorige melding nog open staat.
+function verwerkIndringers(state: GameState): GameState {
+  if (state.indringersEvent) return state;
+  if (Math.random() >= INDRINGERS_KANS) return state;
+
+  const laagHoogte = hoogsteOntgrendeldeLaag(state.lagen);
+  const frontierLaag = state.lagen.find((laag) => laag.hoogte === laagHoogte);
+  if (!frontierLaag) return state;
+
+  const stamNaam = INDRINGERS_STAMMEN[Math.floor(Math.random() * INDRINGERS_STAMMEN.length)];
+
+  if (heeftActieveWachttoren(frontierLaag)) {
+    return { ...state, indringersEvent: { laagHoogte, stamNaam, heeftWachttoren: true, fase: "gemeld" } };
+  }
+
+  const tribuut = kiesTribuut(state.voorraad);
+  if (!tribuut) return state;
+
+  return {
+    ...state,
+    indringersEvent: { laagHoogte, stamNaam, heeftWachttoren: false, tribuut, fase: "gemeld" },
+  };
+}
+
+// Sluit een gemelde-maar-onschadelijke indringers-melding (wachttoren hield
+// stand) zonder verdere gevolgen.
+export function sluitIndringersMelding(state: GameState): GameState {
+  return { ...state, indringersEvent: undefined };
+}
+
+// Geeft het geëiste tribuut: trekt het af van de gedeelde opslag (nooit onder
+// nul) en sluit de melding. Gebruikt zowel voor de bewuste "Geef tribuut"-
+// keuze als voor de afgedwongen betaling na een geweigerd tribuut zonder
+// vorige stad (`bevestigGedwongenTribuut` hieronder).
+export function geefTribuut(state: GameState): GameState {
+  const event = state.indringersEvent;
+  if (!event?.tribuut) return state;
+
+  const voorraad = { ...state.voorraad };
+  voorraad[event.tribuut.resource] = Math.max(0, voorraad[event.tribuut.resource] - event.tribuut.aantal);
+  return { ...state, voorraad, indringersEvent: undefined };
+}
+
+// Weigert het tribuut (hoofdstuk 6): normaal verwoesten de indringers de stad
+// en valt de speler terug op de vorige stad, als die er is. De MVP kent nog
+// maar één stad (hoofdstuk 13) — zonder toevlucht wordt het tribuut alsnog
+// betaald, wat hier eerst zichtbaar wordt gemaakt (`fase: "geforceerd"`)
+// zodat de pop-up dat kan uitleggen vóór `bevestigGedwongenTribuut` het int.
+export function weigerTribuut(state: GameState): GameState {
+  const event = state.indringersEvent;
+  if (!event?.tribuut) return state;
+  return { ...state, indringersEvent: { ...event, fase: "geforceerd" } };
+}
+
+// Int het afgedwongen tribuut na `weigerTribuut` hierboven — zelfde effect als
+// `geefTribuut`, maar bewust als losse actie zodat de UI het onderscheid kan
+// tonen (bewuste keuze vs. afgedwongen).
+export function bevestigGedwongenTribuut(state: GameState): GameState {
+  return geefTribuut(state);
+}
+
 // Start de bouw van een land improvement op de tile die de speler zelf heeft
 // aangewezen (klik-op-tile plaatsing, zie GameRoot: `plaatsingsImprovement`).
 // Geeft de ongewijzigde status terug als die tile niet (meer) leeg is, of als
@@ -710,15 +823,16 @@ export function legWegAan(state: GameState): GameState {
 // (issue: "eerst de grondstoffen binnenkomen, en daarna wordt gecheckt of je
 // afgaat" — een tile/weg die deze beurt klaarkomt telt zo al mee vóór de
 // instort-check), dan de stadsgroei-bouwwachtrij (M6) en de
-// Soldaat-rekruteringswachtrij (M7), dan de beurtteller ophogen. Zet ook de
-// bouwkeuze-vlag (hoofdstuk 11) weer terug, zodat de bouw-pop-up bij het
-// begin van de nieuwe beurt weer verschijnt.
+// Soldaat-rekruteringswachtrij (M7), dan de indringers-kans (hoofdstuk 6),
+// dan de beurtteller ophogen. Zet ook de bouwkeuze-vlag (hoofdstuk 11) weer
+// terug, zodat de bouw-pop-up bij het begin van de nieuwe beurt weer
+// verschijnt.
 //
 // Stort de stad deze beurt volledig in, dan geeft `verwerkVerval` al een
 // verse, gereset spelstatus terug (issue: "run eindigen wanneer stad
-// uitgeput is") — de resterende stappen (groei/rekrutering, beurtteller)
-// slaan we dan over, anders zou de net herstarte tutorial meteen op beurt 2
-// beginnen.
+// uitgeput is") — de resterende stappen (groei/rekrutering, indringers,
+// beurtteller) slaan we dan over, anders zou de net herstarte tutorial
+// meteen op beurt 2 beginnen.
 export function volgendeBeurt(state: GameState): GameState {
   const naUitputting = verwerkUitputting(state);
   const naBouw = verwerkBouwwachtrij(naUitputting);
@@ -729,15 +843,16 @@ export function volgendeBeurt(state: GameState): GameState {
 
   const naGroei = verwerkGroei(naVerval);
   const naRecrutering = verwerkRecrutering(naGroei);
-  const nieuweBeurt = naRecrutering.beurt + 1;
+  const naIndringers = verwerkIndringers(naRecrutering);
+  const nieuweBeurt = naIndringers.beurt + 1;
 
   // De settler verschijnt bij de stad zodra beurt 2 begint (hoofdstuk 16) —
   // en blijft daarna gewoon staan waar de speler 'm laatst neerzette.
   const settler =
-    naRecrutering.settler ?? (nieuweBeurt >= 2 ? { hoogte: 1, positieInLaag: STAD_POSITIE } : undefined);
+    naIndringers.settler ?? (nieuweBeurt >= 2 ? { hoogte: 1, positieInLaag: STAD_POSITIE } : undefined);
 
   return {
-    ...naRecrutering,
+    ...naIndringers,
     beurt: nieuweBeurt,
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,

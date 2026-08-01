@@ -5,6 +5,7 @@ import BouwPopup from "@/components/BouwPopup";
 import GroeiPaneel from "@/components/GroeiPaneel";
 import HistoriePaneel from "@/components/HistoriePaneel";
 import HoofdMenu from "@/components/HoofdMenu";
+import IndringersPopup from "@/components/IndringersPopup";
 import IneenstortingScherm from "@/components/IneenstortingScherm";
 import IntroScherm from "@/components/IntroScherm";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
@@ -56,6 +57,10 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     confrontatie,
     verplaatsSettler,
     legWegAan,
+    sluitIndringersMelding,
+    geefTribuut,
+    weigerTribuut,
+    bevestigGedwongenTribuut,
     opslaan,
     laden,
   } = useGameEngine();
@@ -213,6 +218,12 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     !toonSettlerUitlegPopup &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     !militairUitlegBevestigd;
+  // Indringers-pop-up (nieuwe Wachttoren-functie, hoofdstuk 6) — verschijnt
+  // zodra `verwerkIndringers` (economie.ts) een gebeurtenis op de
+  // frontier-laag heeft gezet. Blijft in beeld tot de speler de melding
+  // afhandelt (geven/weigeren/afgedwongen tribuut of gewoon wegklikken).
+  const toonIndringersPopup =
+    !toonLaagPopup && !toonUitlegPopup && !toonSettlerUitlegPopup && !toonMilitairUitlegPopup && Boolean(state.indringersEvent);
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is") — zie economie.ts
   // `verwerkVerval` voor de trigger zelf (voedsel dreigt binnen 5 beurten op
@@ -222,6 +233,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonMilitairUitlegPopup &&
+    !toonIndringersPopup &&
     state.stad.vervalStatus === "kritiek" &&
     !voedselWaarschuwingBevestigd;
   // Tutorial-voltooid-samenvatting zodra de confrontatie op laag 12 gewonnen
@@ -231,6 +243,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonMilitairUitlegPopup &&
+    !toonIndringersPopup &&
     !toonVoedselWaarschuwingPopup &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     state.laatsteConfrontatie?.gewonnen === true &&
@@ -286,6 +299,15 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
           <LaagPopup hoogte={actieveLaag.hoogte} onDoorgaan={() => setLaatstBevestigdeLaag(actieveLaag.hoogte)} />
         )}
         {toonMilitairUitlegPopup && <MilitairUitlegPopup onDoorgaan={() => setMilitairUitlegBevestigd(true)} />}
+        {toonIndringersPopup && state.indringersEvent && (
+          <IndringersPopup
+            event={state.indringersEvent}
+            onGeefTribuut={geefTribuut}
+            onWeigerTribuut={weigerTribuut}
+            onBevestigGedwongenTribuut={bevestigGedwongenTribuut}
+            onSluiten={sluitIndringersMelding}
+          />
+        )}
         {toonUitlegPopup && (
           <UitlegPopup beurt={state.beurt} onDoorgaan={() => setLaatstBevestigdeUitlegBeurt(state.beurt)} />
         )}
@@ -311,6 +333,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
             !toonUitlegPopup &&
             !toonSettlerUitlegPopup &&
             !toonMilitairUitlegPopup &&
+            !toonIndringersPopup &&
             !toonVoedselWaarschuwingPopup &&
             !toonTutorialVoltooidPopup &&
             !state.bouwKeuzeGedaanDitBeurt &&

@@ -146,3 +146,11 @@ export const INEENSTORTING_FLAVOR_TEKST =
   "Niemand voedt het meer. Het valt terug tot as.\n" +
   "Wat gebouwd was, wordt weer land.\n" +
   "De rivier buigt nog steeds hetzelfde. Een nieuw vuur wacht op dezelfde oever.";
+
+// Indringers-tribuut-pop-up (nieuwe Wachttoren-functie, hoofdstuk 6): een
+// willekeurige naam uit deze pool wordt gekozen door `verwerkIndringers` in
+// economie.ts zodra een tribe de frontier-laag binnendringt. Zelfde
+// stijlgids als de rest van dit bestand — kort, concreet, geen moreel oordeel.
+export const INDRINGERS_STAMMEN = ["de stam van de Halve Maan", "de stam van de Bloedhoeven"];
+
+export const INDRINGERS_TITEL = "Indringers bij de grens";

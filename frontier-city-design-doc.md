@@ -33,9 +33,9 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 |---|---|---|---|---|
 | **Economisch** | Markt, opslagplaats | Boerderij, mijn, houtkap | Karavaan | Goedkopere improvements in elke volgende stad |
 | **Wetenschappelijk** | Bibliotheek, observatorium, universiteit | Onderzoekspost | Verkenner (tijdelijke extra vooruitkijk) | Permanent groter vooruitkijk-bereik |
-| **Militair** | Barakken, muur, wapensmid | Wachttoren (beschermt lege lagen tegen barbaren) | Soldaat, ruiter, artillerie | Extra unit-slot / gratis startgarnizoen |
+| **Militair** | Barakken, muur, wapensmid | Wachttoren (verdedigt de hele laag tegen indringers, put niet uit — zie hoofdstuk 6) | Soldaat, ruiter, artillerie | Extra unit-slot / gratis startgarnizoen |
 | **Civiel** | Aquaduct, riolering, woonwijk (= groei-tiers) | Weg, brug | Ingenieur (versnelt bouw) | Snellere groei-rijptijd in volgende steden |
-| **Cultureel** | Tempel, amfitheater, monument | Heiligdom | Missionaris/diplomaat (voor pushback) | Korting op cultuurkosten voor nieuwe lagen |
+| **Cultureel** | Tempel, amfitheater, monument | Heiligdom (put niet uit; volle cultuur alleen op de frontier-laag, anders de helft — zie hoofdstuk 6) | Missionaris/diplomaat (voor pushback) | Korting op cultuurkosten voor nieuwe lagen |
 
 - "Weg" uit de tabel hierboven is voor de MVP geen gewone, met een categorie-keuze te bouwen land improvement meer, maar een apart settler-mechanisme — zie hoofdstuk 16. "Brug" blijft, net als de rest van de post-MVP-scope, voorlopig ongebouwd.
 - Pool-grootte per categorie (basisversie): 6-8 city improvements, 4-6 land improvement-types, 2-3 units.
@@ -49,6 +49,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - **Stadsgrootte**: klein → middel → groot. Elke tier kost een civiel improvement + rijptijd (geen instant-klik).
 - Hoe groter de tier, hoe meer **relic-slots** (specialisatie-bonussen) je kunt vullen — maar hoe langer je blijft, hoe verder het omliggende land uitput.
 - **Land improvements putten uit** (per type verschillende snelheid — mijnen sneller dan boerderijen), en worden daarna permanent **ghost-town-tiles**: onbebouwbaar, maar met kleine passieve culturele waarde en een rol in flavor-teksten aan het einde van een run.
+- **Uitzondering: Wachttoren en Heiligdom putten niet uit.** Ze blijven permanent actief in plaats van ooit een ghost-town-tile te worden — allebei zijn een structurele, doorlopende aanwezigheid (wachtpost, cultusplek) in plaats van een verbruikende oogst zoals een mijn of boerderij. Zie hoofdstuk 6 voor wat ze in plaats daarvan wél doen (indringers afweren, cultuur produceren).
 - **Voedsel is de directe trigger van verval, niet landuitputting zelf**: een stad verbruikt elke beurt voedsel (hoe groter de tier, hoe meer monden), tegenover de voedselproductie van actieve, wegverbonden boerderijen. Dreigt die voorraad — bij het huidige tempo — binnen een paar beurten op te raken, dan verschijnt een **zichtbare waarschuwingsstatus** ("kritiek"); bouw je op tijd bij (extra boerderij, wegverbinding), dan wordt de status weer gezond. Landuitputting draagt hier alleen **indirect** aan bij: minder producerende tiles zetten de voedselbalans onder druk, maar veroorzaken zelf geen instorting meer.
 - **Reageer je op tijd** (vertrekken/relics oogsten): je behoudt alles wat je tot dan toe hebt verdiend.
 - **Negeer je het**: kans op volledige ineenstorting — **ook de relics van eerder voltooide tiers gaan dan verloren** (permadeath-risico op stadsniveau). Dit is de centrale risk/reward-gok van elke stad-episode.
@@ -85,6 +86,17 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 **Culturele pushback (sterke tribe weerstaat expansie):**
 - Geen gevecht — een **oplopende cultuurkostprijs** (bijv. dubbel) voor het ontgrendelen van die specifieke laag.
 - Diplomatiek keuzemoment: **Erkennen/aanpassen** (permanente kleine wederzijdse korting), **Doordrukken** (hogere kost nu, blijvend hogere basiskost daarna), of **Terugtrekken** (laag laten zitten, zijwaarts verder zoeken indien mogelijk).
+
+**Wachttoren & indringers:**
+- Elke beurt is er een kans (MVP-richtwaarde 50%, tunebaar — hoofdstuk 14) dat een tribe de **frontier-laag** (de hoogst ontgrendelde laag) binnendringt. Een pop-up meldt dit met een korte flavor-tekst en tribenaam (bijv. "de stam van de Halve Maan" of "de stam van de Bloedhoeven").
+- Staat er een actieve Wachttoren op die laag, dan gebeurt er niets — de pop-up meldt dat de wachttoren stand houdt en de indringers zich terugtrekken. De Wachttoren verdedigt zo **de hele laag**, niet alleen zijn eigen vakje — een aparte functie naast zijn bestaande verdedigingsbonus bij een directe militaire confrontatie hierboven.
+- Zonder Wachttoren op de frontier-laag eisen de indringers **tribuut**: ongeveer de helft van het grondstof-type (hout/steen/erts/goud) waar de speler op dat moment het meest van heeft — het spel eist nooit meer dan er daadwerkelijk in voorraad is.
+  - **Geven**: het tribuut wordt van de gedeelde opslag afgetrokken, de indringers trekken zich terug.
+  - **Weigeren**: de indringers verwoesten de stad, en de speler valt terug op de vorige stad — als die er is. In de huidige MVP-scope (hoofdstuk 13: één stad, nog geen frontier-verplaatsing) is die vorige stad er nooit, dus wordt het tribuut in dat geval alsnog betaald (de pop-up legt dit uit zodra het zich voordoet). Zodra meerdere steden bestaan, wordt "weigeren zonder wachttoren" een echt risico: de actieve stad gaat verloren en de speler valt terug op de voorgaande.
+
+**Heiligdom & de frontier:**
+- Een Heiligdom produceert onbeperkt cultuur, ook nadat de frontier verder omhoog is getrokken — het put, net als de Wachttoren, niet uit (hoofdstuk 4).
+- Alleen als het Heiligdom op de frontier-laag zelf staat, levert het de volle opbrengst; op elke laag daaronder levert het nog maar de **helft**. Dat beeldt uit dat een Heiligdom vooral nabije, nog niet "eigen" stammen omtovert tot de eigen stam — een effect dat afneemt naarmate de laag verder van het actieve grensgebied af komt te liggen.
 
 ---
 
@@ -219,6 +231,12 @@ Frostpunk dwingt spelers één opslagtype te kiezen per gebouw, wat in de prakti
 **Twee gescheiden systemen voor militair conflict en culturele pushback**
 Een direct gevecht (unit-sterkte vergelijken) en het weerstaan van een cultureel sterke tribe zijn thematisch verschillende soorten weerstand — de eerste is fysiek, de tweede diplomatiek/economisch. Door ze als aparte systemen te ontwerpen (in plaats van beide via legersterkte af te handelen) blijven de vijf categorieën ook mechanisch onderscheidend: militair lost fysieke dreiging op, cultureel lost expansie-weerstand op.
 
+**Wachttoren en Heiligdom putten niet uit**
+De overige land improvements (mijn, boerderij, houtkap, steengroeve) stellen een eindige oogst voor — hun hele nut ligt in het opgebruiken van een hulpbron. Een Wachttoren en een Heiligdom stellen iets anders voor: een blijvende aanwezigheid (een wachtpost, een cultusplek) die niet "op" kan raken. Ze een levensduur geven zou de speler dwingen ze op den duur te vervangen zonder dat daar een thematische reden voor is — in plaats daarvan krijgen ze allebei een doorlopend, tunebaar effect (indringers-bescherming resp. cultuurproductie) dat wél kan verzwakken (Heiligdom, buiten de frontier) maar nooit stopt.
+
+**Wachttoren verdedigt de hele laag, niet alleen zichzelf**
+Een verdedigingsbonus die alleen meetelt bij een directe, door de speler gestarte confrontatie (het bestaande M7-systeem) beloont de Wachttoren pas op het moment dat de speler toch al voorbereid was. Door de Wachttoren daarnaast een passieve, elke-beurt-kans-gedreven dreiging (indringers-tribuut) volledig te laten blokkeren, wordt hij ook waardevol als voorzorgsmaatregel — precies het gevoel van een wachtpost, in plaats van alleen een statistiekbonus tijdens een gevecht dat de speler zelf initieert.
+
 **Vertakkende verhaalstructuur met een gedeelde slotscène i.p.v. volledig lineair of volledig random**
 Volledig vaste verhaalmomenten (altijd dezelfde gebeurtenis op dezelfde laag) zouden na een paar runs voorspelbaar worden; volledig random getrokken gebeurtenissen zouden geen samenhangend verhaal opbouwen. Een keuzeboom met een paar vaste ankerpunten (waarvan de invulling reageert op eerdere keuzes) geeft het gevoel van een reagerend verhaal, terwijl het aantal te schrijven scenario's beheersbaar blijft — mede mogelijk gemaakt door bij het laatste ankerpunt de paden samen te laten komen in één kernscène met tonale varianten, in plaats van vier volledig aparte eindes.
 
@@ -305,7 +323,7 @@ interface Improvement {
   bouwtijdBeurten: number;
   effect: EffectDefinition; // resource-productie, unlock, bonus, etc.
   zeldzaamheid?: "gewoon" | "rijk" | "legendarisch"; // alleen relevant voor land-improvements, post-MVP
-  uitputtingBeurten?: number; // alleen land-improvements
+  uitputtingBeurten?: number; // alleen land-improvements; `undefined` voor Wachttoren/Heiligdom (hoofdstuk 4/6: putten niet uit)
   terreinEisen?: TerreinType[]; // alleen land-improvements; geen eis = overal plaatsbaar (hoofdstuk 3/11)
 }
 
@@ -345,6 +363,17 @@ interface City {
 // (net als `bouwKeuzeGedaanDitBeurt`, maar dan voor de settler) en
 // `volgendeBouwBeurt` (de eerstvolgende beurt waarop weer een nieuw
 // bouwproject gestart mag worden — het bouw-ritme van hoofdstuk 16).
+
+// Indringers-tribuut (hoofdstuk 6): GameState krijgt daarnaast een optionele
+// `indringersEvent`, gezet zodra de per-beurt-kans een tribe op de
+// frontier-laag laat binnendringen.
+interface IndringersEvent {
+  laagHoogte: number;
+  stamNaam: string;
+  heeftWachttoren: boolean;
+  tribuut?: { resource: "hout" | "steen" | "erts" | "goud"; aantal: number }; // alleen als !heeftWachttoren
+  fase: "gemeld" | "geforceerd"; // "geforceerd" = weigeren zonder vorige stad, MVP-uitzondering (hoofdstuk 13)
+}
 
 interface CampaignConfig {
   id: string;
@@ -419,6 +448,8 @@ Binnen de gekozen range wordt random getrokken; een bergengte/obstakel-zone word
 
 *Winkans-formule militaire confrontaties*:
 > Winkans = eigen legerwaarde / (eigen legerwaarde + vijand legerwaarde), geclampt tussen 10% en 90%.
+
+*Indringers & tribuut (hoofdstuk 6)*: kans op indringers op de frontier-laag = 50% per beurt (MVP-richtwaarde, tunebaar). Tribuut zonder wachttoren = ongeveer de helft (afgerond, minimaal 1) van het grondstof-type waar de speler op dat moment het meest van heeft, nooit meer dan de aanwezige voorraad.
 
 **Lange mars (Anker 3, na Terugvechten — Amerikaanse campagne)**
 - Uitgestrekt over 3-4 opeenvolgende lagen in plaats van één piekmoment.

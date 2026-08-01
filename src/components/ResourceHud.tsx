@@ -1,14 +1,8 @@
 "use client";
 
+import { MATERIAAL_LABELS } from "@/game/improvements";
 import { GameState, MateriaalType } from "@/game/types";
 import { cultuurKostenVoorLaag, hoogsteOntgrendeldeLaag } from "@/game/world";
-
-const MATERIAAL_LABELS: Record<MateriaalType, string> = {
-  hout: "Hout",
-  steen: "Steen",
-  erts: "Erts",
-  goud: "Goud",
-};
 
 interface ResourceHudProps {
   state: GameState;

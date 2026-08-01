@@ -159,6 +159,29 @@ export interface CampaignConfig {
 // onderdeel van deze gedeelde pool (aparte voorraad resp. drempel-tellers).
 export type MateriaalType = "hout" | "steen" | "erts" | "goud";
 
+// Indringers & tribuut (nieuwe Wachttoren-functie, hoofdstuk 6): elke beurt is
+// er een kans dat een tribe de frontier-laag (de hoogst ontgrendelde laag)
+// binnendringt. `tribuut` is alleen aanwezig als er geen actieve Wachttoren op
+// die laag staat.
+export interface IndringersTribuut {
+  resource: MateriaalType;
+  aantal: number;
+}
+
+// `fase: "geforceerd"` is de MVP-uitzondering (hoofdstuk 13: nog geen
+// meerdere steden) op het "weiger → stad verwoest, terugval naar vorige
+// stad"-pad uit hoofdstuk 6: zonder vorige stad om naar terug te vallen wordt
+// het tribuut alsnog betaald — zie `weigerTribuut`/`bevestigGedwongenTribuut`
+// in economie.ts. Zodra meerdere steden bestaan (post-MVP), kan "weigeren"
+// hier in plaats daarvan echt tot stadsverlies leiden.
+export interface IndringersEvent {
+  laagHoogte: number;
+  stamNaam: string;
+  heeftWachttoren: boolean;
+  tribuut?: IndringersTribuut;
+  fase: "gemeld" | "geforceerd";
+}
+
 // Volledige spelstatus voor de MVP (één actieve stad, één band van 9 vakjes,
 // meerdere lagen). Zie hoofdstuk 13 voor de scope-afbakening.
 export interface GameState {
@@ -208,4 +231,9 @@ export interface GameState {
   // (hoofdstuk 16: bouw-ritme, "om de 3 beurten"). Begint op 1 zodat de
   // allereerste bouw-pop-up gewoon blijft verschijnen.
   volgendeBouwBeurt: number;
+  // Lopende indringers-melding (hoofdstuk 6), gezet door `verwerkIndringers`
+  // in economie.ts zodra een beurt een binnendringende tribe oplevert.
+  // `undefined` zolang er geen (onopgeloste) melding is — de UI blokkeert
+  // dan geen andere pop-ups.
+  indringersEvent?: IndringersEvent;
 }
