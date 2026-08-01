@@ -449,7 +449,7 @@ Binnen de gekozen range wordt random getrokken; een bergengte/obstakel-zone word
 *Winkans-formule militaire confrontaties*:
 > Winkans = eigen legerwaarde / (eigen legerwaarde + vijand legerwaarde), geclampt tussen 10% en 90%.
 
-*Indringers & tribuut (hoofdstuk 6)*: kans op indringers op de frontier-laag = 50% per beurt (MVP-richtwaarde, tunebaar). Tribuut zonder wachttoren = ongeveer de helft (afgerond, minimaal 1) van het grondstof-type waar de speler op dat moment het meest van heeft, nooit meer dan de aanwezige voorraad.
+*Indringers & tribuut (hoofdstuk 6)*: kans op indringers op de frontier-laag = 50% per beurt (MVP-richtwaarde, tunebaar), en pas een factor vanaf laag 3 — de eerste twee lagen blijven zo een rustige introductie. Tribuut zonder wachttoren = ongeveer de helft (afgerond, minimaal 1) van het grondstof-type waar de speler op dat moment het meest van heeft, nooit meer dan de aanwezige voorraad.
 
 **Lange mars (Anker 3, na Terugvechten — Amerikaanse campagne)**
 - Uitgestrekt over 3-4 opeenvolgende lagen in plaats van één piekmoment.

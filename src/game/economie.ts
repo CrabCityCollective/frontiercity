@@ -59,7 +59,7 @@ import {
   STAD_POSITIE,
   VOEDSEL_DREMPEL_GROEI,
 } from "./world";
-import { isTileVerbondenMetStad, magSettlerNaar, SettlerRichting, volgendePositie } from "./wegen";
+import { bereikbarePosities, isTileVerbondenMetStad } from "./wegen";
 
 export const OPSLAG_CAP = 30;
 
@@ -641,6 +641,12 @@ export function confrontatie(state: GameState): GameState {
 // aanvroeg.
 const INDRINGERS_KANS = 0.5;
 
+// Indringers zijn pas vanaf deze frontier-laag een factor (issue: "ik wil
+// graag dat indringers pas een factor worden vanaf laag 3, nu is het te
+// moeilijk") — de eerste twee lagen blijven zo een rustige introductie zonder
+// dat risico.
+const INDRINGERS_MIN_LAAG = 3;
+
 function heeftActieveWachttoren(laag: Layer): boolean {
   return laag.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "wachttoren");
 }
@@ -674,9 +680,10 @@ function kiesTribuut(voorraad: Record<MateriaalType, number>): IndringersTribuut
 // een vorige melding nog open staat.
 function verwerkIndringers(state: GameState): GameState {
   if (state.indringersEvent) return state;
+  const laagHoogte = hoogsteOntgrendeldeLaag(state.lagen);
+  if (laagHoogte < INDRINGERS_MIN_LAAG) return state;
   if (Math.random() >= INDRINGERS_KANS) return state;
 
-  const laagHoogte = hoogsteOntgrendeldeLaag(state.lagen);
   const frontierLaag = state.lagen.find((laag) => laag.hoogte === laagHoogte);
   if (!frontierLaag) return state;
 
@@ -780,18 +787,22 @@ export function sluitBouwKeuze(state: GameState): GameState {
   return { ...state, bouwKeuzeGedaanDitBeurt: true, volgendeBouwBeurt: state.beurt + BOUW_RITME_BEURTEN };
 }
 
-// Verplaatst de settler één vakje (hoofdstuk 16), als er niet al een
-// settler-actie deze beurt gebruikt is en het doelvakje binnen ontgrendeld
-// gebied ligt. Negeert de aanroep stilzwijgend bij een ongeldige zet — de UI
-// (SettlerPaneel) controleert dit al vóór het tonen van de knop, dit is een
-// tweede, veilige check (zelfde patroon als `startBouw`/terrein-eisen).
-export function verplaatsSettler(state: GameState, richting: SettlerRichting): GameState {
+// Verplaatst de settler naar een aangeklikte tile (issue: "de tegels waar je
+// heen kunt lichten op, door te klikken op een tegel ga je er naar toe"),
+// als er niet al een settler-actie deze beurt gebruikt is en de tile één van
+// de direct bereikbare buurvakjes is. Negeert de aanroep stilzwijgend bij een
+// ongeldige zet — de canvas (GameRoot) markeert alleen de bereikbare vakjes
+// als klikbaar, dit is een tweede, veilige check (zelfde patroon als
+// `startBouw`/terrein-eisen).
+export function verplaatsSettlerNaar(state: GameState, hoogte: number, positieInLaag: number): GameState {
   if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
 
-  const doel = volgendePositie(state.settler, richting);
-  if (!magSettlerNaar(state.lagen, doel)) return state;
+  const magErheen = bereikbarePosities(state.lagen, state.settler).some(
+    (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
+  );
+  if (!magErheen) return state;
 
-  return { ...state, settler: doel, settlerActieGedaanDitBeurt: true };
+  return { ...state, settler: { hoogte, positieInLaag }, settlerActieGedaanDitBeurt: true };
 }
 
 // Legt een weg aan op het vakje waar de settler nu staat (hoofdstuk 16): geen

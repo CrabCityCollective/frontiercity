@@ -1,29 +1,21 @@
 "use client";
 
 import { GameState } from "@/game/types";
-import { magSettlerNaar, SettlerRichting, volgendePositie } from "@/game/wegen";
 
 interface SettlerPaneelProps {
   state: GameState;
-  onVerplaats: (richting: SettlerRichting) => void;
   onLegWegAan: () => void;
 }
 
-const RICHTING_LABELS: Record<SettlerRichting, string> = {
-  vooruit: "Vooruit",
-  achteruit: "Achteruit",
-  links: "Links",
-  rechts: "Rechts",
-};
-
-const RICHTINGEN = Object.keys(RICHTING_LABELS) as SettlerRichting[];
-
-// Settler-bediening (M10, hoofdstuk 16): verplaatsen (1 vakje per beurt,
-// voor/achter/zijwaarts) of een weg aanleggen op het huidige vakje — allebei
-// hoogstens 1 keer per beurt (`settlerActieGedaanDitBeurt`). Verschijnt pas
-// zodra de settler bestaat (vanaf beurt 2, zie economie.ts `volgendeBeurt`).
-// Puur placeholder-styling, zelfde patroon als GroeiPaneel/MilitairPaneel.
-export default function SettlerPaneel({ state, onVerplaats, onLegWegAan }: SettlerPaneelProps) {
+// Settler-bediening (M10, hoofdstuk 16; issue: "de settler unit is actief
+// als je aan je beurt begint, de tegels waar je heen kunt lichten op, door
+// te klikken op een tegel ga je er naar toe"): verplaatsen gebeurt voortaan
+// direct op de canvas (zie GameRoot: `settlerBereikbarePosities` +
+// `onTileClick`) — dit paneel toont alleen nog de status en de
+// weg-aanleggen-knop. Allebei hoogstens 1 keer per beurt
+// (`settlerActieGedaanDitBeurt`). Verschijnt pas zodra de settler bestaat
+// (vanaf beurt 2, zie economie.ts `volgendeBeurt`).
+export default function SettlerPaneel({ state, onLegWegAan }: SettlerPaneelProps) {
   const { settler } = state;
   if (!settler) return null;
 
@@ -51,18 +43,12 @@ export default function SettlerPaneel({ state, onVerplaats, onLegWegAan }: Settl
         Laag {settler.hoogte}, vakje {settler.positieInLaag + 1}
         {heeftAlWeg ? " — hier ligt al een weg" : ""}
       </span>
+      {kanActie && (
+        <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
+          Klik op een oplichtende tegel op de kaart om de settler daarheen te verplaatsen.
+        </span>
+      )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-        {RICHTINGEN.map((richting) => (
-          <button
-            key={richting}
-            className="fc-knop"
-            disabled={!kanActie || !magSettlerNaar(state.lagen, volgendePositie(settler, richting))}
-            onClick={() => onVerplaats(richting)}
-            style={{ padding: "0.3rem 0.6rem" }}
-          >
-            {RICHTING_LABELS[richting]}
-          </button>
-        ))}
         <button
           className="fc-knop"
           disabled={!kanActie || heeftAlWeg}

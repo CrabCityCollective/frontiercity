@@ -35,6 +35,19 @@ export function magSettlerNaar(lagen: Layer[], positie: Settler): boolean {
   return positie.hoogte >= 1 && positie.hoogte <= hoogsteOntgrendeldeLaag(lagen);
 }
 
+const ALLE_RICHTINGEN: SettlerRichting[] = ["vooruit", "achteruit", "links", "rechts"];
+
+// De vakjes waar de settler deze beurt direct naartoe kan (issue: "de tegels
+// waar je heen kunt lichten op, door te klikken op een tegel ga je er naar
+// toe") — gebruikt zowel om die vakjes op de canvas te markeren als om een
+// klik op zo'n vakje als geldige zet te herkennen (zie economie.ts:
+// `verplaatsSettlerNaar`).
+export function bereikbarePosities(lagen: Layer[], settler: Settler): Settler[] {
+  return ALLE_RICHTINGEN.map((richting) => volgendePositie(settler, richting)).filter((positie) =>
+    magSettlerNaar(lagen, positie)
+  );
+}
+
 function tileSleutel(hoogte: number, positieInLaag: number): string {
   return `${hoogte}:${positieInLaag}`;
 }

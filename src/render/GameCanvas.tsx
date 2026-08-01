@@ -20,6 +20,11 @@ interface GameCanvasProps {
   // Positie van de settler-eenheid (M10, hoofdstuk 16) — `undefined` tot
   // beurt 2, zie economie.ts `volgendeBeurt`.
   settler?: Settler;
+  // Vakjes waar de settler deze beurt direct naartoe kan (issue: "de tegels
+  // waar je heen kunt lichten op") — zolang dit gezet is markeert de canvas
+  // die vakjes en stuurt een klik erop naar `onTileClick` als verplaatsing
+  // i.p.v. tile-selectie (zie GameRoot).
+  settlerBereikbarePosities?: Settler[];
   onTileClick: (hoogte: number, positieInLaag: number) => void;
 }
 
@@ -51,7 +56,14 @@ function bepaalAangeklikteTile(
   return { hoogte, positieInLaag };
 }
 
-export default function GameCanvas({ lagen, stad, plaatsingsLaagHoogte, settler, onTileClick }: GameCanvasProps) {
+export default function GameCanvas({
+  lagen,
+  stad,
+  plaatsingsLaagHoogte,
+  settler,
+  settlerBereikbarePosities,
+  onTileClick,
+}: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -61,8 +73,8 @@ export default function GameCanvas({ lagen, stad, plaatsingsLaagHoogte, settler,
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    tekenWereld(ctx, canvas.width, canvas.height, lagen, stad, plaatsingsLaagHoogte, settler);
-  }, [lagen, stad, plaatsingsLaagHoogte, settler]);
+    tekenWereld(ctx, canvas.width, canvas.height, lagen, stad, plaatsingsLaagHoogte, settler, settlerBereikbarePosities);
+  }, [lagen, stad, plaatsingsLaagHoogte, settler, settlerBereikbarePosities]);
 
   function handleClick(event: MouseEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;

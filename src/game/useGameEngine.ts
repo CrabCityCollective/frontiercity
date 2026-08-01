@@ -13,13 +13,12 @@ import {
   startBouw as startBouwActie,
   startGroei as startGroeiActie,
   startRecrutering as startRecruteringActie,
-  verplaatsSettler as verplaatsSettlerActie,
+  verplaatsSettlerNaar as verplaatsSettlerNaarActie,
   volgendeBeurt as volgendeBeurtActie,
   weigerTribuut as weigerTribuutActie,
 } from "./economie";
 import { laadSpel, saveSpel } from "./save";
 import { Improvement } from "./types";
-import { SettlerRichting } from "./wegen";
 
 // React-hook rond de spelstatus (M3). Geen aparte state-library nodig voor
 // de MVP-omvang — één useState met pure update-functies uit economie.ts.
@@ -75,8 +74,8 @@ export function useGameEngine() {
     setState((huidig) => bevestigIneenstortingActie(huidig));
   }, []);
 
-  const verplaatsSettler = useCallback((richting: SettlerRichting) => {
-    setState((huidig) => verplaatsSettlerActie(huidig, richting));
+  const verplaatsSettlerNaar = useCallback((hoogte: number, positieInLaag: number) => {
+    setState((huidig) => verplaatsSettlerNaarActie(huidig, hoogte, positieInLaag));
   }, []);
 
   const legWegAan = useCallback(() => {
@@ -108,7 +107,7 @@ export function useGameEngine() {
     startRecrutering,
     confrontatie,
     bevestigIneenstorting,
-    verplaatsSettler,
+    verplaatsSettlerNaar,
     legWegAan,
     sluitIndringersMelding,
     geefTribuut,
