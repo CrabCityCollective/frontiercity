@@ -83,7 +83,7 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
       tile.improvement.soort === "land"
         ? isTileVerbondenMetStad(lagen, laag.hoogte, positieInLaag)
           ? " Verbonden met de stad via een weg."
-          : " Nog niet verbonden met de stad — legt pas iets af zodra de settler hier een weg naartoe heeft aangelegd."
+          : " Nog niet verbonden met de stad — legt pas iets af zodra de settler op dit vakje zelf een weg heeft aangelegd, verbonden met het wegennetwerk naar de stad."
         : "";
     return {
       titel: tile.improvement.naam,
