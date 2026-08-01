@@ -54,7 +54,6 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     startGroei,
     startRecrutering,
     confrontatie,
-    bevestigIneenstorting,
     verplaatsSettler,
     legWegAan,
     opslaan,
@@ -246,7 +245,13 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
   if (toonIntro) return <IntroScherm onBeginnen={bevestigIntro} />;
   if (state.laatsteIneenstorting) {
-    return <IneenstortingScherm onDoorgaan={bevestigIneenstorting} statistieken={state.laatsteRunStatistieken} />;
+    // Na een ineenstorting terug naar het beginscherm van het spel (issue:
+    // "na het game over scherm terug naar het begin scherm, niet naar het
+    // begin van de tutorial") — `onVerlaten` unmount GameRoot, waardoor de
+    // volgende sessie (via het menu) weer met een verse `useGameEngine`-status
+    // en het introscherm begint, in plaats van meteen door te spelen op de
+    // (door `verwerkVerval` al gereset) tutorial-status.
+    return <IneenstortingScherm onDoorgaan={onVerlaten} statistieken={state.laatsteRunStatistieken} />;
   }
 
   return (
