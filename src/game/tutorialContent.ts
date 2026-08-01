@@ -153,7 +153,7 @@ export const BOERDERIJ_KLAAR_TEKST =
 // klikt (zie MilitairPaneel/GameRoot).
 export const STRIJDER_BEMAN_TITEL = "Welke wachttoren wil je bemannen?";
 export const STRIJDER_BEMAN_TEKST =
-  "Deze strijder kan één Wachttoren bemannen. Kies een Wachttoren, en klik daarna op de kaart op een actieve Wachttoren om hem daar te plaatsen. Eenmaal bemand kun je een strijder niet meer terughalen.";
+  "Deze strijder kan één Wachttoren bemannen. Kies een Wachttoren, en klik daarna op de kaart op een actieve Wachttoren om hem daar te plaatsen. Je kunt een bemande strijder later terughalen om elders te bemannen, maar hij is dan een paar beurten onderweg voordat hij weer inzetbaar is.";
 
 // Ineenstortingsscherm, getoond zodra de stad instort (M6, hoofdstuk 4: hard
 // verval). In de MVP (één stad, geen frontier-verplaatsing, hoofdstuk 13)

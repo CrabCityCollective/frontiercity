@@ -87,6 +87,20 @@ const VOEDSEL_VERBRUIK: Record<City["grootte"], number> = {
 };
 const VOEDSEL_WAARSCHUWING_BEURTEN = 5;
 
+// Bemannings-voedselverbruik (hoofdstuk 6/11/14, issue: "wachttorens,
+// bemanning en bevoorrading"): elke bemande Wachttoren kost 1 voedsel/beurt
+// bovenop het stadsverbruik hierboven — een wachtpost moet ook gevoed worden,
+// niet alleen bevoorraad met bouwmateriaal. Doorgerekend tegen de
+// boerderij-opbrengst (4 voedsel/beurt, zie ECONOMISCH_LAND_IMPROVEMENTS):
+// zelfs een kleine stad met maar 1 actieve boerderij houdt na het eigen
+// verbruik (2) nog 2 voedsel/beurt over, genoeg voor 2 bemande wachttorens
+// zonder in de min te komen; een speler die gaandeweg de tutorial (12 lagen)
+// een paar boerderijen bijbouwt, houdt ruim voldoende marge over voor alle
+// wachttorens die realistisch nodig zijn (hoofdstuk 11 heeft de volledige
+// onderbouwing, hoofdstuk 14 de cijfers) — vandaar geen aanpassing elders in
+// de voedseleconomie nodig.
+const WACHTTOREN_VOEDSEL_VERBRUIK = 1;
+
 // Militair-tuning (M7, hoofdstuk 6/14): net als de verval-tuning bewuste
 // MVP-placeholders. `WINKANS_MIN`/`WINKANS_MAX` zorgen dat een confrontatie
 // nooit een gegarandeerde uitkomst is, ook bij extreme krachtsverschillen.
@@ -95,6 +109,13 @@ const WINKANS_MAX = 0.95;
 const BUIT_GOUD_FACTOR = 0.5;
 const SCHADE_TILES_AANTAL = 2;
 const SCHADE_BEURTEN = 3;
+
+// Strijder-verplaatsing (hoofdstuk 6/11/14, issue: "wachttorens, bemanning en
+// bevoorrading"): een teruggehaalde strijder is dit aantal beurten onderweg
+// voordat hij weer aan een (andere) Wachttoren toegewezen kan worden — maakt
+// terughalen een herziene keuze in plaats van gratis heen-en-weer schuiven,
+// zonder er een straf van te maken (zie `haalStrijderTerug` hieronder).
+const STRIJDER_VERPLAATSING_BEURTEN = 2;
 
 // Kuddes & settler-jacht (hoofdstuk 16/17; issue: "kuddes met dieren waar je
 // op kunt jagen voor voedsel"): een losse settler-actie naast bewegen/weg
@@ -188,10 +209,11 @@ function berekenVoedselProductie(state: GameState): number {
 
 // Netto voedselverbruik per beurt (issue: "stad instort of verlaten alleen
 // als er te weinig voedsel is"): een grotere stad heeft meer monden te voeden
-// (hoofdstuk 10, laag 10-flavor). Nog geen aparte multiplier per campagne
-// nodig in de MVP (hoofdstuk 13).
-function voedselVerbruik(grootte: City["grootte"]): number {
-  return VOEDSEL_VERBRUIK[grootte];
+// (hoofdstuk 10, laag 10-flavor), plus 1 voedsel per bemande Wachttoren
+// (hoofdstuk 6/11/14, `WACHTTOREN_VOEDSEL_VERBRUIK` hierboven). Nog geen
+// aparte multiplier per campagne nodig in de MVP (hoofdstuk 13).
+function voedselVerbruik(state: GameState): number {
+  return VOEDSEL_VERBRUIK[state.stad.grootte] + telBemandeWachttorens(state) * WACHTTOREN_VOEDSEL_VERBRUIK;
 }
 
 // Netto voedselverandering deze beurt: productie min verbruik. Negatief
@@ -199,7 +221,7 @@ function voedselVerbruik(grootte: City["grootte"]): number {
 // (om de voorraad bij te werken) als `verwerkVerval` (om te voorspellen
 // wanneer de voorraad op raakt).
 function berekenVoedselNetto(state: GameState): number {
-  return berekenVoedselProductie(state) - voedselVerbruik(state.stad.grootte);
+  return berekenVoedselProductie(state) - voedselVerbruik(state);
 }
 
 // Past productie toe van elke actieve land-improvement met een "productie"-effect.
@@ -315,6 +337,29 @@ function investeerInBouwkosten(
 
   const voltooid = (Object.values(nieuweVoortgang) as number[]).every((rest) => rest <= 0);
   return { nieuweVoortgang, voltooid };
+}
+
+// Resterende beurten tot een lopende bouw/rekrutering klaar is, uitgaande van
+// dezelfde per-beurt-investering als `investeerInBouwkosten` hierboven (dus:
+// zolang de voorraad het bijhoudt). Gebruikt door het militaire scherm
+// (hoofdstuk 6/11, issue: "wachttorens, bemanning en bevoorrading" — punt 4:
+// "hoeveel beurten er nóg te gaan zijn" bij een soldaat die al in opleiding
+// is) in plaats van de speler te laten gokken, op dezelfde manier als de
+// bouw-pop-up elders al de totale bouwtijd van een nog niet gestarte
+// improvement toont.
+export function resterendeBouwBeurten(
+  improvement: Improvement,
+  voortgang: Partial<Record<ResourceType, number>>
+): number {
+  let maxBeurten = 0;
+  for (const key of Object.keys(voortgang) as ResourceKey[]) {
+    const resterend = voortgang[key] ?? 0;
+    if (resterend <= 0) continue;
+    const totaal = improvement.kosten[key] ?? 0;
+    const perBeurt = Math.ceil(totaal / improvement.bouwtijdBeurten);
+    maxBeurten = Math.max(maxBeurten, Math.ceil(resterend / perBeurt));
+  }
+  return maxBeurten;
 }
 
 function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number>): Tile {
@@ -604,6 +649,28 @@ function isWachttorenBemand(strijders: Strijder[], hoogte: number, positieInLaag
   );
 }
 
+// Aantal actieve, bemande Wachttoren-tiles over alle lagen heen (hoofdstuk
+// 6/11/14): de basis voor het bemannings-voedselverbruik in `voedselVerbruik`
+// hierboven. Telt bewust ook niet-wegverbonden bemande torens mee — de
+// bemanning moet gevoed worden ongeacht of de toren op dit moment ook
+// daadwerkelijk beschermt (wegverbinding is alleen een eis voor de
+// indringers-bescherming zelf, zie `heeftBeschermendeWachttoren` verderop).
+function telBemandeWachttorens(state: GameState): number {
+  let aantal = 0;
+  for (const laag of state.lagen) {
+    for (const tile of laag.tiles) {
+      if (
+        tile.status === "actief" &&
+        tile.improvement?.id === "wachttoren" &&
+        isWachttorenBemand(state.stad.strijders, laag.hoogte, tile.positieInLaag)
+      ) {
+        aantal += 1;
+      }
+    }
+  }
+  return aantal;
+}
+
 // Totale legerwaarde (hoofdstuk 6: "units + muur/wachttoren-bonus"): elke
 // opgeleide strijder telt mee (ongeacht of hij een Wachttoren bemant), plus
 // de passieve verdedigingsbonus van elke actieve, bemande Wachttoren-tile
@@ -858,11 +925,17 @@ export function bevestigGedwongenTribuut(state: GameState): GameState {
 
 // Start de bouw van een land improvement op de tile die de speler zelf heeft
 // aangewezen (klik-op-tile plaatsing, zie GameRoot: `plaatsingsImprovement`).
-// Geeft de ongewijzigde status terug als die tile niet (meer) leeg is, of als
-// het terrein niet aan de eis van de improvement voldoet (issue: "houtkap
-// alleen op bos" e.d.) — de aanroeper controleert dit al vóór het tonen van
-// de "hier bouwen?"-vraag, dit is een tweede, veilige check. Verbruikt altijd
-// de bouwkeuze van deze beurt (hoofdstuk 11: hoogstens 1 bouwkeuze per beurt).
+// Geeft de ongewijzigde status terug als die laag niet ontgrendeld is, de
+// tile niet (meer) leeg is, of als het terrein niet aan de eis van de
+// improvement voldoet (issue: "houtkap alleen op bos" e.d.) — de aanroeper
+// controleert dit al vóór het tonen van de "hier bouwen?"-vraag, dit is een
+// tweede, veilige check. Bewust geen aparte "is dit de frontier-laag?"-check
+// hier: alleen de UI (GameRoot) beperkt normale improvements tot de
+// frontier-laag, terwijl `bouwbaarBuitenFrontier`-improvements (hoofdstuk
+// 6/11, momenteel alleen de Wachttoren) op elke ontgrendelde laag mogen —
+// deze functie staat dus élke ontgrendelde laag toe en vertrouwt op de
+// aanroeper voor de rest van die keuze. Verbruikt altijd de bouwkeuze van
+// deze beurt (hoofdstuk 11: hoogstens 1 bouwkeuze per beurt).
 export function startBouw(
   state: GameState,
   laagHoogte: number,
@@ -871,6 +944,7 @@ export function startBouw(
 ): GameState {
   const lagen = state.lagen.map((laag) => {
     if (laag.hoogte !== laagHoogte) return laag;
+    if (!laag.ontgrendeld) return laag;
 
     const doelTile = laag.tiles[positieInLaag];
     if (!doelTile || doelTile.status !== "leeg") return laag;
@@ -1014,11 +1088,12 @@ export function heeftWerkendeBoerderij(state: GameState): boolean {
 
 // Bemant een Wachttoren met een specifieke strijder (nieuwe Wachttoren-functie,
 // hoofdstuk 6): via het militaire paneel kiest de speler eerst een nog
-// onbemande strijder, dan een actieve, nog onbemande Wachttoren-tile op de
-// kaart. Geeft de ongewijzigde status terug bij een ongeldige combinatie
-// (strijder bestaat niet, is al bemand, of het doel is geen actieve,
-// onbemande Wachttoren) — eenmaal bemand is dit onomkeerbaar (issue: "je kunt
-// je strijder niet meer uit eerdere wachttorens halen").
+// onbemande, niet-onderweg-zijnde strijder, dan een actieve, nog onbemande
+// Wachttoren-tile op de kaart. Geeft de ongewijzigde status terug bij een
+// ongeldige combinatie (strijder bestaat niet, is al bemand, is nog onderweg
+// na een eerdere `haalStrijderTerug`, of het doel is geen actieve, onbemande
+// Wachttoren). Toewijzen is sinds hoofdstuk 6/11 omkeerbaar (issue:
+// "wachttorens, bemanning en bevoorrading") via `haalStrijderTerug` hieronder.
 export function bemanWachttoren(
   state: GameState,
   strijderId: string,
@@ -1026,7 +1101,7 @@ export function bemanWachttoren(
   positieInLaag: number
 ): GameState {
   const strijder = state.stad.strijders.find((s) => s.id === strijderId);
-  if (!strijder || strijder.wachttoren) return state;
+  if (!strijder || strijder.wachttoren || strijder.onderwegBeurtenResterend) return state;
 
   const laag = state.lagen.find((l) => l.hoogte === hoogte);
   const tile = laag?.tiles[positieInLaag];
@@ -1036,6 +1111,42 @@ export function bemanWachttoren(
   const strijders = state.stad.strijders.map((s) =>
     s.id === strijderId ? { ...s, wachttoren: { hoogte, positieInLaag } } : s
   );
+
+  return { ...state, stad: { ...state.stad, strijders } };
+}
+
+// Haalt een bemande strijder terug van zijn Wachttoren (hoofdstuk 6/11, issue:
+// "wachttorens, bemanning en bevoorrading" — vervangt de eerdere onomkeerbare
+// toewijzing). De Wachttoren zelf raakt meteen onbemand (en dus, tenzij een
+// andere strijder hem overneemt, onbeschermd — zie `heeftBeschermendeWachttoren`),
+// maar de strijder is niet meteen elders inzetbaar: `onderwegBeurtenResterend`
+// (`STRIJDER_VERPLAATSING_BEURTEN` hierboven) telt af via `verwerkStrijdersOnderweg`
+// in `volgendeBeurt`, zodat terughalen een herziene keuze is, geen gratis
+// heen-en-weer-schuiven. Geen effect op een strijder die niet bemand is.
+export function haalStrijderTerug(state: GameState, strijderId: string): GameState {
+  const strijder = state.stad.strijders.find((s) => s.id === strijderId);
+  if (!strijder || !strijder.wachttoren) return state;
+
+  const strijders = state.stad.strijders.map((s) =>
+    s.id === strijderId
+      ? { ...s, wachttoren: undefined, onderwegBeurtenResterend: STRIJDER_VERPLAATSING_BEURTEN }
+      : s
+  );
+
+  return { ...state, stad: { ...state.stad, strijders } };
+}
+
+// Telt de resterende verplaatsingstijd van elke onderweg-zijnde strijder af
+// (hoofdstuk 6/11/14, na `haalStrijderTerug` hierboven) — op nul is de
+// strijder weer inzetbaar voor `bemanWachttoren`. Onderdeel van de
+// `volgendeBeurt`-pijplijn, net als de overige per-beurt-tellers in dit
+// bestand (uitputting, groei, rekrutering).
+function verwerkStrijdersOnderweg(state: GameState): GameState {
+  const strijders = state.stad.strijders.map((strijder) => {
+    if (!strijder.onderwegBeurtenResterend) return strijder;
+    const resterend = strijder.onderwegBeurtenResterend - 1;
+    return { ...strijder, onderwegBeurtenResterend: resterend > 0 ? resterend : undefined };
+  });
 
   return { ...state, stad: { ...state.stad, strijders } };
 }
@@ -1059,10 +1170,11 @@ export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
 // (issue: "eerst de grondstoffen binnenkomen, en daarna wordt gecheckt of je
 // afgaat" — een tile/weg die deze beurt klaarkomt telt zo al mee vóór de
 // instort-check), dan de stadsgroei-bouwwachtrij (M6) en de
-// Soldaat-rekruteringswachtrij (M7), dan de indringers-kans (hoofdstuk 6) en
-// de kuddes-kans (hoofdstuk 16/17), dan de beurtteller ophogen. Zet ook de
-// bouwkeuze-vlag (hoofdstuk 11) weer terug, zodat de bouw-pop-up bij het
-// begin van de nieuwe beurt weer verschijnt.
+// Soldaat-rekruteringswachtrij (M7), de strijder-verplaatsingstellers
+// (hoofdstuk 6/11, `verwerkStrijdersOnderweg` na `haalStrijderTerug`), dan de
+// indringers-kans (hoofdstuk 6) en de kuddes-kans (hoofdstuk 16/17), dan de
+// beurtteller ophogen. Zet ook de bouwkeuze-vlag (hoofdstuk 11) weer terug,
+// zodat de bouw-pop-up bij het begin van de nieuwe beurt weer verschijnt.
 //
 // Stort de stad deze beurt volledig in, dan geeft `verwerkVerval` al een
 // verse, gereset spelstatus terug (issue: "run eindigen wanneer stad
@@ -1079,7 +1191,8 @@ export function volgendeBeurt(state: GameState): GameState {
 
   const naGroei = verwerkGroei(naVerval);
   const naRecrutering = verwerkRecrutering(naGroei);
-  const naIndringers = verwerkIndringers(naRecrutering);
+  const naStrijdersOnderweg = verwerkStrijdersOnderweg(naRecrutering);
+  const naIndringers = verwerkIndringers(naStrijdersOnderweg);
   const naKuddes = verwerkKuddes(naIndringers);
   const nieuweBeurt = naKuddes.beurt + 1;
 

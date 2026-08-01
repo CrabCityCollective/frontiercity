@@ -145,6 +145,13 @@ export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
 // komt in aanmerking, niet alleen de frontier-laag). Geen `uitputtingBeurten`
 // (hoofdstuk 4/6): een Wachttoren, net als het Heiligdom hierboven, blijft
 // permanent actief in plaats van uit te putten.
+//
+// `bouwbaarBuitenFrontier` (hoofdstuk 6/11, issue: "wachttorens, bemanning en
+// bevoorrading"): een expliciete uitzondering op de algemene frontier-only
+// bouwregel — anders zou een achtergelaten laag permanent onverdedigbaar
+// worden zodra de frontier verder trekt, terwijl indringers overal kunnen
+// toeslaan. Thematisch passend: forten werden juist áchter de oprukkende
+// grens aangelegd, niet aan de voorste rand.
 export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
   {
     id: "wachttoren",
@@ -154,6 +161,7 @@ export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
     kosten: { hout: 6, steen: 4 },
     bouwtijdBeurten: 2,
     effect: { type: "verdediging", waarde: 3 },
+    bouwbaarBuitenFrontier: true,
   },
 ];
 
@@ -198,23 +206,36 @@ const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   cultureel: CULTUREEL_LAND_IMPROVEMENTS,
 };
 
+// Of `improvement` een leeg, terrein-geschikt vakje heeft op `laag`, en daar
+// niet al gebouwd staat — de kern-plaatsingscheck, per laag.
+function kanImprovementOpLaag(improvement: Improvement, laag: Layer): boolean {
+  const reedsGebouwd = laag.tiles.some((tile) => tile.improvement?.id === improvement.id);
+  if (reedsGebouwd) return false;
+  return laag.tiles.some(
+    (tile) => tile.status === "leeg" && improvementPastOpTerrein(improvement, tile.terrein)
+  );
+}
+
 // Opties voor de categorie-keuze-UI (hoofdstuk 11: eerst categorie, dan 2-3
 // concrete opties). Sluit improvements uit die al op deze laag gebouwd zijn,
 // én improvements met een terrein-eis (zie `Improvement.terreinEisen`) die
 // geen enkel leeg vakje op deze laag kan plaatsen — anders zou de speler een
 // optie kunnen kiezen die nergens neergezet kan worden.
-export function beschikbareOpties(categorie: Improvement["categorie"], laag: Layer): Improvement[] {
-  const reedsGebouwdeIds = laag.tiles
-    .map((tile) => tile.improvement?.id)
-    .filter((id): id is string => Boolean(id));
-  const legeTerreinen = laag.tiles
-    .filter((tile) => tile.status === "leeg")
-    .map((tile) => tile.terrein);
-
-  return IMPROVEMENT_POOLS[categorie].filter(
-    (improvement) =>
-      !reedsGebouwdeIds.includes(improvement.id) &&
-      legeTerreinen.some((terrein) => improvementPastOpTerrein(improvement, terrein))
+//
+// `bouwbaarBuitenFrontier`-improvements (hoofdstuk 6/11: momenteel alleen de
+// Wachttoren) zijn hierop een uitzondering: die tellen als beschikbaar zodra
+// er ergens op een ontgrendelde laag (niet per se `laag` zelf) een geldig
+// leeg vakje voor ze is — `alleLagen` is nodig om dat over de hele band heen
+// te checken.
+export function beschikbareOpties(
+  categorie: Improvement["categorie"],
+  laag: Layer,
+  alleLagen: Layer[]
+): Improvement[] {
+  return IMPROVEMENT_POOLS[categorie].filter((improvement) =>
+    improvement.bouwbaarBuitenFrontier
+      ? alleLagen.some((l) => l.ontgrendeld && kanImprovementOpLaag(improvement, l))
+      : kanImprovementOpLaag(improvement, laag)
   );
 }
 
@@ -238,9 +259,10 @@ function shuffle<T>(items: T[]): T[] {
 export function willekeurigeOpties(
   categorie: Improvement["categorie"],
   laag: Layer,
+  alleLagen: Layer[],
   verplichteId?: string
 ): Improvement[] {
-  const beschikbaar = beschikbareOpties(categorie, laag);
+  const beschikbaar = beschikbareOpties(categorie, laag, alleLagen);
   const aantal = Math.random() < 0.5 ? 2 : 3;
 
   const verplicht = verplichteId ? beschikbaar.find((improvement) => improvement.id === verplichteId) : undefined;

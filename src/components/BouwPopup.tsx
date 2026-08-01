@@ -78,6 +78,11 @@ function formatteerKosten(improvement: Improvement): string {
 
 interface BouwPopupProps {
   laag: Layer;
+  // Alle lagen (hoofdstuk 6/11): nodig om `bouwbaarBuitenFrontier`-improvements
+  // (momenteel alleen de Wachttoren) als beschikbaar te herkennen zodra ze
+  // ergens op een ontgrendelde laag geplaatst kunnen worden, niet alleen op
+  // `laag` (de frontier) zelf.
+  alleLagen: Layer[];
   // Beurtnummer (issue: "alleen de eerste beurt de houtkap altijd tussen de
   // te kiezen improvements staat") — gebruikt om in beurt 1 de Houtkap-optie
   // te garanderen binnen de economische categorie.
@@ -95,7 +100,7 @@ interface BouwPopupProps {
 // pop-up verdwijnt (zie `plaatsingsImprovement` in GameRoot) en de speler
 // wijst zelf een lege tile op de kaart aan om hem neer te zetten — pas dan
 // wordt `bouwKeuzeGedaanDitBeurt` gezet.
-export default function BouwPopup({ laag, beurt, zichtbaar, onBouwStarten, onSluiten }: BouwPopupProps) {
+export default function BouwPopup({ laag, alleLagen, beurt, zichtbaar, onBouwStarten, onSluiten }: BouwPopupProps) {
   const [gekozenCategorie, setGekozenCategorie] = useState<Categorie | null>(null);
   const [opties, setOpties] = useState<Improvement[]>([]);
 
@@ -115,7 +120,7 @@ export default function BouwPopup({ laag, beurt, zichtbaar, onBouwStarten, onSlu
   function kiesCategorie(categorie: Categorie) {
     setGekozenCategorie(categorie);
     const verplichteId = beurt === 1 && categorie === "economisch" ? "houtkap" : undefined;
-    setOpties(willekeurigeOpties(categorie, laag, verplichteId));
+    setOpties(willekeurigeOpties(categorie, laag, alleLagen, verplichteId));
   }
 
   return (
@@ -153,10 +158,13 @@ export default function BouwPopup({ laag, beurt, zichtbaar, onBouwStarten, onSlu
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
               {CATEGORIEEN.map((categorie) => {
                 // Uitgegrijsd (issue: "categorieën waarin je niks kunt bouwen
-                // uitgegrijsd") als er geen lege vakjes meer zijn, of als deze
-                // categorie geen nog-niet-gebouwde improvements meer heeft op
-                // deze laag.
-                const kanBouwen = legeTilesResterend > 0 && beschikbareOpties(categorie, laag).length > 0;
+                // uitgegrijsd") als deze categorie geen nog-niet-gebouwde
+                // improvements meer heeft met een geldig leeg vakje —
+                // `beschikbareOpties` kijkt voor `bouwbaarBuitenFrontier`-
+                // improvements (Wachttoren) ook naar andere ontgrendelde
+                // lagen, dus dit hoeft niet af te hangen van lege vakjes op
+                // déze (frontier-)laag specifiek.
+                const kanBouwen = beschikbareOpties(categorie, laag, alleLagen).length > 0;
                 return (
                   <button
                     key={categorie}
@@ -188,15 +196,21 @@ export default function BouwPopup({ laag, beurt, zichtbaar, onBouwStarten, onSlu
               {CATEGORIE_LABELS[gekozenCategorie]}
             </strong>
 
-            {legeTilesResterend === 0 && <p style={{ margin: 0 }}>Geen lege vakjes meer op deze laag.</p>}
+            {/* `opties` houdt zelf al rekening met `bouwbaarBuitenFrontier`-
+                improvements (Wachttoren) die elders ontgrendeld nog wél een
+                leeg vakje hebben — "geen lege vakjes" is dus alleen terecht
+                als er ook geen opties over zijn. */}
+            {legeTilesResterend === 0 && opties.length === 0 && (
+              <p style={{ margin: 0 }}>Geen lege vakjes meer op deze laag.</p>
+            )}
 
-            {legeTilesResterend > 0 && opties.length === 0 && (
+            {opties.length === 0 && legeTilesResterend > 0 && (
               <p style={{ margin: 0 }}>
                 Nog geen opties beschikbaar in de categorie {CATEGORIE_LABELS[gekozenCategorie]}.
               </p>
             )}
 
-            {legeTilesResterend > 0 && opties.length > 0 && (
+            {opties.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                 {opties.map((improvement) => {
                   const terreinEis = terreinEisenBeschrijving(improvement);
@@ -207,6 +221,11 @@ export default function BouwPopup({ laag, beurt, zichtbaar, onBouwStarten, onSlu
                       {terreinEis && (
                         <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
                           Alleen op {terreinEis}
+                        </span>
+                      )}
+                      {improvement.bouwbaarBuitenFrontier && (
+                        <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                          Kan op elke ontgrendelde laag gebouwd worden
                         </span>
                       )}
                     </button>

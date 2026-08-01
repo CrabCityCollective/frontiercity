@@ -68,6 +68,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     weigerTribuut,
     bevestigGedwongenTribuut,
     bemanWachttoren,
+    haalStrijderTerug,
     zetUitlegPopups,
     opslaan,
     laden,
@@ -207,11 +208,19 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
         : null;
 
   // De tile die de speler heeft aangeklikt terwijl er een improvement klaar
-  // staat om geplaatst te worden — alleen gezet als die klik ook op de
-  // actieve (bouwbare) laag viel.
+  // staat om geplaatst te worden. Normaal alleen geldig op de actieve
+  // (frontier-)laag; `bouwbaarBuitenFrontier`-improvements (hoofdstuk 6/11:
+  // momenteel alleen de Wachttoren) mogen op elke ontgrendelde laag, dus daar
+  // telt elke aangeklikte tile op een ontgrendelde laag mee.
   const doelTileVoorPlaatsing =
-    plaatsingsImprovement && geselecteerdeTile && geselecteerdeTile.hoogte === actieveLaag.hoogte
-      ? actieveLaag.tiles[geselecteerdeTile.positieInLaag]
+    plaatsingsImprovement && geselecteerdeTile
+      ? plaatsingsImprovement.bouwbaarBuitenFrontier
+        ? geselecteerdeLaag?.ontgrendeld
+          ? geselecteerdeLaag.tiles[geselecteerdeTile.positieInLaag]
+          : undefined
+        : geselecteerdeTile.hoogte === actieveLaag.hoogte
+          ? actieveLaag.tiles[geselecteerdeTile.positieInLaag]
+          : undefined
       : undefined;
 
   // Terrein-eis (issue: "houtkap alleen op bos" e.d.): een leeg vakje met het
@@ -427,6 +436,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
             onStartRecrutering={startRecrutering}
             onConfrontatie={confrontatie}
             onKiesStrijder={(strijderId) => setStrijderBemanPopupStrijderId(strijderId)}
+            onHaalTerug={haalStrijderTerug}
           />
         )}
         {toonLaagPopup && (
@@ -483,6 +493,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
         )}
         <BouwPopup
           laag={actieveLaag}
+          alleLagen={state.lagen}
           beurt={state.beurt}
           zichtbaar={
             !toonLaagPopup &&

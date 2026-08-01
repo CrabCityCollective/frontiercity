@@ -49,6 +49,13 @@ export interface Improvement {
   // (bv. de meeste city/unit-improvements). Alleen relevant voor
   // `soort: "land"`.
   terreinEisen?: TerreinType[];
+  // Expliciete uitzondering op de algemene regel "bouwen kan alleen op de
+  // frontier-laag" (hoofdstuk 6/11): momenteel alleen de Wachttoren. Zonder
+  // deze uitzondering zou een achtergelaten laag permanent onverdedigbaar
+  // zijn zodra de frontier verder trekt, terwijl indringers-incidenten op
+  // elke ontgrendelde laag kunnen vallen (niet meer alleen de frontier).
+  // `undefined`/`false` = de normale frontier-only regel geldt.
+  bouwbaarBuitenFrontier?: boolean;
 }
 
 export interface Tile {
@@ -108,12 +115,16 @@ export interface Relic {
 // 6: "een wachttoren heeft een strijder nodig om te kunnen functioneren").
 // Elke strijder telt mee in de algemene legerwaarde (`berekenLegerwaarde` in
 // economie.ts), ongeacht of hij een Wachttoren bemant. `wachttoren` wordt via
-// het militaire paneel gezet (kies een strijder → kies een wachttoren) en is
-// daarna blijvend — een strijder kan niet meer uit een eerdere Wachttoren
-// gehaald worden om ergens anders bemand te worden (issue).
+// het militaire paneel gezet (kies een strijder → kies een wachttoren).
+// Toewijzen is omkeerbaar (hoofdstuk 6/11, issue: "wachttorens, bemanning en
+// bevoorrading"): een bemande strijder kan teruggehaald worden
+// (`haalStrijderTerug` in economie.ts), waarna hij niet meteen elders
+// inzetbaar is — `onderwegBeurtenResterend` telt af tot hij weer aan een
+// (andere) Wachttoren toegewezen kan worden.
 export interface Strijder {
   id: string;
   wachttoren?: { hoogte: number; positieInLaag: number };
+  onderwegBeurtenResterend?: number;
 }
 
 export interface City {
