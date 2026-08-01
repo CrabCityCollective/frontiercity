@@ -2,9 +2,11 @@
 // (tutorialContent.ts, LaagPopup) krijgt de speler in de eerste paar beurten
 // van de tutorial een korte, directe uitleg over de basisbegrippen —
 // grondstoffen en improvements: wat ze zijn, hoe je ze bouwt en waar ze voor
-// dienen. Na de laatste uitleg-beurt volgt één afsluitende pop-up die
-// aangeeft dat de speler vanaf dan zonder uitleg verder speelt. Dit is
-// puur verklarende UI-content, geen nieuw spelmechaniek (blijft binnen de
+// dienen. Er komt bewust géén afsluitende "voortaan zonder uitleg verder"-
+// pop-up meer (issue: "pop-up dat je op je eigen houtje verder moet, mag
+// weg") — na deze beurten volgt namelijk nog gerichte uitleg (settler,
+// militair) op het moment dat die mechaniek in beeld komt. Dit is puur
+// verklarende UI-content, geen nieuw spelmechaniek (blijft binnen de
 // MVP-scope uit CLAUDE.md).
 
 export interface UitlegContent {
@@ -16,7 +18,7 @@ const BEURT_UITLEG: Record<number, UitlegContent> = {
   1: {
     titel: "Improvements bouwen",
     tekst:
-      "Elke beurt kies je eerst een categorie, dan één concrete improvement uit twee of drie opties. Bouwen kost grondstoffen en een aantal beurten voordat hij klaar is. Daarna wijs je zelf een leeg vakje aan om hem neer te zetten.",
+      "Om de drie beurten kies je eerst een categorie, dan één concrete improvement uit twee of drie opties. Bouwen kost grondstoffen en een aantal beurten voordat hij klaar is. Daarna wijs je zelf een leeg vakje aan om hem neer te zetten.",
   },
   2: {
     titel: "Grondstoffen",
@@ -30,20 +32,10 @@ const BEURT_UITLEG: Record<number, UitlegContent> = {
   },
 };
 
-const LAATSTE_INHOUDELIJKE_UITLEG_BEURT = Math.max(...Object.keys(BEURT_UITLEG).map(Number));
-
-// De beurt direct na de laatste inhoudelijke uitleg: één losse afsluitende
-// pop-up in plaats van nieuwe uitleg (issue: "daarna laatste pop-up dat de
-// speler nu meer vrijgelaten wordt").
-export const AFSLUITENDE_UITLEG_BEURT = LAATSTE_INHOUDELIJKE_UITLEG_BEURT + 1;
-
-const UITLEG_AFSLUITING: UitlegContent = {
-  titel: "Verder op eigen kracht",
-  tekst:
-    "De grondstoffen en de improvements zijn nu bekend. Vanaf hier komt er geen uitleg meer bij elke beurt — het Hertenpad-volk trekt verder, op eigen inzicht.",
-};
+// De laatste beurt met inhoudelijke uitleg: GameRoot gebruikt dit als
+// bovengrens voor de uitleg-pop-up-reeks.
+export const LAATSTE_UITLEG_BEURT = Math.max(...Object.keys(BEURT_UITLEG).map(Number));
 
 export function uitlegContent(beurt: number): UitlegContent | undefined {
-  if (beurt === AFSLUITENDE_UITLEG_BEURT) return UITLEG_AFSLUITING;
   return BEURT_UITLEG[beurt];
 }
