@@ -107,11 +107,17 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
     };
   }
 
+  // Bouwen kan normaal alleen op de frontier-laag (de hoogst ontgrendelde) —
+  // de Wachttoren is daarop een expliciete uitzondering (hoofdstuk 6/11,
+  // issue: "wachttorens, bemanning en bevoorrading") en blijft dus overal
+  // ontgrendeld bouwbaar.
+  const opFrontier = laag.hoogte === hoogsteOntgrendeldeLaag(lagen);
   return {
     titel: "Leeg vakje",
     ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
-    tekst:
-      "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond. Heiligdommen en wachttorens kunnen overal geplaatst worden.",
+    tekst: opFrontier
+      ? "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond. Heiligdommen en wachttorens kunnen overal geplaatst worden."
+      : "Dit is niet meer de frontier-laag, dus hier is alleen nog een Wachttoren te bouwen — die mag, als uitzondering, op elke ontgrendelde laag geplaatst worden.",
   };
 }
 

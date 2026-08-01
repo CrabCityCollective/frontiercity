@@ -7,6 +7,7 @@ import {
   bevestigIneenstorting as bevestigIneenstortingActie,
   confrontatie as confrontatieActie,
   geefTribuut as geefTribuutActie,
+  haalStrijderTerug as haalStrijderTerugActie,
   hakHout as hakHoutActie,
   jaag as jaagActie,
   legWegAan as legWegAanActie,
@@ -114,6 +115,10 @@ export function useGameEngine() {
     setState((huidig) => bemanWachttorenActie(huidig, strijderId, hoogte, positieInLaag));
   }, []);
 
+  const haalStrijderTerug = useCallback((strijderId: string) => {
+    setState((huidig) => haalStrijderTerugActie(huidig, strijderId));
+  }, []);
+
   const zetUitlegPopups = useCallback((aan: boolean) => {
     setState((huidig) => zetUitlegPopupsActie(huidig, aan));
   }, []);
@@ -136,6 +141,7 @@ export function useGameEngine() {
     weigerTribuut,
     bevestigGedwongenTribuut,
     bemanWachttoren,
+    haalStrijderTerug,
     zetUitlegPopups,
     opslaan,
     laden,
