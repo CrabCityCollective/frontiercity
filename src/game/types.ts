@@ -179,10 +179,11 @@ export interface CampaignConfig {
 // onderdeel van deze gedeelde pool (aparte voorraad resp. drempel-tellers).
 export type MateriaalType = "hout" | "steen" | "erts" | "goud";
 
-// Indringers & tribuut (nieuwe Wachttoren-functie, hoofdstuk 6): elke beurt is
-// er een kans dat een tribe de frontier-laag (de hoogst ontgrendelde laag)
-// binnendringt. `tribuut` is alleen aanwezig als er geen actieve Wachttoren op
-// die laag staat.
+// Indringers & tribuut (hoofdstuk 6): elke beurt is er, zodra laag 2
+// ontgrendeld is, een kans dat er ergens een incident plaatsvindt — de
+// getroffen laag wordt geloot uit alle ontgrendelde lagen (ook beschermde).
+// `tribuut` is alleen aanwezig als er geen beschermende Wachttoren (voltooid,
+// bemand én wegverbonden) op die laag staat.
 export interface IndringersTribuut {
   resource: MateriaalType;
   aantal: number;

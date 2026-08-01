@@ -142,7 +142,7 @@ export const VOEDSEL_WAARSCHUWING_TEKST =
 // meeproduceert (zie economie.ts `heeftWerkendeBoerderij`) — de voedselcrisis
 // is dan bezworen, en dit is meteen de introductie van de militaire
 // mechaniek (Wachttoren + militair scherm), die vanaf dit punt relevant
-// wordt (hoofdstuk 6: indringers-dreiging vanaf laag 3).
+// wordt (hoofdstuk 6: indringers-dreiging vanaf laag 2).
 export const BOERDERIJ_KLAAR_TITEL = "Voedsel bereikt het kamp";
 export const BOERDERIJ_KLAAR_TEKST =
   "Voedsel bereikt het kamp, de ergste hongersnood is geweken. De tocht gaat verder. Maar we komen steeds meer vijandelijke stammen tegen. We hebben nu steen en erts nodig uit de heuvels en bergen om een wachttoren te kunnen bouwen, en onze strijders te bewapenen. Bouw een wachttoren, en open het militaire scherm via het menu om strijders op te leiden.";
@@ -165,10 +165,11 @@ export const INEENSTORTING_FLAVOR_TEKST =
   "Wat gebouwd was, wordt weer land.\n" +
   "De rivier buigt nog steeds hetzelfde. Een nieuw vuur wacht op dezelfde oever.";
 
-// Indringers-tribuut-pop-up (nieuwe Wachttoren-functie, hoofdstuk 6): een
-// willekeurige naam uit deze pool wordt gekozen door `verwerkIndringers` in
-// economie.ts zodra een tribe de frontier-laag binnendringt. Zelfde
-// stijlgids als de rest van dit bestand — kort, concreet, geen moreel oordeel.
+// Indringers-tribuut-pop-up (hoofdstuk 6): een willekeurige naam uit deze
+// pool wordt gekozen door `verwerkIndringers` in economie.ts zodra een tribe
+// een ontgrendelde laag binnendringt (niet meer alleen de frontier-laag).
+// Zelfde stijlgids als de rest van dit bestand — kort, concreet, geen moreel
+// oordeel.
 export const INDRINGERS_STAMMEN = ["de stam van de Halve Maan", "de stam van de Bloedhoeven"];
 
 export const INDRINGERS_TITEL = "Indringers bij de grens";
