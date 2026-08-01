@@ -24,7 +24,7 @@ import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/impro
 import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
-import { AFSLUITENDE_UITLEG_BEURT } from "@/game/uitlegContent";
+import { LAATSTE_UITLEG_BEURT } from "@/game/uitlegContent";
 import { useGameEngine } from "@/game/useGameEngine";
 import { TUTORIAL_LAAG_AANTAL, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
 import GameCanvas from "./GameCanvas";
@@ -88,10 +88,9 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
 
   // Uitleg-pop-up (issue: "meer uitleg"): los van de laag-popup hierboven,
   // toont dit de basisbegrippen-uitleg (grondstoffen/improvements) in de
-  // eerste paar beurten, en daarna één keer de afsluitende "verder op eigen
-  // kracht"-pop-up. `laatstBevestigdeUitlegBeurt` volgt hetzelfde patroon als
-  // `laatstBevestigdeLaag`: zodra de speler doorklikt, staat de huidige beurt
-  // vast als bevestigd zodat dezelfde pop-up niet nogmaals verschijnt.
+  // eerste paar beurten. `laatstBevestigdeUitlegBeurt` volgt hetzelfde patroon
+  // als `laatstBevestigdeLaag`: zodra de speler doorklikt, staat de huidige
+  // beurt vast als bevestigd zodat dezelfde pop-up niet nogmaals verschijnt.
   const [laatstBevestigdeUitlegBeurt, setLaatstBevestigdeUitlegBeurt] = useState(0);
 
   // Militaire-uitleg-pop-up en tutorial-voltooid-pop-up (issue: "pop-up met
@@ -201,7 +200,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
 
   const toonLaagPopup = actieveLaag.hoogte > laatstBevestigdeLaag;
   const toonUitlegPopup =
-    !toonLaagPopup && state.beurt > laatstBevestigdeUitlegBeurt && state.beurt <= AFSLUITENDE_UITLEG_BEURT;
+    !toonLaagPopup && state.beurt > laatstBevestigdeUitlegBeurt && state.beurt <= LAATSTE_UITLEG_BEURT;
   // Settler-uitleg direct nadat de settler in beurt 2 verschijnt (hoofdstuk
   // 16) — gekoppeld aan `state.settler` zelf i.p.v. een los beurtnummer, dus
   // hij verschijnt op precies hetzelfde moment als de settler zelf.
