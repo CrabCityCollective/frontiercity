@@ -64,6 +64,19 @@ export interface Tile {
   // Alleen aanwezig terwijl status "in_aanbouw" is (M3: productiewachtrij).
   // Houdt bij hoeveel van elke grondstof nog geïnvesteerd moet worden.
   bouwVoortgang?: Partial<Record<ResourceType, number>>;
+  // Door de settler aangelegd (M10, hoofdstuk 16): een land improvement
+  // produceert pas zodra zijn vakje via een keten van `heeftWeg`-vakjes
+  // verbonden is met de stad (zie game/wegen.ts). Geen bouwkosten/-tijd —
+  // wordt in één keer gezet zodra de settler de aanleg-actie uitvoert.
+  heeftWeg?: boolean;
+}
+
+// Positie van de settler-eenheid (M10, hoofdstuk 16). Bestaat pas vanaf beurt
+// 2 (zie `GameState.settler`) — geen los "gebouwd/niet gebouwd"-veld nodig
+// omdat er precies één settler is, die nooit verloren kan gaan in de MVP.
+export interface Settler {
+  hoogte: number;
+  positieInLaag: number;
 }
 
 export interface Layer {
@@ -184,4 +197,15 @@ export interface GameState {
     stedenGebouwd: number;
     hoogsteLaag: number;
   };
+  // Settler & wegen (M10, hoofdstuk 16). `settler` is `undefined` tot beurt 2
+  // (hij verschijnt dan in de stad, zie economie.ts `volgendeBeurt`).
+  // `settlerActieGedaanDitBeurt` is het settler-equivalent van
+  // `bouwKeuzeGedaanDitBeurt` hierboven: hoogstens 1 settler-actie (bewegen
+  // óf een weg aanleggen) per beurt, teruggezet door `volgendeBeurt`.
+  settler?: Settler;
+  settlerActieGedaanDitBeurt: boolean;
+  // Eerstvolgende beurt waarop weer een nieuw bouwproject gestart mag worden
+  // (hoofdstuk 16: bouw-ritme, "om de 3 beurten"). Begint op 1 zodat de
+  // allereerste bouw-pop-up gewoon blijft verschijnen.
+  volgendeBouwBeurt: number;
 }
