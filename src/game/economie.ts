@@ -700,30 +700,34 @@ export function legWegAan(state: GameState): GameState {
   return { ...state, lagen, settlerActieGedaanDitBeurt: true };
 }
 
-// Verwerkt één spelbeurt: eerst productie van actieve improvements (incl.
+// Verwerkt één spelbeurt: eerst uitputting van de actieve tiles (M4), dan
+// verbruik/voortgang van de land-tile-bouwwachtrij — een tile die deze beurt
+// klaar is, wordt hier al "actief" en begint pas volgende beurt met
+// aftellen (vandaar vóór de productiestap hieronder) — dan productie van
+// alle (incl. deze beurt net voltooide) actieve improvements (incl.
 // voedselverbruik en cultuur), dan laag-ontgrendeling op basis van die
-// cultuur (M5), dan uitputting van de actieve tiles (M4), dan verval op basis
-// van een dreigend voedseltekort (M6), dan verbruik/voortgang van de
-// land-tile-bouwwachtrij, de
-// stadsgroei-bouwwachtrij (M6) en de Soldaat-rekruteringswachtrij (M7), dan
-// de beurtteller ophogen. Een tile die deze beurt net voltooid wordt, begint
-// pas volgende beurt met aftellen. Zet ook de bouwkeuze-vlag (hoofdstuk 11)
-// weer terug, zodat de bouw-pop-up bij het begin van de nieuwe beurt weer
-// verschijnt.
+// cultuur (M5), dan pas verval op basis van een dreigend voedseltekort (M6)
+// (issue: "eerst de grondstoffen binnenkomen, en daarna wordt gecheckt of je
+// afgaat" — een tile/weg die deze beurt klaarkomt telt zo al mee vóór de
+// instort-check), dan de stadsgroei-bouwwachtrij (M6) en de
+// Soldaat-rekruteringswachtrij (M7), dan de beurtteller ophogen. Zet ook de
+// bouwkeuze-vlag (hoofdstuk 11) weer terug, zodat de bouw-pop-up bij het
+// begin van de nieuwe beurt weer verschijnt.
 //
 // Stort de stad deze beurt volledig in, dan geeft `verwerkVerval` al een
 // verse, gereset spelstatus terug (issue: "run eindigen wanneer stad
-// uitgeput is") — de resterende stappen (bouwwachtrijen, beurtteller) slaan
-// we dan over, anders zou de net herstarte tutorial meteen op beurt 2 beginnen.
+// uitgeput is") — de resterende stappen (groei/rekrutering, beurtteller)
+// slaan we dan over, anders zou de net herstarte tutorial meteen op beurt 2
+// beginnen.
 export function volgendeBeurt(state: GameState): GameState {
-  const naProductie = verwerkProductie(state);
+  const naUitputting = verwerkUitputting(state);
+  const naBouw = verwerkBouwwachtrij(naUitputting);
+  const naProductie = verwerkProductie(naBouw);
   const naOntgrendeling = verwerkLaagOntgrendeling(naProductie);
-  const naUitputting = verwerkUitputting(naOntgrendeling);
-  const naVerval = verwerkVerval(naUitputting);
+  const naVerval = verwerkVerval(naOntgrendeling);
   if (naVerval.laatsteIneenstorting) return naVerval;
 
-  const naBouw = verwerkBouwwachtrij(naVerval);
-  const naGroei = verwerkGroei(naBouw);
+  const naGroei = verwerkGroei(naVerval);
   const naRecrutering = verwerkRecrutering(naGroei);
   const nieuweBeurt = naRecrutering.beurt + 1;
 
