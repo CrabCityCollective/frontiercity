@@ -2,16 +2,20 @@
 
 import { useCallback, useState } from "react";
 import {
+  bevestigGedwongenTribuut as bevestigGedwongenTribuutActie,
   bevestigIneenstorting as bevestigIneenstortingActie,
   confrontatie as confrontatieActie,
+  geefTribuut as geefTribuutActie,
   legWegAan as legWegAanActie,
   maakInitieleSpelStatus,
   sluitBouwKeuze as sluitBouwKeuzeActie,
+  sluitIndringersMelding as sluitIndringersMeldingActie,
   startBouw as startBouwActie,
   startGroei as startGroeiActie,
   startRecrutering as startRecruteringActie,
   verplaatsSettler as verplaatsSettlerActie,
   volgendeBeurt as volgendeBeurtActie,
+  weigerTribuut as weigerTribuutActie,
 } from "./economie";
 import { laadSpel, saveSpel } from "./save";
 import { Improvement } from "./types";
@@ -79,6 +83,22 @@ export function useGameEngine() {
     setState((huidig) => legWegAanActie(huidig));
   }, []);
 
+  const sluitIndringersMelding = useCallback(() => {
+    setState((huidig) => sluitIndringersMeldingActie(huidig));
+  }, []);
+
+  const geefTribuut = useCallback(() => {
+    setState((huidig) => geefTribuutActie(huidig));
+  }, []);
+
+  const weigerTribuut = useCallback(() => {
+    setState((huidig) => weigerTribuutActie(huidig));
+  }, []);
+
+  const bevestigGedwongenTribuut = useCallback(() => {
+    setState((huidig) => bevestigGedwongenTribuutActie(huidig));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -90,6 +110,10 @@ export function useGameEngine() {
     bevestigIneenstorting,
     verplaatsSettler,
     legWegAan,
+    sluitIndringersMelding,
+    geefTribuut,
+    weigerTribuut,
+    bevestigGedwongenTribuut,
     opslaan,
     laden,
   };

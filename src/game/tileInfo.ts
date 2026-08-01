@@ -6,7 +6,7 @@
 import { CATEGORIE_LABELS, TERREIN_LABELS } from "./improvements";
 import { City, Improvement, Layer } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
-import { isVooruitkijkLaag } from "./world";
+import { hoogsteOntgrendeldeLaag, isVooruitkijkLaag } from "./world";
 
 export interface TileInfo {
   titel: string;
@@ -14,13 +14,19 @@ export interface TileInfo {
   tekst: string;
 }
 
-function effectBeschrijving(improvement: Improvement): string {
+// `opFrontier` is alleen relevant voor cultuurproductie (Heiligdom,
+// hoofdstuk 6): volle opbrengst op de frontier-laag zelf, de helft op elke
+// laag daaronder — zie `verwerkProductie` in economie.ts voor dezelfde regel.
+function effectBeschrijving(improvement: Improvement, opFrontier = true): string {
   const { effect } = improvement;
   if (effect.type === "productie" && effect.resource && effect.waarde) {
+    if (effect.resource === "cultuur" && !opFrontier) {
+      return `Levert +${effect.waarde / 2} cultuur per beurt (halve opbrengst — niet op de frontier-laag).`;
+    }
     return `Levert +${effect.waarde} ${effect.resource} per beurt.`;
   }
   if (effect.type === "verdediging" && effect.waarde) {
-    return `Geeft +${effect.waarde} verdediging bij een militaire confrontatie.`;
+    return `Geeft +${effect.waarde} verdediging bij een militaire confrontatie, en beschermt deze hele laag tegen indringers-tribuut.`;
   }
   if (effect.type === "stad") {
     return "Het centrum van je nederzetting.";
@@ -73,6 +79,7 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
   }
 
   if (tile.status === "actief" && tile.improvement) {
+    const opFrontier = laag.hoogte === hoogsteOntgrendeldeLaag(lagen);
     const uitputting =
       tile.beurtenTotUitputting !== undefined
         ? ` Nog ${tile.beurtenTotUitputting} beurten actief voordat het uitgeput raakt.`
@@ -88,7 +95,7 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
     return {
       titel: tile.improvement.naam,
       ondertitel: CATEGORIE_LABELS[tile.improvement.categorie],
-      tekst: `${effectBeschrijving(tile.improvement)}${wegStatus}${uitputting}`.trim(),
+      tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${wegStatus}${uitputting}`.trim(),
     };
   }
 

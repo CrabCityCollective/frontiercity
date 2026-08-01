@@ -2,14 +2,15 @@
 // productiewachtrij (M3). Economisch, Cultureel en Militair zijn gevuld:
 // economisch levert de drie bouwmaterialen en voedsel (M3), cultureel levert
 // cultuur voor laag-ontgrendeling (M5), militair levert de Wachttoren-
-// verdedigingsbonus voor militaire confrontaties (M7). Wetenschappelijk
-// krijgt zijn opties pas zodra die mechaniek aan de beurt is. Civiel blijft leeg:
-// de groei-tier-improvement (M6, zie WOONWIJK hieronder) is een stad-upgrade
-// buiten de tegel-band, en de overige civiele land-improvements (weg/brug)
-// vallen buiten de MVP-scope — zie hoofdstuk 3 en hoofdstuk 13 van het
-// design-document.
+// verdedigingsbonus voor militaire confrontaties (M7) én, sindsdien
+// (hoofdstuk 6), de indringers-tribuut-bescherming van de hele laag.
+// Wetenschappelijk krijgt zijn opties pas zodra die mechaniek aan de beurt is.
+// Civiel blijft leeg: de groei-tier-improvement (M6, zie WOONWIJK hieronder)
+// is een stad-upgrade buiten de tegel-band, en de overige civiele
+// land-improvements (weg/brug) vallen buiten de MVP-scope — zie hoofdstuk 3
+// en hoofdstuk 13 van het design-document.
 
-import { Categorie, Improvement, Layer, TerreinType } from "./types";
+import { Categorie, Improvement, Layer, MateriaalType, TerreinType } from "./types";
 
 // Nederlandse labels per categorie, gedeeld tussen de bouw-pop-up (M2) en de
 // tile-info-pop-up (klik-op-tile) zodat beide dezelfde terminologie tonen.
@@ -29,6 +30,16 @@ export const TERREIN_LABELS: Record<TerreinType, string> = {
   bos: "bos",
   heuvel: "heuvel",
   berg: "berg",
+};
+
+// Nederlandse labels per gedeelde-opslag-grondstof (hoofdstuk 5), gedeeld
+// tussen de grondstoffenbalk (ResourceHud) en de indringers-tribuut-pop-up
+// (hoofdstuk 6) zodat beide dezelfde terminologie tonen.
+export const MATERIAAL_LABELS: Record<MateriaalType, string> = {
+  hout: "Hout",
+  steen: "Steen",
+  erts: "Erts",
+  goud: "Goud",
 };
 
 // Of `improvement` op een vakje met dit terrein geplaatst mag worden (issue:
@@ -108,6 +119,11 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
 
 // Cultureel land improvement (hoofdstuk 3: "Heiligdom") — de eerste optie in
 // deze categorie, nodig om cultuur te produceren voor laag-ontgrendeling (M5).
+// Geen `uitputtingBeurten` (hoofdstuk 4/6): een Heiligdom blijft, anders dan
+// de economische land-improvements, permanent actief in plaats van een
+// ghost-town-tile te worden. `verwerkProductie` in economie.ts halveert de
+// opbrengst wel zodra de tile niet op de frontier-laag (de hoogst
+// ontgrendelde laag) staat.
 export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
   {
     id: "heiligdom",
@@ -117,13 +133,16 @@ export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
     kosten: { hout: 4, steen: 4 },
     bouwtijdBeurten: 2,
     effect: { type: "productie", resource: "cultuur", waarde: 2 },
-    uitputtingBeurten: 16,
   },
 ];
 
-// Militair land improvement (hoofdstuk 3: "Wachttoren (beschermt lege lagen
-// tegen barbaren)"). Levert een passieve verdedigingsbonus zolang de tile
-// actief is — telt mee in `berekenLegerwaarde` in economie.ts (M7).
+// Militair land improvement (hoofdstuk 3/6: "Wachttoren verdedigt de hele
+// laag tegen indringers"). Levert nog steeds de passieve verdedigingsbonus
+// die meetelt in `berekenLegerwaarde` (M7), én blokkeert sindsdien (hoofdstuk
+// 6) volledig de indringers-tribuut-eis van `verwerkIndringers` in
+// economie.ts zolang hij actief is op de frontier-laag. Geen
+// `uitputtingBeurten` (hoofdstuk 4/6): een Wachttoren, net als het Heiligdom
+// hierboven, blijft permanent actief in plaats van uit te putten.
 export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
   {
     id: "wachttoren",
@@ -133,7 +152,6 @@ export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
     kosten: { hout: 6, steen: 4 },
     bouwtijdBeurten: 2,
     effect: { type: "verdediging", waarde: 3 },
-    uitputtingBeurten: 20,
   },
 ];
 
