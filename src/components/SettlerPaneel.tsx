@@ -5,6 +5,8 @@ import { GameState } from "@/game/types";
 interface SettlerPaneelProps {
   state: GameState;
   onLegWegAan: () => void;
+  onJaag: () => void;
+  onHakHout: () => void;
 }
 
 // Settler-bediening (M10, hoofdstuk 16; issue: "de settler unit is actief
@@ -12,10 +14,10 @@ interface SettlerPaneelProps {
 // te klikken op een tegel ga je er naar toe"): verplaatsen gebeurt voortaan
 // direct op de canvas (zie GameRoot: `settlerBereikbarePosities` +
 // `onTileClick`) — dit paneel toont alleen nog de status en de
-// weg-aanleggen-knop. Allebei hoogstens 1 keer per beurt
-// (`settlerActieGedaanDitBeurt`). Verschijnt pas zodra de settler bestaat
-// (vanaf beurt 2, zie economie.ts `volgendeBeurt`).
-export default function SettlerPaneel({ state, onLegWegAan }: SettlerPaneelProps) {
+// weg-aanleggen/jagen/hout-hakken-knoppen. Allemaal hoogstens 1 keer per
+// beurt (`settlerActieGedaanDitBeurt`). Verschijnt pas zodra de settler
+// bestaat (vanaf beurt 2, zie economie.ts `volgendeBeurt`).
+export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout }: SettlerPaneelProps) {
   const { settler } = state;
   if (!settler) return null;
 
@@ -23,6 +25,11 @@ export default function SettlerPaneel({ state, onLegWegAan }: SettlerPaneelProps
   const huidigeTile = laag?.tiles[settler.positieInLaag];
   const kanActie = !state.settlerActieGedaanDitBeurt;
   const heeftAlWeg = Boolean(huidigeTile?.heeftWeg);
+  // Kuddes & houtkap (hoofdstuk 16/17, issue: "kuddes met dieren waar je op
+  // kunt jagen voor voedsel" / "ook mag je je settlers inzetten om hout te
+  // kappen"): allebei alleen mogelijk op het vakje waar de settler nu staat.
+  const kudde = huidigeTile?.kudde;
+  const kanHakken = huidigeTile?.terrein === "bos";
 
   return (
     <div
@@ -42,6 +49,7 @@ export default function SettlerPaneel({ state, onLegWegAan }: SettlerPaneelProps
       <span>
         Laag {settler.hoogte}, vakje {settler.positieInLaag + 1}
         {heeftAlWeg ? " — hier ligt al een weg" : ""}
+        {kudde ? ` — wilde kudde (nog ${kudde.beurtenResterend} beurten te jagen)` : ""}
       </span>
       {kanActie && (
         <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
@@ -57,6 +65,16 @@ export default function SettlerPaneel({ state, onLegWegAan }: SettlerPaneelProps
         >
           Weg aanleggen
         </button>
+        {kudde && (
+          <button className="fc-knop" disabled={!kanActie} onClick={onJaag} style={{ padding: "0.3rem 0.6rem" }}>
+            Jagen (+3 voedsel)
+          </button>
+        )}
+        {kanHakken && (
+          <button className="fc-knop" disabled={!kanActie} onClick={onHakHout} style={{ padding: "0.3rem 0.6rem" }}>
+            Hout hakken (+1 hout)
+          </button>
+        )}
       </div>
       {!kanActie && (
         <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>

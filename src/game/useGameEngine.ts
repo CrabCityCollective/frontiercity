@@ -6,6 +6,8 @@ import {
   bevestigIneenstorting as bevestigIneenstortingActie,
   confrontatie as confrontatieActie,
   geefTribuut as geefTribuutActie,
+  hakHout as hakHoutActie,
+  jaag as jaagActie,
   legWegAan as legWegAanActie,
   maakInitieleSpelStatus,
   sluitBouwKeuze as sluitBouwKeuzeActie,
@@ -82,6 +84,14 @@ export function useGameEngine() {
     setState((huidig) => legWegAanActie(huidig));
   }, []);
 
+  const jaag = useCallback(() => {
+    setState((huidig) => jaagActie(huidig));
+  }, []);
+
+  const hakHout = useCallback(() => {
+    setState((huidig) => hakHoutActie(huidig));
+  }, []);
+
   const sluitIndringersMelding = useCallback(() => {
     setState((huidig) => sluitIndringersMeldingActie(huidig));
   }, []);
@@ -109,6 +119,8 @@ export function useGameEngine() {
     bevestigIneenstorting,
     verplaatsSettlerNaar,
     legWegAan,
+    jaag,
+    hakHout,
     sluitIndringersMelding,
     geefTribuut,
     weigerTribuut,

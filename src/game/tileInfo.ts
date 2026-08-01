@@ -99,6 +99,14 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
     };
   }
 
+  if (tile.kudde) {
+    return {
+      titel: "Wilde kudde",
+      ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
+      tekst: `Verplaats de settler hierheen en jaag voor voedsel. Nog ${tile.kudde.beurtenResterend} beurten te jagen voordat de kudde verder trekt.`,
+    };
+  }
+
   return {
     titel: "Leeg vakje",
     ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,

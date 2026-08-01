@@ -91,6 +91,22 @@ const BUIT_GOUD_FACTOR = 0.5;
 const SCHADE_TILES_AANTAL = 2;
 const SCHADE_BEURTEN = 3;
 
+// Kuddes & settler-jacht (hoofdstuk 16/17; issue: "kuddes met dieren waar je
+// op kunt jagen voor voedsel"): een losse settler-actie naast bewegen/weg
+// aanleggen. Bewuste MVP-placeholders, net als de overige tuning-getallen
+// hierboven. Kuddes verschijnen pas vanaf `KUDDE_MIN_LAAG` (issue: "vanaf
+// laag 4 mogen kuddes voorkomen").
+const KUDDE_MIN_LAAG = 4;
+const KUDDE_KANS = 0.15;
+const KUDDE_JACHT_BEURTEN = 4;
+const KUDDE_VOEDSEL_PER_BEURT = 3;
+// Settler-houtkap (issue: "ook mag je je settlers inzetten om hout te
+// kappen. Dan krijg je maar 1 hout per beurt"): een kleinere, directe
+// opbrengst zonder improvement te bouwen — geen vervanging van de Houtkap-
+// improvement hierboven, maar een alternatief voor de tussenliggende beurten
+// (hoofdstuk 16: bouw-ritme).
+const HOUTHAKKEN_HOUT_PER_BEURT = 1;
+
 // Startgrondstoffen (issue: "je begint met bijna geen grondstoffen, alleen
 // net genoeg om een houtkap te bouwen"): precies genoeg steen voor een
 // Houtkap (kosten: `steen: 6`) en niets daarnaast — een Steengroeve, Mijn of
@@ -702,6 +718,38 @@ function verwerkIndringers(state: GameState): GameState {
   };
 }
 
+// Spawnt per beurt met een kleine kans een nieuwe wilde kudde (hoofdstuk
+// 16/17) op een leeg, nog-kuddeloos vakje van een ontgrendelde laag vanaf
+// `KUDDE_MIN_LAAG`. Net als `verwerkIndringers` hierboven: hoogstens één
+// nieuwe kudde per beurt, geen limiet op het totaal aantal tegelijk
+// aanwezige kuddes.
+function verwerkKuddes(state: GameState): GameState {
+  if (hoogsteOntgrendeldeLaag(state.lagen) < KUDDE_MIN_LAAG) return state;
+  if (Math.random() >= KUDDE_KANS) return state;
+
+  const kandidaten: { hoogte: number; positieInLaag: number }[] = [];
+  for (const laag of state.lagen) {
+    if (!laag.ontgrendeld || laag.hoogte < KUDDE_MIN_LAAG) continue;
+    for (const tile of laag.tiles) {
+      if (tile.status === "leeg" && !tile.kudde) {
+        kandidaten.push({ hoogte: laag.hoogte, positieInLaag: tile.positieInLaag });
+      }
+    }
+  }
+  if (kandidaten.length === 0) return state;
+
+  const doel = kandidaten[Math.floor(Math.random() * kandidaten.length)];
+  const lagen = state.lagen.map((laag) => {
+    if (laag.hoogte !== doel.hoogte) return laag;
+    const tiles = laag.tiles.map((tile, index) =>
+      index === doel.positieInLaag ? { ...tile, kudde: { beurtenResterend: KUDDE_JACHT_BEURTEN } } : tile
+    );
+    return { ...laag, tiles };
+  });
+
+  return { ...state, lagen };
+}
+
 // Sluit een gemelde-maar-onschadelijke indringers-melding (wachttoren hield
 // stand) zonder verdere gevolgen.
 export function sluitIndringersMelding(state: GameState): GameState {
@@ -766,6 +814,10 @@ export function startBouw(
         status: "in_aanbouw" as const,
         improvement,
         bouwVoortgang: { ...improvement.kosten },
+        // Een kudde trekt verder zodra hier gebouwd wordt (hoofdstuk 16/17)
+        // — anders zou `jaag` hierboven op een inmiddels bebouwd vakje
+        // kunnen blijven jagen.
+        kudde: undefined,
       };
     });
 
@@ -824,6 +876,58 @@ export function legWegAan(state: GameState): GameState {
   return { ...state, lagen, settlerActieGedaanDitBeurt: true };
 }
 
+// Jaagt op de kudde waar de settler nu op staat (hoofdstuk 16/17, issue:
+// "kuddes met dieren waar je op kunt jagen voor voedsel"): een losse
+// settler-actie naast bewegen/weg aanleggen, dus ook hoogstens 1 keer per
+// beurt. Elke jachtbeurt levert direct voedsel op en telt de resterende
+// jachtbeurten van de kudde af; op nul is de kudde uitgeput en verdwijnt hij
+// — geen ghost-town-tile zoals bij een uitgeputte land-improvement
+// (hoofdstuk 4), het vakje wordt gewoon weer een leeg vakje.
+export function jaag(state: GameState): GameState {
+  if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
+
+  const { hoogte, positieInLaag } = state.settler;
+  const laag = state.lagen.find((l) => l.hoogte === hoogte);
+  const tile = laag?.tiles[positieInLaag];
+  if (!laag || !tile?.kudde) return state;
+
+  const beurtenResterend = tile.kudde.beurtenResterend - 1;
+  const lagen = state.lagen.map((l) => {
+    if (l.hoogte !== hoogte) return l;
+    const tiles = l.tiles.map((t, index) =>
+      index === positieInLaag ? { ...t, kudde: beurtenResterend > 0 ? { beurtenResterend } : undefined } : t
+    );
+    return { ...l, tiles };
+  });
+
+  return {
+    ...state,
+    lagen,
+    voedsel: state.voedsel + KUDDE_VOEDSEL_PER_BEURT,
+    settlerActieGedaanDitBeurt: true,
+  };
+}
+
+// Hakt hout op het bos-vakje waar de settler nu op staat (issue: "ook mag je
+// je settlers inzetten om hout te kappen"): een directe, kleinere opbrengst
+// dan de Houtkap-improvement, zonder te bouwen. Zelfde
+// eenmalige-actie-per-beurt-regel als `jaag`/`legWegAan` hierboven.
+export function hakHout(state: GameState): GameState {
+  if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
+
+  const { hoogte, positieInLaag } = state.settler;
+  const laag = state.lagen.find((l) => l.hoogte === hoogte);
+  const tile = laag?.tiles[positieInLaag];
+  if (!laag || !tile || tile.terrein !== "bos") return state;
+
+  const voorraad = {
+    ...state.voorraad,
+    hout: Math.min(state.opslagCap, state.voorraad.hout + HOUTHAKKEN_HOUT_PER_BEURT),
+  };
+
+  return { ...state, voorraad, settlerActieGedaanDitBeurt: true };
+}
+
 // Verwerkt één spelbeurt: eerst uitputting van de actieve tiles (M4), dan
 // verbruik/voortgang van de land-tile-bouwwachtrij — een tile die deze beurt
 // klaar is, wordt hier al "actief" en begint pas volgende beurt met
@@ -834,16 +938,16 @@ export function legWegAan(state: GameState): GameState {
 // (issue: "eerst de grondstoffen binnenkomen, en daarna wordt gecheckt of je
 // afgaat" — een tile/weg die deze beurt klaarkomt telt zo al mee vóór de
 // instort-check), dan de stadsgroei-bouwwachtrij (M6) en de
-// Soldaat-rekruteringswachtrij (M7), dan de indringers-kans (hoofdstuk 6),
-// dan de beurtteller ophogen. Zet ook de bouwkeuze-vlag (hoofdstuk 11) weer
-// terug, zodat de bouw-pop-up bij het begin van de nieuwe beurt weer
-// verschijnt.
+// Soldaat-rekruteringswachtrij (M7), dan de indringers-kans (hoofdstuk 6) en
+// de kuddes-kans (hoofdstuk 16/17), dan de beurtteller ophogen. Zet ook de
+// bouwkeuze-vlag (hoofdstuk 11) weer terug, zodat de bouw-pop-up bij het
+// begin van de nieuwe beurt weer verschijnt.
 //
 // Stort de stad deze beurt volledig in, dan geeft `verwerkVerval` al een
 // verse, gereset spelstatus terug (issue: "run eindigen wanneer stad
 // uitgeput is") — de resterende stappen (groei/rekrutering, indringers,
-// beurtteller) slaan we dan over, anders zou de net herstarte tutorial
-// meteen op beurt 2 beginnen.
+// kuddes, beurtteller) slaan we dan over, anders zou de net herstarte
+// tutorial meteen op beurt 2 beginnen.
 export function volgendeBeurt(state: GameState): GameState {
   const naUitputting = verwerkUitputting(state);
   const naBouw = verwerkBouwwachtrij(naUitputting);
@@ -855,15 +959,16 @@ export function volgendeBeurt(state: GameState): GameState {
   const naGroei = verwerkGroei(naVerval);
   const naRecrutering = verwerkRecrutering(naGroei);
   const naIndringers = verwerkIndringers(naRecrutering);
-  const nieuweBeurt = naIndringers.beurt + 1;
+  const naKuddes = verwerkKuddes(naIndringers);
+  const nieuweBeurt = naKuddes.beurt + 1;
 
   // De settler verschijnt bij de stad zodra beurt 2 begint (hoofdstuk 16) —
   // en blijft daarna gewoon staan waar de speler 'm laatst neerzette.
   const settler =
-    naIndringers.settler ?? (nieuweBeurt >= 2 ? { hoogte: 1, positieInLaag: STAD_POSITIE } : undefined);
+    naKuddes.settler ?? (nieuweBeurt >= 2 ? { hoogte: 1, positieInLaag: STAD_POSITIE } : undefined);
 
   return {
-    ...naIndringers,
+    ...naKuddes,
     beurt: nieuweBeurt,
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,

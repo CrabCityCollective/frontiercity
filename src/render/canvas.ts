@@ -794,6 +794,43 @@ function tekenTerreinHint(
   ctx.restore();
 }
 
+// Wilde kudde (hoofdstuk 16/17, issue: "kuddes met dieren waar je op kunt
+// jagen voor voedsel"): een paar eenvoudige hertsilhouetten op een leeg vakje
+// — in lijn met de MVP-plaatshouderstijl (hoofdstuk 13), passend bij het
+// Hertenpad-volk van de tutorial.
+function tekenHertSilhouet(ctx: CanvasRenderingContext2D, cx: number, baseY: number, h: number): void {
+  ctx.fillStyle = "rgba(60, 44, 28, 0.82)";
+  ctx.beginPath();
+  ctx.ellipse(cx, baseY - h * 0.4, h * 0.36, h * 0.22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(60, 44, 28, 0.82)";
+  ctx.lineWidth = Math.max(1, h * 0.09);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(cx - h * 0.28, baseY - h * 0.5);
+  ctx.lineTo(cx - h * 0.32, baseY);
+  ctx.moveTo(cx + h * 0.02, baseY - h * 0.5);
+  ctx.lineTo(cx - h * 0.02, baseY);
+  ctx.moveTo(cx + h * 0.3, baseY - h * 0.36);
+  ctx.lineTo(cx + h * 0.4, baseY - h * 0.1);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx + h * 0.32, baseY - h * 0.58);
+  ctx.lineTo(cx + h * 0.44, baseY - h * 0.78);
+  ctx.moveTo(cx + h * 0.36, baseY - h * 0.66);
+  ctx.lineTo(cx + h * 0.28, baseY - h * 0.82);
+  ctx.stroke();
+}
+
+function tekenKudde(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = y + size * 0.82;
+  tekenHertSilhouet(ctx, x + size * 0.38, baseY, size * (0.34 + rng() * 0.06));
+  tekenHertSilhouet(ctx, x + size * 0.62, baseY - size * 0.04, size * (0.26 + rng() * 0.06));
+}
+
 function tekenTileGrid(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -904,6 +941,9 @@ function tekenActieveTile(
 
   if (tile.status === "leeg") {
     tekenTerreinHint(ctx, x, y, size, tile.terrein, seed);
+    if (tile.kudde) {
+      tekenKudde(ctx, x, y, size, seed + 1);
+    }
   }
 }
 
