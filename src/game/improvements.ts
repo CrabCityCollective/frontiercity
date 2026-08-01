@@ -74,6 +74,9 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     bouwtijdBeurten: 2,
     effect: { type: "productie", resource: "steen", waarde: 2 },
     uitputtingBeurten: 10,
+    // Alleen op heuvel/berg (issue: "de steengroeve moet ook op een berg of
+    // heuvel staan") — zelfde terrein-eis als de mijn.
+    terreinEisen: ["heuvel", "berg"],
   },
   {
     id: "mijn",

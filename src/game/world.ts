@@ -155,12 +155,17 @@ export function zichtbareLagen(lagen: Layer[]): Layer[] {
 }
 
 // Cultuurdrempel om laag `hoogte` te ontgrendelen (M5, hoofdstuk 5: "cultuur →
-// laag-ontgrendeling"). Loopt op naarmate je hoger komt. Exacte cijfers zijn
-// nog niet vastgelegd in het design-document (hoofdstuk 14) — dit is een
-// bewuste MVP-placeholder, geen definitieve balans. Laag 1 is de startlaag en
-// heeft dus geen drempel.
+// laag-ontgrendeling"). Exponentieel oplopend (hoofdstuk 14; issue: "cultuur
+// groeit te snel, nieuwe lagen moeten exponentieel meer kosten") — elke laag
+// boven laag 2 kost `CULTUUR_KOSTEN_GROEIFACTOR` keer zoveel als de vorige, in
+// plaats van de vroegere lineaire stap. Laag 1 is de startlaag en heeft dus
+// geen drempel. Exacte cijfers blijven een bewuste MVP-placeholder, geen
+// definitieve balans.
+const CULTUUR_KOSTEN_BASIS = 20;
+const CULTUUR_KOSTEN_GROEIFACTOR = 1.4;
+
 export function cultuurKostenVoorLaag(hoogte: number): number {
-  return 10 + (hoogte - 2) * 6;
+  return Math.round(CULTUUR_KOSTEN_BASIS * CULTUUR_KOSTEN_GROEIFACTOR ** (hoogte - 2));
 }
 
 // Voedseldrempel om de groei-tier klein→middel te mogen starten (M6,

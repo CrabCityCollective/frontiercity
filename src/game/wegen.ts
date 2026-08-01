@@ -82,14 +82,12 @@ function wegNetwerk(lagen: Layer[]): Set<string> {
 }
 
 // Of een land improvement op dit vakje daadwerkelijk kan produceren
-// (hoofdstuk 16: "een mijn zonder verbinding naar je stad levert nog niks
-// op"). Het improvement-vakje zelf hoeft geen weg te hebben — het telt al als
-// verbonden zodra het grenst aan het wegennetwerk (de weg loopt tót het
-// improvement, niet erdoorheen).
+// (hoofdstuk 16; issue: "een resource levert pas iets op als je de weg echt
+// op die tile hebt gebouwd, niet alleen tussen de stad en de resource"). Het
+// improvement-vakje zelf moet dus zelf een weg hebben (`heeftWeg`) én die weg
+// moet via het wegennetwerk verbonden zijn met de stad — een weg die er
+// alleen naartoe leidt, zonder erop te liggen, is niet genoeg.
 export function isTileVerbondenMetStad(lagen: Layer[], hoogte: number, positieInLaag: number): boolean {
   const netwerk = wegNetwerk(lagen);
-  if (netwerk.has(tileSleutel(hoogte, positieInLaag))) return true;
-
-  const positie: Settler = { hoogte, positieInLaag };
-  return buurPosities(positie).some((buur) => netwerk.has(tileSleutel(buur.hoogte, buur.positieInLaag)));
+  return netwerk.has(tileSleutel(hoogte, positieInLaag));
 }
