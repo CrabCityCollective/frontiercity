@@ -3,9 +3,11 @@
 // bouwmateriaal verbruikt tot een improvement voltooid is. Zie
 // frontier-city-design-doc.md hoofdstuk 5.
 //
-// Uitputting & ghost towns (M4): elke actieve land-improvement telt af vanaf
-// `uitputtingBeurten` (hoofdstuk 4/7). Bij nul wordt de tile een permanente,
-// onbebouwbare ghost-town-tile die niet meer produceert.
+// Uitputting & ghost towns (M4): elke actief-producerende land-improvement
+// telt af vanaf `uitputtingBeurten` (hoofdstuk 4/7) — pas zodra hij ook
+// wegverbonden is met de stad (hoofdstuk 16), zie `verwerkUitputting`. Bij
+// nul wordt de tile een permanente, onbebouwbare ghost-town-tile die niet
+// meer produceert.
 //
 // Cultuur & laag-ontgrendeling (M5): cultuur is een voortgangs-valuta zonder
 // opslag-cap (hoofdstuk 5). Zodra de cumulatieve cultuur de drempel van de
@@ -332,16 +334,30 @@ function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number
   return { ...tile, bouwVoortgang: resultaat.nieuweVoortgang };
 }
 
-// Telt de resterende levensduur van elke actieve land-improvement af. Bij nul
-// wordt de tile een permanente ghost-town-tile: onbebouwbaar en stopt met
-// produceren (zie verwerkProductie, die alleen "actief"-tiles meetelt).
-// City-tiles en tiles zonder `uitputtingBeurten` slaan we over (hoofdstuk 4:
-// alleen land-improvements putten uit).
+// Telt de resterende levensduur van elke actief-producerende land-improvement
+// af. Bij nul wordt de tile een permanente ghost-town-tile: onbebouwbaar en
+// stopt met produceren (zie verwerkProductie, die alleen "actief"-tiles
+// meetelt). City-tiles en tiles zonder `uitputtingBeurten` slaan we over
+// (hoofdstuk 4: alleen land-improvements putten uit).
+//
+// Wegverbinding (hoofdstuk 4/16; issue: "land uitputting pas als het gebruikt
+// wordt"): een gebouwde maar nog niet wegverbonden land-improvement produceert
+// niets (zie `verwerkProductie`), dus put hij ook niets uit — de teller blijft
+// stilstaan op zijn huidige waarde tot de wegverbinding er is. Dezelfde regel
+// geldt zodra een verbinding later zou wegvallen: geen productie betekent
+// geen uitputting, ongeacht de oorzaak.
 function verwerkUitputting(state: GameState): GameState {
   const lagen = state.lagen.map((laag) => ({
     ...laag,
     tiles: laag.tiles.map((tile) => {
       if (tile.status !== "actief" || tile.beurtenTotUitputting === undefined) {
+        return tile;
+      }
+
+      if (
+        tile.improvement?.soort === "land" &&
+        !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)
+      ) {
         return tile;
       }
 
@@ -658,7 +674,8 @@ export function confrontatie(state: GameState): GameState {
         geraakt >= SCHADE_TILES_AANTAL ||
         tile.status !== "actief" ||
         tile.improvement?.soort !== "land" ||
-        tile.beurtenTotUitputting === undefined
+        tile.beurtenTotUitputting === undefined ||
+        !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)
       ) {
         return tile;
       }
