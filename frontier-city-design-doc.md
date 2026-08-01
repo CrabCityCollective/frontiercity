@@ -104,7 +104,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 
 ## 7. Ghost towns & zeldzaamheid
 
-- Uitgeputte land-tiles worden permanente **ghost towns**: klein beetje passieve cultuur, rol in flavor bij einde van een run, niet herbouwbaar in de basisversie.
+- Uitgeputte land-tiles worden permanente **ghost towns**: produceren niets meer, rol in flavor bij einde van een run, niet herbouwbaar in de basisversie.
 - **Zeldzaamheid** wordt pas **onthuld na het bouwen** (niet vooraf zichtbaar):
   - **Gewoon** (~70%): standaard opbrengst/uitputting
   - **Rijk** (~25%): hogere opbrengst, snellere uitputting (korte-termijnklapper)
