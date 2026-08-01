@@ -41,8 +41,8 @@ export default function GroeiPaneel({ state, onStartGroei }: GroeiPaneelProps) {
     >
       {stad.vervalStatus === "kritiek" && (
         <p style={{ color: "var(--kleur-gevaar)", fontWeight: "bold", margin: 0 }}>
-          ⚠ Kritiek: het omliggende land is grotendeels uitgeput. Instorting over{" "}
-          {stad.vervalBeurtenResterend} beurten als dit niet afneemt.
+          ⚠ Kritiek: er is te weinig voedsel. Instorting over {stad.vervalBeurtenResterend}{" "}
+          beurten als dit niet verandert.
         </p>
       )}
 

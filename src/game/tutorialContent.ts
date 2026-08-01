@@ -128,6 +128,15 @@ export const INTRO_FLAVOR_TEKST =
   "Hier zet het Hertenpad-volk de eerste palen in de grond.\n" +
   "Boven hen wachten twaalf lagen, nog in mist.";
 
+// Voedselwaarschuwing-pop-up (issue: "dat mag in een aparte pop-up, die hoeft
+// pas te komen als de dreiging van te weinig voedsel 5 beurten ver weg is"):
+// getoond zodra de stad voor het eerst "kritiek" wordt (zie economie.ts
+// `verwerkVerval`) — het voedseltekort-equivalent van MILITAIR_UITLEG_*
+// hierboven, maar dan als waarschuwing in plaats van uitleg vooraf.
+export const VOEDSEL_WAARSCHUWING_TITEL = "De voorraad slinkt";
+export const VOEDSEL_WAARSCHUWING_TEKST =
+  "Er is te weinig voedsel binnengekomen. Over een paar beurten is de voorraad op. Bouw een Boerderij, of zorg dat een bestaande boerderij weer meetelt, voordat het zover is.";
+
 // Ineenstortingsscherm, getoond zodra de stad instort (M6, hoofdstuk 4: hard
 // verval). In de MVP (één stad, geen frontier-verplaatsing, hoofdstuk 13)
 // eindigt dit de hele run en herstart de tutorial (issue: "run eindigen
