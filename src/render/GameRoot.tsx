@@ -18,6 +18,7 @@ import SpelActiesMenu from "@/components/SpelActiesMenu";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
 import UitlegPopup from "@/components/UitlegPopup";
+import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import { berekenHistorieStatistieken, berekenLegerwaarde } from "@/game/economie";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
@@ -102,6 +103,17 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // Settler-uitleg-pop-up (M10, hoofdstuk 16): zelfde eenmalige-confirm-vlag
   // als de twee hierboven, getoond zodra de settler in beurt 2 verschijnt.
   const [settlerUitlegBevestigd, setSettlerUitlegBevestigd] = useState(false);
+  // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
+  // van te weinig voedsel 5 beurten ver weg is"): anders dan de
+  // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
+  // reageert de speler op tijd (stad wordt weer "gezond"), en zakt de
+  // voorraad daarna opnieuw weg, dan verdient dat een nieuwe waarschuwing.
+  // De reset-effect hieronder zet de vlag terug zodra de status weer
+  // "gezond" is.
+  const [voedselWaarschuwingBevestigd, setVoedselWaarschuwingBevestigd] = useState(false);
+  useEffect(() => {
+    if (state.stad.vervalStatus === "gezond") setVoedselWaarschuwingBevestigd(false);
+  }, [state.stad.vervalStatus]);
   // Bouwen gebeurt op de huidige frontier-laag: de hoogste ontgrendelde laag
   // (M5: welke laag dat is, verandert zodra cultuur een nieuwe laag ontgrendelt).
   const actieveLaag = state.lagen.find(
@@ -203,6 +215,17 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     !toonSettlerUitlegPopup &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     !militairUitlegBevestigd;
+  // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
+  // van te weinig voedsel 5 beurten ver weg is") — zie economie.ts
+  // `verwerkVerval` voor de trigger zelf (voedsel dreigt binnen 5 beurten op
+  // te raken).
+  const toonVoedselWaarschuwingPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonMilitairUitlegPopup &&
+    state.stad.vervalStatus === "kritiek" &&
+    !voedselWaarschuwingBevestigd;
   // Tutorial-voltooid-samenvatting zodra de confrontatie op laag 12 gewonnen
   // is (issue: "pop-up met summary wat je geleerd hebt").
   const toonTutorialVoltooidPopup =
@@ -210,6 +233,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonMilitairUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     state.laatsteConfrontatie?.gewonnen === true &&
     !tutorialVoltooidBevestigd;
@@ -262,6 +286,12 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
           <UitlegPopup beurt={state.beurt} onDoorgaan={() => setLaatstBevestigdeUitlegBeurt(state.beurt)} />
         )}
         {toonSettlerUitlegPopup && <SettlerUitlegPopup onDoorgaan={() => setSettlerUitlegBevestigd(true)} />}
+        {toonVoedselWaarschuwingPopup && (
+          <VoedselWaarschuwingPopup
+            beurtenResterend={state.stad.vervalBeurtenResterend}
+            onDoorgaan={() => setVoedselWaarschuwingBevestigd(true)}
+          />
+        )}
         {toonTutorialVoltooidPopup && (
           <TutorialVoltooidPopup
             onDoorgaan={() => {
@@ -277,6 +307,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
             !toonUitlegPopup &&
             !toonSettlerUitlegPopup &&
             !toonMilitairUitlegPopup &&
+            !toonVoedselWaarschuwingPopup &&
             !toonTutorialVoltooidPopup &&
             !state.bouwKeuzeGedaanDitBeurt &&
             !plaatsingsImprovement &&

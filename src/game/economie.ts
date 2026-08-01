@@ -15,8 +15,14 @@
 // Groei & verval (M6): zodra voedsel de groeidrempel haalt kan de speler
 // bewust de groei-tier klein→middel starten (geen automatische ontgrendeling
 // zoals cultuur, hoofdstuk 11), die net als een land-improvement een aantal
-// beurten rijptijd kost. Raakt het gebouwde land grotendeels uitgeput, dan
-// verschijnt een "kritiek"-waarschuwing; blijft dat zo, dan stort de stad in.
+// beurten rijptijd kost. Voedsel is daarnaast (issue: "stad instort of
+// verlaten alleen als er te weinig voedsel is") een echte, per beurt
+// verbruikte voorraad: een grotere stad verbruikt meer (zie
+// `VOEDSEL_VERBRUIK`). Dreigt die voorraad binnen een paar beurten op te
+// raken, dan verschijnt een "kritiek"-waarschuwing; blijft dat zo tot de
+// voorraad daadwerkelijk nul bereikt, dan stort de stad in. Land-uitputting
+// (M4) leidt zelf niet meer tot instorting — alleen tot minder producerende
+// tiles, wat de voedselbalans indirect onder druk kan zetten.
 // In de MVP (hoofdstuk 13: één stad, nog geen frontier-verplaatsing) is er
 // geen volgende stad om naartoe te gaan, dus eindigt een volledige
 // ineenstorting de hele run: de speler begint de tutorial opnieuw
@@ -53,13 +59,19 @@ export const OPSLAG_CAP = 30;
 // — de tussenliggende beurten zijn voor de settler (wegen aanleggen).
 const BOUW_RITME_BEURTEN = 3;
 
-// Verval-tuning (M6, hoofdstuk 4/14): bewuste MVP-placeholders, net als de
-// overige nog niet vastgelegde balansgetallen. Een minimum-aantal ghost towns
-// naast de ratio voorkomt dat de allereerste uitgeputte tile al meteen een
-// crisis veroorzaakt.
-const KRITIEK_MIN_UITGEPUTTE_TILES = 3;
-const KRITIEK_UITPUTTINGSRATIO = 0.6;
-const VERVAL_BEURTEN = 5;
+// Voedseltekort-tuning (M6, hoofdstuk 4/14; issue: "stad instort of verlaten
+// alleen als er te weinig voedsel is"): bewuste MVP-placeholders, net als de
+// overige nog niet vastgelegde balansgetallen. Een grotere stad verbruikt
+// meer voedsel per beurt (hoofdstuk 10, laag 10-flavor: "meer monden, minder
+// plek om ze allemaal te voeden"). De waarschuwing verschijnt zodra de
+// voorraad — bij het huidige productie/verbruikstempo — naar verwachting
+// binnen `VOEDSEL_WAARSCHUWING_BEURTEN` beurten op zou raken.
+const VOEDSEL_VERBRUIK: Record<City["grootte"], number> = {
+  klein: 2,
+  middel: 4,
+  groot: 6,
+};
+const VOEDSEL_WAARSCHUWING_BEURTEN = 5;
 
 // Militair-tuning (M7, hoofdstuk 6/14): net als de verval-tuning bewuste
 // MVP-placeholders. `WINKANS_MIN`/`WINKANS_MAX` zorgen dat een confrontatie
@@ -70,12 +82,23 @@ const BUIT_GOUD_FACTOR = 0.5;
 const SCHADE_TILES_AANTAL = 2;
 const SCHADE_BEURTEN = 3;
 
+// Startgrondstoffen (issue: "je begint met bijna geen grondstoffen, alleen
+// net genoeg om een houtkap te bouwen"): precies genoeg steen voor een
+// Houtkap (kosten: `steen: 6`) en niets daarnaast — een Steengroeve, Mijn of
+// Boerderij is bij de start dus nog niet te betalen.
 const STARTVOORRAAD: Record<MateriaalType, number> = {
-  hout: 8,
+  hout: 0,
   steen: 6,
   erts: 0,
   goud: 0,
 };
+
+// Startvoedsel (issue: "genoeg voedsel om het net genoeg beurten te
+// overleven zodat de houtkap, plus de wegen ernaartoe, net klaar zijn"):
+// afgestemd op het bouw/wegen-tempo van de openingszet — genoeg om de
+// Houtkap (2 beurten bouwtijd + 1-2 beurten wegaanleg) te overbruggen,
+// waarna de voedselwaarschuwing verschijnt en een Boerderij nodig wordt.
+const VOEDSEL_START = 14;
 
 export function maakInitieleSpelStatus(): GameState {
   return {
@@ -89,7 +112,7 @@ export function maakInitieleSpelStatus(): GameState {
     lagen: maakInitieleWereld(),
     voorraad: { ...STARTVOORRAAD },
     opslagCap: OPSLAG_CAP,
-    voedsel: 0,
+    voedsel: VOEDSEL_START,
     cultuur: 0,
     beurt: 1,
     bouwKeuzeGedaanDitBeurt: false,
@@ -104,8 +127,52 @@ function isMateriaalType(resource: string): resource is MateriaalType {
 
 type ResourceKey = keyof Improvement["kosten"];
 
+// Totale voedselproductie van dit beurt: alle actieve, (voor land-improvements)
+// wegverbonden tiles met een voedsel-productie-effect (hoofdstuk 16: een
+// Boerderij zonder wegverbinding levert nog niets op). Los van
+// `verwerkProductie` hieronder zodat `verwerkVerval` dezelfde berekening kan
+// hergebruiken om het voedseltekort een paar beurten vooruit te voorspellen.
+function berekenVoedselProductie(state: GameState): number {
+  let productie = 0;
+
+  for (const laag of state.lagen) {
+    for (const tile of laag.tiles) {
+      const effect = tile.improvement?.effect;
+      if (tile.status !== "actief" || effect?.type !== "productie" || effect.resource !== "voedsel" || !effect.waarde) {
+        continue;
+      }
+      if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)) {
+        continue;
+      }
+      productie += effect.waarde;
+    }
+  }
+
+  return productie;
+}
+
+// Netto voedselverbruik per beurt (issue: "stad instort of verlaten alleen
+// als er te weinig voedsel is"): een grotere stad heeft meer monden te voeden
+// (hoofdstuk 10, laag 10-flavor). Nog geen aparte multiplier per campagne
+// nodig in de MVP (hoofdstuk 13).
+function voedselVerbruik(grootte: City["grootte"]): number {
+  return VOEDSEL_VERBRUIK[grootte];
+}
+
+// Netto voedselverandering deze beurt: productie min verbruik. Negatief
+// betekent dat de voorraad slinkt — gebruikt door zowel `verwerkProductie`
+// (om de voorraad bij te werken) als `verwerkVerval` (om te voorspellen
+// wanneer de voorraad op raakt).
+function berekenVoedselNetto(state: GameState): number {
+  return berekenVoedselProductie(state) - voedselVerbruik(state.stad.grootte);
+}
+
 // Past productie toe van elke actieve land-improvement met een "productie"-effect.
-// Bouwmaterialen lopen tegen de gedeelde opslag-cap aan; voedsel niet (hoofdstuk 5).
+// Bouwmaterialen lopen tegen de gedeelde opslag-cap aan; voedsel niet (hoofdstuk 5),
+// maar wordt wel per beurt verbruikt (zie `voedselVerbruik` hierboven) — de
+// voorraad kan dus, anders dan bouwmateriaal, ook weer afnemen. Nooit onder
+// nul: zodra de voorraad nul bereikt, ziet `verwerkVerval` dat als een
+// voedseltekort.
 function verwerkProductie(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
   let voedsel = state.voedsel;
@@ -126,9 +193,7 @@ function verwerkProductie(state: GameState): GameState {
         continue;
       }
 
-      if (effect.resource === "voedsel") {
-        voedsel += effect.waarde;
-      } else if (effect.resource === "cultuur") {
+      if (effect.resource === "cultuur") {
         cultuur += effect.waarde;
       } else if (isMateriaalType(effect.resource)) {
         voorraad[effect.resource] = Math.min(
@@ -136,8 +201,12 @@ function verwerkProductie(state: GameState): GameState {
           voorraad[effect.resource] + effect.waarde
         );
       }
+      // Voedsel-productie wordt hieronder in één keer verrekend met het
+      // verbruik (niet per tile), zie `berekenVoedselProductie`.
     }
   }
+
+  voedsel = Math.max(0, voedsel + berekenVoedselNetto(state));
 
   return { ...state, voorraad, voedsel, cultuur };
 }
@@ -285,57 +354,53 @@ function telLandTiles(state: GameState): { totaal: number; ghostTowns: number } 
   return { totaal, ghostTowns };
 }
 
-// Verval (M6, hoofdstuk 4): zodra het gebouwde land grotendeels is uitgeput
-// verschijnt een zichtbare "kritiek"-waarschuwing voor meerdere beurten.
-// Reageert de speler op tijd (bijv. nieuw land ontsluiten door een laag te
-// ontgrendelen, wat de uitputtingsratio weer verlaagt) dan wordt de stad
-// weer "gezond" en blijft alles behouden. Blijft de ratio kritiek tot de
-// aftelling nul bereikt, dan stort de stad in — de centrale risk/reward-gok
-// van elke stad-episode. Omdat de MVP maar één stad kent (hoofdstuk 13), is
-// er geen volgende stad om de run mee door te laten lopen: de hele run
-// eindigt en de tutorial herstart vanaf een verse spelstatus (hoofdstuk 4/11).
+// Verval (M6, hoofdstuk 4; issue: "stad instort of verlaten alleen als er te
+// weinig voedsel is"): zodra de voedselvoorraad — bij het huidige
+// productie/verbruikstempo — naar verwachting binnen
+// `VOEDSEL_WAARSCHUWING_BEURTEN` beurten op zou raken, verschijnt een
+// zichtbare "kritiek"-waarschuwing. Bouwt de speler op tijd een Boerderij (of
+// verhoogt anderszins de netto voedselproductie), dan wordt de stad weer
+// "gezond" en blijft alles behouden. Bereikt de voorraad daadwerkelijk nul,
+// dan stort de stad in — de centrale risk/reward-gok van elke stad-episode.
+// Omdat de MVP maar één stad kent (hoofdstuk 13), is er geen volgende stad om
+// de run mee door te laten lopen: de hele run eindigt en de tutorial herstart
+// vanaf een verse spelstatus (hoofdstuk 4/11).
 function verwerkVerval(state: GameState): GameState {
-  const { totaal, ghostTowns } = telLandTiles(state);
-  const isKritiekeUitputting =
-    ghostTowns >= KRITIEK_MIN_UITGEPUTTE_TILES &&
-    totaal > 0 &&
-    ghostTowns / totaal >= KRITIEK_UITPUTTINGSRATIO;
-
-  if (state.stad.vervalStatus === "gezond") {
-    if (!isKritiekeUitputting) return state;
+  if (state.voedsel <= 0) {
+    // Volledige ineenstorting (issue: "run eindigen wanneer stad uitgeput
+    // is" / "stad instort ... als er te weinig voedsel is"): de run zelf
+    // eindigt hier, niet alleen de groei-tier/relics van de stad — een verse
+    // spelstatus, met de ineenstortingsvlag erbovenop zodat de UI het
+    // game-over-scherm toont tot de speler bevestigt. `laatsteRunStatistieken`
+    // is een momentopname van de net geëindigde run (issue: "beurten/steden/
+    // lagen tonen op het game-over-scherm") — moet vóór de reset genomen
+    // worden, anders is er niets meer over om te tonen.
     return {
-      ...state,
-      stad: { ...state.stad, vervalStatus: "kritiek", vervalBeurtenResterend: VERVAL_BEURTEN },
+      ...maakInitieleSpelStatus(),
+      laatsteIneenstorting: true,
+      laatsteRunStatistieken: {
+        beurten: state.beurt,
+        stedenGebouwd: 1, // MVP: precies 1 stad per run (hoofdstuk 13, geen frontier-verplaatsing)
+        hoogsteLaag: hoogsteOntgrendeldeLaag(state.lagen),
+      },
     };
   }
 
-  if (!isKritiekeUitputting) {
+  const netto = berekenVoedselNetto(state);
+  const beurtenTotTekort = netto >= 0 ? Infinity : Math.ceil(state.voedsel / -netto);
+  const isDreiging = beurtenTotTekort <= VOEDSEL_WAARSCHUWING_BEURTEN;
+
+  if (!isDreiging) {
+    if (state.stad.vervalStatus === "gezond") return state;
     return {
       ...state,
       stad: { ...state.stad, vervalStatus: "gezond", vervalBeurtenResterend: undefined },
     };
   }
 
-  const resterend = (state.stad.vervalBeurtenResterend ?? VERVAL_BEURTEN) - 1;
-  if (resterend > 0) {
-    return { ...state, stad: { ...state.stad, vervalBeurtenResterend: resterend } };
-  }
-
-  // Volledige ineenstorting (issue: "run eindigen wanneer stad uitgeput is"):
-  // de run zelf eindigt hier, niet alleen de groei-tier/relics van de stad —
-  // een verse spelstatus, met de ineenstortingsvlag erbovenop zodat de UI het
-  // game-over-scherm toont tot de speler bevestigt. `laatsteRunStatistieken`
-  // is een momentopname van de net geëindigde run (issue: "beurten/steden/
-  // lagen tonen op het game-over-scherm") — moet vóór de reset genomen
-  // worden, anders is er niets meer over om te tonen.
   return {
-    ...maakInitieleSpelStatus(),
-    laatsteIneenstorting: true,
-    laatsteRunStatistieken: {
-      beurten: state.beurt,
-      stedenGebouwd: 1, // MVP: precies 1 stad per run (hoofdstuk 13, geen frontier-verplaatsing)
-      hoogsteLaag: hoogsteOntgrendeldeLaag(state.lagen),
-    },
+    ...state,
+    stad: { ...state.stad, vervalStatus: "kritiek", vervalBeurtenResterend: beurtenTotTekort },
   };
 }
 
@@ -636,9 +701,10 @@ export function legWegAan(state: GameState): GameState {
 }
 
 // Verwerkt één spelbeurt: eerst productie van actieve improvements (incl.
-// cultuur), dan laag-ontgrendeling op basis van die cultuur (M5), dan
-// uitputting van de actieve tiles (M4), dan verval op basis van die
-// uitputting (M6), dan verbruik/voortgang van de land-tile-bouwwachtrij, de
+// voedselverbruik en cultuur), dan laag-ontgrendeling op basis van die
+// cultuur (M5), dan uitputting van de actieve tiles (M4), dan verval op basis
+// van een dreigend voedseltekort (M6), dan verbruik/voortgang van de
+// land-tile-bouwwachtrij, de
 // stadsgroei-bouwwachtrij (M6) en de Soldaat-rekruteringswachtrij (M7), dan
 // de beurtteller ophogen. Een tile die deze beurt net voltooid wordt, begint
 // pas volgende beurt met aftellen. Zet ook de bouwkeuze-vlag (hoofdstuk 11)
