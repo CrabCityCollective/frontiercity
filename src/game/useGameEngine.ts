@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import {
+  bemanWachttoren as bemanWachttorenActie,
   bevestigGedwongenTribuut as bevestigGedwongenTribuutActie,
   bevestigIneenstorting as bevestigIneenstortingActie,
   confrontatie as confrontatieActie,
@@ -18,6 +19,7 @@ import {
   verplaatsSettlerNaar as verplaatsSettlerNaarActie,
   volgendeBeurt as volgendeBeurtActie,
   weigerTribuut as weigerTribuutActie,
+  zetUitlegPopups as zetUitlegPopupsActie,
 } from "./economie";
 import { laadSpel, saveSpel } from "./save";
 import { Improvement } from "./types";
@@ -108,6 +110,14 @@ export function useGameEngine() {
     setState((huidig) => bevestigGedwongenTribuutActie(huidig));
   }, []);
 
+  const bemanWachttoren = useCallback((strijderId: string, hoogte: number, positieInLaag: number) => {
+    setState((huidig) => bemanWachttorenActie(huidig, strijderId, hoogte, positieInLaag));
+  }, []);
+
+  const zetUitlegPopups = useCallback((aan: boolean) => {
+    setState((huidig) => zetUitlegPopupsActie(huidig, aan));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -125,6 +135,8 @@ export function useGameEngine() {
     geefTribuut,
     weigerTribuut,
     bevestigGedwongenTribuut,
+    bemanWachttoren,
+    zetUitlegPopups,
     opslaan,
     laden,
   };

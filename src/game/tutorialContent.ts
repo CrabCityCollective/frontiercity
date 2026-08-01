@@ -109,7 +109,7 @@ export const MILITAIR_UITLEG_TEKST =
 // patroon als MILITAIR_UITLEG_* hierboven.
 export const SETTLER_UITLEG_TITEL = "De settler";
 export const SETTLER_UITLEG_TEKST =
-  "Er staat een huifkar bij Holenrots: de settler. Zodra je beurt begint lichten de vakjes waar hij heen kan op — klik op zo'n vakje om 'm daarheen te verplaatsen, of gebruik de knop op zijn paneel om een weg aan te leggen. Een weg kost geen grondstoffen, alleen die ene beurt. Land-improvements leveren pas grondstoffen op zodra er een wegverbinding met de stad is — een mijn zonder weg blijft stil liggen. Nieuwe bouwprojecten kun je voortaan om de drie beurten starten; gebruik de tussenliggende beurten om wegen aan te leggen.";
+  "We gaan vooruit de wildenis in. De settlers kunnen bewegen over de kaart, en wegen bouwen. We moeten een weg naar de houtkap bouwen, anders kan het hout de voorraad niet bereiken.";
 
 // Tutorial-voltooid-pop-up (issue: "pop-up met een summary van wat je
 // geleerd hebt"), getoond zodra de confrontatie op laag 12 gewonnen is. De
@@ -128,14 +128,32 @@ export const INTRO_FLAVOR_TEKST =
   "Hier zet het Hertenpad-volk de eerste palen in de grond.\n" +
   "Boven hen wachten twaalf lagen, nog in mist.";
 
-// Voedselwaarschuwing-pop-up (issue: "dat mag in een aparte pop-up, die hoeft
-// pas te komen als de dreiging van te weinig voedsel 5 beurten ver weg is"):
-// getoond zodra de stad voor het eerst "kritiek" wordt (zie economie.ts
-// `verwerkVerval`) — het voedseltekort-equivalent van MILITAIR_UITLEG_*
-// hierboven, maar dan als waarschuwing in plaats van uitleg vooraf.
+// Voedselwaarschuwing-pop-up (issue: "uitleg pop-ups dynamisch tonen" —
+// vervangt de vroegere vaste beurt-3-pop-up): getoond zodra de stad voor het
+// eerst "kritiek" wordt (zie economie.ts `verwerkVerval`) — dynamisch op het
+// moment dat de voedseldreiging zich voordoet, in plaats van op een vast
+// beurtnummer.
 export const VOEDSEL_WAARSCHUWING_TITEL = "De voorraad slinkt";
 export const VOEDSEL_WAARSCHUWING_TEKST =
-  "Er is te weinig voedsel binnengekomen. Over een paar beurten is de voorraad op. Bouw een Boerderij, of zorg dat een bestaande boerderij weer meetelt, voordat het zover is.";
+  "De bodem van de voedselvoorraad komt behoorlijk dichtbij. Als het voedsel op, verlaat de stam het kamp, en gaat iedereen op zijn houtje de wildernis in. Bouw een boerderij om de voedselvoorraad weer aan te vullen. Vergeet niet de boerderij met een weg te verbinden.";
+
+// Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"):
+// getoond zodra er voor het eerst een actieve, wegverbonden boerderij
+// meeproduceert (zie economie.ts `heeftWerkendeBoerderij`) — de voedselcrisis
+// is dan bezworen, en dit is meteen de introductie van de militaire
+// mechaniek (Wachttoren + militair scherm), die vanaf dit punt relevant
+// wordt (hoofdstuk 6: indringers-dreiging vanaf laag 3).
+export const BOERDERIJ_KLAAR_TITEL = "Voedsel bereikt het kamp";
+export const BOERDERIJ_KLAAR_TEKST =
+  "Voedsel bereikt het kamp, de ergste hongersnood is geweken. De tocht gaat verder. Maar we komen steeds meer vijandelijke stammen tegen. We hebben nu steen en erts nodig uit de heuvels en bergen om een wachttoren te kunnen bouwen, en onze strijders te bewapenen. Bouw een wachttoren, en open het militaire scherm via het menu om strijders op te leiden.";
+
+// Strijder-bemannen-pop-up (nieuwe Wachttoren-functie, hoofdstuk 6: "een
+// wachttoren heeft een strijder nodig om te kunnen functioneren"), getoond
+// zodra de speler in het militaire paneel op een nog niet toegewezen strijder
+// klikt (zie MilitairPaneel/GameRoot).
+export const STRIJDER_BEMAN_TITEL = "Welke wachttoren wil je bemannen?";
+export const STRIJDER_BEMAN_TEKST =
+  "Deze strijder kan één Wachttoren bemannen. Kies een Wachttoren, en klik daarna op de kaart op een actieve Wachttoren om hem daar te plaatsen. Eenmaal bemand kun je een strijder niet meer terughalen.";
 
 // Ineenstortingsscherm, getoond zodra de stad instort (M6, hoofdstuk 4: hard
 // verval). In de MVP (één stad, geen frontier-verplaatsing, hoofdstuk 13)

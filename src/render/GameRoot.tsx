@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import BoerderijKlaarUitlegPopup from "@/components/BoerderijKlaarUitlegPopup";
 import BouwPopup from "@/components/BouwPopup";
 import GroeiPaneel from "@/components/GroeiPaneel";
 import HistoriePaneel from "@/components/HistoriePaneel";
@@ -16,17 +17,18 @@ import ResourceHud from "@/components/ResourceHud";
 import SettlerPaneel from "@/components/SettlerPaneel";
 import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
 import SpelActiesMenu from "@/components/SpelActiesMenu";
+import StrijderBemanPopup from "@/components/StrijderBemanPopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
 import UitlegPopup from "@/components/UitlegPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import VolgendeBeurtWaarschuwingPopup from "@/components/VolgendeBeurtWaarschuwingPopup";
-import { berekenHistorieStatistieken, berekenLegerwaarde } from "@/game/economie";
+import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
+import { berekenHistorieStatistieken, berekenLegerwaarde, heeftWerkendeBoerderij } from "@/game/economie";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
-import { LAATSTE_UITLEG_BEURT } from "@/game/uitlegContent";
 import { useGameEngine } from "@/game/useGameEngine";
 import { bereikbarePosities } from "@/game/wegen";
 import { TUTORIAL_LAAG_AANTAL, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
@@ -65,6 +67,8 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     geefTribuut,
     weigerTribuut,
     bevestigGedwongenTribuut,
+    bemanWachttoren,
+    zetUitlegPopups,
     opslaan,
     laden,
   } = useGameEngine();
@@ -94,12 +98,11 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // IntroScherm) zodat hij niet meteen bij de eerste laag verschijnt.
   const [laatstBevestigdeLaag, setLaatstBevestigdeLaag] = useState(1);
 
-  // Uitleg-pop-up (issue: "meer uitleg"): los van de laag-popup hierboven,
-  // toont dit de basisbegrippen-uitleg (grondstoffen/improvements) in de
-  // eerste paar beurten. `laatstBevestigdeUitlegBeurt` volgt hetzelfde patroon
-  // als `laatstBevestigdeLaag`: zodra de speler doorklikt, staat de huidige
-  // beurt vast als bevestigd zodat dezelfde pop-up niet nogmaals verschijnt.
-  const [laatstBevestigdeUitlegBeurt, setLaatstBevestigdeUitlegBeurt] = useState(0);
+  // Openings-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"): los van
+  // de laag-popup hierboven, toont dit één vaste pop-up bij het begin van
+  // beurt 1 — een eenmalige-confirm-vlag, zelfde patroon als de overige
+  // uitleg-pop-ups hieronder (settler/voedsel/boerderij/militair).
+  const [openingsUitlegBevestigd, setOpeningsUitlegBevestigd] = useState(false);
 
   // Militaire-uitleg-pop-up en tutorial-voltooid-pop-up (issue: "pop-up met
   // uitleg over de militaire confrontatie" + "pop-up met summary na het
@@ -110,6 +113,11 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // Settler-uitleg-pop-up (M10, hoofdstuk 16): zelfde eenmalige-confirm-vlag
   // als de twee hierboven, getoond zodra de settler in beurt 2 verschijnt.
   const [settlerUitlegBevestigd, setSettlerUitlegBevestigd] = useState(false);
+  // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"):
+  // zelfde eenmalige-confirm-vlag, getoond zodra er voor het eerst een
+  // actieve, wegverbonden boerderij meeproduceert (zie economie.ts
+  // `heeftWerkendeBoerderij`).
+  const [boerderijKlaarBevestigd, setBoerderijKlaarBevestigd] = useState(false);
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is"): anders dan de
   // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
@@ -121,6 +129,14 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   useEffect(() => {
     if (state.stad.vervalStatus === "gezond") setVoedselWaarschuwingBevestigd(false);
   }, [state.stad.vervalStatus]);
+  // Strijder-bemannen-flow (nieuwe Wachttoren-functie, hoofdstuk 6): klik op
+  // een strijder-icoontje in MilitairPaneel zet `strijderBemanPopupStrijderId`
+  // — de pop-up vraagt te bevestigen; "Kies een wachttoren" schakelt door
+  // naar `wachttorenKiesModusStrijderId`, waarna een klik op een actieve
+  // Wachttoren-tile op de kaart (zie `handleTileClick` hieronder) die
+  // strijder daadwerkelijk bemant.
+  const [strijderBemanPopupStrijderId, setStrijderBemanPopupStrijderId] = useState<string | null>(null);
+  const [wachttorenKiesModusStrijderId, setWachttorenKiesModusStrijderId] = useState<string | null>(null);
   // "Volgende beurt"-waarschuwing (issue: "als je op volgende beurt drukt,
   // dan moet er eerst gecheckt worden of je settler nog mag lopen of iets
   // mag doen die beurt ... en of je nog een improvement mocht neerzetten"):
@@ -157,6 +173,8 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     setPlaatsingsImprovement(null);
     setGeselecteerdeTile(null);
     setToonVolgendeBeurtWaarschuwing(false);
+    setStrijderBemanPopupStrijderId(null);
+    setWachttorenKiesModusStrijderId(null);
   }, [state.beurt]);
 
   const geselecteerdeLaag = geselecteerdeTile
@@ -215,10 +233,29 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // zweven. De bereikbare vakjes lichten op via GameCanvas/canvas.ts; een
   // klik erop verplaatst de settler meteen in plaats van de tile-info-popup
   // te openen (zie `handleTileClick` hieronder).
-  const settlerKanBewegen = Boolean(state.settler) && !state.settlerActieGedaanDitBeurt && !plaatsingsImprovement;
+  const settlerKanBewegen =
+    Boolean(state.settler) &&
+    !state.settlerActieGedaanDitBeurt &&
+    !plaatsingsImprovement &&
+    !wachttorenKiesModusStrijderId;
   const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.lagen, state.settler!) : [];
 
   function handleTileClick(hoogte: number, positieInLaag: number) {
+    // Wachttoren-kies-modus (nieuwe Wachttoren-functie, hoofdstuk 6) heeft
+    // voorrang op settler-verplaatsing/tile-selectie: een klik op een
+    // geldig doel (actieve Wachttoren-tile) bemant de gekozen strijder en
+    // sluit de modus af; een klik ernaast laat de modus openstaan zodat de
+    // speler opnieuw kan mikken.
+    if (wachttorenKiesModusStrijderId) {
+      const laag = state.lagen.find((l) => l.hoogte === hoogte);
+      const tile = laag?.tiles[positieInLaag];
+      if (tile?.status === "actief" && tile.improvement?.id === "wachttoren") {
+        bemanWachttoren(wachttorenKiesModusStrijderId, hoogte, positieInLaag);
+        setWachttorenKiesModusStrijderId(null);
+      }
+      return;
+    }
+
     const isSettlerDoel = settlerBereikbarePosities.some(
       (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
     );
@@ -236,13 +273,45 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     setGeselecteerdeTile(null);
   }
 
+  // Alle tutorial-uitleg-pop-ups (openings/settler/voedsel/boerderij/militair)
+  // zijn via het hoofdmenu aan/uit te zetten (issue: "een setting waarmee je
+  // deze uitleg pop-ups aan en uit kunt zetten") — laag-flavor, indringers en
+  // de tutorial-voltooid-samenvatting blijven altijd zichtbaar, dat is
+  // kerninhoud, geen uitleg.
+  const uitlegAan = state.uitlegPopupsAan;
+
   const toonLaagPopup = actieveLaag.hoogte > laatstBevestigdeLaag;
-  const toonUitlegPopup =
-    !toonLaagPopup && state.beurt > laatstBevestigdeUitlegBeurt && state.beurt <= LAATSTE_UITLEG_BEURT;
+  // Openings-uitleg bij het begin van beurt 1 (issue: "uitleg pop-ups
+  // dynamisch tonen") — geen vast beurtbereik meer, één vaste pop-up.
+  const toonUitlegPopup = !toonLaagPopup && uitlegAan && state.beurt === 1 && !openingsUitlegBevestigd;
   // Settler-uitleg direct nadat de settler in beurt 2 verschijnt (hoofdstuk
   // 16) — gekoppeld aan `state.settler` zelf i.p.v. een los beurtnummer, dus
   // hij verschijnt op precies hetzelfde moment als de settler zelf.
-  const toonSettlerUitlegPopup = !toonLaagPopup && !toonUitlegPopup && Boolean(state.settler) && !settlerUitlegBevestigd;
+  const toonSettlerUitlegPopup =
+    !toonLaagPopup && !toonUitlegPopup && uitlegAan && Boolean(state.settler) && !settlerUitlegBevestigd;
+  // Voedselwaarschuwing-pop-up (issue: "uitleg pop-ups dynamisch tonen" —
+  // vervangt de vroegere vaste beurt-3-pop-up) — zie economie.ts
+  // `verwerkVerval` voor de trigger zelf (voedsel dreigt binnen 5 beurten op
+  // te raken).
+  const toonVoedselWaarschuwingPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    uitlegAan &&
+    state.stad.vervalStatus === "kritiek" &&
+    !voedselWaarschuwingBevestigd;
+  // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"):
+  // zodra er voor het eerst een actieve, wegverbonden boerderij meeproduceert
+  // — de introductie van de militaire mechaniek (Wachttoren + militair
+  // scherm).
+  const toonBoerderijKlaarUitlegPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    uitlegAan &&
+    !boerderijKlaarBevestigd &&
+    heeftWerkendeBoerderij(state);
   // Militaire-uitleg direct na de laag-pop-up van laag 12 (issue: "als je op
   // het laatst in de tutorial bij de militaire confrontatie bent, uitleg
   // over hoe je het moet aanpakken").
@@ -250,35 +319,34 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     !toonLaagPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    uitlegAan &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     !militairUitlegBevestigd;
   // Indringers-pop-up (nieuwe Wachttoren-functie, hoofdstuk 6) — verschijnt
   // zodra `verwerkIndringers` (economie.ts) een gebeurtenis op de
   // frontier-laag heeft gezet. Blijft in beeld tot de speler de melding
-  // afhandelt (geven/weigeren/afgedwongen tribuut of gewoon wegklikken).
+  // afhandelt (geven/weigeren/afgedwongen tribuut of gewoon wegklikken). Los
+  // van de uitleg-toggle hierboven — dit is kerninhoud, geen uitleg.
   const toonIndringersPopup =
-    !toonLaagPopup && !toonUitlegPopup && !toonSettlerUitlegPopup && !toonMilitairUitlegPopup && Boolean(state.indringersEvent);
-  // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
-  // van te weinig voedsel 5 beurten ver weg is") — zie economie.ts
-  // `verwerkVerval` voor de trigger zelf (voedsel dreigt binnen 5 beurten op
-  // te raken).
-  const toonVoedselWaarschuwingPopup =
     !toonLaagPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
-    !toonIndringersPopup &&
-    state.stad.vervalStatus === "kritiek" &&
-    !voedselWaarschuwingBevestigd;
+    Boolean(state.indringersEvent);
   // Tutorial-voltooid-samenvatting zodra de confrontatie op laag 12 gewonnen
   // is (issue: "pop-up met summary wat je geleerd hebt").
   const toonTutorialVoltooidPopup =
     !toonLaagPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     !toonIndringersPopup &&
-    !toonVoedselWaarschuwingPopup &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     state.laatsteConfrontatie?.gewonnen === true &&
     !tutorialVoltooidBevestigd;
@@ -325,7 +393,14 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
 
   return (
     <div className="game-viewport">
-      <HoofdMenu onOpslaan={opslaan} onLaden={laden} kanLaden={heeftOpgeslagenSpel()} onVerlaten={onVerlaten} />
+      <HoofdMenu
+        onOpslaan={opslaan}
+        onLaden={laden}
+        kanLaden={heeftOpgeslagenSpel()}
+        onVerlaten={onVerlaten}
+        uitlegAan={uitlegAan}
+        onToggleUitleg={() => zetUitlegPopups(!uitlegAan)}
+      />
       <SpelActiesMenu
         toonMilitair={toonMilitair}
         onToggleMilitair={() => setToonMilitair((huidig) => !huidig)}
@@ -350,6 +425,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
             tegenstanderSterkte={actieveLaag.dreigingsniveau ?? 0}
             onStartRecrutering={startRecrutering}
             onConfrontatie={confrontatie}
+            onKiesStrijder={(strijderId) => setStrijderBemanPopupStrijderId(strijderId)}
           />
         )}
         {toonLaagPopup && (
@@ -365,15 +441,28 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
             onSluiten={sluitIndringersMelding}
           />
         )}
-        {toonUitlegPopup && (
-          <UitlegPopup beurt={state.beurt} onDoorgaan={() => setLaatstBevestigdeUitlegBeurt(state.beurt)} />
-        )}
+        {toonUitlegPopup && <UitlegPopup onDoorgaan={() => setOpeningsUitlegBevestigd(true)} />}
         {toonSettlerUitlegPopup && <SettlerUitlegPopup onDoorgaan={() => setSettlerUitlegBevestigd(true)} />}
         {toonVoedselWaarschuwingPopup && (
           <VoedselWaarschuwingPopup
             beurtenResterend={state.stad.vervalBeurtenResterend}
             onDoorgaan={() => setVoedselWaarschuwingBevestigd(true)}
           />
+        )}
+        {toonBoerderijKlaarUitlegPopup && (
+          <BoerderijKlaarUitlegPopup onDoorgaan={() => setBoerderijKlaarBevestigd(true)} />
+        )}
+        {strijderBemanPopupStrijderId && (
+          <StrijderBemanPopup
+            onKiesWachttoren={() => {
+              setWachttorenKiesModusStrijderId(strijderBemanPopupStrijderId);
+              setStrijderBemanPopupStrijderId(null);
+            }}
+            onAnnuleren={() => setStrijderBemanPopupStrijderId(null)}
+          />
+        )}
+        {wachttorenKiesModusStrijderId && (
+          <WachttorenKiesBanner onAnnuleren={() => setWachttorenKiesModusStrijderId(null)} />
         )}
         {toonVolgendeBeurtWaarschuwing && (
           <VolgendeBeurtWaarschuwingPopup
@@ -393,14 +482,18 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
         )}
         <BouwPopup
           laag={actieveLaag}
+          beurt={state.beurt}
           zichtbaar={
             !toonLaagPopup &&
             !toonUitlegPopup &&
             !toonSettlerUitlegPopup &&
+            !toonVoedselWaarschuwingPopup &&
+            !toonBoerderijKlaarUitlegPopup &&
             !toonMilitairUitlegPopup &&
             !toonIndringersPopup &&
-            !toonVoedselWaarschuwingPopup &&
             !toonTutorialVoltooidPopup &&
+            !strijderBemanPopupStrijderId &&
+            !wachttorenKiesModusStrijderId &&
             !state.bouwKeuzeGedaanDitBeurt &&
             !plaatsingsImprovement &&
             kanBouwen

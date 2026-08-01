@@ -88,9 +88,11 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - Diplomatiek keuzemoment: **Erkennen/aanpassen** (permanente kleine wederzijdse korting), **Doordrukken** (hogere kost nu, blijvend hogere basiskost daarna), of **Terugtrekken** (laag laten zitten, zijwaarts verder zoeken indien mogelijk).
 
 **Wachttoren & indringers:**
-- Elke beurt is er een kans (MVP-richtwaarde 50%, tunebaar — hoofdstuk 14) dat een tribe de **frontier-laag** (de hoogst ontgrendelde laag) binnendringt. Een pop-up meldt dit met een korte flavor-tekst en tribenaam (bijv. "de stam van de Halve Maan" of "de stam van de Bloedhoeven").
-- Staat er een actieve Wachttoren op die laag, dan gebeurt er niets — de pop-up meldt dat de wachttoren stand houdt en de indringers zich terugtrekken. De Wachttoren verdedigt zo **de hele laag**, niet alleen zijn eigen vakje — een aparte functie naast zijn bestaande verdedigingsbonus bij een directe militaire confrontatie hierboven.
-- Zonder Wachttoren op de frontier-laag eisen de indringers **tribuut**: ongeveer de helft van het grondstof-type (hout/steen/erts/goud) waar de speler op dat moment het meest van heeft — het spel eist nooit meer dan er daadwerkelijk in voorraad is.
+- De dreiging van indringers doet zich alleen voor als er al een improvement (in aanbouw, actief, of een ghost-town-restant) óf de settler zelf op de **frontier-laag** staat — een volledig lege laag is altijd veilig. Dat betekent dat de speler vaak eerst een Wachttoren wil bouwen en die via een weg wil aansluiten, vóórdat hij andere improvements op een nieuwe laag neerzet.
+- Elke beurt is er, zodra er zo'n aanwezigheid is, een kans (MVP-richtwaarde 40%, tunebaar — hoofdstuk 14; verlaagd vanaf de eerdere 50%) dat een tribe de frontier-laag binnendringt. Een pop-up meldt dit met een korte flavor-tekst en tribenaam (bijv. "de stam van de Halve Maan" of "de stam van de Bloedhoeven").
+- Een Wachttoren beschermt de hele laag alleen als hij **actief én bemand** is. Een Wachttoren heeft dus een strijder nodig om te kunnen functioneren — gebouwd maar onbemand biedt hij geen bescherming en telt zijn verdedigingsbonus niet mee bij een directe militaire confrontatie. Staat er een bemande Wachttoren op de laag, dan gebeurt er niets — de pop-up meldt dat de wachttoren stand houdt en de indringers zich terugtrekken.
+  - **Bemannen**: in het militaire scherm ziet de speler zijn opgeleide strijders als los aanklikbare icoontjes. Een klik op een nog niet toegewezen strijder opent een keuze ("kies een wachttoren"); de daaropvolgende klik op een actieve Wachttoren-tile op de kaart bemant die. Eenmaal bemand is dit onomkeerbaar binnen de MVP: een strijder kan niet meer uit een eerdere Wachttoren teruggehaald worden om elders bemand te worden.
+- Zonder bemande Wachttoren op de frontier-laag eisen de indringers **tribuut**: ongeveer de helft van het grondstof-type (hout/steen/erts/goud) waar de speler op dat moment het meest van heeft — het spel eist nooit meer dan er daadwerkelijk in voorraad is.
   - **Geven**: het tribuut wordt van de gedeelde opslag afgetrokken, de indringers trekken zich terug.
   - **Weigeren**: de indringers verwoesten de stad, en de speler valt terug op de vorige stad — als die er is. In de huidige MVP-scope (hoofdstuk 13: één stad, nog geen frontier-verplaatsing) is die vorige stad er nooit, dus wordt het tribuut in dat geval alsnog betaald (de pop-up legt dit uit zodra het zich voordoet). Zodra meerdere steden bestaan, wordt "weigeren zonder wachttoren" een echt risico: de actieve stad gaat verloren en de speler valt terug op de voorgaande.
 
@@ -373,6 +375,16 @@ interface City {
 // `volgendeBouwBeurt` (de eerstvolgende beurt waarop weer een nieuw
 // bouwproject gestart mag worden — het bouw-ritme van hoofdstuk 16).
 
+// Wachttoren-bemanning (hoofdstuk 6): `City` krijgt een `strijders`-lijst
+// i.p.v. één opgetelde legerwaarde-getal — elke opgeleide Soldaat is
+// individueel aanklikbaar in het militaire scherm en optioneel toegewezen
+// aan één Wachttoren-vakje. Toewijzen is binnen de MVP onomkeerbaar: een
+// strijder kan niet meer uit een eerdere Wachttoren teruggehaald worden.
+interface Strijder {
+  id: string;
+  wachttoren?: { hoogte: number; positieInLaag: number };
+}
+
 // Indringers-tribuut (hoofdstuk 6): GameState krijgt daarnaast een optionele
 // `indringersEvent`, gezet zodra de per-beurt-kans een tribe op de
 // frontier-laag laat binnendringen.
@@ -459,7 +471,7 @@ Binnen de gekozen range wordt random getrokken; een bergengte/obstakel-zone word
 *Winkans-formule militaire confrontaties*:
 > Winkans = eigen legerwaarde / (eigen legerwaarde + vijand legerwaarde), geclampt tussen 10% en 90%.
 
-*Indringers & tribuut (hoofdstuk 6)*: kans op indringers op de frontier-laag = 50% per beurt (MVP-richtwaarde, tunebaar), en pas een factor vanaf laag 3 — de eerste twee lagen blijven zo een rustige introductie. Tribuut zonder wachttoren = ongeveer de helft (afgerond, minimaal 1) van het grondstof-type waar de speler op dat moment het meest van heeft, nooit meer dan de aanwezige voorraad.
+*Indringers & tribuut (hoofdstuk 6)*: kans op indringers op de frontier-laag = 40% per beurt (MVP-richtwaarde, tunebaar; verlaagd vanaf de eerdere 50%), alleen zodra er een improvement of de settler op die laag staat, en pas een factor vanaf laag 3 — de eerste twee lagen blijven zo een rustige introductie. Tribuut zonder bemande wachttoren = ongeveer de helft (afgerond, minimaal 1) van het grondstof-type waar de speler op dat moment het meest van heeft, nooit meer dan de aanwezige voorraad.
 
 **Lange mars (Anker 3, na Terugvechten — Amerikaanse campagne)**
 - Uitgestrekt over 3-4 opeenvolgende lagen in plaats van één piekmoment.

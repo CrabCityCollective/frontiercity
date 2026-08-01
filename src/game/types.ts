@@ -104,6 +104,18 @@ export interface Relic {
   categorie: Categorie;
 }
 
+// Individuele opgeleide Soldaat-eenheid (nieuwe Wachttoren-functie, hoofdstuk
+// 6: "een wachttoren heeft een strijder nodig om te kunnen functioneren").
+// Elke strijder telt mee in de algemene legerwaarde (`berekenLegerwaarde` in
+// economie.ts), ongeacht of hij een Wachttoren bemant. `wachttoren` wordt via
+// het militaire paneel gezet (kies een strijder → kies een wachttoren) en is
+// daarna blijvend — een strijder kan niet meer uit een eerdere Wachttoren
+// gehaald worden om ergens anders bemand te worden (issue).
+export interface Strijder {
+  id: string;
+  wachttoren?: { hoogte: number; positieInLaag: number };
+}
+
 export interface City {
   naam: string;
   grootte: "klein" | "middel" | "groot";
@@ -118,11 +130,11 @@ export interface City {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
-  // Opgebouwde legerwaarde (M7, hoofdstuk 6: "vergelijking van totale
-  // legerwaarde") uit gerekruteerde Soldaat-eenheden. Net als `grootte` en
-  // `relics` een resultaat van keuzes over de tijd, dus ook onderdeel van het
-  // permadeath-verval-risico (hoofdstuk 4).
-  leger: number;
+  // Alle opgeleide Soldaat-eenheden (M7, hoofdstuk 6), elk optioneel toegewezen
+  // aan een Wachttoren-vakje (zie `Strijder` hierboven). Vervangt een simpele
+  // legerwaarde-teller: de speler moet nu per strijder kunnen kiezen welke
+  // Wachttoren hij bemant.
+  strijders: Strijder[];
   // Lopende rekrutering, zelfde queue-patroon als `groeiInAanbouw` (los van
   // de tegel-band omdat een unit geen land-vakje inneemt).
   legerInAanbouw?: {
@@ -244,4 +256,12 @@ export interface GameState {
   // `undefined` zolang er geen (onopgeloste) melding is — de UI blokkeert
   // dan geen andere pop-ups.
   indringersEvent?: IndringersEvent;
+  // Per-run instelling (issue: "een setting waarmee je deze uitleg pop-ups
+  // aan en uit kunt zetten ... voor deze run specifiek") — schakelt alle
+  // tutorial-uitleg-pop-ups (openings-uitleg, settler, voedsel/boerderij,
+  // militair) in of uit via het hoofdmenu, los van de standaard-instelling
+  // (zie save.ts: `standaardUitlegAan`) waarmee elke nieuwe run start. Laat
+  // laag-flavor, indringers-meldingen en de tutorial-voltooid-samenvatting
+  // ongemoeid — dat is kerninhoud, geen uitleg.
+  uitlegPopupsAan: boolean;
 }

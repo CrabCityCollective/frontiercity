@@ -50,8 +50,9 @@
 // definitieve balans.
 
 import { improvementPastOpTerrein, SOLDAAT, WOONWIJK } from "./improvements";
+import { standaardUitlegAan } from "./save";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
-import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, Layer, MateriaalType, ResourceType, Tile } from "./types";
+import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, Layer, MateriaalType, ResourceType, Strijder, Tile } from "./types";
 import {
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
@@ -132,7 +133,7 @@ export function maakInitieleSpelStatus(): GameState {
       grootte: "klein",
       relics: [],
       vervalStatus: "gezond",
-      leger: 0,
+      strijders: [],
     },
     lagen: maakInitieleWereld(),
     voorraad: { ...STARTVOORRAAD },
@@ -143,6 +144,11 @@ export function maakInitieleSpelStatus(): GameState {
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,
     volgendeBouwBeurt: 1,
+    // Standaard-instelling (issue: "een setting waarmee je deze uitleg
+    // pop-ups aan en uit kunt zetten ... standaard voor alle nieuwe potjes")
+    // bepaalt de startwaarde; de per-run toggle in het hoofdmenu wijzigt
+    // daarna alleen deze ene run.
+    uitlegPopupsAan: standaardUitlegAan(),
   };
 }
 
@@ -504,12 +510,18 @@ function verwerkRecrutering(state: GameState): GameState {
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
+    // Elke voltooide rekrutering levert één individuele strijder op (nieuwe
+    // Wachttoren-functie, hoofdstuk 6) in plaats van alleen een opgetelde
+    // legerwaarde — de speler moet 'm straks kunnen kiezen om een specifieke
+    // Wachttoren te bemannen. Een oplopende teller volstaat als id, want
+    // `strijders` groeit alleen (nooit verwijderd, zie `bemanWachttoren`).
+    const nieuweStrijder: Strijder = { id: `strijder-${state.stad.strijders.length}` };
     return {
       ...state,
       voorraad,
       stad: {
         ...state.stad,
-        leger: state.stad.leger + (legerInAanbouw.improvement.effect.waarde ?? 0),
+        strijders: [...state.stad.strijders, nieuweStrijder],
         legerInAanbouw: undefined,
       },
     };
@@ -566,17 +578,32 @@ export function startRecrutering(state: GameState): GameState {
   };
 }
 
-// Totale legerwaarde (hoofdstuk 6: "units + muur/wachttoren-bonus"): opgebouwde
-// Soldaat-eenheden plus de passieve verdedigingsbonus van elke actieve
-// Wachttoren-tile, ongeacht op welke laag die staat (er is in de MVP maar
-// één actieve stad, hoofdstuk 13).
+// Of een Wachttoren-vakje bemand is door een van de strijders (nieuwe
+// Wachttoren-functie, hoofdstuk 6: "de wachttoren moet dus bemand zijn").
+function isWachttorenBemand(strijders: Strijder[], hoogte: number, positieInLaag: number): boolean {
+  return strijders.some(
+    (strijder) => strijder.wachttoren?.hoogte === hoogte && strijder.wachttoren?.positieInLaag === positieInLaag
+  );
+}
+
+// Totale legerwaarde (hoofdstuk 6: "units + muur/wachttoren-bonus"): elke
+// opgeleide strijder telt mee (ongeacht of hij een Wachttoren bemant), plus
+// de passieve verdedigingsbonus van elke actieve, bemande Wachttoren-tile
+// (nieuwe Wachttoren-functie hierboven: onbemand levert geen bonus),
+// ongeacht op welke laag die staat (er is in de MVP maar één actieve stad,
+// hoofdstuk 13).
 export function berekenLegerwaarde(state: GameState): number {
-  let waarde = state.stad.leger;
+  let waarde = state.stad.strijders.length * (SOLDAAT.effect.waarde ?? 0);
 
   for (const laag of state.lagen) {
     for (const tile of laag.tiles) {
       const effect = tile.improvement?.effect;
-      if (tile.status === "actief" && effect?.type === "verdediging" && effect.waarde) {
+      if (
+        tile.status === "actief" &&
+        effect?.type === "verdediging" &&
+        effect.waarde &&
+        isWachttorenBemand(state.stad.strijders, laag.hoogte, tile.positieInLaag)
+      ) {
         waarde += effect.waarde;
       }
     }
@@ -654,8 +681,9 @@ export function confrontatie(state: GameState): GameState {
 // Kans per beurt dat indringers de frontier-laag binnendringen (hoofdstuk 6).
 // Bewuste MVP-placeholder, net als de overige tuning-getallen in dit bestand
 // (hoofdstuk 14) — expliciet tunebaar genoemd in het issue dat deze feature
-// aanvroeg.
-const INDRINGERS_KANS = 0.5;
+// aanvroeg. Was 50%, verlaagd naar 40% (issue: "de kans op een inval van 50%
+// is te hoog").
+const INDRINGERS_KANS = 0.4;
 
 // Indringers zijn pas vanaf deze frontier-laag een factor (issue: "ik wil
 // graag dat indringers pas een factor worden vanaf laag 3, nu is het te
@@ -663,8 +691,27 @@ const INDRINGERS_KANS = 0.5;
 // dat risico.
 const INDRINGERS_MIN_LAAG = 3;
 
-function heeftActieveWachttoren(laag: Layer): boolean {
-  return laag.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "wachttoren");
+// Een actieve Wachttoren beschermt de laag alleen als hij ook bemand is
+// (nieuwe Wachttoren-functie, hoofdstuk 6: "de wachttoren moet dus bemand
+// zijn") — een gebouwde maar onbemande Wachttoren biedt geen bescherming.
+function heeftActieveWachttoren(laag: Layer, strijders: Strijder[]): boolean {
+  return laag.tiles.some(
+    (tile) =>
+      tile.status === "actief" &&
+      tile.improvement?.id === "wachttoren" &&
+      isWachttorenBemand(strijders, laag.hoogte, tile.positieInLaag)
+  );
+}
+
+// De dreiging van indringers doet zich alleen voor als er al iets van de
+// speler op de frontier-laag staat — een improvement (in aanbouw, actief of
+// een ghost-town-restant) of de settler zelf (issue: "de dreiging van een
+// indringers doet zich alleen voor als er een improvement of een settler op
+// de frontier laag staat. Anders niet."). Een nog volledig lege laag is dus
+// altijd veilig.
+function heeftAanwezigheidOpLaag(state: GameState, laag: Layer): boolean {
+  if (state.settler?.hoogte === laag.hoogte) return true;
+  return laag.tiles.some((tile) => tile.improvement !== undefined);
 }
 
 // Het grondstof-type waar de speler op dit moment het meest van heeft, met
@@ -698,14 +745,16 @@ function verwerkIndringers(state: GameState): GameState {
   if (state.indringersEvent) return state;
   const laagHoogte = hoogsteOntgrendeldeLaag(state.lagen);
   if (laagHoogte < INDRINGERS_MIN_LAAG) return state;
-  if (Math.random() >= INDRINGERS_KANS) return state;
 
   const frontierLaag = state.lagen.find((laag) => laag.hoogte === laagHoogte);
   if (!frontierLaag) return state;
+  if (!heeftAanwezigheidOpLaag(state, frontierLaag)) return state;
+
+  if (Math.random() >= INDRINGERS_KANS) return state;
 
   const stamNaam = INDRINGERS_STAMMEN[Math.floor(Math.random() * INDRINGERS_STAMMEN.length)];
 
-  if (heeftActieveWachttoren(frontierLaag)) {
+  if (heeftActieveWachttoren(frontierLaag, state.stad.strijders)) {
     return { ...state, indringersEvent: { laagHoogte, stamNaam, heeftWachttoren: true, fase: "gemeld" } };
   }
 
@@ -926,6 +975,58 @@ export function hakHout(state: GameState): GameState {
   };
 
   return { ...state, voorraad, settlerActieGedaanDitBeurt: true };
+}
+
+// Of er al een actieve, wegverbonden boerderij meeproduceert (issue: "uitleg
+// pop-ups dynamisch tonen" — trigger voor BoerderijKlaarUitlegPopup): gebruikt
+// dezelfde wegverbindingsregel als `verwerkProductie` hierboven, zodat de
+// pop-up pas verschijnt zodra de boerderij daadwerkelijk voedsel oplevert.
+export function heeftWerkendeBoerderij(state: GameState): boolean {
+  return state.lagen.some((laag) =>
+    laag.tiles.some(
+      (tile) =>
+        tile.status === "actief" &&
+        tile.improvement?.id === "boerderij" &&
+        isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)
+    )
+  );
+}
+
+// Bemant een Wachttoren met een specifieke strijder (nieuwe Wachttoren-functie,
+// hoofdstuk 6): via het militaire paneel kiest de speler eerst een nog
+// onbemande strijder, dan een actieve, nog onbemande Wachttoren-tile op de
+// kaart. Geeft de ongewijzigde status terug bij een ongeldige combinatie
+// (strijder bestaat niet, is al bemand, of het doel is geen actieve,
+// onbemande Wachttoren) — eenmaal bemand is dit onomkeerbaar (issue: "je kunt
+// je strijder niet meer uit eerdere wachttorens halen").
+export function bemanWachttoren(
+  state: GameState,
+  strijderId: string,
+  hoogte: number,
+  positieInLaag: number
+): GameState {
+  const strijder = state.stad.strijders.find((s) => s.id === strijderId);
+  if (!strijder || strijder.wachttoren) return state;
+
+  const laag = state.lagen.find((l) => l.hoogte === hoogte);
+  const tile = laag?.tiles[positieInLaag];
+  if (!tile || tile.status !== "actief" || tile.improvement?.id !== "wachttoren") return state;
+  if (isWachttorenBemand(state.stad.strijders, hoogte, positieInLaag)) return state;
+
+  const strijders = state.stad.strijders.map((s) =>
+    s.id === strijderId ? { ...s, wachttoren: { hoogte, positieInLaag } } : s
+  );
+
+  return { ...state, stad: { ...state.stad, strijders } };
+}
+
+// Zet de per-run uitleg-pop-ups-instelling (issue: "een setting waarmee je
+// deze uitleg pop-ups aan en uit kunt zetten ... voor deze run specifiek"),
+// via een nieuwe optie in het hoofdmenu. Wijzigt uitsluitend deze lopende
+// run — de globale standaard-instelling (save.ts: `standaardUitlegAan`)
+// blijft ongemoeid.
+export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
+  return { ...state, uitlegPopupsAan: aan };
 }
 
 // Verwerkt één spelbeurt: eerst uitputting van de actieve tiles (M4), dan

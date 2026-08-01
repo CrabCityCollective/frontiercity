@@ -7,13 +7,18 @@ interface HoofdMenuProps {
   onLaden: () => void;
   kanLaden: boolean;
   onVerlaten: () => void;
+  // Per-run uitleg-pop-ups-toggle (issue: "een nieuwe optie erbij in het
+  // menu waar nu ook 'opslaan' en 'spel verlaten' staat, waarmee je voor
+  // deze run specifiek de uitleg popups aan kunt zetten, en uit").
+  uitlegAan: boolean;
+  onToggleUitleg: () => void;
 }
 
 // Zwevend menu-icoontje rechtsboven (issue: "niet automatisch opslaan, maar
 // een menu-icoontje ... opslaan en oudere games ... inladen ... spel
 // verlaten"). Puur een klein pop-overpaneel — geen navigatie-state, dat blijft
 // bij AppRoot/GameRoot.
-export default function HoofdMenu({ onOpslaan, onLaden, kanLaden, onVerlaten }: HoofdMenuProps) {
+export default function HoofdMenu({ onOpslaan, onLaden, kanLaden, onVerlaten, uitlegAan, onToggleUitleg }: HoofdMenuProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -61,6 +66,13 @@ export default function HoofdMenu({ onOpslaan, onLaden, kanLaden, onVerlaten }: 
             style={{ padding: "0.35rem 0.75rem" }}
           >
             Laden
+          </button>
+          <button
+            className="fc-knop"
+            onClick={onToggleUitleg}
+            style={{ padding: "0.35rem 0.75rem" }}
+          >
+            Uitleg pop-ups: {uitlegAan ? "aan" : "uit"}
           </button>
           <button
             className="fc-knop"
