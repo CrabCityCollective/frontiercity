@@ -418,20 +418,22 @@ interface CampaignConfig {
 
 ### Bouw-milestones
 
-| # | Milestone | Omvat |
-|---|---|---|
-| M0 | Project-setup | Next.js + TypeScript scaffolding, canvas-rendering basis, repo-structuur |
-| M1 | Grid & laag-rendering | 9-tile band, meerdere lagen, fog of war, placeholder-tegels tonen |
-| M2 | Categorie-keuze-UI | Categorie kiezen → 2-3 opties tonen → bouwen starten |
-| M3 | Resource-economie | 3 materialen + opslag-cap, voedsel, productiewachtrij |
-| M4 | Uitputting & ghost towns | Land improvements putten uit, worden ghost-town-tiles |
-| M5 | Cultuur & laag-ontgrendeling | Cultuur verzamelen, nieuwe laag ontgrendelen |
-| M6 | Groei & verval | Klein→middel groei-tier, waarschuwingssignaal, permadeath-verval (ineenstorting eindigt de run) |
-| M7 | Militair (basis) | Eenvoudige confrontatie met winkans-formule |
-| M8 | Tutorial-content | Lagen 1-12 met de vastgelegde mechaniek-volgorde en flavor-teksten |
-| M9 | Save/load | Eén actieve run lokaal opslaan en hervatten |
-| M10 | Wegen & settler | Settler-eenheid + verplaatsing, wegen aanleggen, bouw-ritme (1 nieuw project per 3 beurten), resource-activatie via wegverbinding, uitleg-pop-up bij beurt 2 (hoofdstuk 16) |
-| M11 | Kuddes, settler-jacht & beurt-waarschuwing | Wilde kuddes vanaf laag 4, settler-jacht (voedsel) en settler-houtkap (hout) als extra settler-acties, waarschuwing-pop-up bij "Volgende beurt" zolang de settler of de bouwkeuze nog iets te doen heeft (hoofdstuk 11/17) |
+De tabel hieronder geeft de huidige stand van de implementatie weer (gecontroleerd tegen de code in `src/`); M0-M11 is de bouwvolgorde waarin de milestones zijn opgepakt, geen open takenlijst — een nieuwe sessie hoeft dus niet bij M0 te beginnen.
+
+| # | Milestone | Omvat | Status |
+|---|---|---|---|
+| M0 | Project-setup | Next.js + TypeScript scaffolding, canvas-rendering basis, repo-structuur | Klaar |
+| M1 | Grid & laag-rendering | 9-tile band, meerdere lagen, fog of war, placeholder-tegels tonen | Klaar |
+| M2 | Categorie-keuze-UI | Categorie kiezen → 2-3 opties tonen → bouwen starten | Klaar |
+| M3 | Resource-economie | 3 materialen + opslag-cap, voedsel, productiewachtrij | Klaar |
+| M4 | Uitputting & ghost towns | Land improvements putten uit, worden ghost-town-tiles | Klaar |
+| M5 | Cultuur & laag-ontgrendeling | Cultuur verzamelen, nieuwe laag ontgrendelen | Klaar |
+| M6 | Groei & verval | Klein→middel groei-tier, waarschuwingssignaal, permadeath-verval (ineenstorting eindigt de run) | Klaar |
+| M7 | Militair (basis) | Eenvoudige confrontatie met winkans-formule | Klaar |
+| M8 | Tutorial-content | Lagen 1-12 met de vastgelegde mechaniek-volgorde en flavor-teksten | Klaar |
+| M9 | Save/load | Eén actieve run lokaal opslaan en hervatten | Klaar |
+| M10 | Wegen & settler | Settler-eenheid + verplaatsing, wegen aanleggen, bouw-ritme (1 nieuw project per 3 beurten), resource-activatie via wegverbinding, uitleg-pop-up bij beurt 2 (hoofdstuk 16) | Klaar |
+| M11 | Kuddes, settler-jacht & beurt-waarschuwing | Wilde kuddes vanaf laag 4, settler-jacht (voedsel) en settler-houtkap (hout) als extra settler-acties, waarschuwing-pop-up bij "Volgende beurt" zolang de settler of de bouwkeuze nog iets te doen heeft (hoofdstuk 11/17) | Klaar |
 
 Elke milestone is bewust klein genoeg om als losse Claude Code-taak opgepakt te worden.
 
