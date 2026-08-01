@@ -230,6 +230,9 @@ Vooraf zichtbare zeldzaamheid zou het bouwen puur een optimalisatie-keuze maken 
 **Eén gedeelde opslag i.p.v. één-resource-kiezen (zoals in Frostpunk)**
 Frostpunk dwingt spelers één opslagtype te kiezen per gebouw, wat in de praktijk onrealistisch aanvoelt (waarom zou je geen hout én steen naast elkaar kunnen opslaan?). Een gedeelde opslag met een gezamenlijke cap is intuïtiever en legt de spanning waar die hoort: bij de totale capaciteit, niet bij een kunstmatige keuze tussen fysiek vergelijkbare goederen. Voedsel kreeg wel een aparte voorraad, omdat het conceptueel een ander doel dient (groei-drempels) dan bouwmateriaal.
 
+**Kwadratisch in plaats van exponentieel cultuurkosten**
+De oorspronkelijke cultuurkosten-formule (basis 20, ×1,4 per laag, hoofdstuk 14) schaalde exponentieel, terwijl het daadwerkelijke cultuurinkomen — in de MVP vrijwel volledig het Heiligdom (hoofdstuk 6) — ruwweg lineair groeit naarmate een speler er in de loop van een run meer bouwt. Voor de 12-laags tutorial viel dat verschil nog te verbergen, maar bij de 30-60-laags campagnes (hoofdstuk 14) liep de cumulatieve drempel binnen enkele tientallen lagen op tot miljoenen — een harde muur in plaats van een geleidelijk oplopende uitdaging. Een kwadratische kostencurve groeit nog altijd sneller dan het lineaire inkomen (dus blijft elke laag moeilijker dan de vorige), maar niet exponentieel sneller, waardoor het aantal beurten per laag geleidelijk oploopt in plaats van door te schieten naar het twintigvoudige of meer.
+
 **Twee gescheiden systemen voor militair conflict en culturele pushback**
 Een direct gevecht (unit-sterkte vergelijken) en het weerstaan van een cultureel sterke tribe zijn thematisch verschillende soorten weerstand — de eerste is fysiek, de tweede diplomatiek/economisch. Door ze als aparte systemen te ontwerpen (in plaats van beide via legersterkte af te handelen) blijven de vijf categorieën ook mechanisch onderscheidend: militair lost fysieke dreiging op, cultureel lost expansie-weerstand op.
 
@@ -462,7 +465,27 @@ Binnen de gekozen range wordt random getrokken; een bergengte/obstakel-zone word
 | Houtkap (hout) | 12-16 (nooit volledig 0, wel afnemend) | 8-11 | 25-30 |
 | Steengroeve (steen) | 10-14 | 7-10 | 22-27 |
 
-*Cultuurkosten*: basis 20 punten voor laag 2, ×1,4 per volgende laag (exponentieel — issue: "cultuur groeit te snel, nieuwe lagen moeten exponentieel meer kosten"). Culturele pushback-lagen: ×2 van het normale (dan al exponentieel opgelopen) bedrag.
+*Cultuurkosten*: `kosten(laag) = 15 + 5 × (laag − 1)²` — kwadratisch, cumulatieve drempel (cultuur wordt nooit "uitgegeven", zie hoofdstuk 5). Vervangt de eerdere exponentiële formule (basis 20, ×1,4 per laag); zie hoofdstuk 11 ("Kwadratisch in plaats van exponentieel cultuurkosten") voor de onderbouwing. Culturele pushback-lagen: ×2 van het normale (dan al kwadratisch opgelopen) bedrag.
+
+| Laag | Cultuurkosten (cumulatief) |
+|---|---|
+| 2 | 20 |
+| 6 | 140 |
+| 12 | 620 |
+| 20 | 1.820 |
+| 30 | 4.220 |
+| 40 | 7.620 |
+
+*Cultuurinkomen*: de enige cultuurbron in de MVP is het **Heiligdom** (hoofdstuk 3/6) — 2 cultuur/beurt op de frontier-laag zelf, 1 cultuur/beurt (halve opbrengst) op elke laag daaronder; hij put niet uit en blijft dus permanent actief. Tempel/amfitheater/monument en de passieve cultuur van ghost towns (hoofdstuk 7) zijn nog niet geïmplementeerd — buiten de huidige MVP-scope (hoofdstuk 13). Bij een gemiddelde build (niet puur cultuur, niet nul — indicatief: ruwweg 1 Heiligdom per 4 ontgrendelde lagen, waarvan steeds het nieuwste op de frontier-laag staat) geeft dat ruwweg:
+
+| Laag | Heiligdommen (indicatief) | Cultuur/beurt (indicatief) | Beurten voor déze laag (marginale kosten ÷ inkomen) |
+|---|---|---|---|
+| 5 | 1 | ~2 | ~18 |
+| 12 | 3 | ~4 | ~26 |
+| 25 | 6 | ~7 | ~34 |
+| 40 | 10 | ~11 | ~35 |
+
+Het aantal beurten per laag loopt zo geleidelijk op (ruwweg 2× van vroeg- naar laat-spel) in plaats van naar het twintig- of honderdvoudige zoals bij de oude exponentiële formule.
 
 *Opslag-cap*: start op 30 (gedeeld voor hout/steen/erts/goud), elke opslagplaats-improvement +20, praktisch maximum ~3-4 opslagplaatsen per stad (~110 totaal).
 
