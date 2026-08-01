@@ -38,13 +38,15 @@
 // uitputting van een deel van de actieve land-tiles (schade, geen
 // instant-verlies van de stad zelf).
 //
-// Wachttoren & indringers (hoofdstuk 6): naast de verdedigingsbonus hierboven
-// beschermt een actieve Wachttoren ook de hele laag waarop hij staat tegen
-// indringers — een los, per-beurt risico (`verwerkIndringers` hieronder,
-// gebruikt door `volgendeBeurt`). Zonder wachttoren op de frontier-laag eisen
-// indringers tribuut uit de gedeelde opslag; de speler kiest geven
-// (`geefTribuut`) of weigeren (`weigerTribuut`). Heiligdom en Wachttoren
-// putten (hoofdstuk 4) bewust niet uit — zie improvements.ts.
+// Wachttoren & indringers (hoofdstuk 6): één keer per beurt een kans dat er
+// ergens een indringers-incident plaatsvindt (`verwerkIndringers` hieronder,
+// gebruikt door `volgendeBeurt`) — is er een incident, dan wordt de
+// getroffen laag geloot uit alle ontgrendelde lagen, ook beschermde. Een
+// Wachttoren beschermt de laag waarop hij staat alleen als hij voltooid,
+// bemand én via een wegketen met de stad verbonden is (zie hoofdstuk 16);
+// anders eisen de indringers tribuut uit de gedeelde opslag, en kiest de
+// speler geven (`geefTribuut`) of weigeren (`weigerTribuut`). Heiligdom en
+// Wachttoren putten (hoofdstuk 4) bewust niet uit — zie improvements.ts.
 //
 // Exacte getallen (opslag-cap, kosten, productiesnelheden, uitputtingssnelheid,
 // winkans-formule) zijn nog niet vastgelegd in het design-document
@@ -695,40 +697,35 @@ export function confrontatie(state: GameState): GameState {
   return { ...state, lagen, laatsteConfrontatie };
 }
 
-// Kans per beurt dat indringers de frontier-laag binnendringen (hoofdstuk 6).
+// Kans per beurt dat er ergens een indringers-incident plaatsvindt
+// (hoofdstuk 6/14) — één trekking voor de hele stad, niet meer per laag.
 // Bewuste MVP-placeholder, net als de overige tuning-getallen in dit bestand
 // (hoofdstuk 14) — expliciet tunebaar genoemd in het issue dat deze feature
-// aanvroeg. Was 50%, verlaagd naar 40% (issue: "de kans op een inval van 50%
-// is te hoog").
-const INDRINGERS_KANS = 0.4;
+// aanvroeg. Was 40% op alleen de frontier-laag; nu 20% verspreid over alle
+// ontgrendelde lagen (issue: "elke nieuwe laag maakt een eerder gebouwde
+// wachttoren waardeloos, en 40% per beurt op één laag is erg hoog").
+const INDRINGERS_KANS = 0.2;
 
-// Indringers zijn pas vanaf deze frontier-laag een factor (issue: "ik wil
-// graag dat indringers pas een factor worden vanaf laag 3, nu is het te
-// moeilijk") — de eerste twee lagen blijven zo een rustige introductie zonder
-// dat risico.
-const INDRINGERS_MIN_LAAG = 3;
+// Het mechanisme is pas een factor zodra deze laag ontgrendeld is (issue:
+// "het mechanisme start pas zodra de speler laag 2 heeft ontgrendeld") — de
+// eerste laag blijft zo een rustige introductie zonder dat risico. Was laag 3.
+const INDRINGERS_MIN_LAAG = 2;
 
-// Een actieve Wachttoren beschermt de laag alleen als hij ook bemand is
-// (nieuwe Wachttoren-functie, hoofdstuk 6: "de wachttoren moet dus bemand
-// zijn") — een gebouwde maar onbemande Wachttoren biedt geen bescherming.
-function heeftActieveWachttoren(laag: Layer, strijders: Strijder[]): boolean {
+// Een Wachttoren beschermt de laag waarop hij staat alleen als hij voltooid,
+// bemand én via een aaneengesloten wegketen met de stad verbonden is (issue:
+// "een wachtpost moet bevoorraad worden; zonder verbinding met de stad kan
+// hij zijn functie niet vervullen") — dit lost de eerdere ambiguïteit tussen
+// hoofdstuk 6 ("actief én bemand") en hoofdstuk 16 (land improvements worden
+// pas actief via een wegverbinding) op. Een gebouwde maar onbemande of
+// onverbonden Wachttoren biedt geen bescherming.
+function heeftBeschermendeWachttoren(state: GameState, laag: Layer): boolean {
   return laag.tiles.some(
     (tile) =>
       tile.status === "actief" &&
       tile.improvement?.id === "wachttoren" &&
-      isWachttorenBemand(strijders, laag.hoogte, tile.positieInLaag)
+      isWachttorenBemand(state.stad.strijders, laag.hoogte, tile.positieInLaag) &&
+      isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)
   );
-}
-
-// De dreiging van indringers doet zich alleen voor als er al iets van de
-// speler op de frontier-laag staat — een improvement (in aanbouw, actief of
-// een ghost-town-restant) of de settler zelf (issue: "de dreiging van een
-// indringers doet zich alleen voor als er een improvement of een settler op
-// de frontier laag staat. Anders niet."). Een nog volledig lege laag is dus
-// altijd veilig.
-function heeftAanwezigheidOpLaag(state: GameState, laag: Layer): boolean {
-  if (state.settler?.hoogte === laag.hoogte) return true;
-  return laag.tiles.some((tile) => tile.improvement !== undefined);
 }
 
 // Het grondstof-type waar de speler op dit moment het meest van heeft, met
@@ -751,28 +748,34 @@ function kiesTribuut(voorraad: Record<MateriaalType, number>): IndringersTribuut
   return { resource: grootsteType, aantal: Math.max(1, Math.round(grootsteWaarde / 2)) };
 }
 
-// Indringers & tribuut (nieuwe Wachttoren-functie, hoofdstuk 6): elke beurt
-// een kans dat een tribe de frontier-laag (de hoogst ontgrendelde laag)
-// binnendringt. Een actieve Wachttoren op die laag verdedigt de hele laag —
-// er gebeurt dan niets, alleen een meldings-pop-up. Zonder wachttoren eist de
-// tribe tribuut (zie `kiesTribuut`); de speler lost dit verder zelf op via
+// Indringers & tribuut (hoofdstuk 6): elke beurt is er, zodra laag
+// `INDRINGERS_MIN_LAAG` ontgrendeld is, één trekking of er sowieso een
+// incident plaatsvindt — niet meer per laag. Is er een incident, dan wordt de
+// getroffen laag geloot uit alle ontgrendelde lagen (issue: "loot dan de laag
+// uit álle ontgrendelde lagen — ook lagen die beschermd zijn"), zodat elke
+// gebouwde, bemande en verbonden Wachttoren zijn hele run lang waarde houdt
+// in plaats van waardeloos te worden zodra de frontier opschuift. Een
+// beschermende Wachttoren op de geloten laag verdedigt de hele laag — er
+// gebeurt dan niets, alleen een meldings-pop-up. Zonder zo'n wachttoren eist
+// de tribe tribuut (zie `kiesTribuut`); de speler lost dit verder zelf op via
 // `geefTribuut`/`weigerTribuut` hieronder. Rolt geen nieuwe gebeurtenis zolang
 // een vorige melding nog open staat.
 function verwerkIndringers(state: GameState): GameState {
   if (state.indringersEvent) return state;
-  const laagHoogte = hoogsteOntgrendeldeLaag(state.lagen);
-  if (laagHoogte < INDRINGERS_MIN_LAAG) return state;
-
-  const frontierLaag = state.lagen.find((laag) => laag.hoogte === laagHoogte);
-  if (!frontierLaag) return state;
-  if (!heeftAanwezigheidOpLaag(state, frontierLaag)) return state;
-
+  if (hoogsteOntgrendeldeLaag(state.lagen) < INDRINGERS_MIN_LAAG) return state;
   if (Math.random() >= INDRINGERS_KANS) return state;
 
+  const ontgrendeldeLagen = state.lagen.filter((laag) => laag.ontgrendeld);
+  if (ontgrendeldeLagen.length === 0) return state;
+
+  const laag = ontgrendeldeLagen[Math.floor(Math.random() * ontgrendeldeLagen.length)];
   const stamNaam = INDRINGERS_STAMMEN[Math.floor(Math.random() * INDRINGERS_STAMMEN.length)];
 
-  if (heeftActieveWachttoren(frontierLaag, state.stad.strijders)) {
-    return { ...state, indringersEvent: { laagHoogte, stamNaam, heeftWachttoren: true, fase: "gemeld" } };
+  if (heeftBeschermendeWachttoren(state, laag)) {
+    return {
+      ...state,
+      indringersEvent: { laagHoogte: laag.hoogte, stamNaam, heeftWachttoren: true, fase: "gemeld" },
+    };
   }
 
   const tribuut = kiesTribuut(state.voorraad);
@@ -780,7 +783,7 @@ function verwerkIndringers(state: GameState): GameState {
 
   return {
     ...state,
-    indringersEvent: { laagHoogte, stamNaam, heeftWachttoren: false, tribuut, fase: "gemeld" },
+    indringersEvent: { laagHoogte: laag.hoogte, stamNaam, heeftWachttoren: false, tribuut, fase: "gemeld" },
   };
 }
 

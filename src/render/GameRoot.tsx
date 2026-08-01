@@ -324,11 +324,12 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     uitlegAan &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     !militairUitlegBevestigd;
-  // Indringers-pop-up (nieuwe Wachttoren-functie, hoofdstuk 6) — verschijnt
-  // zodra `verwerkIndringers` (economie.ts) een gebeurtenis op de
-  // frontier-laag heeft gezet. Blijft in beeld tot de speler de melding
-  // afhandelt (geven/weigeren/afgedwongen tribuut of gewoon wegklikken). Los
-  // van de uitleg-toggle hierboven — dit is kerninhoud, geen uitleg.
+  // Indringers-pop-up (hoofdstuk 6) — verschijnt zodra `verwerkIndringers`
+  // (economie.ts) een gebeurtenis op een van de ontgrendelde lagen heeft
+  // gezet (niet meer alleen de frontier-laag). Blijft in beeld tot de speler
+  // de melding afhandelt (geven/weigeren/afgedwongen tribuut of gewoon
+  // wegklikken). Los van de uitleg-toggle hierboven — dit is kerninhoud, geen
+  // uitleg.
   const toonIndringersPopup =
     !toonLaagPopup &&
     !toonUitlegPopup &&

@@ -12,12 +12,13 @@ interface IndringersPopupProps {
   onSluiten: () => void;
 }
 
-// Indringers-pop-up (nieuwe Wachttoren-functie, hoofdstuk 6): verschijnt zodra
-// `verwerkIndringers` (economie.ts) op de frontier-laag toeslaat. Eén
-// component met drie varianten, geschakeld op `event.heeftWachttoren`/
-// `event.fase`, omdat ze hetzelfde blokkerende meldings-frame delen (zelfde
-// patroon als VoedselWaarschuwingPopup/MilitairUitlegPopup) en alleen in
-// tekst/knoppen verschillen.
+// Indringers-pop-up (hoofdstuk 6): verschijnt zodra `verwerkIndringers`
+// (economie.ts) toeslaat op een van de ontgrendelde lagen (niet meer alleen
+// de frontier-laag). Eén component met drie varianten, geschakeld op
+// `event.heeftWachttoren`/`event.fase`, omdat ze hetzelfde blokkerende
+// meldings-frame delen (zelfde patroon als
+// VoedselWaarschuwingPopup/MilitairUitlegPopup) en alleen in tekst/knoppen
+// verschillen.
 export default function IndringersPopup({
   event,
   onGeefTribuut,

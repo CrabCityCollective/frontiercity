@@ -140,9 +140,11 @@ export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
 // laag tegen indringers"). Levert nog steeds de passieve verdedigingsbonus
 // die meetelt in `berekenLegerwaarde` (M7), én blokkeert sindsdien (hoofdstuk
 // 6) volledig de indringers-tribuut-eis van `verwerkIndringers` in
-// economie.ts zolang hij actief is op de frontier-laag. Geen
-// `uitputtingBeurten` (hoofdstuk 4/6): een Wachttoren, net als het Heiligdom
-// hierboven, blijft permanent actief in plaats van uit te putten.
+// economie.ts, mits hij ook bemand én wegverbonden is met de stad — welke
+// laag getroffen wordt, doet er niet toe (hoofdstuk 6: elke ontgrendelde laag
+// komt in aanmerking, niet alleen de frontier-laag). Geen `uitputtingBeurten`
+// (hoofdstuk 4/6): een Wachttoren, net als het Heiligdom hierboven, blijft
+// permanent actief in plaats van uit te putten.
 export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
   {
     id: "wachttoren",

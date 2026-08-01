@@ -88,11 +88,12 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - Diplomatiek keuzemoment: **Erkennen/aanpassen** (permanente kleine wederzijdse korting), **Doordrukken** (hogere kost nu, blijvend hogere basiskost daarna), of **Terugtrekken** (laag laten zitten, zijwaarts verder zoeken indien mogelijk).
 
 **Wachttoren & indringers:**
-- De dreiging van indringers doet zich alleen voor als er al een improvement (in aanbouw, actief, of een ghost-town-restant) óf de settler zelf op de **frontier-laag** staat — een volledig lege laag is altijd veilig. Dat betekent dat de speler vaak eerst een Wachttoren wil bouwen en die via een weg wil aansluiten, vóórdat hij andere improvements op een nieuwe laag neerzet.
-- Elke beurt is er, zodra er zo'n aanwezigheid is, een kans (MVP-richtwaarde 40%, tunebaar — hoofdstuk 14; verlaagd vanaf de eerdere 50%) dat een tribe de frontier-laag binnendringt. Een pop-up meldt dit met een korte flavor-tekst en tribenaam (bijv. "de stam van de Halve Maan" of "de stam van de Bloedhoeven").
-- Een Wachttoren beschermt de hele laag alleen als hij **actief én bemand** is. Een Wachttoren heeft dus een strijder nodig om te kunnen functioneren — gebouwd maar onbemand biedt hij geen bescherming en telt zijn verdedigingsbonus niet mee bij een directe militaire confrontatie. Staat er een bemande Wachttoren op de laag, dan gebeurt er niets — de pop-up meldt dat de wachttoren stand houdt en de indringers zich terugtrekken.
+- Het mechanisme is pas actief zodra de speler **laag 2** heeft ontgrendeld — daarvóór gebeurt er nooit iets, zodat de speler eerst iets kan opbouwen (verlaagd vanaf de eerdere drempel van laag 3).
+- Elke beurt is er, zodra die drempel gehaald is, **één trekking** (MVP-richtwaarde 20%, tunebaar — hoofdstuk 14; verlaagd vanaf de eerdere 40%) of er sowieso een incident plaatsvindt — niet meer een aparte kans per laag, maar één kans per beurt voor de hele stad. Dat houdt het tempo van indringers-incidenten constant, ongeacht hoeveel lagen er al ontgrendeld zijn.
+- Is er een incident, dan wordt de getroffen laag geloot uit **álle ontgrendelde lagen** — ook de startlaag, lagen waar alleen nog ghost towns staan, én lagen die beschermd zijn door een Wachttoren. De eis dat er al een improvement of de settler op de laag moet staan, is vervallen: ontgrendeld is voldoende. Een pop-up meldt het incident met een korte flavor-tekst, tribenaam (bijv. "de stam van de Halve Maan" of "de stam van de Bloedhoeven") en de betrokken laag.
+- Een Wachttoren beschermt de laag waarop hij staat alleen als hij **voltooid, bemand én via een aaneengesloten wegketen met de stad verbonden** is — alle drie de voorwaarden (zie ook hoofdstuk 16). Een wachtpost moet bevoorraad worden om te kunnen functioneren; zonder wegverbinding telt een Wachttoren dus niet mee, ook al staat hij er en is hij bemand. Onbemand of onverbonden biedt hij geen bescherming en telt zijn verdedigingsbonus ook niet mee bij een directe militaire confrontatie. Valt het incident op een laag met zo'n beschermde Wachttoren, dan gebeurt er niets — de pop-up meldt dat de wachttoren stand houdt en de indringers zich terugtrekken.
   - **Bemannen**: in het militaire scherm ziet de speler zijn opgeleide strijders als los aanklikbare icoontjes. Een klik op een nog niet toegewezen strijder opent een keuze ("kies een wachttoren"); de daaropvolgende klik op een actieve Wachttoren-tile op de kaart bemant die. Eenmaal bemand is dit onomkeerbaar binnen de MVP: een strijder kan niet meer uit een eerdere Wachttoren teruggehaald worden om elders bemand te worden.
-- Zonder bemande Wachttoren op de frontier-laag eisen de indringers **tribuut**: ongeveer de helft van het grondstof-type (hout/steen/erts/goud) waar de speler op dat moment het meest van heeft — het spel eist nooit meer dan er daadwerkelijk in voorraad is.
+- Valt het incident op een laag **zonder** beschermende Wachttoren, dan eisen de indringers **tribuut**: ongeveer de helft van het grondstof-type (hout/steen/erts/goud) waar de speler op dat moment het meest van heeft — het spel eist nooit meer dan er daadwerkelijk in voorraad is. De laag waar het incident plaatsvindt bepaalt alleen wáár het gebeurt, niet wat er geëist wordt: de hoogte van het tribuut hangt alleen af van de totale voorraad.
   - **Geven**: het tribuut wordt van de gedeelde opslag afgetrokken, de indringers trekken zich terug.
   - **Weigeren**: de indringers verwoesten de stad, en de speler valt terug op de vorige stad — als die er is. In de huidige MVP-scope (hoofdstuk 13: één stad, nog geen frontier-verplaatsing) is die vorige stad er nooit, dus wordt het tribuut in dat geval alsnog betaald (de pop-up legt dit uit zodra het zich voordoet). Zodra meerdere steden bestaan, wordt "weigeren zonder wachttoren" een echt risico: de actieve stad gaat verloren en de speler valt terug op de voorgaande.
 
@@ -245,6 +246,9 @@ Uitputting stelt het opgebruiken van een hulpbron voor (zie hierboven) — zonde
 **Wachttoren verdedigt de hele laag, niet alleen zichzelf**
 Een verdedigingsbonus die alleen meetelt bij een directe, door de speler gestarte confrontatie (het bestaande M7-systeem) beloont de Wachttoren pas op het moment dat de speler toch al voorbereid was. Door de Wachttoren daarnaast een passieve, elke-beurt-kans-gedreven dreiging (indringers-tribuut) volledig te laten blokkeren, wordt hij ook waardevol als voorzorgsmaatregel — precies het gevoel van een wachtpost, in plaats van alleen een statistiekbonus tijdens een gevecht dat de speler zelf initieert.
 
+**Indringers-incidenten verspreid over alle ontgrendelde lagen, niet alleen de frontier**
+Zolang indringers alleen op de frontier-laag konden toeslaan, werd elke eerder gebouwde Wachttoren waardeloos zodra de frontier een laag opschoof — terwijl de strijder die erin zat onomkeerbaar toegewezen bleef (zie hierboven, "Bemannen"). Elke nieuwe laag vroeg zo om een nieuwe toren mét een nieuwe strijder, en alles wat de speler eerder had opgebouwd, telde niet meer mee. Door de getroffen laag bij elk incident te loten uit **alle** ontgrendelde lagen — inclusief beschermde — blijft elke gebouwde, bemande en verbonden Wachttoren zijn hele run lang waarde houden, en wordt de onomkeerbare strijder-toewijzing een investering in plaats van een verlies zodra de frontier verder trekt. Beschermde lagen blijven bewust meeloten zodat de dreiging voelbaar blijft: de speler ziet dat er nog steeds pogingen zijn, maar ziet ook dat zijn verdediging werkt. De één-trekking-per-beurt-vorm (in plaats van een aparte kans per laag) houdt daarbij het tempo van incidenten constant, ongeacht hoeveel lagen er ontgrendeld zijn.
+
 **Vertakkende verhaalstructuur met een gedeelde slotscène i.p.v. volledig lineair of volledig random**
 Volledig vaste verhaalmomenten (altijd dezelfde gebeurtenis op dezelfde laag) zouden na een paar runs voorspelbaar worden; volledig random getrokken gebeurtenissen zouden geen samenhangend verhaal opbouwen. Een keuzeboom met een paar vaste ankerpunten (waarvan de invulling reageert op eerdere keuzes) geeft het gevoel van een reagerend verhaal, terwijl het aantal te schrijven scenario's beheersbaar blijft — mede mogelijk gemaakt door bij het laatste ankerpunt de paden samen te laten komen in één kernscène met tonale varianten, in plaats van vier volledig aparte eindes.
 
@@ -392,8 +396,8 @@ interface Strijder {
 }
 
 // Indringers-tribuut (hoofdstuk 6): GameState krijgt daarnaast een optionele
-// `indringersEvent`, gezet zodra de per-beurt-kans een tribe op de
-// frontier-laag laat binnendringen.
+// `indringersEvent`, gezet zodra de per-beurt-kans toeslaat en een tribe een
+// (uit alle ontgrendelde lagen geloten) laag laat binnendringen.
 interface IndringersEvent {
   laagHoogte: number;
   stamNaam: string;
@@ -499,7 +503,7 @@ Het aantal beurten per laag loopt zo geleidelijk op (ruwweg 2× van vroeg- naar 
 *Winkans-formule militaire confrontaties*:
 > Winkans = eigen legerwaarde / (eigen legerwaarde + vijand legerwaarde), geclampt tussen 10% en 90%.
 
-*Indringers & tribuut (hoofdstuk 6)*: kans op indringers op de frontier-laag = 40% per beurt (MVP-richtwaarde, tunebaar; verlaagd vanaf de eerdere 50%), alleen zodra er een improvement of de settler op die laag staat, en pas een factor vanaf laag 3 — de eerste twee lagen blijven zo een rustige introductie. Tribuut zonder bemande wachttoren = ongeveer de helft (afgerond, minimaal 1) van het grondstof-type waar de speler op dat moment het meest van heeft, nooit meer dan de aanwezige voorraad.
+*Indringers & tribuut (hoofdstuk 6)*: kans op een indringers-incident (één trekking voor de hele stad, niet per laag) = 20% per beurt (MVP-richtwaarde, tunebaar; verlaagd vanaf de eerdere 40% op alleen de frontier-laag), getrokken over alle ontgrendelde lagen samen — geen aanwezigheids-eis meer, en pas een factor vanaf laag 2 (verlaagd vanaf laag 3) — de eerste laag blijft zo een rustige introductie. Tribuut zonder beschermende (voltooide, bemande én wegverbonden) wachttoren op de getroffen laag = ongeveer de helft (afgerond, minimaal 1) van het grondstof-type waar de speler op dat moment het meest van heeft, nooit meer dan de aanwezige voorraad.
 
 **Lange mars (Anker 3, na Terugvechten — Amerikaanse campagne)**
 - Uitgestrekt over 3-4 opeenvolgende lagen in plaats van één piekmoment.
@@ -559,6 +563,7 @@ Nieuw spelmechanisme (in de MVP, zie hoofdstuk 13): het bouwen van improvements 
 **Wegen activeren resource-productie**
 - Een land improvement (mijn, boerderij, houtkap, steengroeve, heiligdom, wachttoren) is pas **actief-producerend** zodra er een weg **op zijn eigen vakje** ligt, én die weg via een aaneengesloten keten van wegen verbonden is met de stad-tile. Een weg die alleen tót het improvement leidt, zonder er zelf op te liggen, is niet genoeg — de speler moet de weg daadwerkelijk over/op het resource-vakje aanleggen.
 - Zonder die eigen wegverbinding blijft de improvement gewoon gebouwd en zichtbaar, maar levert hij niets op totdat de wegverbinding er is — en telt hij ook niet mee voor uitputting (hoofdstuk 4): pas zodra een improvement daadwerkelijk produceert, telt de uitputtingsteller af.
+- Dezelfde eis geldt voor de indringers-bescherming van een Wachttoren (hoofdstuk 6): een gebouwde en bemande Wachttoren zonder eigen wegverbinding beschermt zijn laag nog niet. Pas met een aaneengesloten wegketen naar de stad is een Wachttoren, net als elke andere land improvement, echt "actief" — en dus in staat zijn functie te vervullen. Dit maakt expliciet wat hoofdstuk 6 vereist ("voltooid, bemand én verbonden"): de drie voorwaarden zijn geen aparte regel, maar dezelfde activerings-eis die hier voor alle land improvements geldt.
 - Dit maakt wegenaanleg geen losstaand extraatje maar een echte voorwaarde voor de economie — de actieve handeling die de rustigere bouw-ritme hierboven opvult.
 
 **Tutorial**
