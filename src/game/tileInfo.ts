@@ -111,7 +111,7 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
     titel: "Leeg vakje",
     ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
     tekst:
-      "Hier kun je een improvement bouwen. Kies een categorie in de bouw-pop-up (economisch, cultureel of militair) om te zien wat je hier kunt neerzetten. Sommige improvements hebben een terrein-eis: houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond.",
+      "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond. Heiligdommen en wachttorens kunnen overal geplaatst worden.",
   };
 }
 

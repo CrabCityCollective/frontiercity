@@ -1,15 +1,16 @@
 "use client";
 
-import { OPENINGS_UITLEG_TEKST, OPENINGS_UITLEG_TITEL } from "@/game/uitlegContent";
+import { BOERDERIJ_KLAAR_TEKST, BOERDERIJ_KLAAR_TITEL } from "@/game/tutorialContent";
 
-interface UitlegPopupProps {
+interface BoerderijKlaarUitlegPopupProps {
   onDoorgaan: () => void;
 }
 
-// Openings-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"): getoond
-// bij het begin van beurt 1 — zelfde blokkerende overlay als de andere
-// uitleg-pop-ups (SettlerUitlegPopup, VoedselWaarschuwingPopup, ...).
-export default function UitlegPopup({ onDoorgaan }: UitlegPopupProps) {
+// Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"),
+// getoond zodra er voor het eerst een actieve, wegverbonden boerderij
+// meeproduceert (zie economie.ts `heeftWerkendeBoerderij`) — zelfde
+// blokkerende overlay als de andere uitleg-pop-ups.
+export default function BoerderijKlaarUitlegPopup({ onDoorgaan }: BoerderijKlaarUitlegPopupProps) {
   return (
     <div
       style={{
@@ -35,9 +36,9 @@ export default function UitlegPopup({ onDoorgaan }: UitlegPopupProps) {
         }}
       >
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
-          {OPENINGS_UITLEG_TITEL}
+          {BOERDERIJ_KLAAR_TITEL}
         </strong>
-        <p style={{ margin: 0, lineHeight: 1.6 }}>{OPENINGS_UITLEG_TEKST}</p>
+        <p style={{ margin: 0, lineHeight: 1.6 }}>{BOERDERIJ_KLAAR_TEKST}</p>
         <button className="fc-knop" onClick={onDoorgaan} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Begrepen
         </button>

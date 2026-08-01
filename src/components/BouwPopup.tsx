@@ -78,6 +78,10 @@ function formatteerKosten(improvement: Improvement): string {
 
 interface BouwPopupProps {
   laag: Layer;
+  // Beurtnummer (issue: "alleen de eerste beurt de houtkap altijd tussen de
+  // te kiezen improvements staat") — gebruikt om in beurt 1 de Houtkap-optie
+  // te garanderen binnen de economische categorie.
+  beurt: number;
   zichtbaar: boolean;
   onBouwStarten: (improvement: Improvement) => void;
   onSluiten: () => void;
@@ -91,7 +95,7 @@ interface BouwPopupProps {
 // pop-up verdwijnt (zie `plaatsingsImprovement` in GameRoot) en de speler
 // wijst zelf een lege tile op de kaart aan om hem neer te zetten — pas dan
 // wordt `bouwKeuzeGedaanDitBeurt` gezet.
-export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }: BouwPopupProps) {
+export default function BouwPopup({ laag, beurt, zichtbaar, onBouwStarten, onSluiten }: BouwPopupProps) {
   const [gekozenCategorie, setGekozenCategorie] = useState<Categorie | null>(null);
   const [opties, setOpties] = useState<Improvement[]>([]);
 
@@ -110,7 +114,8 @@ export default function BouwPopup({ laag, zichtbaar, onBouwStarten, onSluiten }:
 
   function kiesCategorie(categorie: Categorie) {
     setGekozenCategorie(categorie);
-    setOpties(willekeurigeOpties(categorie, laag));
+    const verplichteId = beurt === 1 && categorie === "economisch" ? "houtkap" : undefined;
+    setOpties(willekeurigeOpties(categorie, laag, verplichteId));
   }
 
   return (

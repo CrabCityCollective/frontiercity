@@ -14,6 +14,10 @@ interface MilitairPaneelProps {
   tegenstanderSterkte: number;
   onStartRecrutering: () => void;
   onConfrontatie: () => void;
+  // Klik op een nog niet toegewezen strijder-icoontje (nieuwe
+  // Wachttoren-functie, hoofdstuk 6) — GameRoot opent daarop de
+  // "welke wachttoren wil je bemannen?"-pop-up.
+  onKiesStrijder: (strijderId: string) => void;
 }
 
 // Militair (basis) (M7, hoofdstuk 6): rekruteren van Soldaat-eenheden en het
@@ -26,6 +30,7 @@ export default function MilitairPaneel({
   tegenstanderSterkte,
   onStartRecrutering,
   onConfrontatie,
+  onKiesStrijder,
 }: MilitairPaneelProps) {
   const { stad, laatsteConfrontatie } = state;
 
@@ -45,6 +50,33 @@ export default function MilitairPaneel({
         <span>Legerwaarde: {legerwaarde}</span>
         <span>Dreiging op de frontier: {tegenstanderSterkte}</span>
       </div>
+
+      {stad.strijders.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+          <span style={{ color: "var(--kleur-tekst-gedempt)" }}>Strijders:</span>
+          {stad.strijders.map((strijder) => (
+            <button
+              key={strijder.id}
+              className="fc-knop"
+              // Bemand = onomkeerbaar (issue: "je kunt je strijder niet meer
+              // uit eerdere wachttorens halen") — alleen nog niet toegewezen
+              // strijders zijn klikbaar.
+              disabled={Boolean(strijder.wachttoren)}
+              onClick={() => onKiesStrijder(strijder.id)}
+              title={strijder.wachttoren ? `Bemant wachttoren op laag ${strijder.wachttoren.hoogte}` : "Wijs deze strijder toe aan een wachttoren"}
+              aria-label="Strijder"
+              style={{
+                padding: "0.3rem 0.5rem",
+                fontSize: "1rem",
+                lineHeight: 1,
+                opacity: strijder.wachttoren ? 0.5 : 1,
+              }}
+            >
+              🛡
+            </button>
+          ))}
+        </div>
+      )}
 
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
         {stad.legerInAanbouw ? (

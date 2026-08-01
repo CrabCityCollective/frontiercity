@@ -228,8 +228,25 @@ function shuffle<T>(items: T[]): T[] {
 // Willekeurige subset van 2 of 3 concrete opties binnen een categorie
 // (hoofdstuk 11: eerst categorie, dán 2-3 willekeurige opties). Geeft minder
 // terug als de categorie nog geen 2 beschikbare opties heeft.
-export function willekeurigeOpties(categorie: Improvement["categorie"], laag: Layer): Improvement[] {
+//
+// `verplichteId` (issue: "alleen de eerste beurt de houtkap altijd tussen de
+// te kiezen improvements staat, om de speler nog even bij de hand te nemen")
+// forceert die ene improvement in de uitkomst als hij beschikbaar is — de
+// rest van de opties blijft willekeurig.
+export function willekeurigeOpties(
+  categorie: Improvement["categorie"],
+  laag: Layer,
+  verplichteId?: string
+): Improvement[] {
   const beschikbaar = beschikbareOpties(categorie, laag);
   const aantal = Math.random() < 0.5 ? 2 : 3;
-  return shuffle(beschikbaar).slice(0, aantal);
+
+  const verplicht = verplichteId ? beschikbaar.find((improvement) => improvement.id === verplichteId) : undefined;
+  if (!verplicht) return shuffle(beschikbaar).slice(0, aantal);
+
+  const overigen = shuffle(beschikbaar.filter((improvement) => improvement.id !== verplichteId)).slice(
+    0,
+    aantal - 1
+  );
+  return shuffle([verplicht, ...overigen]);
 }

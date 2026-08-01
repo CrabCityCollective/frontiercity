@@ -69,3 +69,29 @@ export function heeftTutorialVoltooid(): boolean {
     return false;
   }
 }
+
+// Losse sleutel (issue: "uitleg pop-ups aan en uit ... standaard voor alle
+// nieuwe potjes"), gezet via het instellingen-scherm (InstellingenPopup, na
+// het titelscherm). Bepaalt alleen de standaardwaarde van
+// `GameState.uitlegPopupsAan` bij het starten van een nieuwe run — de
+// per-run toggle in het hoofdmenu overschrijft dit daarna zonder deze
+// globale instelling te wijzigen. Ontbreekt de sleutel nog (eerste bezoek),
+// dan staat uitleg standaard aan.
+const STANDAARD_UITLEG_KEY = "frontier-city:standaard-uitleg-aan";
+
+export function standaardUitlegAan(): boolean {
+  try {
+    const ruw = window.localStorage.getItem(STANDAARD_UITLEG_KEY);
+    return ruw === null ? true : ruw === "1";
+  } catch {
+    return true;
+  }
+}
+
+export function zetStandaardUitleg(aan: boolean): void {
+  try {
+    window.localStorage.setItem(STANDAARD_UITLEG_KEY, aan ? "1" : "0");
+  } catch {
+    // Zie hierboven bij saveSpel: bewust genegeerd.
+  }
+}
