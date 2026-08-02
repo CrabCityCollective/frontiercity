@@ -33,5 +33,10 @@ export default function AppRoot() {
   }
 
   if (scherm === "campagne") return <CampagneSelectScherm onKiesTutorial={() => setScherm("spel")} />;
-  return <GameRoot onVerlaten={() => setScherm("titel")} />;
+  return (
+    <GameRoot
+      onVerlaten={() => setScherm("titel")}
+      onTutorialAfgerond={() => setScherm("campagne")}
+    />
+  );
 }

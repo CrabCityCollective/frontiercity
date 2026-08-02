@@ -1,6 +1,11 @@
 "use client";
 
-import { TUTORIAL_LAAG_CONTENT, TUTORIAL_VOLTOOID_INTRO, TUTORIAL_VOLTOOID_TITEL } from "@/game/tutorialContent";
+import {
+  STICHTING_AFSLUITENDE_SCENE,
+  TUTORIAL_LAAG_CONTENT,
+  TUTORIAL_VOLTOOID_INTRO,
+  TUTORIAL_VOLTOOID_TITEL,
+} from "@/game/tutorialContent";
 
 interface TutorialVoltooidPopupProps {
   onDoorgaan: () => void;
@@ -45,6 +50,7 @@ export default function TutorialVoltooidPopup({ onDoorgaan }: TutorialVoltooidPo
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
           {TUTORIAL_VOLTOOID_TITEL}
         </strong>
+        <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: "pre-line" }}>{STICHTING_AFSLUITENDE_SCENE}</p>
         <p style={{ margin: 0, lineHeight: 1.6 }}>{TUTORIAL_VOLTOOID_INTRO}</p>
         <ul style={{ margin: 0, padding: 0, listStyle: "none", textAlign: "left", lineHeight: 1.8 }}>
           {lagen.map((laag) => (

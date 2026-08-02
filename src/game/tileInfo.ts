@@ -55,8 +55,13 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
   const tile = laag.tiles[positieInLaag];
 
   if (tile.improvement?.soort === "city") {
+    // `tile.improvement.naam` i.p.v. het meegegeven `stad.naam`: sinds het
+    // stichten van een nieuwe stad (hoofdstuk 2/16, issue: "stad stichten op
+    // de frontier") kan er een tweede city-tile bestaan (de zojuist
+    // gestichte stad) met een eigen naam, los van de originele `stad`-status
+    // die alleen Holenrots beschrijft.
     return {
-      titel: stad.naam,
+      titel: tile.improvement.naam,
       ondertitel: "Jouw nederzetting",
       tekst: "Het hart van je stad. Verzamel voedsel om hier te laten groeien.",
     };
@@ -112,12 +117,18 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
   // issue: "wachttorens, bemanning en bevoorrading") en blijft dus overal
   // ontgrendeld bouwbaar.
   const opFrontier = laag.hoogte === hoogsteOntgrendeldeLaag(lagen);
+  // Vers water (hoofdstuk 2, issue: "stad stichten op de frontier" deel 1):
+  // maakt op de kaart/tile-info zichtbaar welke vakjes geschikt zijn om een
+  // nieuwe stad te stichten, zodat de speler ernaartoe kan plannen.
+  const versWaterTekst = tile.versWater
+    ? " Dit vakje ligt aan vers water — hier kan, met de settler erop, een nieuwe stad gesticht worden."
+    : "";
   return {
     titel: "Leeg vakje",
     ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
-    tekst: opFrontier
+    tekst: (opFrontier
       ? "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond. Heiligdommen en wachttorens kunnen overal geplaatst worden."
-      : "Dit is niet meer de frontier-laag, dus hier is alleen nog een Wachttoren te bouwen — die mag, als uitzondering, op elke ontgrendelde laag geplaatst worden.",
+      : "Dit is niet meer de frontier-laag, dus hier is alleen nog een Wachttoren te bouwen — die mag, als uitzondering, op elke ontgrendelde laag geplaatst worden.") + versWaterTekst,
   };
 }
 

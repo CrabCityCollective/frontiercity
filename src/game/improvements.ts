@@ -185,7 +185,7 @@ export const SOLDAAT: Improvement = {
 // upgradet, geen land-vakje — daarom geen onderdeel van IMPROVEMENT_POOLS/
 // beschikbareOpties (die zijn voor land-improvements op de actieve laag) en
 // wordt in plaats daarvan rechtstreeks gebruikt door de startGroei-actie in
-// economie.ts en het groei-paneel. Weg/brug (de land-improvements onder
+// economie.ts en het civiele paneel. Weg/brug (de land-improvements onder
 // civiel) blijven, net als de rest van IMPROVEMENT_POOLS.civiel, buiten de
 // MVP-scope (hoofdstuk 13).
 export const WOONWIJK: Improvement = {
@@ -196,6 +196,41 @@ export const WOONWIJK: Improvement = {
   kosten: { hout: 6, steen: 4 },
   bouwtijdBeurten: 4,
   effect: { type: "groei", naarGrootte: "middel" },
+};
+
+// Nieuwe settler (hoofdstuk 3/11/13/16, issue: "stad stichten op de
+// frontier" deel 4): de speler begint met één settler; zodra een stad
+// gesticht is (`stichtStad` in economie.ts) kan de nieuwe stad er weer één
+// uitrusten. Bewust een civiele keuze naast WOONWIJK (`City.civielInAanbouw`
+// bevat hoogstens één van de twee tegelijk) — "investeer je in de stad waar
+// je staat, of rust je een expeditie uit om verder te trekken?" (hoofdstuk
+// 11). Geen land-vakje (soort "unit", net als SOLDAAT), dus ook geen
+// onderdeel van IMPROVEMENT_POOLS/beschikbareOpties.
+export const NIEUWE_SETTLER: Improvement = {
+  id: "nieuwe-settler",
+  naam: "Nieuwe settler",
+  categorie: "civiel",
+  soort: "unit",
+  kosten: { hout: 10, steen: 4 },
+  bouwtijdBeurten: 4,
+  effect: { type: "settler" },
+};
+
+// Opslagplaats (hoofdstuk 3/5/13/14, issue: "stad stichten op de frontier"
+// deel 2): economische city improvement die de gedeelde opslag-cap verhoogt.
+// Eigen wachtrij (`City.opslagplaatsInAanbouw`, los van `civielInAanbouw`
+// hierboven) — Opslagplaats is economisch, geen civiel improvement (hoofdstuk
+// 3), en concurreert dus niet met groei/nieuwe-settler. Herhaalbaar: elke
+// voltooide Opslagplaats telt de cap opnieuw op (hoofdstuk 14: "praktisch
+// maximum ~3-4 opslagplaatsen per stad").
+export const OPSLAGPLAATS: Improvement = {
+  id: "opslagplaats",
+  naam: "Opslagplaats",
+  categorie: "economisch",
+  soort: "city",
+  kosten: { hout: 8, steen: 6 },
+  bouwtijdBeurten: 3,
+  effect: { type: "opslag", waarde: 20 },
 };
 
 const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {

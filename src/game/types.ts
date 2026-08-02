@@ -84,6 +84,13 @@ export interface Tile {
   kudde?: {
     beurtenResterend: number;
   };
+  // Ligt dit vakje aan vers water — een rivier of een meer (hoofdstuk 2:
+  // "een stad kan alleen gesticht worden op een vakje dat aan vers water
+  // ligt")? Vast, niet-procedureel (net als `terrein`) — de tutorial-worldgen
+  // garandeert minstens één zulk vakje tussen laag 10 en 12 (zie world.ts).
+  // Geen terrein-eis op zichzelf: een vlak, bos-, heuvel- of bergvakje kan
+  // allemaal aan water liggen, dus los van `terrein` bijgehouden.
+  versWater?: boolean;
 }
 
 // Positie van de settler-eenheid (M10, hoofdstuk 16). Bestaat pas vanaf beurt
@@ -133,11 +140,15 @@ export interface City {
   relics: Relic[];
   vervalStatus: "gezond" | "kritiek";
   vervalBeurtenResterend?: number;
-  // Lopende groei-tier-bouw (M6, hoofdstuk 4: "kost een civiel improvement +
-  // rijptijd"). Net als een tile-in-aanbouw (M3) een per-beurt investering
-  // van bouwmateriaal, maar los van de tegel-band omdat groei de stad zelf
-  // upgradet, geen land-vakje inneemt.
-  groeiInAanbouw?: {
+  // Lopende civiele stads-bouw (M6, hoofdstuk 4/16: "kost een civiel
+  // improvement + rijptijd"). Net als een tile-in-aanbouw (M3) een per-beurt
+  // investering van bouwmateriaal, maar los van de tegel-band omdat dit de
+  // stad zelf upgradet, geen land-vakje inneemt. Eén gedeelde wachtrij voor
+  // de groei-tier (WOONWIJK) én een nieuwe settler (NIEUWE_SETTLER,
+  // hoofdstuk 11/13/16: "concurrerend met de groei-improvements") — de
+  // speler kiest er hoogstens één tegelijk, precies de bedoelde spanning
+  // tussen investeren in de huidige stad of een nieuwe expeditie uitrusten.
+  civielInAanbouw?: {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
@@ -146,9 +157,19 @@ export interface City {
   // legerwaarde-teller: de speler moet nu per strijder kunnen kiezen welke
   // Wachttoren hij bemant.
   strijders: Strijder[];
-  // Lopende rekrutering, zelfde queue-patroon als `groeiInAanbouw` (los van
+  // Lopende rekrutering, zelfde queue-patroon als `civielInAanbouw` (los van
   // de tegel-band omdat een unit geen land-vakje inneemt).
   legerInAanbouw?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+  };
+  // Lopende Opslagplaats-bouw (hoofdstuk 3/5/14, issue: "stad stichten op de
+  // frontier" deel 2): eigen wachtrij, los van `civielInAanbouw` — Opslagplaats
+  // is een economisch, geen civiel improvement (hoofdstuk 3), en concurreert
+  // dus niet met groei/nieuwe-settler. Elke voltooide Opslagplaats verhoogt
+  // `GameState.opslagCap` direct met `OPSLAGPLAATS.effect.waarde` (zie
+  // economie.ts) — geen apart telveld nodig, de cap zelf is de optelsom.
+  opslagplaatsInAanbouw?: {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
@@ -268,6 +289,14 @@ export interface GameState {
   // `undefined` zolang er geen (onopgeloste) melding is — de UI blokkeert
   // dan geen andere pop-ups.
   indringersEvent?: IndringersEvent;
+  // Gezet zodra de speler een nieuwe stad heeft gesticht (hoofdstuk 2/10/16,
+  // issue: "stad stichten op de frontier" — vervangt "bereik laag 12" als
+  // tutorial-einddoel). De settler is dan al verdwenen (`settler` teruggezet
+  // naar `undefined` door `stichtStad` in economie.ts) en dit vlag triggert
+  // de afsluitende tutorial-scène/samenvatting (zie GameRoot), net als
+  // `laatsteIneenstorting` hierboven het game-over-scherm triggert — maar dan
+  // de winnende afsluiting in plaats van de verliezende.
+  stadGesticht?: boolean;
   // Per-run instelling (issue: "een setting waarmee je deze uitleg pop-ups
   // aan en uit kunt zetten ... voor deze run specifiek") — schakelt alle
   // tutorial-uitleg-pop-ups (openings-uitleg, settler, voedsel/boerderij,

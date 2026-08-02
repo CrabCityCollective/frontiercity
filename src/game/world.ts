@@ -57,6 +57,25 @@ function terreinVoorTile(hoogte: number, positieInLaag: number): TerreinType {
   return TUTORIAL_TILE_TERREIN[hoogte]?.[positieInLaag] ?? "vlak";
 }
 
+// Vakjes die aan vers water liggen — een rivier of een meer (hoofdstuk 2:
+// "een stad kan alleen gesticht worden op een vakje dat aan vers water
+// ligt"). Vaste tutorial-worldgen (net als TUTORIAL_TILE_TERREIN hierboven),
+// bewust zo gekozen dat elk van laag 10, 11 en 12 minstens één zo'n vakje
+// heeft — een speler kan dus nooit pech hebben en eindeloos moeten
+// doorlopen op zoek naar een geschikte plek (issue: "stad stichten op de
+// frontier" deel 1). Alle drie op een vlak vakje (nooit het centrum/positie
+// 4) zodat het ook een boerderij-kandidaat is — plannen waar je een stad
+// sticht versus waar je verbouwt, is een bewuste keuze, geen dwangkeuze.
+const TUTORIAL_VERS_WATER: Record<number, number[]> = {
+  10: [0],
+  11: [5],
+  12: [5],
+};
+
+function versWaterVoorTile(hoogte: number, positieInLaag: number): boolean {
+  return TUTORIAL_VERS_WATER[hoogte]?.includes(positieInLaag) ?? false;
+}
+
 // Dreigingsniveau per laag (M7, hoofdstuk 6): de tegenstandersterkte bij een
 // militaire confrontatie op die laag, gebruikt door `confrontatie` in
 // economie.ts. Vastgelegde tutorial-waarden, oplopend met de hoogte — net
@@ -72,6 +91,7 @@ function maakLegeTiles(hoogte: number): Tile[] {
     positieInLaag,
     terrein: terreinVoorTile(hoogte, positieInLaag),
     status: "leeg" as const,
+    versWater: versWaterVoorTile(hoogte, positieInLaag),
   }));
 }
 
@@ -186,3 +206,12 @@ export function cultuurKostenVoorLaag(hoogte: number): number {
 // de MVP-scope beperkt zich tot deze ene groei-stap (hoofdstuk 13), dus geen
 // aparte formule per grootte-tier nodig.
 export const VOEDSEL_DREMPEL_GROEI = 40;
+
+// Of een vakje geschikt is om een nieuwe stad te stichten (hoofdstuk 2,
+// issue: "stad stichten op de frontier"): aan vers water, en nog onbebouwd —
+// een vakje met een improvement of een ghost town erop is geen geldig doel
+// meer, ook al ligt het aan water. Gedeeld tussen `stichtStad` (economie.ts),
+// de settler-UI en de tile-info-pop-up zodat alle drie dezelfde regel volgen.
+export function isGeschiktVoorStichten(tile: Tile): boolean {
+  return Boolean(tile.versWater) && tile.status === "leeg";
+}
