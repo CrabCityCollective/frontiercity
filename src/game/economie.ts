@@ -302,38 +302,41 @@ interface BouwInvestering {
 }
 
 // Investeert dit beurt-aandeel van de resterende bouwkosten vanuit de
-// gedeelde opslag, als er voldoende voorraad is. Bij onvoldoende voorraad
-// stokt de bouw deze beurt (geen gedeeltelijke betaling) — zie hoofdstuk 5,
-// "geen instant-klik, maar een productiewachtrij". Gedeeld tussen de
-// land-tile-bouwwachtrij (M3) en de stadsgroei-bouwwachtrij (M6), die verder
-// los van elkaar staan (tile vs. stad).
+// gedeelde opslag, per grondstof-type onafhankelijk van de andere benodigde
+// types (bugfix, issue: "soldaat in opleiding wordt nooit voltooid" — een
+// wachtrij die bv. hout én erts nodig heeft, mag niet *ook* de hout-betaling
+// blokkeren zolang alleen de erts-voorraad tijdelijk tekortschiet, anders
+// bevriest de hele teller onzichtbaar zodra één grondstof-type opdroogt,
+// terwijl de UI gewoon een "nog X beurten" blijft tonen alsof er nog voortgang
+// is). Binnen één grondstof-type blijft het wél alles-of-niets per beurt
+// (geen gedeeltelijke betaling van dat ene bedrag) — zie hoofdstuk 5, "geen
+// instant-klik, maar een productiewachtrij". Gedeeld tussen de
+// land-tile-bouwwachtrij (M3) en de stadsgroei-/rekruterings-bouwwachtrij
+// (M6/M7), die verder los van elkaar staan (tile vs. stad).
 function investeerInBouwkosten(
   improvement: Improvement,
   voortgang: Partial<Record<ResourceType, number>>,
   voorraad: Record<MateriaalType, number>
 ): BouwInvestering | null {
-  const teBetalen: Partial<Record<ResourceKey, number>> = {};
+  const nieuweVoortgang = { ...voortgang };
+  let geinvesteerd = false;
+
   for (const key of Object.keys(voortgang) as ResourceKey[]) {
     const resterend = voortgang[key] ?? 0;
     if (resterend <= 0) continue;
+
     const totaal = improvement.kosten[key] ?? 0;
     const perBeurt = Math.ceil(totaal / improvement.bouwtijdBeurten);
-    teBetalen[key] = Math.min(perBeurt, resterend);
-  }
+    const bedrag = Math.min(perBeurt, resterend);
 
-  const kanBetalen = (Object.keys(teBetalen) as ResourceKey[]).every((key) => {
-    if (!isMateriaalType(key)) return true; // niet-materiaalkosten komen hier nog niet voor
-    return voorraad[key] >= (teBetalen[key] ?? 0);
-  });
+    if (isMateriaalType(key) && voorraad[key] < bedrag) continue; // dit type stokt deze beurt, de rest gaat gewoon door
 
-  if (!kanBetalen) return null;
-
-  const nieuweVoortgang = { ...voortgang };
-  for (const key of Object.keys(teBetalen) as ResourceKey[]) {
-    const bedrag = teBetalen[key] ?? 0;
     if (isMateriaalType(key)) voorraad[key] -= bedrag;
-    nieuweVoortgang[key] = (nieuweVoortgang[key] ?? 0) - bedrag;
+    nieuweVoortgang[key] = resterend - bedrag;
+    geinvesteerd = true;
   }
+
+  if (!geinvesteerd) return null;
 
   const voltooid = (Object.values(nieuweVoortgang) as number[]).every((rest) => rest <= 0);
   return { nieuweVoortgang, voltooid };
