@@ -192,9 +192,11 @@ Eén nieuw mechaniek per laag, oplopend:
 | 6-7 | Cultuur → laag ontgrendelen |
 | 8 | Vooruitkijk-bereik |
 | 9 | Zeldzaamheid (verborgen tot bouwen) |
-| 10 | Groei-gok (zonder echte permadeath-dreiging) |
+| 10 | Groei-gok |
 | 11 | Waarschuwingssignaal bij verval (gescript, ongevaarlijk) |
 | 12 | Militair/verdediging (licht, laagdrempelig) |
+
+**Laag 10 in het bijzonder:** dit is de eerste keer dat de speler de volledige inzet van hoofdstuk 4 voelt — een ineenstorting hier beëindigt de hele tutorial-run, net zoals later in een echte campagne. De tutorial waarschuwt de speler dan ook expliciet wat er op het spel staat: zodra de voedselstatus "kritiek" wordt (de zichtbare waarschuwingsstatus uit hoofdstuk 4, die al een paar beurten vóór een mogelijke instorting verschijnt), krijgt de speler een duidelijke melding dat doorgroeien nu een echte gok is en dat bij een instorting de hele stad — inclusief alle tot dan toe verdiende relics — verloren gaat. Dat de speler dit risico ruim van tevoren kan zien aankomen, is wat deze laag uitdagend houdt zonder oneerlijk te worden.
 
 Na laag 12: afsluitende scène, opent het campagnemenu (alleen Amerikaanse frontier beschikbaar; overige campagnes ontgrendelen daarna). Tutorial-save blijft apart bestaan/speelbaar.
 
@@ -221,6 +223,9 @@ Dit is een bewuste keuze om het "frontier"-gevoel scherp te houden: als oude ste
 
 **Hard verval (permadeath van relics) i.p.v. zachte aftakeling**
 Zachte aftakeling (een stad die langzaam minder oplevert tot je vertrekt) is altijd veilig zolang je op tijd weggaat — er is dan geen echt risico. Hard verval, waarbij ook al verdiende relics verloren kunnen gaan bij een misrekening, geeft een echt risk/reward-moment: doorgroeien voor een extra relic-slot is een bewuste gok, geen gratis extra beloning. Het zichtbare waarschuwingssignaal zorgt ervoor dat dit risico eerlijk aanvoelt (voorspelbaar te vermijden) in plaats van willekeurig.
+
+**De permadeath-dreiging geldt ook in de tutorial, zonder uitzondering**
+De groei-gok op laag 10 (hoofdstuk 10) is bewust géén ongevaarlijke oefening: een ineenstorting beëindigt ook daar de hele run, precies zoals hoofdstuk 4 beschrijft. Een tutorial waarin niets echt op het spel staat, zou de speler nooit laten voelen waarom groeien versus op tijd vertrekken de kernspanning van het hele spel is — en dus ook niet waarom het spel de moeite waard is. Dat het risico ruim van tevoren zichtbaar aankomt (het waarschuwingssignaal uit hoofdstuk 4, hier expliciet uitgelicht in hoofdstuk 10) houdt dit uitdagend in plaats van oneerlijk: de speler maakt de gok bewust, in plaats van hem per ongeluk te verliezen. Echte inzet vanaf het begin is dus een bewuste ontwerpkeuze, geen omissie.
 
 **Volledige ineenstorting eindigt in de MVP de hele run**
 Zolang er maar één stad is (hoofdstuk 13), heeft een ineenstorting geen "volgende stad" om naar door te schuiven — de stad die instort, is de enige stad. Een stad laten voortbestaan in verzwakte vorm (geen relics, kleine tier) zou het permadeath-risico uit hoofdstuk 4 juist ondermijnen: de speler kan dan gewoon doorspelen alsof er niets gebeurd is. Door de run in dat geval echt te beëindigen en de tutorial opnieuw te starten, blijft de inzet van "doorgroeien voor een extra relic-slot" reëel, ook zonder dat er al een frontier-verplaatsing naar een nieuwe stad bestaat.
