@@ -7,7 +7,7 @@ import {
   terreinEisenBeschrijving,
   willekeurigeOpties,
 } from "@/game/improvements";
-import { Categorie, Improvement, Layer } from "@/game/types";
+import { Categorie, Improvement, Layer, TechId } from "@/game/types";
 
 const CATEGORIEEN = Object.keys(CATEGORIE_LABELS) as Categorie[];
 
@@ -87,6 +87,10 @@ interface BouwPopupProps {
   // te kiezen improvements staat") — gebruikt om in beurt 1 de Houtkap-optie
   // te garanderen binnen de economische categorie.
   beurt: number;
+  // Gekozen technologieën (hoofdstuk 3/9, issue: "tech tree toevoegen" Deel
+  // 2) — bepaalt of tech-gated improvements (momenteel alleen de
+  // Voorraadkuil, ontgrendeld door "aardewerk") als optie meegenomen worden.
+  technologieen: TechId[];
   zichtbaar: boolean;
   onBouwStarten: (improvement: Improvement) => void;
   onSluiten: () => void;
@@ -100,7 +104,15 @@ interface BouwPopupProps {
 // pop-up verdwijnt (zie `plaatsingsImprovement` in GameRoot) en de speler
 // wijst zelf een lege tile op de kaart aan om hem neer te zetten — pas dan
 // wordt `bouwKeuzeGedaanDitBeurt` gezet.
-export default function BouwPopup({ laag, alleLagen, beurt, zichtbaar, onBouwStarten, onSluiten }: BouwPopupProps) {
+export default function BouwPopup({
+  laag,
+  alleLagen,
+  beurt,
+  technologieen,
+  zichtbaar,
+  onBouwStarten,
+  onSluiten,
+}: BouwPopupProps) {
   const [gekozenCategorie, setGekozenCategorie] = useState<Categorie | null>(null);
   const [opties, setOpties] = useState<Improvement[]>([]);
 
@@ -120,7 +132,7 @@ export default function BouwPopup({ laag, alleLagen, beurt, zichtbaar, onBouwSta
   function kiesCategorie(categorie: Categorie) {
     setGekozenCategorie(categorie);
     const verplichteId = beurt === 1 && categorie === "economisch" ? "houtkap" : undefined;
-    setOpties(willekeurigeOpties(categorie, laag, alleLagen, verplichteId));
+    setOpties(willekeurigeOpties(categorie, laag, alleLagen, verplichteId, technologieen));
   }
 
   return (
@@ -164,7 +176,7 @@ export default function BouwPopup({ laag, alleLagen, beurt, zichtbaar, onBouwSta
                 // improvements (Wachttoren) ook naar andere ontgrendelde
                 // lagen, dus dit hoeft niet af te hangen van lege vakjes op
                 // déze (frontier-)laag specifiek.
-                const kanBouwen = beschikbareOpties(categorie, laag, alleLagen).length > 0;
+                const kanBouwen = beschikbareOpties(categorie, laag, alleLagen, technologieen).length > 0;
                 return (
                   <button
                     key={categorie}

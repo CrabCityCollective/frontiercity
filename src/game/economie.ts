@@ -48,6 +48,18 @@
 // speler geven (`geefTribuut`) of weigeren (`weigerTribuut`). Heiligdom en
 // Wachttoren putten (hoofdstuk 4) bewust niet uit — zie improvements.ts.
 //
+// Technologie-boom (hoofdstuk 3/9/11, issue: "tech tree toevoegen"):
+// wetenschap is, net als cultuur, een voortgangs-valuta zonder opslag-cap,
+// geproduceerd door de Sterrencirkel (improvements.ts, zelfde niet-uitputtende
+// patroon als het Heiligdom). Zodra de cumulatieve wetenschap een drempel
+// haalt (`verwerkTechDrempel`), opent dit — anders dan cultuur — geen
+// automatische ontgrendeling maar een keuze tussen twee technologieën
+// (`kiesTech`); de niet-gekozen tech en alles daaronder in de boom wordt
+// daarmee voor de rest van de run permanent onbereikbaar (dezelfde
+// vertakkingslogica als de Anker-verhalen, hoofdstuk 9/11). De effecten zelf
+// (boerderij-opbrengst, jachtopbrengst, opslag-cap, enz.) staan als pure
+// helpers in techTree.ts en worden hieronder op de relevante plek toegepast.
+//
 // Exacte getallen (opslag-cap, kosten, productiesnelheden, uitputtingssnelheid,
 // winkans-formule) zijn nog niet vastgelegd in het design-document
 // (hoofdstuk 14) — de waarden hieronder zijn bewuste MVP-placeholders, geen
@@ -55,8 +67,23 @@
 
 import { improvementPastOpTerrein, NIEUWE_SETTLER, OPSLAGPLAATS, SOLDAAT, WOONWIJK } from "./improvements";
 import { standaardUitlegAan } from "./save";
+import {
+  boerderijOpbrengstFactor,
+  boerderijUitputtingFactor,
+  jachtVoedselBonus,
+  kuddeKansFactor,
+  legerwaardeBonusPerStrijder,
+  OPSLAGCAP_BONUS_WEVEN,
+  roofdierKansFactor,
+  settlerBeweegtGratis,
+  settlerWegaanlegGratis,
+  steenOpbrengstFactor,
+  techKinderen,
+  voedselVerbruikVermindering,
+  wetenschapKostenVoorDrempel,
+} from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
-import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, KuddeEvent, Layer, MateriaalType, ResourceType, RoofdierEvent, Strijder, Tile } from "./types";
+import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, KuddeEvent, Layer, MateriaalType, ResourceType, RoofdierEvent, Strijder, TechDrempel, TechId, Tile } from "./types";
 import {
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
@@ -174,6 +201,8 @@ export function maakInitieleSpelStatus(): GameState {
     opslagCap: OPSLAG_CAP,
     voedsel: VOEDSEL_START,
     cultuur: 0,
+    wetenschap: 0,
+    technologieen: [],
     beurt: 1,
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,
@@ -192,6 +221,14 @@ function isMateriaalType(resource: string): resource is MateriaalType {
 
 type ResourceKey = keyof Improvement["kosten"];
 
+// Boerderij-opbrengst (hoofdstuk 3/9, "A. Vuur temmen": +20%, techTree.ts) —
+// `Math.ceil` in plaats van `Math.round` zodat de bonus bij de kleine
+// MVP-basiswaarden (4 voedsel/beurt) altijd zichtbaar is, ook al rondt een
+// exacte 20%-verhoging soms af naar beneden.
+function boerderijOpbrengst(waarde: number, technologieen: TechId[]): number {
+  return Math.ceil(waarde * boerderijOpbrengstFactor(technologieen));
+}
+
 // Totale voedselproductie van dit beurt: alle actieve, (voor land-improvements)
 // wegverbonden tiles met een voedsel-productie-effect (hoofdstuk 16: een
 // Boerderij zonder wegverbinding levert nog niets op). Los van
@@ -209,7 +246,8 @@ function berekenVoedselProductie(state: GameState): number {
       if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)) {
         continue;
       }
-      productie += effect.waarde;
+      productie +=
+        tile.improvement?.id === "boerderij" ? boerderijOpbrengst(effect.waarde, state.technologieen) : effect.waarde;
     }
   }
 
@@ -221,8 +259,15 @@ function berekenVoedselProductie(state: GameState): number {
 // (hoofdstuk 10, laag 10-flavor), plus 1 voedsel per bemande Wachttoren
 // (hoofdstuk 6/11/14, `WACHTTOREN_VOEDSEL_VERBRUIK` hierboven). Nog geen
 // aparte multiplier per campagne nodig in de MVP (hoofdstuk 13).
+// "A2b. Voorraadschuur" (techTree.ts): verlaagt alleen het stadsverbruik
+// zelf, niet de bemannings-kosten van Wachttorens hieronder — nooit onder de
+// 1 (een stad van 0 monden bestaat niet).
 function voedselVerbruik(state: GameState): number {
-  return VOEDSEL_VERBRUIK[state.stad.grootte] + telBemandeWachttorens(state) * WACHTTOREN_VOEDSEL_VERBRUIK;
+  const stadVerbruik = Math.max(
+    1,
+    VOEDSEL_VERBRUIK[state.stad.grootte] - voedselVerbruikVermindering(state.technologieen)
+  );
+  return stadVerbruik + telBemandeWachttorens(state) * WACHTTOREN_VOEDSEL_VERBRUIK;
 }
 
 // Netto voedselverandering deze beurt: productie min verbruik. Negatief
@@ -231,6 +276,12 @@ function voedselVerbruik(state: GameState): number {
 // wanneer de voorraad op raakt).
 function berekenVoedselNetto(state: GameState): number {
   return berekenVoedselProductie(state) - voedselVerbruik(state);
+}
+
+// Steen-opbrengst (hoofdstuk 3/9, "A1b. Kalkoven": +20%, techTree.ts) —
+// zelfde `Math.ceil`-redenering als `boerderijOpbrengst` hierboven.
+function steenOpbrengst(waarde: number, technologieen: TechId[]): number {
+  return Math.ceil(waarde * steenOpbrengstFactor(technologieen));
 }
 
 // Past productie toe van elke actieve land-improvement met een "productie"-effect.
@@ -244,11 +295,15 @@ function berekenVoedselNetto(state: GameState): number {
 // de frontier-laag (de hoogst ontgrendelde laag) zelf, en voor de helft op
 // elke laag daaronder — uitbeelding van een Heiligdom dat vooral nabije,
 // nog niet "eigen" stammen omtovert, een effect dat afneemt naarmate de laag
-// verder van het actieve grensgebied ligt.
+// verder van het actieve grensgebied ligt. De Sterrencirkel (hoofdstuk 3/9,
+// issue: "tech tree toevoegen" Deel 1) volgt voor wetenschap exact hetzelfde
+// patroon — "zelfde patroon als Heiligdom voor cultuur", inclusief deze
+// frontier-halvering.
 function verwerkProductie(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
   let voedsel = state.voedsel;
   let cultuur = state.cultuur;
+  let wetenschap = state.wetenschap;
   const frontierHoogte = hoogsteOntgrendeldeLaag(state.lagen);
 
   for (const laag of state.lagen) {
@@ -268,11 +323,14 @@ function verwerkProductie(state: GameState): GameState {
 
       if (effect.resource === "cultuur") {
         cultuur += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+      } else if (effect.resource === "wetenschap") {
+        wetenschap += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
       } else if (isMateriaalType(effect.resource)) {
-        voorraad[effect.resource] = Math.min(
-          state.opslagCap,
-          voorraad[effect.resource] + effect.waarde
-        );
+        const opbrengst =
+          effect.resource === "steen" && tile.improvement?.id === "steengroeve"
+            ? steenOpbrengst(effect.waarde, state.technologieen)
+            : effect.waarde;
+        voorraad[effect.resource] = Math.min(state.opslagCap, voorraad[effect.resource] + opbrengst);
       }
       // Voedsel-productie wordt hieronder in één keer verrekend met het
       // verbruik (niet per tile), zie `berekenVoedselProductie`.
@@ -281,7 +339,7 @@ function verwerkProductie(state: GameState): GameState {
 
   voedsel = Math.max(0, voedsel + berekenVoedselNetto(state));
 
-  return { ...state, voorraad, voedsel, cultuur };
+  return { ...state, voorraad, voedsel, cultuur, wetenschap };
 }
 
 // Ontgrendelt de eerstvolgende vergrendelde laag zodra de cumulatieve cultuur
@@ -303,6 +361,54 @@ function verwerkLaagOntgrendeling(state: GameState): GameState {
   }
 
   return lagen === state.lagen ? state : { ...state, lagen };
+}
+
+// Technologie-boom (hoofdstuk 3/9/11, issue: "tech tree toevoegen" Deel 2):
+// zodra de cumulatieve wetenschap de eerstvolgende drempel haalt, opent dit
+// een keuze tussen twee technologieën — anders dan `verwerkLaagOntgrendeling`
+// hierboven ontgrendelt dit niet automatisch, want de speler moet zelf
+// kiezen (zelfde blokkerende meldings-vorm als `verwerkIndringers` verderop
+// in dit bestand: geen nieuwe gebeurtenis zolang een vorige nog openstaat).
+// Rolt hoogstens één drempel per aanroep: staat er na het oplossen van deze
+// keuze (`kiesTech` hieronder) meteen alweer genoeg wetenschap voor de
+// volgende drempel, dan pakt de eerstvolgende `volgendeBeurt`-aanroep die op
+// — net zo lang als de speler er niet eerder voor kiest.
+function verwerkTechDrempel(state: GameState): GameState {
+  if (state.techKeuzeEvent) return state;
+
+  const volgendeDrempel = (state.technologieen.length + 1) as TechDrempel;
+  if (volgendeDrempel > 3) return state;
+  if (state.wetenschap < wetenschapKostenVoorDrempel(volgendeDrempel)) return state;
+
+  const ouder = state.technologieen[state.technologieen.length - 1];
+  return {
+    ...state,
+    techKeuzeEvent: { drempel: volgendeDrempel, opties: techKinderen(ouder) },
+  };
+}
+
+// Legt de keuze van de speler vast op de openstaande drempel (hoofdstuk 3/9):
+// de niet-gekozen tech (en alles wat daaronder in de boom hangt) wordt
+// hiermee voor de rest van de run permanent onbereikbaar — `techKinderen` in
+// techTree.ts kan bij de volgende drempel immers alleen nog de kinderen van
+// de hier gekozen `techId` teruggeven. Negeert een ongeldige aanroep (geen
+// openstaande keuze, of een `techId` die niet één van de twee getoonde opties
+// is) — zelfde veilige-aanroep-conventie als `startBouw`/`bemanWachttoren`.
+//
+// "Weven" (A1a, techTree.ts) verhoogt de opslag-cap direct bij het kiezen,
+// net als de Opslagplaats-improvement bij voltooiing (hoofdstuk 3/5) — het is
+// een keuze, geen gebouwd improvement, dus er is geen wachtrij of
+// wegverbinding om op te wachten.
+export function kiesTech(state: GameState, techId: TechId): GameState {
+  const event = state.techKeuzeEvent;
+  if (!event || !event.opties.includes(techId)) return state;
+
+  return {
+    ...state,
+    technologieen: [...state.technologieen, techId],
+    opslagCap: techId === "weven" ? state.opslagCap + OPSLAGCAP_BONUS_WEVEN : state.opslagCap,
+    techKeuzeEvent: undefined,
+  };
 }
 
 interface BouwInvestering {
@@ -374,7 +480,13 @@ export function resterendeBouwBeurten(
   return maxBeurten;
 }
 
-function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number>): Tile {
+// "A2. Zaadselectie" (hoofdstuk 3/9, techTree.ts: boerderij-uitputting 25%
+// trager) wordt hier toegepast — op het moment dat de tile "actief" wordt,
+// niet per beurt tijdens het aftellen (`verwerkUitputting` hieronder telt
+// gewoon 1 per beurt af, ongeacht de tech): de totale levensduur wordt langer
+// verlengd, precies zoals de bestaande `uitputtingBeurten`-waarden al een
+// vaste levensduur per improvement-type zijn.
+function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number>, technologieen: TechId[]): Tile {
   const improvement = tile.improvement;
   if (!improvement || !tile.bouwVoortgang) return tile;
 
@@ -382,11 +494,15 @@ function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number
   if (!resultaat) return tile;
 
   if (resultaat.voltooid) {
+    const beurtenTotUitputting =
+      improvement.uitputtingBeurten !== undefined && improvement.id === "boerderij"
+        ? Math.round(improvement.uitputtingBeurten * boerderijUitputtingFactor(technologieen))
+        : improvement.uitputtingBeurten;
     return {
       ...tile,
       status: "actief",
       bouwVoortgang: undefined,
-      beurtenTotUitputting: improvement.uitputtingBeurten,
+      beurtenTotUitputting,
     };
   }
 
@@ -432,17 +548,29 @@ function verwerkUitputting(state: GameState): GameState {
   return { ...state, lagen };
 }
 
+// Opslag-effecten van land improvements (momenteel alleen de Voorraadkuil,
+// hoofdstuk 3/9: "A1. Aardewerk") tellen direct bij voltooiing mee, niet pas
+// na wegverbinding zoals productie-effecten (`verwerkProductie` hierboven) —
+// een opslagvergroting is een structurele capaciteit, geen lopende oogst, net
+// als de Opslagplaats-city-improvement (hoofdstuk 3/5, `verwerkOpslagplaats`
+// verderop) die om dezelfde reden ook geen wegverbinding vereist.
 function verwerkBouwwachtrij(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
+  let opslagCap = state.opslagCap;
 
   const lagen = state.lagen.map((laag) => ({
     ...laag,
-    tiles: laag.tiles.map((tile) =>
-      tile.status === "in_aanbouw" ? verwerkTileInAanbouw(tile, voorraad) : tile
-    ),
+    tiles: laag.tiles.map((tile) => {
+      if (tile.status !== "in_aanbouw") return tile;
+      const nieuweTile = verwerkTileInAanbouw(tile, voorraad, state.technologieen);
+      if (nieuweTile.status === "actief" && nieuweTile.improvement?.effect.type === "opslag") {
+        opslagCap += nieuweTile.improvement.effect.waarde ?? 0;
+      }
+      return nieuweTile;
+    }),
   }));
 
-  return { ...state, lagen, voorraad };
+  return { ...state, lagen, voorraad, opslagCap };
 }
 
 // Telt de gebouwde land-tiles (actief + ghost_town) en hoeveel daarvan al
@@ -783,7 +911,10 @@ function telBemandeWachttorens(state: GameState): number {
 // ongeacht op welke laag die staat (er is in de MVP maar één actieve stad,
 // hoofdstuk 13).
 export function berekenLegerwaarde(state: GameState): number {
-  let waarde = state.stad.strijders.length * (SOLDAAT.effect.waarde ?? 0);
+  // "B2b. Verharde speren" (hoofdstuk 3/9, techTree.ts): een lichte
+  // legerwaarde-bonus per strijder, bovenop de vaste SOLDAAT-waarde.
+  let waarde =
+    state.stad.strijders.length * ((SOLDAAT.effect.waarde ?? 0) + legerwaardeBonusPerStrijder(state.technologieen));
 
   for (const laag of state.lagen) {
     for (const tile of laag.tiles) {
@@ -996,7 +1127,8 @@ function verwerkIndringers(state: GameState): GameState {
 // aanwezige kuddes.
 function verwerkKuddes(state: GameState): GameState {
   if (hoogsteOntgrendeldeLaag(state.lagen) < KUDDE_MIN_LAAG) return state;
-  if (Math.random() >= KUDDE_KANS) return state;
+  // "A2a. Veeteelt" (hoofdstuk 3/9, techTree.ts): kuddes verschijnen vaker.
+  if (Math.random() >= KUDDE_KANS * kuddeKansFactor(state.technologieen)) return state;
 
   const kandidaten: { hoogte: number; positieInLaag: number }[] = [];
   for (const laag of state.lagen) {
@@ -1192,7 +1324,15 @@ export function verplaatsSettlerNaar(state: GameState, hoogte: number, positieIn
   );
   if (!magErheen) return state;
 
-  return { ...state, settler: { hoogte, positieInLaag }, settlerActieGedaanDitBeurt: true };
+  // "B1b. Handkar" (hoofdstuk 3/9, techTree.ts): verplaatsen kost dan geen
+  // aparte settler-actie meer, dus de speler kan deze beurt nog een andere
+  // actie (weg aanleggen/jagen/hout hakken) uitvoeren.
+  const kostGeenActie = settlerBeweegtGratis(state.technologieen);
+  return {
+    ...state,
+    settler: { hoogte, positieInLaag },
+    settlerActieGedaanDitBeurt: kostGeenActie ? state.settlerActieGedaanDitBeurt : true,
+  };
 }
 
 // Legt een weg aan op het vakje waar de settler nu staat (hoofdstuk 16): geen
@@ -1211,7 +1351,10 @@ export function legWegAan(state: GameState): GameState {
     return { ...l, tiles };
   });
 
-  return { ...state, lagen, settlerActieGedaanDitBeurt: true };
+  // "B1. Het wiel" (hoofdstuk 3/9, techTree.ts): wegaanleg kost dan geen
+  // aparte settler-actie meer.
+  const kostGeenActie = settlerWegaanlegGratis(state.technologieen);
+  return { ...state, lagen, settlerActieGedaanDitBeurt: kostGeenActie ? state.settlerActieGedaanDitBeurt : true };
 }
 
 // Jaagt op de kudde waar de settler nu op staat (hoofdstuk 16/17, issue:
@@ -1236,7 +1379,11 @@ export function jaag(state: GameState): GameState {
   if (!laag || !tile?.kudde) return state;
 
   const beurtenResterend = tile.kudde.beurtenResterend - 1;
-  const roofdierVerschijnt = hoogte >= ROOFDIER_MIN_LAAG && Math.random() < ROOFDIER_KANS;
+  // "B2. Speerwerper" / "B2a. Boogschieten" (hoofdstuk 3/9, techTree.ts):
+  // verlagen de roofdier-kans (`roofdierKansFactor`); "B. Het spoor lezen" /
+  // "B2a. Boogschieten" verhogen de jachtopbrengst (`jachtVoedselBonus`).
+  const roofdierVerschijnt =
+    hoogte >= ROOFDIER_MIN_LAAG && Math.random() < ROOFDIER_KANS * roofdierKansFactor(state.technologieen);
 
   const lagen = state.lagen.map((l) => {
     if (l.hoogte !== hoogte) return l;
@@ -1259,7 +1406,7 @@ export function jaag(state: GameState): GameState {
   return {
     ...state,
     lagen,
-    voedsel: state.voedsel + KUDDE_VOEDSEL_PER_BEURT,
+    voedsel: state.voedsel + KUDDE_VOEDSEL_PER_BEURT + jachtVoedselBonus(state.technologieen),
     settlerActieGedaanDitBeurt: true,
     roofdierEvent,
   };
@@ -1506,7 +1653,10 @@ export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
 // aftellen (vandaar vóór de productiestap hieronder) — dan productie van
 // alle (incl. deze beurt net voltooide) actieve improvements (incl.
 // voedselverbruik en cultuur), dan laag-ontgrendeling op basis van die
-// cultuur (M5), dan pas verval op basis van een dreigend voedseltekort (M6)
+// cultuur (M5), dan de technologie-boom op basis van diezelfde-beurt
+// wetenschap (hoofdstuk 3/9, `verwerkTechDrempel` — opent hoogstens één
+// keuze-pop-up per aanroep, ontgrendelt niet automatisch zoals cultuur), dan
+// pas verval op basis van een dreigend voedseltekort (M6)
 // (issue: "eerst de grondstoffen binnenkomen, en daarna wordt gecheckt of je
 // afgaat" — een tile/weg die deze beurt klaarkomt telt zo al mee vóór de
 // instort-check), dan de civiele stadsbouwwachtrij (M6/hoofdstuk 16: groei óf
@@ -1527,7 +1677,8 @@ export function volgendeBeurt(state: GameState): GameState {
   const naBouw = verwerkBouwwachtrij(naUitputting);
   const naProductie = verwerkProductie(naBouw);
   const naOntgrendeling = verwerkLaagOntgrendeling(naProductie);
-  const naVerval = verwerkVerval(naOntgrendeling);
+  const naTechDrempel = verwerkTechDrempel(naOntgrendeling);
+  const naVerval = verwerkVerval(naTechDrempel);
   if (naVerval.laatsteIneenstorting) return naVerval;
 
   const naCiviel = verwerkCivielInAanbouw(naVerval);

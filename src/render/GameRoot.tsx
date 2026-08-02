@@ -22,6 +22,7 @@ import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
 import SpelActiesMenu from "@/components/SpelActiesMenu";
 import StichtStadPopup from "@/components/StichtStadPopup";
 import StrijderBemanPopup from "@/components/StrijderBemanPopup";
+import TechKeuzePopup from "@/components/TechKeuzePopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
 import UitlegPopup from "@/components/UitlegPopup";
@@ -85,6 +86,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     bemanWachttoren,
     haalStrijderTerug,
     zetUitlegPopups,
+    kiesTech,
     opslaan,
     laden,
   } = useGameEngine();
@@ -395,6 +397,22 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonIndringersPopup &&
     !toonKuddePopup &&
     Boolean(state.roofdierEvent);
+  // Technologie-keuze-pop-up (hoofdstuk 3/9/11, issue: "tech tree toevoegen"
+  // Deel 2) — verschijnt zodra `verwerkTechDrempel` (economie.ts) een drempel
+  // bereikt heeft. Net als de indringers-/kudde-/roofdier-pop-ups hierboven
+  // los van de uitleg-toggle (kerninhoud, geen uitleg) en niet wegklikbaar
+  // zonder te kiezen.
+  const toonTechKeuzePopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonMilitairUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    Boolean(state.techKeuzeEvent);
   // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
   // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
   // "confrontatie op laag 12 gewonnen" als trigger: het stichten is nu het
@@ -409,6 +427,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
+    !toonTechKeuzePopup &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
   // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
@@ -516,6 +535,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonRoofdierPopup && state.roofdierEvent && (
           <RoofdierPopup event={state.roofdierEvent} onSluiten={sluitRoofdierMelding} />
         )}
+        {toonTechKeuzePopup && state.techKeuzeEvent && (
+          <TechKeuzePopup
+            drempel={state.techKeuzeEvent.drempel}
+            opties={state.techKeuzeEvent.opties}
+            onKiesTech={kiesTech}
+          />
+        )}
         {toonUitlegPopup && <UitlegPopup onDoorgaan={() => setOpeningsUitlegBevestigd(true)} />}
         {toonSettlerUitlegPopup && <SettlerUitlegPopup onDoorgaan={() => setSettlerUitlegBevestigd(true)} />}
         {toonVoedselWaarschuwingPopup && (
@@ -573,6 +599,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           laag={actieveLaag}
           alleLagen={state.lagen}
           beurt={state.beurt}
+          technologieen={state.technologieen}
           zichtbaar={
             !toonLaagPopup &&
             !toonUitlegPopup &&
@@ -583,6 +610,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonIndringersPopup &&
             !toonKuddePopup &&
             !toonRoofdierPopup &&
+            !toonTechKeuzePopup &&
             !toonTutorialVoltooidPopup &&
             !strijderBemanPopupStrijderId &&
             !wachttorenKiesModusStrijderId &&

@@ -28,6 +28,9 @@ function effectBeschrijving(improvement: Improvement, opFrontier = true): string
   if (effect.type === "verdediging" && effect.waarde) {
     return `Geeft +${effect.waarde} verdediging bij een militaire confrontatie, en beschermt deze hele laag tegen indringers-tribuut.`;
   }
+  if (effect.type === "opslag" && effect.waarde) {
+    return `Verhoogt de opslag-cap met +${effect.waarde}, direct bij voltooiing.`;
+  }
   if (effect.type === "stad") {
     return "Het centrum van je nederzetting.";
   }
@@ -127,7 +130,7 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
     titel: "Leeg vakje",
     ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
     tekst: (opFrontier
-      ? "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond. Heiligdommen en wachttorens kunnen overal geplaatst worden."
+      ? "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond. Heiligdommen, sterrencirkels en wachttorens kunnen overal geplaatst worden."
       : "Dit is niet meer de frontier-laag, dus hier is alleen nog een Wachttoren te bouwen — die mag, als uitzondering, op elke ontgrendelde laag geplaatst worden.") + versWaterTekst,
   };
 }

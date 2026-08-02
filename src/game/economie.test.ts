@@ -5,6 +5,7 @@ import {
   heeftGenoegVoorStichten,
   jaag,
   kanStichten,
+  kiesTech,
   maakInitieleSpelStatus,
   OPSLAG_CAP,
   resterendeBouwBeurten,
@@ -16,7 +17,8 @@ import {
   verplaatsSettlerNaar,
   volgendeBeurt,
 } from "./economie";
-import { ECONOMISCH_LAND_IMPROVEMENTS, MILITAIR_LAND_IMPROVEMENTS, SOLDAAT } from "./improvements";
+import { ECONOMISCH_LAND_IMPROVEMENTS, MILITAIR_LAND_IMPROVEMENTS, SOLDAAT, STERRENCIRKEL } from "./improvements";
+import { wetenschapKostenVoorDrempel } from "./techTree";
 import { GameState } from "./types";
 
 // Vervangt `Math.random` tijdelijk door een vaste waarde, zodat de
@@ -359,4 +361,124 @@ test("verwerkKuddes meldt een nieuwe kudde via kuddeEvent", () => {
   const gemeldeLaag = state.lagen.find((l) => l.hoogte === state.kuddeEvent!.hoogte)!;
   const tile = gemeldeLaag.tiles[state.kuddeEvent!.positieInLaag];
   assert.deepEqual(tile.kudde, { beurtenResterend: 4 });
+});
+
+// Bouwt een startstatus met een actieve, wegverbonden Sterrencirkel op de
+// frontier-laag (laag 1) — gedeelde opzet voor de technologie-boom-tests
+// hieronder, zelfde patroon als `metWerkendeEconomie` hierboven.
+function metWerkendeSterrencirkel(): GameState {
+  const state = maakInitieleSpelStatus();
+  return {
+    ...state,
+    lagen: state.lagen.map((laag, idx) =>
+      idx !== 0
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((tile) => {
+              if (tile.positieInLaag === 2) {
+                return { ...tile, status: "actief" as const, improvement: STERRENCIRKEL, heeftWeg: true };
+              }
+              // Bruggetje naar de stad-tile (positie 4): zonder dit tussenliggende
+              // wegvakje is positie 2 niet daadwerkelijk verbonden (zie wegen.ts).
+              if (tile.positieInLaag === 3) {
+                return { ...tile, heeftWeg: true };
+              }
+              return tile;
+            }),
+          }
+    ),
+  };
+}
+
+test("een Sterrencirkel produceert wetenschap per beurt zonder uit te putten", () => {
+  let state = metWerkendeSterrencirkel();
+  const tile = () => state.lagen[0].tiles[2];
+
+  assert.equal(tile().beurtenTotUitputting, undefined, "de Sterrencirkel put niet uit");
+
+  state = volgendeBeurt(state);
+  assert.equal(state.wetenschap, STERRENCIRKEL.effect.waarde);
+  assert.equal(tile().status, "actief", "blijft actief in plaats van ooit een ghost town te worden");
+
+  state = volgendeBeurt(state);
+  assert.equal(state.wetenschap, (STERRENCIRKEL.effect.waarde ?? 0) * 2);
+});
+
+test("bij drempel 1 opent een technologie-keuze met de twee vaste startrichtingen", () => {
+  let state = metWerkendeSterrencirkel();
+  const beurtenTotDrempel1 = Math.ceil(wetenschapKostenVoorDrempel(1) / (STERRENCIRKEL.effect.waarde ?? 1));
+
+  for (let i = 0; i < beurtenTotDrempel1; i++) {
+    assert.equal(state.techKeuzeEvent, undefined, `nog geen keuze vóór drempel 1 (beurt ${i})`);
+    state = volgendeBeurt(state);
+  }
+
+  assert.deepEqual(state.techKeuzeEvent, { drempel: 1, opties: ["vuur-temmen", "spoor-lezen"] });
+  assert.equal(state.technologieen.length, 0, "nog niets gekozen, alleen de keuze staat open");
+});
+
+test("kiesTech legt de keuze vast en het niet-gekozen pad blijft daarna onbereikbaar bij de volgende drempel", () => {
+  let state = metWerkendeSterrencirkel();
+  state = { ...state, wetenschap: wetenschapKostenVoorDrempel(1) };
+  state = volgendeBeurt(state);
+  assert.deepEqual(state.techKeuzeEvent?.opties, ["vuur-temmen", "spoor-lezen"]);
+
+  // Een ongeldige keuze (niet één van de twee getoonde opties) heeft geen effect.
+  const naOngeldigeKeuze = kiesTech(state, "wiel");
+  assert.equal(naOngeldigeKeuze, state);
+
+  state = kiesTech(state, "vuur-temmen");
+  assert.deepEqual(state.technologieen, ["vuur-temmen"]);
+  assert.equal(state.techKeuzeEvent, undefined);
+
+  // Drempel 2 vanuit "vuur-temmen" toont alleen A1/A2 — nooit B1/B2 (het
+  // pad onder "spoor-lezen" is nu permanent onbereikbaar deze run).
+  state = { ...state, wetenschap: wetenschapKostenVoorDrempel(2) };
+  state = volgendeBeurt(state);
+  assert.deepEqual(state.techKeuzeEvent, { drempel: 2, opties: ["aardewerk", "zaadselectie"] });
+});
+
+test('"weven" verhoogt de opslag-cap direct bij het kiezen, zonder wachtrij of wegverbinding', () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, technologieen: ["vuur-temmen", "aardewerk"], techKeuzeEvent: { drempel: 3, opties: ["weven", "kalkoven"] } };
+
+  state = kiesTech(state, "weven");
+
+  assert.deepEqual(state.technologieen, ["vuur-temmen", "aardewerk", "weven"]);
+  assert.equal(state.opslagCap, OPSLAG_CAP + 10);
+});
+
+test('"vuur-temmen" verhoogt de boerderij-opbrengst met 20%', () => {
+  let state = maakInitieleSpelStatus();
+  const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag, idx) =>
+      idx !== 0
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((tile) => {
+              if (tile.positieInLaag === 0) {
+                return { ...tile, status: "actief" as const, improvement: BOERDERIJ, heeftWeg: true };
+              }
+              // Bruggetje naar de stad-tile (positie 4), zie ook hierboven.
+              if ([1, 2, 3].includes(tile.positieInLaag)) {
+                return { ...tile, heeftWeg: true };
+              }
+              return tile;
+            }),
+          }
+    ),
+  };
+
+  const zonderTech = volgendeBeurt(state);
+  const voedselZonderTech = zonderTech.voedsel - state.voedsel;
+
+  state = { ...state, technologieen: ["vuur-temmen"] };
+  const metTech = volgendeBeurt(state);
+  const voedselMetTech = metTech.voedsel - state.voedsel;
+
+  assert.ok(voedselMetTech > voedselZonderTech, "de boerderij-opbrengst met 'vuur-temmen' moet hoger liggen");
 });

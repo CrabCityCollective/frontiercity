@@ -32,8 +32,8 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 
 | Categorie | City improvement (vb.) | Land improvement (vb.) | Unit | Relic (permanent, bij specialisatie) |
 |---|---|---|---|---|
-| **Economisch** | Markt, opslagplaats | Boerderij, mijn, houtkap | Karavaan | Goedkopere improvements in elke volgende stad |
-| **Wetenschappelijk** | Bibliotheek, observatorium, universiteit | Onderzoekspost | Verkenner (tijdelijke extra vooruitkijk) | Permanent groter vooruitkijk-bereik |
+| **Economisch** | Markt, opslagplaats | Boerderij, mijn, houtkap, (met "aardewerk"-tech) Voorraadkuil | Karavaan | Goedkopere improvements in elke volgende stad |
+| **Wetenschappelijk** | Bibliotheek, observatorium, universiteit | Sterrencirkel (produceert wetenschap, put niet uit — zie hoofdstuk 4/6) | Verkenner (tijdelijke extra vooruitkijk) | Permanent groter vooruitkijk-bereik |
 | **Militair** | Barakken, muur, wapensmid | Wachttoren (verdedigt de hele laag tegen indringers, put niet uit — zie hoofdstuk 6) | Soldaat, ruiter, artillerie | Extra unit-slot / gratis startgarnizoen |
 | **Civiel** | Aquaduct, riolering, woonwijk (= groei-tiers) | Weg, brug | Ingenieur (versnelt bouw) | Snellere groei-rijptijd in volgende steden |
 | **Cultureel** | Tempel, amfitheater, monument | Heiligdom (put niet uit; volle cultuur alleen op de frontier-laag, anders de helft — zie hoofdstuk 6) | Missionaris/diplomaat (voor pushback) | Korting op cultuurkosten voor nieuwe lagen |
@@ -41,7 +41,8 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - "Weg" uit de tabel hierboven is voor de MVP geen gewone, met een categorie-keuze te bouwen land improvement meer, maar een apart settler-mechanisme — zie hoofdstuk 16. "Brug" blijft, net als de rest van de post-MVP-scope, voorlopig ongebouwd.
 - Pool-grootte per categorie (basisversie): 6-8 city improvements, 4-6 land improvement-types, 2-3 units.
 - Latere campagnes vervangen een deel van de generieke opties door thema-specifieke varianten.
-- **Terrein-eisen**: sommige land improvements zijn beperkt tot een vakje-terreinsubtype (hoofdstuk 2) — houtkap alleen op **bos**, mijn en steengroeve alleen op **heuvel of berg**, boerderij alleen op **vlakke grond**. Overige land improvements (heiligdom, wachttoren) hebben geen terrein-eis. Zie hoofdstuk 11 voor de reden achter deze keuze.
+- **Terrein-eisen**: sommige land improvements zijn beperkt tot een vakje-terreinsubtype (hoofdstuk 2) — houtkap alleen op **bos**, mijn en steengroeve alleen op **heuvel of berg**, boerderij alleen op **vlakke grond**, Voorraadkuil alleen op **vlakke grond**. Overige land improvements (heiligdom, sterrencirkel, wachttoren) hebben geen terrein-eis. Zie hoofdstuk 11 voor de reden achter deze keuze.
+- **Wetenschap in de MVP** (issue: "tech tree toevoegen"): de wetenschap-relic uit de tabel hierboven ("permanent groter vooruitkijk-bereik") blijft, net als de Verkenner-unit, een latere post-MVP-uitwerking (hoofdstuk 13: "vooruitkijk-mechaniek verder dan 1 laag"). De MVP-functie van wetenschap is in plaats daarvan de **technologie-boom** (hoofdstuk 9/11/13/14): 3 drempels van elk 2 keuzes, geproduceerd door de Sterrencirkel.
 
 ---
 
@@ -50,7 +51,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - **Stadsgrootte**: klein → middel → groot. Elke tier kost een civiel improvement + rijptijd (geen instant-klik).
 - Hoe groter de tier, hoe meer **relic-slots** (specialisatie-bonussen) je kunt vullen — maar hoe langer je blijft, hoe verder het omliggende land uitput.
 - **Land improvements putten uit** (per type verschillende snelheid — mijnen sneller dan boerderijen), en worden daarna permanent **ghost-town-tiles**: onbebouwbaar, maar met kleine passieve culturele waarde en een rol in flavor-teksten aan het einde van een run. De teller telt pas af zodra het vakje daadwerkelijk **actief-producerend** is — dus gebouwd én via een wegverbinding met de stad verbonden (hoofdstuk 16). Staat een improvement nog te wachten op zijn wegverbinding, dan blijft de teller stilstaan: geen productie betekent geen uitputting.
-- **Uitzondering: Wachttoren en Heiligdom putten niet uit.** Ze blijven permanent actief in plaats van ooit een ghost-town-tile te worden — allebei zijn een structurele, doorlopende aanwezigheid (wachtpost, cultusplek) in plaats van een verbruikende oogst zoals een mijn of boerderij. Zie hoofdstuk 6 voor wat ze in plaats daarvan wél doen (indringers afweren, cultuur produceren).
+- **Uitzondering: Wachttoren, Heiligdom en Sterrencirkel putten niet uit.** Ze blijven permanent actief in plaats van ooit een ghost-town-tile te worden — alledrie zijn een structurele, doorlopende aanwezigheid (wachtpost, cultusplek, sterrenobservatorium) in plaats van een verbruikende oogst zoals een mijn of boerderij: er is geen fysieke grondstof die opraakt. Zie hoofdstuk 6 voor wat ze in plaats daarvan wél doen (indringers afweren, cultuur produceren, wetenschap produceren).
 - **Voedsel is de directe trigger van verval, niet landuitputting zelf**: een stad verbruikt elke beurt voedsel (hoe groter de tier, hoe meer monden), tegenover de voedselproductie van actieve, wegverbonden boerderijen. Dreigt die voorraad — bij het huidige tempo — binnen een paar beurten op te raken, dan verschijnt een **zichtbare waarschuwingsstatus** ("kritiek"); bouw je op tijd bij (extra boerderij, wegverbinding), dan wordt de status weer gezond. Landuitputting draagt hier alleen **indirect** aan bij: minder producerende tiles zetten de voedselbalans onder druk, maar veroorzaken zelf geen instorting meer.
 - **Reageer je op tijd** (vertrekken/relics oogsten): je behoudt alles wat je tot dan toe hebt verdiend.
 - **Negeer je het**: kans op volledige ineenstorting — **ook de relics van eerder voltooide tiers gaan dan verloren** (permadeath-risico op stadsniveau). Dit is de centrale risk/reward-gok van elke stad-episode.
@@ -72,7 +73,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 
 **Voortgangs-valuta (geen opslag/cap, cumulatieve teller richting drempel):**
 - **Cultuur** → laag-ontgrendeling
-- **Wetenschap** → vooruitkijk-bereik
+- **Wetenschap** → technologie-boom (3 drempels van elk 2 keuzes, permanente effecten — hoofdstuk 3/9/11/14; het vooruitkijk-bereik uit een eerdere versie van dit document is post-MVP, hoofdstuk 13)
 
 **Bouwen**: geen instant-klik, maar een productiewachtrij — verbruikt elke beurt bouwmateriaal tot voltooiing. Hogere materiaalinkomsten = snellere bouw. Ingenieur-unit versnelt dit extra. Militair heeft bewust géén eigen valuta: puur directe krachtsvergelijking op het moment zelf.
 
@@ -104,6 +105,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 **Heiligdom & de frontier:**
 - Een Heiligdom produceert onbeperkt cultuur, ook nadat de frontier verder omhoog is getrokken — het put, net als de Wachttoren, niet uit (hoofdstuk 4).
 - Alleen als het Heiligdom op de frontier-laag zelf staat, levert het de volle opbrengst; op elke laag daaronder levert het nog maar de **helft**. Dat beeldt uit dat een Heiligdom vooral nabije, nog niet "eigen" stammen omtovert tot de eigen stam — een effect dat afneemt naarmate de laag verder van het actieve grensgebied af komt te liggen.
+- De **Sterrencirkel** (hoofdstuk 3/9, issue: "tech tree toevoegen") volgt voor wetenschap exact hetzelfde patroon: onbeperkte productie, put niet uit, volle opbrengst op de frontier-laag en de helft daaronder — dezelfde reden (nabije observatie/kennis weegt zwaarder dan een verre).
 
 ---
 
@@ -191,7 +193,7 @@ Eén nieuw mechaniek per laag, oplopend:
 | 3-4 | Drie bouwmaterialen (hout/steen/erts) |
 | 5 | Uitputting (laagdrempelig voorbeeld) |
 | 6-7 | Cultuur → laag ontgrendelen |
-| 8 | Vooruitkijk-bereik |
+| 8 | Wetenschap → technologie kiezen (drempel 1 van de technologie-boom, hoofdstuk 3/9/14) |
 | 9 | Zeldzaamheid (verborgen tot bouwen) |
 | 10 | Groei-gok |
 | 11 | Waarschuwingssignaal bij verval (gescript, ongevaarlijk) |
@@ -278,6 +280,12 @@ Een wachtpost die alleen bouwmateriaal en bouwtijd kost, maar daarna niets meer,
 **Vertakkende verhaalstructuur met een gedeelde slotscène i.p.v. volledig lineair of volledig random**
 Volledig vaste verhaalmomenten (altijd dezelfde gebeurtenis op dezelfde laag) zouden na een paar runs voorspelbaar worden; volledig random getrokken gebeurtenissen zouden geen samenhangend verhaal opbouwen. Een keuzeboom met een paar vaste ankerpunten (waarvan de invulling reageert op eerdere keuzes) geeft het gevoel van een reagerend verhaal, terwijl het aantal te schrijven scenario's beheersbaar blijft — mede mogelijk gemaakt door bij het laatste ankerpunt de paden samen te laten komen in één kernscène met tonale varianten, in plaats van vier volledig aparte eindes.
 
+**Wetenschap als vertakkende, onomkeerbare technologie-boom i.p.v. los vooruitkijk-bereik (issue: "tech tree toevoegen")**
+Wetenschap had tot deze issue geen enkele functie in de MVP: de bijbehorende bron (een land improvement die wetenschap produceert) ontbrak volledig, en het enige voorziene effect (vooruitkijk-bereik) is bewust post-MVP (hoofdstuk 13). In plaats van dat losse vooruitkijk-effect alvast half te bouwen, krijgt wetenschap dezelfde vertakkende, permanent-onomkeerbare keuzelogica als de Anker-verhalen (hoofdstuk 9): op elke drempel kiest de speler één van twee technologieën, en het niet-gekozen pad — inclusief alles wat daaronder in de boom hangt — is voor de rest van de run blijvend ontoegankelijk. Dat is bewuste consistentie in ontwerptaal (twee systemen die aanvoelen als variaties op hetzelfde patroon, in plaats van twee losse mechanieken die toevallig allebei "kiezen" heten) en versterkt tegelijk het rogue-like karakter: net als bij een Anker-keuze bouwt de speler binnen één run een onherhaalbare combinatie van technologieën op.
+
+**Wetenschapscurve bewust zwaarder dan de cultuurcurve (issue: "tech tree toevoegen")**
+Cultuur koopt eenmalige toegang tot een laag — een keer betaald, geen blijvend voordeel behalve de toegang zelf. Elke technologie in de boom hierboven levert daarentegen een **permanente, structurele** bonus op (een boerderij die voorgoed 20% meer opbrengt, een opslag-cap die voorgoed +10 is, een leger dat voorgoed sterker vecht) — een stapelend voordeel voor de rest van de run, niet een eenmalige drempel. Die grotere waarde per aankoop rechtvaardigt een hogere prijs: zowel de basisterm als de kwadratische factor van de wetenschapskosten (hoofdstuk 14) liggen boven die van de cultuurkosten, met een verschil dat oploopt naarmate de speler dieper de boom in gaat — passend bij hoe ook de bonussen zelf zwaarder worden (drempel 3 stapelt op drempel 1 en 2).
+
 **Echte historische inspiratie i.p.v. fictieve samengestelde facties**
 Er is bewust gekozen om echte historische volken en leiders te gebruiken als inspiratiebron, met volledige creatieve vrijheid voor de ontwerper om zelf te bepalen hoeveel historische nauwkeurigheid wordt aangehouden. Dit sluit aan bij de achtergrond en voorkeur van de ontwerper, en geeft de campagnes meer historisch gewicht dan volledig verzonnen namen zouden bieden.
 
@@ -357,10 +365,12 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 - **Opslagplaats** (hoofdstuk 3/5/11/14, economische city improvement): verhoogt de gedeelde opslag-cap met +20, herhaalbaar. Eigen wachtrij, los van de civiele wachtrij hieronder.
 - **Stad stichten** (hoofdstuk 2/10/16): op een vakje aan vers water waar de settler fysiek staat, met een bevestigingswaarschuwing (de settler verdwijnt hierbij — "de huifkar wordt de stad"). Vervangt "bereik laag 12" als tutorial-einddoel; opent daarna de afsluitende scène en het campagnemenu. Nog **geen** volledige frontier-verplaatsing (dat blijft hieronder uitgesteld).
 - **Nieuwe settler in de civiele improvement-pool** (hoofdstuk 3/11): concurreert met de groei-tier-improvement (hoogstens één van de twee tegelijk in aanbouw). Alleen beschikbaar als het huidige aantal settlers lager is dan het aantal gestichte steden.
+- **Sterrencirkel** (hoofdstuk 3/4/6/14, wetenschappelijk land improvement, issue: "tech tree toevoegen"): produceert wetenschap per beurt, put niet uit (zelfde patroon als het Heiligdom), pas actief na wegverbinding zoals elk ander land improvement.
+- **Technologie-boom** (hoofdstuk 3/9/11/14, issue: "tech tree toevoegen"): 3 drempels van elk 2 keuzes, permanent vertakkend zoals de Anker-verhalen — zie techTree.ts voor de volledige boom en effecten.
 
 **Nog niet in de MVP** (bewust uitgesteld tot de kernloop staat):
 - Meerdere steden/frontier-verplaatsing
-- Vooruitkijk-mechaniek verder dan 1 laag
+- Vooruitkijk-mechaniek verder dan 1 laag (de wetenschap-relic uit hoofdstuk 3 — wetenschap zelf krijgt in de MVP een andere functie, de technologie-boom hieronder)
 - Culturele pushback-diplomatie
 - Zeldzaamheid (rijk/legendarisch) en het oogst-tijdvenster
 - Volledige Amerikaanse campagne-content (ankers, vertakkingen)
@@ -375,6 +385,17 @@ type ResourceType = "hout" | "steen" | "erts" | "goud" | "voedsel" | "cultuur" |
 // van het terreintype van de hele laag (Layer.terreinType hieronder).
 type TerreinType = "vlak" | "bos" | "heuvel" | "berg";
 
+// Technologie-boom (hoofdstuk 3/9/11/13/14, issue: "tech tree toevoegen"): elke
+// sleutel is functioneel (het effect), los van naam/flavor-tekst — dezelfde
+// herbruikbare aanpak per campagne als `CampaignConfig.tegelSet` hieronder.
+// De boomvorm (welke tech onder welke ouder hangt, 3 drempels van elk 2
+// keuzes) staat vast in techTree.ts, niet in dit type.
+type TechId =
+  | "vuur-temmen" | "spoor-lezen"
+  | "aardewerk" | "zaadselectie" | "wiel" | "speerwerper"
+  | "weven" | "kalkoven" | "veeteelt" | "voorraadschuur" | "vlotten" | "handkar" | "boogschieten" | "verharde-speren";
+type TechDrempel = 1 | 2 | 3;
+
 interface Improvement {
   id: string;
   naam: string;
@@ -384,9 +405,10 @@ interface Improvement {
   bouwtijdBeurten: number;
   effect: EffectDefinition; // resource-productie, unlock, bonus, etc.
   zeldzaamheid?: "gewoon" | "rijk" | "legendarisch"; // alleen relevant voor land-improvements, post-MVP
-  uitputtingBeurten?: number; // alleen land-improvements; `undefined` voor Wachttoren/Heiligdom (hoofdstuk 4/6: putten niet uit)
+  uitputtingBeurten?: number; // alleen land-improvements; `undefined` voor Wachttoren/Heiligdom/Sterrencirkel (hoofdstuk 4/6: putten niet uit)
   terreinEisen?: TerreinType[]; // alleen land-improvements; geen eis = overal plaatsbaar (hoofdstuk 3/11)
   bouwbaarBuitenFrontier?: boolean; // uitzondering op "alleen op de frontier-laag" (hoofdstuk 6/11); momenteel alleen Wachttoren
+  vereisteTech?: TechId; // alleen beschikbaar nadat deze tech gekozen is (hoofdstuk 3/9); momenteel alleen de Voorraadkuil
 }
 
 interface Tile {
@@ -438,6 +460,13 @@ interface City {
 // hoofdstuk 2/10 komt daar een optionele `stadGesticht`-vlag bij, gezet
 // zodra de speler een nieuwe stad heeft gesticht — dit vervangt "laag 12
 // bereikt" als tutorial-einddoel-trigger.
+//
+// Technologie-boom (hoofdstuk 3/9/11/14, issue: "tech tree toevoegen"):
+// GameState krijgt daarnaast `wetenschap` (voortgangs-valuta, zelfde patroon
+// als `cultuur`), `technologieen: TechId[]` (gekozen technologieën, in
+// volgorde — `technologieen.length` is tegelijk de laatst opgeloste drempel)
+// en een optionele `techKeuzeEvent: { drempel: TechDrempel; opties: [TechId, TechId] }`
+// (dezelfde blokkerende meldings-vorm als `IndringersEvent` hieronder).
 
 // Wachttoren-bemanning (hoofdstuk 6): `City` krijgt een `strijders`-lijst
 // i.p.v. één opgetelde legerwaarde-getal — elke opgeleide Soldaat is
@@ -469,6 +498,7 @@ interface CampaignConfig {
   tegelSet: string; // asset-map referentie
   multipliers: Partial<{ uitputtingssnelheid: number; pushbackFrequentie: number; zeldzaamheidLegendarisch: number }>;
   ankers?: StoryAnchor[]; // post-MVP
+  techNamen?: Partial<Record<TechId, string>>; // per-campagne naam-override voor de technologie-boom (hoofdstuk 3/9), zelfde aanpak als `tegelSet`
 }
 ```
 
@@ -502,6 +532,7 @@ De tabel hieronder geeft de huidige stand van de implementatie weer (gecontrolee
 | M10 | Wegen & settler | Settler-eenheid + verplaatsing, wegen aanleggen, bouw-ritme (1 nieuw project per 3 beurten), resource-activatie via wegverbinding, uitleg-pop-up bij beurt 2 (hoofdstuk 16) | Klaar |
 | M11 | Kuddes, settler-jacht & beurt-waarschuwing | Wilde kuddes vanaf laag 4, settler-jacht (voedsel) en settler-houtkap (hout) als extra settler-acties, waarschuwing-pop-up bij "Volgende beurt" zolang de settler of de bouwkeuze nog iets te doen heeft (hoofdstuk 11/17) | Klaar |
 | M12 | Stad stichten | Vers-water-vakjes (gegarandeerd tussen laag 10-12), Opslagplaats-improvement, doorgerekende stichtingskosten, settler-in-de-civiele-pool (max 1 per gestichte stad), stichtingsbevestiging + afsluitende tutorial-scène als nieuw einddoel (hoofdstuk 2/3/10/11/14/16) | Klaar |
+| M13 | Technologie-boom & Sterrencirkel | Sterrencirkel-improvement (wetenschap, put niet uit), vertakkende 3-drempel technologie-boom met permanente effecten, tech-keuze-pop-up, doorgerekende drempelkosten (hoofdstuk 3/4/6/9/11/13/14) | Klaar |
 
 Elke milestone is bewust klein genoeg om als losse Claude Code-taak opgepakt te worden.
 
@@ -564,6 +595,28 @@ Het aantal beurten per laag loopt zo geleidelijk op (ruwweg 2× van vroeg- naar 
 | 4 | 48 | ~36 | ~42 |
 
 Twee dingen volgen hieruit. Eén: de trage start heeft inderdaad **deels een andere oorzaak** dan de kostenformule (issue-punt 4) — de ~13 beurten tot het eerste Heiligdom zijn een gevolg van de grondstofketen, het bouw-ritme en de wegaanleg, niet van de cultuurdrempel, en geen enkele drempelverlaging brengt laag 2 onder die ~13 beurten. Dat is precies waarom de basisterm hierboven is verlaagd in plaats van op nul gezet: verder verlagen zou de drempel zelf triviaal maken zonder dat eerste, onvermijdelijke wachten te verkorten. Twee: bóven die vloer van ~13 beurten scheelt de nieuwe formule wel degelijk fors — laag 2 valt van ~22 naar ~16 beurten, dus van ~9 naar ~3 beurten ná het eerste Heiligdom, ruim binnen een handvol beurten zoals de issue vraagt.
+
+**Technologie-boom & Sterrencirkel (hoofdstuk 3/9/11/13, issue: "tech tree toevoegen")**
+
+*Sterrencirkel*: **6 hout, 2 steen**, bouwtijd **2 beurten** — vergelijkbaar bouwprofiel als het Heiligdom (4 hout, 4 steen, 2 beurten, hoofdstuk 3), maar verschoven naar "vooral hout, een beetje steen" zoals gevraagd; hetzelfde totaal (8) en dezelfde bouwtijd, alleen de verhouding wijkt af. Opbrengst **2 wetenschap/beurt**, exact hetzelfde patroon als het Heiligdom voor cultuur (hoofdstuk 6): geen uitputting, volle opbrengst op de frontier-laag, de helft daaronder.
+
+*Drempelkosten*: `kosten(drempel) = 10 + 10 × (drempel-1)²` — drempel 1 = 10, drempel 2 = 20, drempel 3 = 50. Afgeweken van het voorstel in het issue (`8 + 5 × (drempel-1)²`, drempel 1/2/3 = 8/13/28): bij een near-optimale opening levert dat voorstel een curve op die de cultuurcurve (hieronder) nauwelijks trager haalt — met een basisterm en kwadratische factor die allebei maar net boven cultuur (3 en 5) uitkomen, groeit het verschil tussen de twee curves te langzaam om "merkbaar" te blijven voorbij de eerste drempel (zie de doorrekening hieronder). Zowel de basisterm als de kwadratische factor zijn daarom naar **10** gezet.
+
+| Drempel | Wetenschapskosten (cumulatief) |
+|---|---|
+| 1 | 10 |
+| 2 | 20 |
+| 3 | 50 |
+
+*Doorrekening tegen de Sterrencirkel-opbrengst*: met dezelfde near-optimale opening als de cultuur-doorrekening hierboven (Houtkap → Boerderij → Steengroeve → Heiligdom, actief rond beurt 10-13) is het bouw-ritme (hoofdstuk 16: 1 nieuw project per 3 beurten) na het Heiligdom vrij voor een Sterrencirkel — met dezelfde bouwtijd en wegaanleg-tijd als het Heiligdom komt die rond **beurt 17** actief. Vanaf dan loopt wetenschap met 2/beurt op (één Sterrencirkel op de frontier):
+
+| Drempel | Wetenschapskosten | Beurt bereikt (indicatief) | Vergelijkbare cultuurlaag | Beurt bereikt (cultuur, indicatief) |
+|---|---|---|---|---|
+| 1 | 10 | ~22 | laag 2 (8) | ~16 |
+| 2 | 20 | ~27 | laag 3 (23) | ~24 |
+| 3 | 50 | ~42 | laag 4 (48) | ~36 |
+
+Het verschil met de vergelijkbare cultuurlaag loopt op van ~6 naar ~9 beurten — een oplopend, dus **merkbaar** tempoverschil, precies zoals het issue vraagt ("wetenschap moet spelbaar merkbaar trager gaan dan cultuur"), zonder dat de boom onbereikbaar wordt: drempel 3 valt ruim vóór het einde van de 12 tutorial-lagen (de cultuurkosten lopen daar al op tot 400-600, zie de cultuurkosten-tabel hierboven — de tutorial duurt dus sowieso veel langer dan 42 beurten). Het zwaardere tempo is bewust: wetenschap levert permanente, structurele bonussen op (een boerderij die voorgoed 20% meer opbrengt, een opslag-cap die voorgoed +10 is) in plaats van eenmalige toegang tot een laag — zie hoofdstuk 11 voor de volledige onderbouwing.
 
 *Opslag-cap (issue: "stad stichten op de frontier" deel 3, doorgerekend tegen de code)*: start op 30, elke Opslagplaats-improvement +20, praktisch maximum ~3-4 opslagplaatsen per stad (~110 totaal). **Correctie op eerdere beschrijving**: dit is in de daadwerkelijke implementatie een cap **per grondstof** (hout/steen/erts/goud elk apart tot 30, niet hun gezamenlijke som) — anders dan "gedeelde opslag" in hoofdstuk 5 en eerdere versies van dit hoofdstuk suggereren. De opslagplaats-waarde (`OPSLAGPLAATS.kosten`, hoofdstuk 3) is **8 hout, 6 steen**, bouwtijd **3 beurten**; het effect (+20 opslag-cap) geldt voor alle vier grondstoffen tegelijk. Deze architectuur is bewust ongewijzigd gelaten bij het doorrekenen van de stichtingskosten hieronder (een refactor naar een echt gedeelde cap is een aparte, grotere wijziging) — in plaats daarvan zijn de stichtingskosten erop afgestemd.
 

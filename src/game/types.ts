@@ -18,6 +18,31 @@ export type Categorie =
   | "civiel"
   | "cultureel";
 
+// Technologie-boom (hoofdstuk 3/9/11/13, issue: "tech tree toevoegen"): 3
+// drempels, elk met 2 keuzes. Elke sleutel is functioneel (het effect), los
+// van naam/flavor-tekst — dezelfde aanpak als `CampaignConfig.tegelSet`
+// hieronder, zodat latere campagnes een eigen naam kunnen geven zonder de
+// boom-structuur of effecten te wijzigen (zie techTree.ts). De boomvorm zelf
+// (welke tech onder welke ouder hangt) staat vast in `techTree.ts` en wordt
+// hier bewust niet herhaald in het type-systeem.
+export type TechId =
+  | "vuur-temmen"
+  | "spoor-lezen"
+  | "aardewerk"
+  | "zaadselectie"
+  | "wiel"
+  | "speerwerper"
+  | "weven"
+  | "kalkoven"
+  | "veeteelt"
+  | "voorraadschuur"
+  | "vlotten"
+  | "handkar"
+  | "boogschieten"
+  | "verharde-speren";
+
+export type TechDrempel = 1 | 2 | 3;
+
 // Terrein-subtype van een los vakje binnen een laag (issue: "grotere
 // verscheidenheid van tiles per laag"). Een laag heeft daarnaast nog steeds
 // een eigen `terreinType`-label (hieronder, op `Layer`) voor de sfeer/flavor
@@ -56,6 +81,11 @@ export interface Improvement {
   // elke ontgrendelde laag kunnen vallen (niet meer alleen de frontier).
   // `undefined`/`false` = de normale frontier-only regel geldt.
   bouwbaarBuitenFrontier?: boolean;
+  // Alleen beschikbaar in de bouw-opties nadat deze tech gekozen is (hoofdstuk
+  // 3/9, Deel 2 van "tech tree toevoegen"): momenteel alleen de Voorraadkuil,
+  // ontgrendeld door "aardewerk". `undefined` = altijd beschikbaar (los van
+  // de technologie-boom), zoals bijna elke andere improvement.
+  vereisteTech?: TechId;
 }
 
 export interface Tile {
@@ -214,6 +244,14 @@ export interface CampaignConfig {
     zeldzaamheidLegendarisch: number;
   }>;
   ankers?: StoryAnchor[]; // post-MVP
+  // Herbruikbaarheid van de technologie-boom per campagne (hoofdstuk 3/9/13,
+  // issue: "tech tree toevoegen"): dezelfde functionele `TechId`-sleutels
+  // (techTree.ts) krijgen per campagne een eigen naam/flavor (bijv. "IJzeren
+  // ploeg" i.p.v. "Vuur temmen" voor een latere campagne), zonder de boom of
+  // effecten te wijzigen — zelfde aanpak als `tegelSet` hierboven. Ontbreekt
+  // een sleutel (of de hele campagne heeft geen override), dan valt
+  // `techNaam()` terug op de tutorial-naam.
+  techNamen?: Partial<Record<TechId, string>>;
 }
 
 // Gedeelde-opslag-grondstoffen (hoofdstuk 5): hout, steen, erts, goud delen
@@ -278,6 +316,24 @@ export interface GameState {
   // cumulatief oplopen (ook voorbij de drempel van de eerstvolgende laag) —
   // zie hoofdstuk 5, "Voortgangs-valuta".
   cultuur: number;
+  // Wetenschap (hoofdstuk 3/5/9/11/13, issue: "tech tree toevoegen"): net als
+  // cultuur een voortgangs-valuta zonder opslag-cap, die niet "uitgegeven"
+  // wordt (hoofdstuk 5) — maar ontgrendelt geen los vooruitkijk-bereik (dat
+  // blijft post-MVP, zie hoofdstuk 13), enkel de technologie-boom hieronder.
+  wetenschap: number;
+  // Gekozen technologieën, in volgorde van drempel (hoogstens 3 — hoofdstuk
+  // 3/9). `technologieen.length` is tegelijk de laatst bereikte, opgeloste
+  // drempel: de eerstvolgende te bereiken drempel is dus altijd
+  // `technologieen.length + 1`. Het niet-gekozen pad op elke drempel (en
+  // alles daaronder) wordt hierdoor vanzelf nooit bereikbaar — dezelfde
+  // permanente vertakkingslogica als de Anker-verhalen (hoofdstuk 9/11).
+  technologieen: TechId[];
+  // Lopende technologie-keuze (hoofdstuk 9/11: dezelfde blokkerende
+  // meldings-vorm als `indringersEvent` hieronder), gezet door
+  // `verwerkTechDrempel` in economie.ts zodra de cumulatieve wetenschap de
+  // eerstvolgende drempel haalt. `undefined` zolang er geen (onopgeloste)
+  // keuze openstaat.
+  techKeuzeEvent?: { drempel: TechDrempel; opties: [TechId, TechId] };
   beurt: number;
   // Resultaat van de laatst afgehandelde militaire confrontatie (M7), voor
   // de UI. `undefined` zolang er nog geen confrontatie heeft plaatsgevonden.
