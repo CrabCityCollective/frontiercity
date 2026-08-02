@@ -84,6 +84,16 @@ export interface Tile {
   kudde?: {
     beurtenResterend: number;
   };
+  // Roofdier (hoofdstuk 14/17, issue: "roofdieren toevoegen"): kan vanaf
+  // laag 5 verschijnen op het vakje waar de settler net gejaagd heeft (zie
+  // `jaag` in economie.ts) — nooit los van een kudde-jachtactie. Valt pas de
+  // beurt ná verschijnen aan (`beurtenTotAanval` telt af in
+  // `verwerkRoofdieren`, economie.ts): staat de settler er op dat moment nog
+  // (of weer) op, dan sterft hij. Geen eigen ghost-town-achtige nasleep — het
+  // veld verdwijnt gewoon weer zodra de aanval is afgehandeld.
+  roofdier?: {
+    beurtenTotAanval: number;
+  };
   // Ligt dit vakje aan vers water — een rivier of een meer (hoofdstuk 2:
   // "een stad kan alleen gesticht worden op een vakje dat aan vers water
   // ligt")? Vast, niet-procedureel (net als `terrein`) — de tutorial-worldgen
@@ -235,6 +245,27 @@ export interface IndringersEvent {
   fase: "gemeld" | "geforceerd";
 }
 
+// Kudde-melding (hoofdstuk 17: "verschijnt een kudde, dan meldt een pop-up
+// dit meteen — dezelfde stijl als de indringers-pop-up"), gezet door
+// `verwerkKuddes` in economie.ts zodra er een nieuwe wilde kudde verschijnt.
+// Puur een meldings-vlag (geen keuze zoals `IndringersEvent`) — de speler
+// klikt 'm gewoon weg via `sluitKuddeMelding`.
+export interface KuddeEvent {
+  hoogte: number;
+  positieInLaag: number;
+}
+
+// Roofdier-melding (hoofdstuk 14/17, issue: "roofdieren toevoegen"): gezet
+// door `jaag` zodra een roofdier verschijnt (`fase: "verschenen"`) en
+// opnieuw door `verwerkRoofdieren` als de settler bij de aanval nog op het
+// vakje staat (`fase: "aanval"`). Twee losse momenten van dezelfde dreiging,
+// zelfde patroon als `IndringersEvent.fase` hierboven.
+export interface RoofdierEvent {
+  hoogte: number;
+  positieInLaag: number;
+  fase: "verschenen" | "aanval";
+}
+
 // Volledige spelstatus voor de MVP (één actieve stad, één band van 9 vakjes,
 // meerdere lagen). Zie hoofdstuk 13 voor de scope-afbakening.
 export interface GameState {
@@ -297,6 +328,19 @@ export interface GameState {
   // `laatsteIneenstorting` hierboven het game-over-scherm triggert — maar dan
   // de winnende afsluiting in plaats van de verliezende.
   stadGesticht?: boolean;
+  // Kudde- & roofdier-meldingen (hoofdstuk 14/17): zie `KuddeEvent`/
+  // `RoofdierEvent` hierboven. `undefined` zolang er geen (onopgeloste)
+  // melding is, net als `indringersEvent` hierboven.
+  kuddeEvent?: KuddeEvent;
+  roofdierEvent?: RoofdierEvent;
+  // Gezet zodra een roofdier de settler daadwerkelijk doodt (hoofdstuk 17,
+  // issue: "roofdieren toevoegen"). Voorkomt dat de "settler verschijnt bij
+  // beurt 2"-vangnet in `volgendeBeurt` (economie.ts) hem daarna gratis laat
+  // terugkeren — precies dezelfde bescherming die `stadGesticht` hierboven al
+  // geeft na het stichten. Een vervangende settler is daarna alleen nog te
+  // krijgen via de civiele improvement-pool (`startNieuweSettler`), zoals
+  // hoofdstuk 17 beschrijft.
+  settlerVerlorenAanRoofdier?: boolean;
   // Per-run instelling (issue: "een setting waarmee je deze uitleg pop-ups
   // aan en uit kunt zetten ... voor deze run specifiek") — schakelt alle
   // tutorial-uitleg-pop-ups (openings-uitleg, settler, voedsel/boerderij,

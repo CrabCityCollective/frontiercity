@@ -3,18 +3,35 @@ import assert from "node:assert/strict";
 import {
   bemanWachttoren,
   heeftGenoegVoorStichten,
+  jaag,
   kanStichten,
   maakInitieleSpelStatus,
   OPSLAG_CAP,
   resterendeBouwBeurten,
+  startNieuweSettler,
   startOpslagplaats,
   startRecrutering,
   STICHTING_KOSTEN,
   stichtStad,
+  verplaatsSettlerNaar,
   volgendeBeurt,
 } from "./economie";
 import { ECONOMISCH_LAND_IMPROVEMENTS, MILITAIR_LAND_IMPROVEMENTS, SOLDAAT } from "./improvements";
 import { GameState } from "./types";
+
+// Vervangt `Math.random` tijdelijk door een vaste waarde, zodat de
+// kans-gedreven roofdier-/kuddelogica deterministisch te testen is — altijd
+// hersteld in een `finally` zodat een falende assertie andere tests niet kan
+// laten meeliften op een gemanipuleerde random.
+function metVasteRandom<T>(waarde: number, fn: () => T): T {
+  const origineel = Math.random;
+  Math.random = () => waarde;
+  try {
+    return fn();
+  } finally {
+    Math.random = origineel;
+  }
+}
 
 const HOUTKAP = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "houtkap")!;
 const MIJN = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "mijn")!;
@@ -227,4 +244,119 @@ test("kanStichten is false op een vakje zonder vers water, of als het vakje al b
     ),
   };
   assert.equal(kanStichten(state), false, "een al bebouwd vakje is geen geldig stichtingsdoel, ook al ligt het aan water");
+});
+
+// Bouwt een status met de settler op een kudde-vakje van de opgegeven laag
+// (ontgrendeld, indien nodig) — gedeelde opzet voor de roofdier-tests
+// hieronder.
+function metSettlerOpKuddeVakje(hoogte: number, positieInLaag = 0): GameState {
+  const state = maakInitieleSpelStatus();
+  return {
+    ...state,
+    settler: { hoogte, positieInLaag },
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte === hoogte
+        ? {
+            ...laag,
+            ontgrendeld: true,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === positieInLaag ? { ...tile, kudde: { beurtenResterend: 4 } } : tile
+            ),
+          }
+        : laag
+    ),
+  };
+}
+
+test("jaag roept nooit een roofdier op onder laag 5, ook niet bij een gunstige worp", () => {
+  const state = metSettlerOpKuddeVakje(4);
+  const naJacht = metVasteRandom(0, () => jaag(state));
+
+  assert.equal(naJacht.roofdierEvent, undefined);
+  const tile = naJacht.lagen.find((l) => l.hoogte === 4)!.tiles[0];
+  assert.equal(tile.roofdier, undefined);
+});
+
+test("jaag roept vanaf laag 5 een roofdier op als de worp binnen de kans valt", () => {
+  const state = metSettlerOpKuddeVakje(5);
+  const naJacht = metVasteRandom(0, () => jaag(state));
+
+  assert.deepEqual(naJacht.roofdierEvent, { hoogte: 5, positieInLaag: 0, fase: "verschenen" });
+  const tile = naJacht.lagen.find((l) => l.hoogte === 5)!.tiles[0];
+  assert.deepEqual(tile.roofdier, { beurtenTotAanval: 1 });
+});
+
+test("jaag roept geen roofdier op bij een ongunstige worp", () => {
+  const state = metSettlerOpKuddeVakje(5);
+  const naJacht = metVasteRandom(0.99, () => jaag(state));
+
+  assert.equal(naJacht.roofdierEvent, undefined);
+  const tile = naJacht.lagen.find((l) => l.hoogte === 5)!.tiles[0];
+  assert.equal(tile.roofdier, undefined);
+});
+
+test("een roofdier valt pas de beurt ná verschijnen aan, en doodt de settler als die er dan nog op staat", () => {
+  let state = metSettlerOpKuddeVakje(5);
+  state = metVasteRandom(0, () => jaag(state));
+  assert.deepEqual(state.lagen.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 1 });
+
+  // Eerste beurtovergang: de reactietijd, geen aanval.
+  state = volgendeBeurt(state);
+  assert.notEqual(state.settler, undefined, "de settler overleeft de eerste beurtovergang (reactietijd)");
+  assert.deepEqual(state.lagen.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 0 });
+
+  // Tweede beurtovergang: de settler is niet weggegaan, dus de aanval slaat toe.
+  state = volgendeBeurt(state);
+  assert.equal(state.settler, undefined, "de settler sterft als hij op het roofdier-vakje bleef staan");
+  assert.equal(state.settlerVerlorenAanRoofdier, true);
+  assert.deepEqual(state.roofdierEvent, { hoogte: 5, positieInLaag: 0, fase: "aanval" });
+  assert.equal(state.lagen.find((l) => l.hoogte === 5)!.tiles[0].roofdier, undefined);
+});
+
+test("de settler overleeft een roofdier als hij op tijd wegbeweegt", () => {
+  let state = metSettlerOpKuddeVakje(5);
+  state = metVasteRandom(0, () => jaag(state));
+
+  state = volgendeBeurt(state); // reactietijd
+  state = verplaatsSettlerNaar(state, 5, 1);
+  assert.deepEqual(state.settler, { hoogte: 5, positieInLaag: 1 }, "de settler moet daadwerkelijk verplaatst zijn");
+
+  state = volgendeBeurt(state); // de aanval, maar de settler staat er niet meer
+  assert.deepEqual(state.settler, { hoogte: 5, positieInLaag: 1 }, "de settler overleeft");
+  assert.equal(state.settlerVerlorenAanRoofdier, undefined);
+  assert.equal(state.lagen.find((l) => l.hoogte === 5)!.tiles[0].roofdier, undefined);
+});
+
+test("na het verlies van de settler aan een roofdier komt hij niet gratis terug, maar wel via de civiele pool", () => {
+  let state = metSettlerOpKuddeVakje(5);
+  state = metVasteRandom(0, () => jaag(state));
+  state = volgendeBeurt(state); // reactietijd
+  state = volgendeBeurt(state); // de aanval doodt de settler
+
+  assert.equal(state.settler, undefined);
+
+  // Zonder de `settlerVerlorenAanRoofdier`-bescherming zou het bestaande
+  // "settler verschijnt bij beurt 2"-vangnet hem hier gratis laten terugkeren.
+  state = volgendeBeurt(state);
+  assert.equal(state.settler, undefined, "geen gratis automatische settler na verlies aan een roofdier");
+
+  // De civiele improvement-pool moet 'm wel weer aanbieden (hoofdstuk 17:
+  // "dezelfde regel ... verschijnt de huifkar weer als optie").
+  state = startNieuweSettler(state);
+  assert.equal(state.stad.civielInAanbouw?.improvement.id, "nieuwe-settler");
+});
+
+test("verwerkKuddes meldt een nieuwe kudde via kuddeEvent", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag) => (laag.hoogte === 4 ? { ...laag, ontgrendeld: true } : laag)),
+  };
+
+  state = metVasteRandom(0, () => volgendeBeurt(state));
+
+  assert.notEqual(state.kuddeEvent, undefined, "een gunstige worp op een ontgrendelde laag 4 moet een kudde melden");
+  const gemeldeLaag = state.lagen.find((l) => l.hoogte === state.kuddeEvent!.hoogte)!;
+  const tile = gemeldeLaag.tiles[state.kuddeEvent!.positieInLaag];
+  assert.deepEqual(tile.kudde, { beurtenResterend: 4 });
 });

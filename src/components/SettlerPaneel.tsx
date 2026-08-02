@@ -32,6 +32,11 @@ export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout, o
   // kappen"): allebei alleen mogelijk op het vakje waar de settler nu staat.
   const kudde = huidigeTile?.kudde;
   const kanHakken = huidigeTile?.terrein === "bos";
+  // Roofdier (hoofdstuk 14/17, issue: "roofdieren toevoegen"): zichtbaar op
+  // de kaart (canvas.ts) én hier in tekst, zodat de speler ook zonder de
+  // waarschuwings-pop-up nog eens terug te lezen weet hoeveel beurten er nog
+  // zijn om weg te bewegen.
+  const roofdier = huidigeTile?.roofdier;
   // Stad stichten (hoofdstuk 2/16, issue: "stad stichten op de frontier"):
   // beschikbaar zodra de settler op een geschikt (vers-water) leeg vakje
   // staat — los van `settlerActieGedaanDitBeurt`, dit is geen herhaalbare
@@ -58,6 +63,7 @@ export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout, o
         Laag {settler.hoogte}, vakje {settler.positieInLaag + 1}
         {heeftAlWeg ? " — hier ligt al een weg" : ""}
         {kudde ? ` — wilde kudde (nog ${kudde.beurtenResterend} beurten te jagen)` : ""}
+        {roofdier ? " — een roofdier is hier gesignaleerd, beweeg de settler weg" : ""}
         {kanStichtenHier ? " — dit vakje ligt aan vers water: hier kan een stad gesticht worden" : ""}
       </span>
       {kanActie && (
