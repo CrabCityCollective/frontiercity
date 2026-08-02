@@ -10,6 +10,7 @@ import {
   haalStrijderTerug as haalStrijderTerugActie,
   hakHout as hakHoutActie,
   jaag as jaagActie,
+  kiesTech as kiesTechActie,
   legWegAan as legWegAanActie,
   maakInitieleSpelStatus,
   sluitBouwKeuze as sluitBouwKeuzeActie,
@@ -28,7 +29,7 @@ import {
   zetUitlegPopups as zetUitlegPopupsActie,
 } from "./economie";
 import { laadSpel, saveSpel } from "./save";
-import { Improvement } from "./types";
+import { Improvement, TechId } from "./types";
 
 // React-hook rond de spelstatus (M3). Geen aparte state-library nodig voor
 // de MVP-omvang — één useState met pure update-functies uit economie.ts.
@@ -148,6 +149,10 @@ export function useGameEngine() {
     setState((huidig) => zetUitlegPopupsActie(huidig, aan));
   }, []);
 
+  const kiesTech = useCallback((techId: TechId) => {
+    setState((huidig) => kiesTechActie(huidig, techId));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -173,6 +178,7 @@ export function useGameEngine() {
     bemanWachttoren,
     haalStrijderTerug,
     zetUitlegPopups,
+    kiesTech,
     opslaan,
     laden,
   };

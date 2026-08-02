@@ -58,8 +58,9 @@ export const TUTORIAL_LAAG_CONTENT: Record<number, LaagContent> = {
   },
   8: {
     naam: "De Hooggebergte-voet",
-    mechaniek: "Vooruitkijk-bereik",
-    flavorTekst: "Aan de voet van het hooggebergte is één laag vooruit te zien. Niet meer, niet minder.",
+    mechaniek: "Wetenschap → technologie kiezen",
+    flavorTekst:
+      "Aan de voet van het hooggebergte staat een stenen cirkel. Wie er lang genoeg naar de hemel kijkt, moet kiezen welk pad hij verder volgt.",
   },
   9: {
     naam: "Het Naaldwoud",

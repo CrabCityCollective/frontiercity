@@ -1,16 +1,17 @@
 // Pool van bouwbare land improvements voor de categorie-keuze-UI (M2) en de
-// productiewachtrij (M3). Economisch, Cultureel en Militair zijn gevuld:
-// economisch levert de drie bouwmaterialen en voedsel (M3), cultureel levert
-// cultuur voor laag-ontgrendeling (M5), militair levert de Wachttoren-
-// verdedigingsbonus voor militaire confrontaties (M7) én, sindsdien
-// (hoofdstuk 6), de indringers-tribuut-bescherming van de hele laag.
-// Wetenschappelijk krijgt zijn opties pas zodra die mechaniek aan de beurt is.
-// Civiel blijft leeg: de groei-tier-improvement (M6, zie WOONWIJK hieronder)
+// productiewachtrij (M3). Economisch, Cultureel, Militair en Wetenschappelijk
+// zijn gevuld: economisch levert de drie bouwmaterialen, voedsel (M3) en
+// (sindsdien "aardewerk" gekozen is, hoofdstuk 3/9) een kleine opslagbonus,
+// cultureel levert cultuur voor laag-ontgrendeling (M5), militair levert de
+// Wachttoren-verdedigingsbonus voor militaire confrontaties (M7) én, sindsdien
+// (hoofdstuk 6), de indringers-tribuut-bescherming van de hele laag,
+// wetenschappelijk levert wetenschap voor de technologie-boom (hoofdstuk 3/9,
+// zie techTree.ts). Civiel blijft leeg: de groei-tier-improvement (M6, zie WOONWIJK hieronder)
 // is een stad-upgrade buiten de tegel-band, en de overige civiele
 // land-improvements (weg/brug) vallen buiten de MVP-scope — zie hoofdstuk 3
 // en hoofdstuk 13 van het design-document.
 
-import { Categorie, Improvement, Layer, MateriaalType, TerreinType } from "./types";
+import { Categorie, Improvement, Layer, MateriaalType, TechId, TerreinType } from "./types";
 
 // Nederlandse labels per categorie, gedeeld tussen de bouw-pop-up (M2) en de
 // tile-info-pop-up (klik-op-tile) zodat beide dezelfde terminologie tonen.
@@ -115,7 +116,29 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     // en bossen zetten, alleen op vlakke grond").
     terreinEisen: ["vlak"],
   },
+  // Ontgrendeld door de "aardewerk"-tech (drempel 2, techTree.ts; issue: "tech
+  // tree toevoegen" Deel 2 — "A1. Aardewerk: nieuw goedkoop land improvement:
+  // Voorraadkuil"): een goedkoop land improvement met een kleine extra
+  // opslag. Anders dan de overige economische land improvements hierboven
+  // telt de opslag-bonus direct bij voltooiing mee, niet pas na
+  // wegverbinding (zie `verwerkBouwwachtrij` in economie.ts) — een
+  // opslagvergroting is een structurele capaciteit, geen lopende productie,
+  // net zoals de Opslagplaats-city-improvement (hoofdstuk 3/5) ook geen
+  // wegverbinding nodig heeft. Op vlakke grond (een kuil, geen bos/heuvel/berg).
+  {
+    id: "voorraadkuil",
+    naam: "Voorraadkuil",
+    categorie: "economisch",
+    soort: "land",
+    kosten: { hout: 3 },
+    bouwtijdBeurten: 1,
+    effect: { type: "opslag", waarde: 5 },
+    terreinEisen: ["vlak"],
+    vereisteTech: "aardewerk",
+  },
 ];
+
+export const VOORRAADKUIL = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "voorraadkuil")!;
 
 // Cultureel land improvement (hoofdstuk 3: "Heiligdom") — de eerste optie in
 // deze categorie, nodig om cultuur te produceren voor laag-ontgrendeling (M5).
@@ -135,6 +158,33 @@ export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
     effect: { type: "productie", resource: "cultuur", waarde: 2 },
   },
 ];
+
+// Wetenschappelijk land improvement (hoofdstuk 3/9, issue: "tech tree
+// toevoegen" Deel 1): de Sterrencirkel is de eerste (en tot "aardewerk"
+// gekozen wordt, enige) bron van wetenschap — zonder haar blijft de
+// technologie-boom (techTree.ts) voor altijd ontoegankelijk. Zelfde patroon
+// als het Heiligdom hierboven: geen `uitputtingBeurten` (hoofdstuk 4/6, put
+// niet uit — een stenen cirkel is, net als een cultusplek of wachtpost, een
+// blijvende aanwezigheid, geen verbruikende oogst) en dezelfde
+// frontier-halvering van de opbrengst in `verwerkProductie` (economie.ts).
+//
+// Kosten (hoofdstuk 14): vergelijkbaar bouwprofiel als het Heiligdom (hout 4,
+// steen 4, totaal 8, bouwtijd 2 beurten), maar verschoven naar "vooral hout,
+// een beetje steen" zoals gevraagd — hout 6, steen 2, zelfde totaal en
+// bouwtijd. De naam "Sterrencirkel" (een stenen cirkel waar het volk de
+// sterren en seizoenen bestudeert) sluit aan bij de Riven/Myst-tutorialsfeer
+// (hoofdstuk 12) en is verder ongewijzigd overgenomen uit het issue.
+export const STERRENCIRKEL: Improvement = {
+  id: "sterrencirkel",
+  naam: "Sterrencirkel",
+  categorie: "wetenschappelijk",
+  soort: "land",
+  kosten: { hout: 6, steen: 2 },
+  bouwtijdBeurten: 2,
+  effect: { type: "productie", resource: "wetenschap", waarde: 2 },
+};
+
+export const WETENSCHAPPELIJK_LAND_IMPROVEMENTS: Improvement[] = [STERRENCIRKEL];
 
 // Militair land improvement (hoofdstuk 3/6: "Wachttoren verdedigt de hele
 // laag tegen indringers"). Levert nog steeds de passieve verdedigingsbonus
@@ -235,7 +285,7 @@ export const OPSLAGPLAATS: Improvement = {
 
 const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   economisch: ECONOMISCH_LAND_IMPROVEMENTS,
-  wetenschappelijk: [],
+  wetenschappelijk: WETENSCHAPPELIJK_LAND_IMPROVEMENTS,
   militair: MILITAIR_LAND_IMPROVEMENTS,
   civiel: [],
   cultureel: CULTUREEL_LAND_IMPROVEMENTS,
@@ -262,16 +312,25 @@ function kanImprovementOpLaag(improvement: Improvement, laag: Layer): boolean {
 // er ergens op een ontgrendelde laag (niet per se `laag` zelf) een geldig
 // leeg vakje voor ze is — `alleLagen` is nodig om dat over de hele band heen
 // te checken.
+//
+// `technologieen` (hoofdstuk 3/9, issue: "tech tree toevoegen" Deel 2) sluit
+// daarnaast improvements met een `vereisteTech` (momenteel alleen de
+// Voorraadkuil, ontgrendeld door "aardewerk") uit zolang die tech nog niet
+// gekozen is — een lege array (de default) sluit dus elke tech-gated
+// improvement uit, precies het gedrag vóórdat er ooit een tech gekozen is.
 export function beschikbareOpties(
   categorie: Improvement["categorie"],
   laag: Layer,
-  alleLagen: Layer[]
+  alleLagen: Layer[],
+  technologieen: TechId[] = []
 ): Improvement[] {
-  return IMPROVEMENT_POOLS[categorie].filter((improvement) =>
-    improvement.bouwbaarBuitenFrontier
-      ? alleLagen.some((l) => l.ontgrendeld && kanImprovementOpLaag(improvement, l))
-      : kanImprovementOpLaag(improvement, laag)
-  );
+  return IMPROVEMENT_POOLS[categorie]
+    .filter((improvement) => !improvement.vereisteTech || technologieen.includes(improvement.vereisteTech))
+    .filter((improvement) =>
+      improvement.bouwbaarBuitenFrontier
+        ? alleLagen.some((l) => l.ontgrendeld && kanImprovementOpLaag(improvement, l))
+        : kanImprovementOpLaag(improvement, laag)
+    );
 }
 
 function shuffle<T>(items: T[]): T[] {
@@ -295,9 +354,10 @@ export function willekeurigeOpties(
   categorie: Improvement["categorie"],
   laag: Layer,
   alleLagen: Layer[],
-  verplichteId?: string
+  verplichteId?: string,
+  technologieen: TechId[] = []
 ): Improvement[] {
-  const beschikbaar = beschikbareOpties(categorie, laag, alleLagen);
+  const beschikbaar = beschikbareOpties(categorie, laag, alleLagen, technologieen);
   const aantal = Math.random() < 0.5 ? 2 : 3;
 
   const verplicht = verplichteId ? beschikbaar.find((improvement) => improvement.id === verplichteId) : undefined;
