@@ -296,6 +296,9 @@ Zowel de settler-actie als de bouwkeuze zijn beperkt tot één keer per beurt (h
 **Settler-jacht op kuddes als alternatief voor de Houtkap-improvement**
 Een losse, directe settler-actie (jagen/hout hakken) naast de bestaande improvement-productie (hoofdstuk 5) geeft de speler een kleinere maar onmiddellijke opbrengst zonder bouwkosten of wegverbinding — nuttig in de vroege beurten van het bouw-ritme (hoofdstuk 16) voordat een Houtkap of Boerderij daadwerkelijk staat en verbonden is. Kuddes zijn bewust eindig (net als de uitputting van land improvements, hoofdstuk 4) zodat jagen een tijdelijke bonus blijft in plaats van een permanente vervanging van boerderijen — vandaar de hogere opbrengst per beurt (3 voedsel) tegenover het structurele, maar onbeperkte houtkappen (1 hout per beurt).
 
+**Roofdieren als risico op settler-jacht (issue: "roofdieren toevoegen")**
+Settler-jacht op kuddes (hierboven) was tot nu toe een gratis, risicoloze uitweg uit een voedseltekort: geen bouwkosten, geen wegverbinding, en — anders dan bijvoorbeeld een Boerderij, die tijd en materiaal kost — zonder enig nadeel. Zodra jagen vanaf laag 5 een kans op een roofdier met zich meebrengt (hoofdstuk 14/17), staat voor het eerst een reëel risico tegenover die gratis opbrengst: de settler kan sterven als de speler niet op tijd wegbeweegt. Dat maakt "jaag ik hier nog een keer, of bouw ik liever een Boerderij" weer een echte afweging, in plaats van dat jagen altijd de dominante keuze blijft zolang er een kudde in de buurt staat. Het ritme (zichtbaar → een beurt reactietijd → pas dan het gevolg) houdt dit, net als bij stadsverval en indringers (hoofdstuk 4/6/7), voorspelbaar te vermijden in plaats van willekeurig oneerlijk.
+
 **Opslagplaats als bewuste tussenstap richting het stichten (issue: "stad stichten op de frontier")**
 De stichtingskosten liggen bewust hoger dan de start-opslag-cap van 30 (hoofdstuk 14), zodat de speler niet zomaar op weg kan naar een geschikt vakje en meteen kan stichten zodra hij er staat — hij moet eerst zijn stad economisch uitbouwen (een Opslagplaats bouwen) voordat hij er klaar voor is. Dat past bij de kernspanning van hoofdstuk 4: doorgroeien/uitbouwen kost tijd en blootstelling aan verval-risico, tegenover simpelweg vertrekken zodra het net-lukt. Zonder deze eis zou de Opslagplaats-improvement (al in het ontwerp aanwezig sinds hoofdstuk 3/5, maar tot deze issue nooit daadwerkelijk gebouwd) geen enkele rol spelen in de tutorial.
 
@@ -346,7 +349,7 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 - Eén groei-tier-stap (klein→middel), met het zichtbare waarschuwingssignaal en het permadeath-verval-risico (volledige ineenstorting eindigt de run en herstart de tutorial, zie hoofdstuk 4/11)
 - Eenvoudige militaire confrontatie (winkans-formule)
 - Settler-eenheid en wegen (hoofdstuk 16): de settler start beurt 2 in de stad en verplaatst 1 vakje per beurt (voor/achter/zijwaarts); hij legt kosteloos wegen aan (kost enkel die beurt). Een land improvement produceert pas zodra zijn vakje via zo'n wegverbinding aan de stad hangt. Nieuwe bouwprojecten kun je hierdoor nog maar om de 3 beurten starten (de eerste beurt telt al als bouwmoment)
-- Kuddes & settler-jacht (hoofdstuk 17): vanaf laag 4 kunnen wilde kuddes op een leeg vakje verschijnen; de settler kan er (in plaats van bewegen/weg aanleggen) op jagen voor voedsel, of op een bos-vakje hout hakken — beide een alternatief voor gebouwde improvements, zonder bouwkosten
+- Kuddes & settler-jacht (hoofdstuk 17): vanaf laag 4 kunnen wilde kuddes op een leeg vakje verschijnen (gemeld via een pop-up, dezelfde stijl als de indringers-pop-up); de settler kan er (in plaats van bewegen/weg aanleggen) op jagen voor voedsel, of op een bos-vakje hout hakken — beide een alternatief voor gebouwde improvements, zonder bouwkosten. Vanaf laag 5 kan jagen een **roofdier** oproepen op het jachtvakje: zichtbaar via een pop-up, valt pas de beurt erna aan, en doodt de settler als die er dan nog staat — verlies van de settler kan de huifkar terugbrengen in de civiele improvement-pool (hoofdstuk 6/11)
 - Waarschuwing bij "Volgende beurt" (hoofdstuk 11) als de settler nog een actie heeft of er nog een bouwkeuze openstaat, met de mogelijkheid om alsnog terug te gaan en te handelen
 - Placeholder-tegels (simpele, consistente stijl — geen definitieve pre-rendered assets nodig om te testen)
 - Alléén de tutorial-content (Het Hertenpad-volk, lagen 1-12) als speelbare inhoud
@@ -581,6 +584,8 @@ Twee dingen volgen hieruit. Eén: de trage start heeft inderdaad **deels een and
 
 *Indringers & tribuut (hoofdstuk 6)*: kans op een indringers-incident (één trekking voor de hele stad, niet per laag) = 20% per beurt (MVP-richtwaarde, tunebaar; verlaagd vanaf de eerdere 40% op alleen de frontier-laag), getrokken over alle ontgrendelde lagen samen — geen aanwezigheids-eis meer, en pas een factor vanaf laag 2 (verlaagd vanaf laag 3) — de eerste laag blijft zo een rustige introductie. Tribuut zonder beschermende (voltooide, bemande én wegverbonden) wachttoren op de getroffen laag = ongeveer de helft (afgerond, minimaal 1) van het grondstof-type waar de speler op dat moment het meest van heeft, nooit meer dan de aanwezige voorraad.
 
+*Roofdieren (hoofdstuk 17)*: kans op een roofdier per jachtactie op laag 5 of hoger = **15%** (MVP-richtwaarde, tunebaar) — geen aparte per-beurt- of per-laag-kans, alleen getrokken op het moment dat de settler daadwerkelijk jaagt. Het roofdier verschijnt op het jachtvakje zelf en valt pas de beurt erna aan, wat de speler één beurt geeft om de settler weg te bewegen voordat hij sterft.
+
 **Lange mars (Anker 3, na Terugvechten — Amerikaanse campagne)**
 - Uitgestrekt over 3-4 opeenvolgende lagen in plaats van één piekmoment.
 - Vooruitkijk-bereik tijdelijk teruggezet naar 0 extra lagen tijdens deze reeks.
@@ -660,12 +665,23 @@ Nieuw spelmechanisme (in de MVP, zie hoofdstuk 13): twee extra, directe settler-
 - Vanaf **laag 4** kan elke beurt, met een kleine kans, een wilde kudde verschijnen op een leeg vakje van een al ontgrendelde laag (laag 4 of hoger).
 - Een kudde staat los van improvements: het vakje blijft "leeg" (er kan nog steeds op gebouwd worden — bouwen op een kudde-vakje laat de kudde verder trekken, zie hieronder).
 - Een kudde is eindig: ze biedt in totaal **4 jachtbeurten** voordat ze verder trekt (net als de uitputting van land improvements, hoofdstuk 4, maar zonder ghost-town-tile erna — het vakje wordt gewoon weer een normaal leeg vakje).
+- Verschijnt een kudde, dan meldt een pop-up dit meteen — dezelfde stijl als de indringers-pop-up (hoofdstuk 6): een korte melding met flavor-tekst en de laag waar de kudde staat. Zo hoeft de speler niet toevallig op de kaart te zien waar hij de settler heen kan sturen om te jagen.
 
 **Jagen**
 - De settler moet eerst naar het vakje met de kudde verplaatst worden (kost, net als elke verplaatsing, de settler-actie van die beurt).
 - Staat de settler op een kudde-vakje, dan kan hij in plaats van bewegen/weg aanleggen ook **jagen**: dat levert die beurt direct **3 voedsel** op en telt één jachtbeurt van de kudde af.
 - Na 4 jachtbeurten (in totaal, niet per se aaneengesloten) is de kudde uitgeput en verdwijnt ze; de speler kan opnieuw naar een andere, nieuw verschenen kudde trekken.
 - Wordt er op het kudde-vakje gebouwd voordat de kudde uitgeput is, dan trekt de kudde meteen verder (het vakje verliest zijn kudde-status).
+
+**Roofdieren**
+- Vanaf **laag 5** — één laag na de introductie van kuddes zelf (laag 4, hierboven) — brengt jagen een risico met zich mee, zodat de speler eerst met de kudde-mechaniek heeft kennisgemaakt voordat dit risico erbij komt.
+- Geen losstaande, willekeurige kans per laag of per beurt (zoals bij kuddes hierboven of indringers, hoofdstuk 6): een roofdier is uitsluitend een **gevolg van jagen**. Elke keer dat de settler jaagt op een kudde op laag 5 of hoger, is er een kans (MVP-richtwaarde 15%, tunebaar — hoofdstuk 14) dat een roofdier verschijnt, op datzelfde vakje.
+- Het ritme volgt de signature-mechanic van het spel (waarschuwing → kort reactievenster → gevolg, hoofdstuk 7):
+  1. **Waarschuwing**: het roofdier is meteen zichtbaar op de kaart, op het vakje waar de settler zojuist jaagde. Een pop-up meldt zijn komst — dezelfde stijl als de indringers- en kudde-pop-up hierboven: korte flavor-tekst, geen paniekerige taal.
+  2. **Reactietijd**: het roofdier valt pas de **beurt erna** aan, niet meteen. De speler heeft die tussenliggende beurt om de settler weg te bewegen (een gewone verplaatsings-actie, hoofdstuk 16) en zo te ontsnappen.
+  3. **Gevolg**: staat de settler nog op (of keert hij terug naar) het vakje met het roofdier wanneer die beurt om is, dan **sterft de settler**.
+- Verlies van de settler activeert de bestaande regel uit hoofdstuk 6/13: is het aantal settlers lager dan het aantal steden (de startstad Holenrots telt hierbij mee, ook al is die niet via de stichter-actie ontstaan, hoofdstuk 16), dan verschijnt de huifkar weer als optie in de civiele improvement-pool. Dit is de eerste situatie waarin die regel al van toepassing is vóórdat er ooit gesticht is.
+- **Buiten scope**: geen "strijder verjaagt het roofdier"-mechanisme — militaire eenheden en Wachttorens (hoofdstuk 6) spelen hier bewust geen rol. De enige uitweg is de settler op tijd wegbewegen.
 
 **Hout hakken**
 - Op elk vakje met terrein-subtype **bos** (hoofdstuk 2/11) kan de settler, in plaats van bewegen/weg aanleggen, **hout hakken**: dat levert die beurt direct **1 hout** op.
