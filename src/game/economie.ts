@@ -815,14 +815,42 @@ function kiesTribuut(voorraad: Record<MateriaalType, number>): IndringersTribuut
   return { resource: grootsteType, aantal: Math.max(1, Math.round(grootsteWaarde / 2)) };
 }
 
+// Een laag is alleen "interessant" voor indringers als er iets te halen valt
+// (hoofdstuk 6/11, issue: "een laag met alleen een wachttoren kan geen
+// indringers krijgen"). Staat er op een laag uitsluitend een Wachttoren — en
+// verder geen enkele andere improvement en geen ghost town — dan doet die
+// laag niet mee in de trekking, ongeacht de staat van die Wachttoren (ook in
+// aanbouw of nog niet bemand telt niet mee): een kale wachtpost biedt geen
+// aanleiding. Een compleet lege laag (nog geen enkele improvement, bv. een
+// net ontgrendelde laag) telt hier niet als "alleen een wachttoren" en blijft
+// dus gewoon meedoen, net als lagen met alleen ghost towns en de startlaag —
+// die regel is ongewijzigd. Is de Wachttoren op zo'n laag daarnaast ook nog
+// beschermend (voltooid, bemand, verbonden), dan verandert dat hier niets:
+// zo'n laag heeft dan alsnog niets anders te bieden en blijft uitgesloten.
+function isAlleenWachttorenLaag(laag: Layer): boolean {
+  let heeftWachttoren = false;
+  for (const tile of laag.tiles) {
+    if (tile.status === "ghost_town") return false;
+    if (tile.improvement) {
+      if (tile.improvement.id === "wachttoren") {
+        heeftWachttoren = true;
+      } else {
+        return false;
+      }
+    }
+  }
+  return heeftWachttoren;
+}
+
 // Indringers & tribuut (hoofdstuk 6): elke beurt is er, zodra laag
 // `INDRINGERS_MIN_LAAG` ontgrendeld is, één trekking of er sowieso een
 // incident plaatsvindt — niet meer per laag. Is er een incident, dan wordt de
-// getroffen laag geloot uit alle ontgrendelde lagen (issue: "loot dan de laag
-// uit álle ontgrendelde lagen — ook lagen die beschermd zijn"), zodat elke
-// gebouwde, bemande en verbonden Wachttoren zijn hele run lang waarde houdt
-// in plaats van waardeloos te worden zodra de frontier opschuift. Een
-// beschermende Wachttoren op de geloten laag verdedigt de hele laag — er
+// getroffen laag geloot uit alle ontgrendelde lagen die iets te bieden hebben
+// (issue: "loot dan de laag uit álle ontgrendelde lagen — ook lagen die
+// beschermd zijn", later verfijnd met `isAlleenWachttorenLaag` hierboven),
+// zodat elke gebouwde, bemande en verbonden Wachttoren zijn hele run lang
+// waarde houdt in plaats van waardeloos te worden zodra de frontier opschuift.
+// Een beschermende Wachttoren op de geloten laag verdedigt de hele laag — er
 // gebeurt dan niets, alleen een meldings-pop-up. Zonder zo'n wachttoren eist
 // de tribe tribuut (zie `kiesTribuut`); de speler lost dit verder zelf op via
 // `geefTribuut`/`weigerTribuut` hieronder. Rolt geen nieuwe gebeurtenis zolang
@@ -832,7 +860,9 @@ function verwerkIndringers(state: GameState): GameState {
   if (hoogsteOntgrendeldeLaag(state.lagen) < INDRINGERS_MIN_LAAG) return state;
   if (Math.random() >= INDRINGERS_KANS) return state;
 
-  const ontgrendeldeLagen = state.lagen.filter((laag) => laag.ontgrendeld);
+  const ontgrendeldeLagen = state.lagen.filter(
+    (laag) => laag.ontgrendeld && !isAlleenWachttorenLaag(laag)
+  );
   if (ontgrendeldeLagen.length === 0) return state;
 
   const laag = ontgrendeldeLagen[Math.floor(Math.random() * ontgrendeldeLagen.length)];
