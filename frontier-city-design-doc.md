@@ -242,6 +242,9 @@ Frostpunk dwingt spelers één opslagtype te kiezen per gebouw, wat in de prakti
 **Kwadratisch in plaats van exponentieel cultuurkosten**
 De oorspronkelijke cultuurkosten-formule (basis 20, ×1,4 per laag, hoofdstuk 14) schaalde exponentieel, terwijl het daadwerkelijke cultuurinkomen — in de MVP vrijwel volledig het Heiligdom (hoofdstuk 6) — ruwweg lineair groeit naarmate een speler er in de loop van een run meer bouwt. Voor de 12-laags tutorial viel dat verschil nog te verbergen, maar bij de 30-60-laags campagnes (hoofdstuk 14) liep de cumulatieve drempel binnen enkele tientallen lagen op tot miljoenen — een harde muur in plaats van een geleidelijk oplopende uitdaging. Een kwadratische kostencurve groeit nog altijd sneller dan het lineaire inkomen (dus blijft elke laag moeilijker dan de vorige), maar niet exponentieel sneller, waardoor het aantal beurten per laag geleidelijk oploopt in plaats van door te schieten naar het twintigvoudige of meer.
 
+**Basisterm van de cultuurkosten verlaagd, kwadratische factor niet (issue: "de eerste cultuurdrempel is te hoog")**
+Ook na de omzetting naar een kwadratische curve hierboven bleef laag 2 (drempel 20) in de praktijk tientallen beurten kosten — precies het moment waarop een speler voortgang wil voelen, niet stilstand. De doorrekening in hoofdstuk 14 ("Vroege-spel-doorrekening") laat zien dat dit voor een belangrijk deel een ándere oorzaak heeft dan de kostenformule (de grondstofketen naar het eerste Heiligdom kost zelf al zo'n 13 beurten), maar de kostenformule droeg door zijn hoge basisterm (15) ook onnodig bij. Omdat de basisterm een vaste optelling is, weegt hij bij lage lagen (waar de kwadratische term nog klein is) verreweg het zwaarst mee, maar wordt hij bij hoge lagen verwaarloosbaar tegenover de kwadratische term. Hem verlagen (van 15 naar 3) is daarom een chirurgische ingreep: de eerste paar lagen worden fors goedkoper, terwijl de curve verderop — en dus de hierboven beschreven, bewust behouden schaling voor de 30-60-laags campagnes — nauwelijks verandert. De kwadratische factor (5) blijft daarom bewust ongewijzigd; alleen de basis is aangepast.
+
 **Twee gescheiden systemen voor militair conflict en culturele pushback**
 Een direct gevecht (unit-sterkte vergelijken) en het weerstaan van een cultureel sterke tribe zijn thematisch verschillende soorten weerstand — de eerste is fysiek, de tweede diplomatiek/economisch. Door ze als aparte systemen te ontwerpen (in plaats van beide via legersterkte af te handelen) blijven de vijf categorieën ook mechanisch onderscheidend: militair lost fysieke dreiging op, cultureel lost expansie-weerstand op.
 
@@ -493,16 +496,19 @@ Binnen de gekozen range wordt random getrokken; een bergengte/obstakel-zone word
 | Houtkap (hout) | 12-16 (nooit volledig 0, wel afnemend) | 8-11 | 25-30 |
 | Steengroeve (steen) | 10-14 | 7-10 | 22-27 |
 
-*Cultuurkosten*: `kosten(laag) = 15 + 5 × (laag − 1)²` — kwadratisch, cumulatieve drempel (cultuur wordt nooit "uitgegeven", zie hoofdstuk 5). Vervangt de eerdere exponentiële formule (basis 20, ×1,4 per laag); zie hoofdstuk 11 ("Kwadratisch in plaats van exponentieel cultuurkosten") voor de onderbouwing. Culturele pushback-lagen: ×2 van het normale (dan al kwadratisch opgelopen) bedrag.
+*Cultuurkosten*: `kosten(laag) = 3 + 5 × (laag − 1)²` — kwadratisch, cumulatieve drempel (cultuur wordt nooit "uitgegeven", zie hoofdstuk 5). Vervangt de eerdere exponentiële formule (basis 20, ×1,4 per laag); zie hoofdstuk 11 ("Kwadratisch in plaats van exponentieel cultuurkosten") voor de onderbouwing. De basisterm is sindsdien verder verlaagd van 15 naar 3 (issue: "de eerste cultuurdrempel is te hoog"; hoofdstuk 11, "Basisterm van de cultuurkosten verlaagd") — de kwadratische factor (5) is ongewijzigd, dus de curve vanaf ruwweg laag 6-8 verandert nauwelijks, terwijl laag 2-5 fors goedkoper worden. Culturele pushback-lagen: ×2 van het normale (dan al kwadratisch opgelopen) bedrag.
 
 | Laag | Cultuurkosten (cumulatief) |
 |---|---|
-| 2 | 20 |
-| 6 | 140 |
-| 12 | 620 |
-| 20 | 1.820 |
-| 30 | 4.220 |
-| 40 | 7.620 |
+| 2 | 8 |
+| 3 | 23 |
+| 4 | 48 |
+| 5 | 83 |
+| 6 | 128 |
+| 12 | 608 |
+| 20 | 1.808 |
+| 30 | 4.208 |
+| 40 | 7.608 |
 
 *Cultuurinkomen*: de enige cultuurbron in de MVP is het **Heiligdom** (hoofdstuk 3/6) — 2 cultuur/beurt op de frontier-laag zelf, 1 cultuur/beurt (halve opbrengst) op elke laag daaronder; hij put niet uit en blijft dus permanent actief. Tempel/amfitheater/monument en de passieve cultuur van ghost towns (hoofdstuk 7) zijn nog niet geïmplementeerd — buiten de huidige MVP-scope (hoofdstuk 13). Bij een gemiddelde build (niet puur cultuur, niet nul — indicatief: ruwweg 1 Heiligdom per 4 ontgrendelde lagen, waarvan steeds het nieuwste op de frontier-laag staat) geeft dat ruwweg:
 
@@ -514,6 +520,16 @@ Binnen de gekozen range wordt random getrokken; een bergengte/obstakel-zone word
 | 40 | 10 | ~11 | ~35 |
 
 Het aantal beurten per laag loopt zo geleidelijk op (ruwweg 2× van vroeg- naar laat-spel) in plaats van naar het twintig- of honderdvoudige zoals bij de oude exponentiële formule.
+
+*Vroege-spel-doorrekening (issue: "de eerste cultuurdrempel is te hoog")*: de tabel hierboven gaat uit van een gemiddelde build over een hele run; voor de allereerste laag-ontgrendeling is de vraag niet "wat is het gemiddelde inkomen", maar "wanneer staat het eerste Heiligdom er, en hoeveel beurten kost de drempel dáárna nog". Een doorgerekende, near-optimale openingszet — Houtkap eerst (de enige houtbron, en steen is bij de start toevallig precies genoeg voor de Houtkap), dan een Boerderij tegen de voedselwaarschuwing (het startvoedsel van 14 is expliciet hierop afgestemd, zie economie.ts), dan een Steengroeve (nodig omdat de startvoorraad steen volledig opgaat aan de Houtkap, en het Heiligdom zelf ook steen kost), en pas dán het eerste Heiligdom — laat zien dat deze volgorde vrijwel afgedwongen wordt door de grondstofketen zelf: een Heiligdom kost zowel hout als steen, en zonder Steengroeve blijft de steenvoorraad op 0 staan. Door het bouw-ritme (hoofdstuk 16: 1 nieuw project per 3 beurten) en de settler-reistijd voor elke wegverbinding (elke land improvement produceert pas met een eigen wegverbinding, hoofdstuk 16) komt het eerste Heiligdom pas rond **beurt 13** daadwerkelijk actief, ruim vóórdat enige cultuurdrempel een rol speelt. Vanaf dat punt loopt de cultuur met 2/beurt op (één Heiligdom op de frontier-laag):
+
+| Laag | Cultuurkosten (nieuw) | Beurt bereikt (indicatief) | Beurt bereikt met oude formule (indicatief) |
+|---|---|---|---|
+| 2 | 8 | ~16 | ~22 |
+| 3 | 23 | ~24 | ~30 |
+| 4 | 48 | ~36 | ~42 |
+
+Twee dingen volgen hieruit. Eén: de trage start heeft inderdaad **deels een andere oorzaak** dan de kostenformule (issue-punt 4) — de ~13 beurten tot het eerste Heiligdom zijn een gevolg van de grondstofketen, het bouw-ritme en de wegaanleg, niet van de cultuurdrempel, en geen enkele drempelverlaging brengt laag 2 onder die ~13 beurten. Dat is precies waarom de basisterm hierboven is verlaagd in plaats van op nul gezet: verder verlagen zou de drempel zelf triviaal maken zonder dat eerste, onvermijdelijke wachten te verkorten. Twee: bóven die vloer van ~13 beurten scheelt de nieuwe formule wel degelijk fors — laag 2 valt van ~22 naar ~16 beurten, dus van ~9 naar ~3 beurten ná het eerste Heiligdom, ruim binnen een handvol beurten zoals de issue vraagt.
 
 *Opslag-cap*: start op 30 (gedeeld voor hout/steen/erts/goud), elke opslagplaats-improvement +20, praktisch maximum ~3-4 opslagplaatsen per stad (~110 totaal).
 

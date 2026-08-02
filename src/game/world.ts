@@ -158,9 +158,19 @@ export function zichtbareLagen(lagen: Layer[]): Layer[] {
 // laag-ontgrendeling"). Kwadratisch oplopend (hoofdstuk 14; issue: "cultuur
 // doorrekenen" — de eerdere exponentiële formule schaalde niet naar de
 // 30-60-laags campagnes, zie hoofdstuk 11 voor de onderbouwing). Laag 1 is de
-// startlaag en heeft dus geen drempel. Exacte cijfers blijven een bewuste MVP-
+// startlaag en heeft dus geen drempel.
+//
+// CULTUUR_KOSTEN_BASIS verlaagd van 15 naar 3 (issue: "de eerste
+// cultuurdrempel is te hoog", hoofdstuk 11/14 voor de volledige doorrekening).
+// De basis is een vaste optelling die bij lage lagen (waar de kwadratische
+// term nog klein is) verreweg de grootste bijdrage aan de kosten levert, maar
+// bij hoge lagen verwaarloosbaar wordt tegenover de kwadratische term — hem
+// verlagen knijpt dus specifiek de eerste paar lagen samen zonder de reeds
+// getunede curve verderop (hoofdstuk 11: "kwadratisch i.p.v. exponentieel")
+// noemenswaardig te veranderen. CULTUUR_KOSTEN_KWADRATISCHE_FACTOR blijft
+// daarom bewust ongewijzigd. Exacte cijfers blijven een bewuste MVP-
 // placeholder, geen definitieve balans.
-const CULTUUR_KOSTEN_BASIS = 15;
+const CULTUUR_KOSTEN_BASIS = 3;
 const CULTUUR_KOSTEN_KWADRATISCHE_FACTOR = 5;
 
 export function cultuurKostenVoorLaag(hoogte: number): number {
