@@ -27,14 +27,19 @@ export default function TitelScherm({ onStart }: TitelSchermProps) {
         padding: "1.5rem",
         cursor: "pointer",
         zIndex: 200,
-        backgroundImage: `linear-gradient(180deg, rgba(15, 10, 6, 0.55), rgba(15, 10, 6, 0.88)), url(/assets/scenes/intro.jpg)`,
+        backgroundImage: `linear-gradient(180deg, rgba(15, 10, 6, 0.35), rgba(15, 10, 6, 0.85)), url(/assets/scenes/title-screen.jpg)`,
         backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundPosition: "center top",
       }}
     >
       <div
         className="fc-paneel"
-        style={{ padding: "2rem 2.5rem", textAlign: "center", maxWidth: "min(32rem, 100%)" }}
+        style={{
+          padding: "2rem 2.5rem",
+          textAlign: "center",
+          maxWidth: "min(32rem, 100%)",
+          marginTop: "12vh",
+        }}
       >
         <h1 style={{ margin: "0 0 0.5rem", fontSize: "2.6rem", color: "var(--kleur-oker)" }}>
           Frontier City
