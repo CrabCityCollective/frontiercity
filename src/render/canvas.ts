@@ -831,6 +831,42 @@ function tekenKudde(ctx: CanvasRenderingContext2D, x: number, y: number, size: n
   tekenHertSilhouet(ctx, x + size * 0.62, baseY - size * 0.04, size * (0.26 + rng() * 0.06));
 }
 
+// Roofdier (hoofdstuk 14/17, issue: "roofdieren toevoegen"): een laag,
+// gedrongen silhouet — bewust anders dan de rechtop staande hertsilhouetten
+// hierboven, zodat de dreiging ook zonder UI-tekst meteen leesbaar is. In
+// lijn met de MVP-plaatshouderstijl (hoofdstuk 13): eenvoudige vormen, geen
+// gedetailleerd sprite-werk.
+function tekenRoofdier(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const cx = x + size * 0.5;
+  const baseY = y + size * 0.78;
+  const h = size * 0.32;
+
+  ctx.fillStyle = "rgba(30, 12, 10, 0.88)";
+  ctx.beginPath();
+  ctx.ellipse(cx, baseY - h * 0.24, h * 0.62, h * 0.24, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(30, 12, 10, 0.88)";
+  ctx.lineWidth = Math.max(1, h * 0.1);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(cx - h * 0.5, baseY - h * 0.3);
+  ctx.lineTo(cx - h * 0.56, baseY);
+  ctx.moveTo(cx + h * 0.5, baseY - h * 0.3);
+  ctx.lineTo(cx + h * 0.56, baseY);
+  ctx.stroke();
+
+  // Kop, laag bij de grond — een jagende houding.
+  ctx.beginPath();
+  ctx.ellipse(cx + h * 0.68, baseY - h * 0.12, h * 0.2, h * 0.13, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(196, 70, 40, 0.95)";
+  ctx.beginPath();
+  ctx.arc(cx + h * 0.76, baseY - h * 0.16, h * 0.045, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 // Vers-water-markering (hoofdstuk 2, issue: "stad stichten op de
 // frontier" deel 1: "maak op de kaart zichtbaar welke vakjes geschikt
 // zijn"): een klein golvend randje langs de onderzijde van het vakje, zodat
@@ -971,6 +1007,9 @@ function tekenActieveTile(
     tekenTerreinHint(ctx, x, y, size, tile.terrein, seed);
     if (tile.kudde) {
       tekenKudde(ctx, x, y, size, seed + 1);
+    }
+    if (tile.roofdier) {
+      tekenRoofdier(ctx, x, y, size);
     }
   }
 }

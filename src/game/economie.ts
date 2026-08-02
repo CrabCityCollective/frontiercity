@@ -56,7 +56,7 @@
 import { improvementPastOpTerrein, NIEUWE_SETTLER, OPSLAGPLAATS, SOLDAAT, WOONWIJK } from "./improvements";
 import { standaardUitlegAan } from "./save";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
-import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, Layer, MateriaalType, ResourceType, Strijder, Tile } from "./types";
+import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, KuddeEvent, Layer, MateriaalType, ResourceType, RoofdierEvent, Strijder, Tile } from "./types";
 import {
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
@@ -133,6 +133,14 @@ const KUDDE_VOEDSEL_PER_BEURT = 3;
 // improvement hierboven, maar een alternatief voor de tussenliggende beurten
 // (hoofdstuk 16: bouw-ritme).
 const HOUTHAKKEN_HOUT_PER_BEURT = 1;
+
+// Roofdieren (hoofdstuk 14/17, issue: "roofdieren toevoegen"): vanaf
+// `ROOFDIER_MIN_LAAG` heeft elke jachtactie (niet elke beurt/laag zoals
+// indringers/kuddes hierboven) een kans om een roofdier op te roepen op het
+// jachtvakje zelf. Bewuste MVP-placeholder, net als de overige tuning-
+// getallen hierboven.
+const ROOFDIER_MIN_LAAG = 5;
+const ROOFDIER_KANS = 0.15;
 
 // Startgrondstoffen (issue: "je begint met bijna geen grondstoffen, alleen
 // net genoeg om een houtkap te bouwen"): precies genoeg steen voor een
@@ -1010,7 +1018,65 @@ function verwerkKuddes(state: GameState): GameState {
     return { ...laag, tiles };
   });
 
-  return { ...state, lagen };
+  // Meldt de nieuwe kudde meteen (hoofdstuk 17: "dezelfde stijl als de
+  // indringers-pop-up"), zodat de speler niet toevallig op de kaart hoeft te
+  // zien waar hij de settler heen kan sturen om te jagen.
+  const kuddeEvent: KuddeEvent = { hoogte: doel.hoogte, positieInLaag: doel.positieInLaag };
+
+  return { ...state, lagen, kuddeEvent };
+}
+
+// Sluit een kudde-melding (hoofdstuk 17) — puur een UI-bevestiging, de kudde
+// zelf blijft gewoon op de kaart staan tot hij leeggejaagd is of overbouwd
+// wordt.
+export function sluitKuddeMelding(state: GameState): GameState {
+  return { ...state, kuddeEvent: undefined };
+}
+
+// Roofdieren (hoofdstuk 14/17, issue: "roofdieren toevoegen") — onderdeel van
+// de `volgendeBeurt`-pijplijn, net als `verwerkIndringers`/`verwerkKuddes`
+// hierboven. Elk vakje met een `roofdier` (gezet door `jaag`) telt eerst zijn
+// `beurtenTotAanval` af — dat geeft de speler exact één tussenliggende beurt
+// om de settler weg te bewegen (hoofdstuk 7: "waarschuwing → kort
+// reactievenster → gevolg"). Is die beurt om, dan wordt de aanval
+// afgehandeld: staat de settler nog (of weer) op het vakje, dan sterft hij en
+// meldt een pop-up dit (`fase: "aanval"`); staat hij er niet, dan trekt het
+// roofdier zich stilzwijgend terug. Zowel bij een voltreffer als een
+// ontsnapping verdwijnt het roofdier-veld daarna — één aanvalspoging per
+// verschijning (hoofdstuk 17 kent geen mechanisme om een roofdier af te
+// weren, alleen om het te ontwijken).
+function verwerkRoofdieren(state: GameState): GameState {
+  let settler = state.settler;
+  let settlerVerlorenAanRoofdier = state.settlerVerlorenAanRoofdier;
+  let roofdierEvent = state.roofdierEvent;
+
+  const lagen = state.lagen.map((laag) => {
+    const tiles = laag.tiles.map((tile) => {
+      if (!tile.roofdier) return tile;
+
+      if (tile.roofdier.beurtenTotAanval > 0) {
+        return { ...tile, roofdier: { beurtenTotAanval: tile.roofdier.beurtenTotAanval - 1 } };
+      }
+
+      const settlerOpPlek =
+        state.settler?.hoogte === laag.hoogte && state.settler?.positieInLaag === tile.positieInLaag;
+      if (settlerOpPlek) {
+        settler = undefined;
+        settlerVerlorenAanRoofdier = true;
+        roofdierEvent = { hoogte: laag.hoogte, positieInLaag: tile.positieInLaag, fase: "aanval" };
+      }
+      return { ...tile, roofdier: undefined };
+    });
+    return { ...laag, tiles };
+  });
+
+  return { ...state, lagen, settler, settlerVerlorenAanRoofdier, roofdierEvent };
+}
+
+// Sluit een roofdier-melding (hoofdstuk 14/17) — puur een UI-bevestiging,
+// zowel bij de waarschuwing ("verschenen") als bij het gevolg ("aanval").
+export function sluitRoofdierMelding(state: GameState): GameState {
+  return { ...state, roofdierEvent: undefined };
 }
 
 // Sluit een gemelde-maar-onschadelijke indringers-melding (wachttoren hield
@@ -1086,8 +1152,10 @@ export function startBouw(
         bouwVoortgang: { ...improvement.kosten },
         // Een kudde trekt verder zodra hier gebouwd wordt (hoofdstuk 16/17)
         // — anders zou `jaag` hierboven op een inmiddels bebouwd vakje
-        // kunnen blijven jagen.
+        // kunnen blijven jagen. Een eventueel roofdier op ditzelfde vakje
+        // (hoofdstuk 17) verliest hiermee ook zijn doel.
         kudde: undefined,
+        roofdier: undefined,
       };
     });
 
@@ -1153,6 +1221,12 @@ export function legWegAan(state: GameState): GameState {
 // jachtbeurten van de kudde af; op nul is de kudde uitgeput en verdwijnt hij
 // — geen ghost-town-tile zoals bij een uitgeputte land-improvement
 // (hoofdstuk 4), het vakje wordt gewoon weer een leeg vakje.
+//
+// Roofdieren (hoofdstuk 14/17, issue: "roofdieren toevoegen"): vanaf
+// `ROOFDIER_MIN_LAAG` heeft elke jachtbeurt een kans om een roofdier op te
+// roepen, op hetzelfde vakje. Meldt dit meteen (`roofdierEvent`,
+// fase "verschenen") — de daadwerkelijke aanval volgt pas een beurt later,
+// zie `verwerkRoofdieren` in `volgendeBeurt` hieronder.
 export function jaag(state: GameState): GameState {
   if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
 
@@ -1162,19 +1236,32 @@ export function jaag(state: GameState): GameState {
   if (!laag || !tile?.kudde) return state;
 
   const beurtenResterend = tile.kudde.beurtenResterend - 1;
+  const roofdierVerschijnt = hoogte >= ROOFDIER_MIN_LAAG && Math.random() < ROOFDIER_KANS;
+
   const lagen = state.lagen.map((l) => {
     if (l.hoogte !== hoogte) return l;
     const tiles = l.tiles.map((t, index) =>
-      index === positieInLaag ? { ...t, kudde: beurtenResterend > 0 ? { beurtenResterend } : undefined } : t
+      index === positieInLaag
+        ? {
+            ...t,
+            kudde: beurtenResterend > 0 ? { beurtenResterend } : undefined,
+            roofdier: roofdierVerschijnt ? { beurtenTotAanval: 1 } : t.roofdier,
+          }
+        : t
     );
     return { ...l, tiles };
   });
+
+  const roofdierEvent: RoofdierEvent | undefined = roofdierVerschijnt
+    ? { hoogte, positieInLaag, fase: "verschenen" }
+    : state.roofdierEvent;
 
   return {
     ...state,
     lagen,
     voedsel: state.voedsel + KUDDE_VOEDSEL_PER_BEURT,
     settlerActieGedaanDitBeurt: true,
+    roofdierEvent,
   };
 }
 
@@ -1449,7 +1536,8 @@ export function volgendeBeurt(state: GameState): GameState {
   const naStrijdersOnderweg = verwerkStrijdersOnderweg(naRecrutering);
   const naIndringers = verwerkIndringers(naStrijdersOnderweg);
   const naKuddes = verwerkKuddes(naIndringers);
-  const nieuweBeurt = naKuddes.beurt + 1;
+  const naRoofdieren = verwerkRoofdieren(naKuddes);
+  const nieuweBeurt = naRoofdieren.beurt + 1;
 
   // De settler verschijnt bij de stad zodra beurt 2 begint (hoofdstuk 16) —
   // en blijft daarna gewoon staan waar de speler 'm laatst neerzette. Niet
@@ -1457,12 +1545,18 @@ export function volgendeBeurt(state: GameState): GameState {
   // 9/10/16, issue: "stad stichten op de frontier" deel 4): `stichtStad`
   // zet `settler` bewust op `undefined` ("de huifkar wordt de stad") — zonder
   // deze uitzondering zou deze val-terug-regel daar per ongeluk elke beurt
-  // weer een gratis nieuwe settler van maken.
+  // weer een gratis nieuwe settler van maken. Dezelfde uitzondering geldt
+  // sinds hoofdstuk 17 (issue: "roofdieren toevoegen") voor een settler die
+  // aan een roofdier is verloren — ook dan moet een vervanging via de
+  // civiele improvement-pool (`startNieuweSettler`), niet gratis terugkomen.
   const settler =
-    naKuddes.settler ?? (!naKuddes.stadGesticht && nieuweBeurt >= 2 ? { hoogte: 1, positieInLaag: STAD_POSITIE } : undefined);
+    naRoofdieren.settler ??
+    (!naRoofdieren.stadGesticht && !naRoofdieren.settlerVerlorenAanRoofdier && nieuweBeurt >= 2
+      ? { hoogte: 1, positieInLaag: STAD_POSITIE }
+      : undefined);
 
   return {
-    ...naKuddes,
+    ...naRoofdieren,
     beurt: nieuweBeurt,
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,

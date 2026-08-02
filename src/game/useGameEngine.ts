@@ -14,6 +14,8 @@ import {
   maakInitieleSpelStatus,
   sluitBouwKeuze as sluitBouwKeuzeActie,
   sluitIndringersMelding as sluitIndringersMeldingActie,
+  sluitKuddeMelding as sluitKuddeMeldingActie,
+  sluitRoofdierMelding as sluitRoofdierMeldingActie,
   startBouw as startBouwActie,
   startGroei as startGroeiActie,
   startNieuweSettler as startNieuweSettlerActie,
@@ -114,6 +116,14 @@ export function useGameEngine() {
     setState((huidig) => sluitIndringersMeldingActie(huidig));
   }, []);
 
+  const sluitKuddeMelding = useCallback(() => {
+    setState((huidig) => sluitKuddeMeldingActie(huidig));
+  }, []);
+
+  const sluitRoofdierMelding = useCallback(() => {
+    setState((huidig) => sluitRoofdierMeldingActie(huidig));
+  }, []);
+
   const geefTribuut = useCallback(() => {
     setState((huidig) => geefTribuutActie(huidig));
   }, []);
@@ -155,6 +165,8 @@ export function useGameEngine() {
     jaag,
     hakHout,
     sluitIndringersMelding,
+    sluitKuddeMelding,
+    sluitRoofdierMelding,
     geefTribuut,
     weigerTribuut,
     bevestigGedwongenTribuut,

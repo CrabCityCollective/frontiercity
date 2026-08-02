@@ -193,3 +193,23 @@ export const INEENSTORTING_FLAVOR_TEKST =
 export const INDRINGERS_STAMMEN = ["de stam van de Halve Maan", "de stam van de Bloedhoeven"];
 
 export const INDRINGERS_TITEL = "Indringers bij de grens";
+
+// Kudde-melding (hoofdstuk 17): getoond zodra `verwerkKuddes` (economie.ts)
+// een nieuwe wilde kudde neerzet — zelfde stijlgids als de rest van dit
+// bestand, en dezelfde blokkerende meldings-vorm als de indringers-pop-up
+// hierboven. De laag zelf wordt, net als bij `INDRINGERS_TITEL`, in de
+// pop-up-component zelf achter de flavor-tekst gezet — dit is puur de
+// vaste tekst.
+export const KUDDE_TITEL = "Een kudde in de verte";
+export const KUDDE_FLAVOR_TEKST = "Dieren bewegen tussen de bomen. Genoeg voor een paar dagen jacht.";
+
+// Roofdier-meldingen (hoofdstuk 14/17, issue: "roofdieren toevoegen"): twee
+// momenten van dezelfde dreiging — eerst de waarschuwing zodra hij verschijnt
+// (`jaag` in economie.ts), dan pas het gevolg een beurt later
+// (`verwerkRoofdieren`), als de settler niet op tijd wegkwam.
+export const ROOFDIER_VERSCHENEN_TITEL = "Iets anders volgt de kudde";
+export const ROOFDIER_VERSCHENEN_TEKST =
+  "Een schaduw breekt door het struikgewas. Nog één beurt om de settler weg te bewegen.";
+export const ROOFDIER_AANVAL_TITEL = "De settler keert niet terug";
+export const ROOFDIER_AANVAL_TEKST =
+  "Het spoor eindigt bij de kudde. Er is geen huifkar meer — een nieuwe moet eerst uitgerust worden.";

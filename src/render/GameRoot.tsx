@@ -9,12 +9,14 @@ import HoofdMenu from "@/components/HoofdMenu";
 import IndringersPopup from "@/components/IndringersPopup";
 import IneenstortingScherm from "@/components/IneenstortingScherm";
 import IntroScherm from "@/components/IntroScherm";
+import KuddePopup from "@/components/KuddePopup";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import LaagPopup from "@/components/LaagPopup";
 import MilitairPaneel from "@/components/MilitairPaneel";
 import MilitairUitlegPopup from "@/components/MilitairUitlegPopup";
 import OpslagplaatsPaneel from "@/components/OpslagplaatsPaneel";
 import ResourceHud from "@/components/ResourceHud";
+import RoofdierPopup from "@/components/RoofdierPopup";
 import SettlerPaneel from "@/components/SettlerPaneel";
 import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
 import SpelActiesMenu from "@/components/SpelActiesMenu";
@@ -75,6 +77,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     jaag,
     hakHout,
     sluitIndringersMelding,
+    sluitKuddeMelding,
+    sluitRoofdierMelding,
     geefTribuut,
     weigerTribuut,
     bevestigGedwongenTribuut,
@@ -369,6 +373,28 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     Boolean(state.indringersEvent);
+  // Kudde- & roofdier-pop-ups (hoofdstuk 14/17) — zelfde blokkerende vorm en
+  // prioriteit als de indringers-pop-up hierboven, ook los van de
+  // uitleg-toggle: dit is kerninhoud, geen uitleg.
+  const toonKuddePopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonMilitairUitlegPopup &&
+    !toonIndringersPopup &&
+    Boolean(state.kuddeEvent);
+  const toonRoofdierPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonMilitairUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    Boolean(state.roofdierEvent);
   // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
   // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
   // "confrontatie op laag 12 gewonnen" als trigger: het stichten is nu het
@@ -381,6 +407,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
   // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
@@ -482,6 +510,12 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             onSluiten={sluitIndringersMelding}
           />
         )}
+        {toonKuddePopup && state.kuddeEvent && (
+          <KuddePopup event={state.kuddeEvent} onSluiten={sluitKuddeMelding} />
+        )}
+        {toonRoofdierPopup && state.roofdierEvent && (
+          <RoofdierPopup event={state.roofdierEvent} onSluiten={sluitRoofdierMelding} />
+        )}
         {toonUitlegPopup && <UitlegPopup onDoorgaan={() => setOpeningsUitlegBevestigd(true)} />}
         {toonSettlerUitlegPopup && <SettlerUitlegPopup onDoorgaan={() => setSettlerUitlegBevestigd(true)} />}
         {toonVoedselWaarschuwingPopup && (
@@ -547,6 +581,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonBoerderijKlaarUitlegPopup &&
             !toonMilitairUitlegPopup &&
             !toonIndringersPopup &&
+            !toonKuddePopup &&
+            !toonRoofdierPopup &&
             !toonTutorialVoltooidPopup &&
             !strijderBemanPopupStrijderId &&
             !wachttorenKiesModusStrijderId &&
