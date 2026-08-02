@@ -831,6 +831,34 @@ function tekenKudde(ctx: CanvasRenderingContext2D, x: number, y: number, size: n
   tekenHertSilhouet(ctx, x + size * 0.62, baseY - size * 0.04, size * (0.26 + rng() * 0.06));
 }
 
+// Vers-water-markering (hoofdstuk 2, issue: "stad stichten op de
+// frontier" deel 1: "maak op de kaart zichtbaar welke vakjes geschikt
+// zijn"): een klein golvend randje langs de onderzijde van het vakje, zodat
+// een speler op elk moment kan zien/plannen waar hij later zou kunnen
+// stichten — zichtbaar ongeacht of het vakje nog leeg is of al bebouwd
+// (bebouwde vakjes tonen 'm nog om te laten zien dat de kans daar verkeken
+// is, i.p.v. het spoor stilzwijgend te laten verdwijnen).
+function tekenVersWaterMarkering(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  seed: number
+): void {
+  const rng = maakSeededRandom(seed);
+  ctx.save();
+  ctx.strokeStyle = "rgba(120, 195, 220, 0.85)";
+  ctx.lineWidth = Math.max(1.5, size * 0.035);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  const baseY = y + size * (0.93 + (rng() - 0.5) * 0.02);
+  ctx.moveTo(x + size * 0.06, baseY);
+  ctx.quadraticCurveTo(x + size * 0.28, baseY - size * 0.06, x + size * 0.5, baseY);
+  ctx.quadraticCurveTo(x + size * 0.72, baseY + size * 0.06, x + size * 0.94, baseY);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function tekenTileGrid(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -981,6 +1009,9 @@ export function tekenWereld(
       } else {
         const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
         tekenActieveTile(ctx, x, y, tileSize, laag.tiles[col], laag.terreinType, stad, col, laag.hoogte, verbonden);
+        if (laag.tiles[col].versWater) {
+          tekenVersWaterMarkering(ctx, x, y, tileSize, tileSeed(col, laag.hoogte, 2));
+        }
       }
 
       tekenTileGrid(ctx, x, y, tileSize);

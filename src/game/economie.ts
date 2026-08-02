@@ -53,13 +53,14 @@
 // (hoofdstuk 14) — de waarden hieronder zijn bewuste MVP-placeholders, geen
 // definitieve balans.
 
-import { improvementPastOpTerrein, SOLDAAT, WOONWIJK } from "./improvements";
+import { improvementPastOpTerrein, NIEUWE_SETTLER, OPSLAGPLAATS, SOLDAAT, WOONWIJK } from "./improvements";
 import { standaardUitlegAan } from "./save";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
 import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, Layer, MateriaalType, ResourceType, Strijder, Tile } from "./types";
 import {
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
+  isGeschiktVoorStichten,
   maakInitieleWereld,
   STAD_POSITIE,
   VOEDSEL_DREMPEL_GROEI,
@@ -536,21 +537,35 @@ export function berekenHistorieStatistieken(state: GameState): {
   };
 }
 
-// Betaalt de bouwkosten van een lopende stadsgroei (M6). Los van de
-// land-tile-bouwwachtrij omdat groei de stad zelf upgradet, geen land-vakje.
-function verwerkGroei(state: GameState): GameState {
-  const groeiInAanbouw = state.stad.groeiInAanbouw;
-  if (!groeiInAanbouw) return state;
+// Betaalt de bouwkosten van een lopende civiele stadsbouw (M6, hoofdstuk
+// 11/16): één gedeelde wachtrij voor de groei-tier (WOONWIJK) én een nieuwe
+// settler (NIEUWE_SETTLER) — hoogstens één van de twee tegelijk (hoofdstuk
+// 11: "concurrerend met de groei-improvements"). Los van de
+// land-tile-bouwwachtrij omdat dit de stad zelf upgradet, geen land-vakje.
+// Bij voltooiing bepaalt `effect.type` welk resultaat het oplevert: "groei"
+// (grootte klein→middel, bestaand gedrag) of "settler" (een nieuwe settler
+// verschijnt bij de stad — alleen mogelijk als er op dat moment geen settler
+// actief is, zie `startNieuweSettler` hieronder, dus dit overschrijft nooit
+// een bestaande).
+function verwerkCivielInAanbouw(state: GameState): GameState {
+  const civielInAanbouw = state.stad.civielInAanbouw;
+  if (!civielInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(groeiInAanbouw.improvement, groeiInAanbouw.voortgang, voorraad);
+  const resultaat = investeerInBouwkosten(civielInAanbouw.improvement, civielInAanbouw.voortgang, voorraad);
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
+    const isSettler = civielInAanbouw.improvement.effect.type === "settler";
     return {
       ...state,
       voorraad,
-      stad: { ...state.stad, grootte: "middel", groeiInAanbouw: undefined },
+      stad: {
+        ...state.stad,
+        grootte: isSettler ? state.stad.grootte : "middel",
+        civielInAanbouw: undefined,
+      },
+      settler: isSettler ? { hoogte: 1, positieInLaag: STAD_POSITIE } : state.settler,
     };
   }
 
@@ -559,7 +574,38 @@ function verwerkGroei(state: GameState): GameState {
     voorraad,
     stad: {
       ...state.stad,
-      groeiInAanbouw: { ...groeiInAanbouw, voortgang: resultaat.nieuweVoortgang },
+      civielInAanbouw: { ...civielInAanbouw, voortgang: resultaat.nieuweVoortgang },
+    },
+  };
+}
+
+// Betaalt de bouwkosten van een lopende Opslagplaats (hoofdstuk 3/5/13/14,
+// issue: "stad stichten op de frontier" deel 2). Eigen wachtrij, los van
+// `civielInAanbouw` — Opslagplaats is economisch, geen civiel improvement
+// (hoofdstuk 3). Voltooiing verhoogt de gedeelde opslag-cap direct.
+function verwerkOpslagplaats(state: GameState): GameState {
+  const opslagplaatsInAanbouw = state.stad.opslagplaatsInAanbouw;
+  if (!opslagplaatsInAanbouw) return state;
+
+  const voorraad = { ...state.voorraad };
+  const resultaat = investeerInBouwkosten(opslagplaatsInAanbouw.improvement, opslagplaatsInAanbouw.voortgang, voorraad);
+  if (!resultaat) return state;
+
+  if (resultaat.voltooid) {
+    return {
+      ...state,
+      voorraad,
+      opslagCap: state.opslagCap + (OPSLAGPLAATS.effect.waarde ?? 0),
+      stad: { ...state.stad, opslagplaatsInAanbouw: undefined },
+    };
+  }
+
+  return {
+    ...state,
+    voorraad,
+    stad: {
+      ...state.stad,
+      opslagplaatsInAanbouw: { ...opslagplaatsInAanbouw, voortgang: resultaat.nieuweVoortgang },
     },
   };
 }
@@ -612,7 +658,7 @@ function verwerkRecrutering(state: GameState): GameState {
 export function startGroei(state: GameState): GameState {
   if (
     state.stad.grootte !== "klein" ||
-    state.stad.groeiInAanbouw ||
+    state.stad.civielInAanbouw ||
     state.voedsel < VOEDSEL_DREMPEL_GROEI
   ) {
     return state;
@@ -622,7 +668,55 @@ export function startGroei(state: GameState): GameState {
     ...state,
     stad: {
       ...state.stad,
-      groeiInAanbouw: { improvement: WOONWIJK, voortgang: { ...WOONWIJK.kosten } },
+      civielInAanbouw: { improvement: WOONWIJK, voortgang: { ...WOONWIJK.kosten } },
+    },
+  };
+}
+
+// MVP: precies 1 stad per run (hoofdstuk 13, geen frontier-verplaatsing) —
+// zelfde constante als `berekenHistorieStatistieken` hieronder gebruikt.
+// Zodra meerdere steden bestaan (post-MVP), wordt dit een echte telling.
+const AANTAL_STEDEN_MVP = 1;
+
+function aantalSettlers(state: GameState): number {
+  return state.settler ? 1 : 0;
+}
+
+// Start het uitrusten van een nieuwe settler (hoofdstuk 3/11/13/16, issue:
+// "stad stichten op de frontier" deel 4): een civiele keuze die concurreert
+// met `startGroei` hierboven (zelfde `civielInAanbouw`-wachtrij, dus
+// hoogstens één van de twee tegelijk). Alleen mogelijk zolang het huidige
+// aantal settlers lager is dan het aantal steden — de speler begint met één
+// settler, en pas een gestichte stad kan er weer één uitrusten (hoofdstuk
+// 11: "maximaal één settler per gestichte stad" als natuurlijke rem op
+// expansie). In de MVP (één stad) is dat dus alleen mogelijk vóórdat de
+// eerste settler bestaat (vóór beurt 2, zie `volgendeBeurt`).
+export function startNieuweSettler(state: GameState): GameState {
+  if (state.stad.civielInAanbouw || aantalSettlers(state) >= AANTAL_STEDEN_MVP) {
+    return state;
+  }
+
+  return {
+    ...state,
+    stad: {
+      ...state.stad,
+      civielInAanbouw: { improvement: NIEUWE_SETTLER, voortgang: { ...NIEUWE_SETTLER.kosten } },
+    },
+  };
+}
+
+// Start het bouwen van een Opslagplaats (hoofdstuk 3/5/13/14, issue: "stad
+// stichten op de frontier" deel 2). Herhaalbaar (hoofdstuk 14: "praktisch
+// maximum ~3-4 opslagplaatsen per stad") — geen bovengrens in code, alleen
+// hoogstens één tegelijk in aanbouw, net als de overige wachtrijen hierboven.
+export function startOpslagplaats(state: GameState): GameState {
+  if (state.stad.opslagplaatsInAanbouw) return state;
+
+  return {
+    ...state,
+    stad: {
+      ...state.stad,
+      opslagplaatsInAanbouw: { improvement: OPSLAGPLAATS, voortgang: { ...OPSLAGPLAATS.kosten } },
     },
   };
 }
@@ -1104,6 +1198,132 @@ export function hakHout(state: GameState): GameState {
   return { ...state, voorraad, settlerActieGedaanDitBeurt: true };
 }
 
+// Stichtingskosten (hoofdstuk 2/14, issue: "stad stichten op de frontier"
+// deel 3, narekenen van het voorstel "25 hout, 15 steen, 10 erts, 30
+// voedsel"). Doorrekening tegen de werkelijke code (niet alleen het
+// design-document): `OPSLAG_CAP` blijkt in `verwerkProductie` hierboven per
+// grondstof te gelden (`voorraad[resource] = min(opslagCap, ...)` voor élk
+// van hout/steen/erts/goud apart), niet als gezamenlijke som van de vier
+// zoals hoofdstuk 5 beschrijft. Met een gedeelde som zou 25+15+10 = 50 al
+// ruim boven de cap van 30 uitkomen en dus altijd een Opslagplaats afdwingen
+// — maar met een cap per grondstof (de daadwerkelijke situatie) zitten
+// 25/15/10 elk ruim ónder de 30, en zou de speler nooit hoeven uit te
+// breiden. `hout` is daarom verhoogd naar 40 (boven de startcap van 30) —
+// dat dwingt minstens één Opslagplaats af (cap 30 → 50), precies de bewuste
+// tussenstap uit deel 2. Steen/erts blijven ruim onder de cap (ook na een
+// paar bouwprojecten realistisch op te sparen) en voedsel is sowieso
+// ongelimiteerd (hoofdstuk 5) — de architectuur zelf blijft hier bewust
+// ongewijzigd (dat is een aparte refactor, buiten deze issue), alleen de
+// bedragen zijn erop afgestemd.
+//
+// Voedsel blijft op de voorgestelde 30: aangezien voedsel nooit "uitgegeven"
+// wordt (hoofdstuk 5 — alleen drempels zoals `VOEDSEL_DREMPEL_GROEI`
+// controleren de voorraad, ze verlagen 'm niet) is een gezonde stad tegen de
+// tijd dat laag 10-12 ontgrendeld is sowieso al ver voorbij 30 voedsel, op
+// straffe van een eerdere ineenstorting (hoofdstuk 4) — de eis dwingt dus
+// vooral af dat de voedselcrisis allang opgelost moet zijn, wat de bestaande
+// verval-mechaniek toch al vereist. Hem hoger zetten dan 30 zou daar weinig
+// aan veranderen; lager zou de eis betekenisloos maken.
+//
+// Turn-doorrekening (indicatief, zelfde stijl als hoofdstuk 14): met één
+// Houtkap (3 hout/beurt) en één Opslagplaats gebouwd, is 40 hout binnen
+// ~13-14 beurten surplus te verzamelen; 15 steen (één Steengroeve, 2/beurt)
+// binnen ~8 beurten, 10 erts (één Mijn, 2/beurt) binnen ~5 beurten — ruim
+// haalbaar binnen de vele tientallen beurten die toch al nodig zijn om laag
+// 10-12 te bereiken (hoofdstuk 14: cultuurkosten lopen daar al op tot
+// 400-600), dus een doel waar de speler een paar lagen naartoe werkt zonder
+// dat het sleept.
+export const STICHTING_KOSTEN: { hout: number; steen: number; erts: number; voedsel: number } = {
+  hout: 40,
+  steen: 15,
+  erts: 10,
+  voedsel: 30,
+};
+
+// Naam van de nieuw te stichten stad (hoofdstuk 10: prehistorisch klinkende
+// stadsnamen naast Holenrots — "Vuurbron", "Asvallei"). Puur cosmetisch: de
+// MVP bouwt geen tweede, speelbare stad (hoofdstuk 13/16 — het stichten is
+// hier het eindpunt van de tutorial), dus dit is alleen de naam die op de
+// nieuwe stad-tile en in de afsluitende scène verschijnt.
+export const GESTICHTE_STAD_NAAM = "Vuurbron";
+
+// Of de settler nu op een geldig stichtingsdoel staat (hoofdstuk 2: aan
+// vers water, en nog onbebouwd — zie `isGeschiktVoorStichten`). Gedeeld
+// tussen `stichtStad` hieronder en de UI (SettlerPaneel/GameRoot), zodat de
+// "Stad stichten"-knop alleen verschijnt wanneer de actie ook echt zou
+// slagen.
+export function kanStichten(state: GameState): boolean {
+  const settler = state.settler;
+  if (!settler) return false;
+  const laag = state.lagen.find((l) => l.hoogte === settler.hoogte);
+  const tile = laag?.tiles[settler.positieInLaag];
+  return Boolean(tile && isGeschiktVoorStichten(tile));
+}
+
+// Of er genoeg grondstoffen zijn om de stichtingskosten te betalen —
+// losstaand van `kanStichten` (locatie) zodat de UI apart kan tonen "je
+// staat op de juiste plek, maar mist nog X" versus "dit is geen geschikte
+// plek".
+export function heeftGenoegVoorStichten(state: GameState): boolean {
+  return (
+    state.voorraad.hout >= STICHTING_KOSTEN.hout &&
+    state.voorraad.steen >= STICHTING_KOSTEN.steen &&
+    state.voorraad.erts >= STICHTING_KOSTEN.erts &&
+    state.voedsel >= STICHTING_KOSTEN.voedsel
+  );
+}
+
+// Sticht een nieuwe stad op het vakje waar de settler nu staat (hoofdstuk
+// 2/10/16, issue: "stad stichten op de frontier" deel 4 — vervangt "bereik
+// laag 12" als tutorial-einddoel). De settler zelf verdwijnt hierbij: "de
+// huifkar wordt de stad" (de UI waarschuwt hier vóóraf duidelijk voor, zie
+// StichtStadPopup — deze functie voert de al-bevestigde actie alleen nog
+// uit). Geen effect bij een ongeldige aanroep (verkeerde locatie of te
+// weinig grondstoffen) — dezelfde twee-staps-veilige-aanroep-conventie als
+// `startBouw`/`verplaatsSettlerNaar` hierboven. Zet `stadGesticht` (GameRoot
+// toont daarop de afsluitende tutorial-scène) en verbruikt geen aparte
+// settler-actie-vlag: dit is de laatste, beslissende zet, geen herhaalbare
+// per-beurt-actie zoals bewegen/jagen/hakken.
+export function stichtStad(state: GameState): GameState {
+  if (!kanStichten(state) || !heeftGenoegVoorStichten(state)) return state;
+
+  const { hoogte, positieInLaag } = state.settler!;
+  const lagen = state.lagen.map((laag) => {
+    if (laag.hoogte !== hoogte) return laag;
+    const tiles = laag.tiles.map((tile, index) => {
+      if (index !== positieInLaag) return tile;
+      return {
+        ...tile,
+        status: "actief" as const,
+        improvement: {
+          id: "gestichte-stad",
+          naam: GESTICHTE_STAD_NAAM,
+          categorie: "civiel" as const,
+          soort: "city" as const,
+          kosten: {},
+          bouwtijdBeurten: 0,
+          effect: { type: "stad" },
+        },
+      };
+    });
+    return { ...laag, tiles };
+  });
+
+  return {
+    ...state,
+    lagen,
+    voorraad: {
+      ...state.voorraad,
+      hout: state.voorraad.hout - STICHTING_KOSTEN.hout,
+      steen: state.voorraad.steen - STICHTING_KOSTEN.steen,
+      erts: state.voorraad.erts - STICHTING_KOSTEN.erts,
+    },
+    voedsel: state.voedsel - STICHTING_KOSTEN.voedsel,
+    settler: undefined,
+    stadGesticht: true,
+  };
+}
+
 // Of er al een actieve, wegverbonden boerderij meeproduceert (issue: "uitleg
 // pop-ups dynamisch tonen" — trigger voor BoerderijKlaarUitlegPopup): gebruikt
 // dezelfde wegverbindingsregel als `verwerkProductie` hierboven, zodat de
@@ -1202,7 +1422,8 @@ export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
 // cultuur (M5), dan pas verval op basis van een dreigend voedseltekort (M6)
 // (issue: "eerst de grondstoffen binnenkomen, en daarna wordt gecheckt of je
 // afgaat" — een tile/weg die deze beurt klaarkomt telt zo al mee vóór de
-// instort-check), dan de stadsgroei-bouwwachtrij (M6) en de
+// instort-check), dan de civiele stadsbouwwachtrij (M6/hoofdstuk 16: groei óf
+// een nieuwe settler), de Opslagplaats-wachtrij (hoofdstuk 14) en de
 // Soldaat-rekruteringswachtrij (M7), de strijder-verplaatsingstellers
 // (hoofdstuk 6/11, `verwerkStrijdersOnderweg` na `haalStrijderTerug`), dan de
 // indringers-kans (hoofdstuk 6) en de kuddes-kans (hoofdstuk 16/17), dan de
@@ -1222,17 +1443,23 @@ export function volgendeBeurt(state: GameState): GameState {
   const naVerval = verwerkVerval(naOntgrendeling);
   if (naVerval.laatsteIneenstorting) return naVerval;
 
-  const naGroei = verwerkGroei(naVerval);
-  const naRecrutering = verwerkRecrutering(naGroei);
+  const naCiviel = verwerkCivielInAanbouw(naVerval);
+  const naOpslagplaats = verwerkOpslagplaats(naCiviel);
+  const naRecrutering = verwerkRecrutering(naOpslagplaats);
   const naStrijdersOnderweg = verwerkStrijdersOnderweg(naRecrutering);
   const naIndringers = verwerkIndringers(naStrijdersOnderweg);
   const naKuddes = verwerkKuddes(naIndringers);
   const nieuweBeurt = naKuddes.beurt + 1;
 
   // De settler verschijnt bij de stad zodra beurt 2 begint (hoofdstuk 16) —
-  // en blijft daarna gewoon staan waar de speler 'm laatst neerzette.
+  // en blijft daarna gewoon staan waar de speler 'm laatst neerzette. Niet
+  // opnieuw laten verschijnen ná het stichten van een stad (hoofdstuk
+  // 9/10/16, issue: "stad stichten op de frontier" deel 4): `stichtStad`
+  // zet `settler` bewust op `undefined` ("de huifkar wordt de stad") — zonder
+  // deze uitzondering zou deze val-terug-regel daar per ongeluk elke beurt
+  // weer een gratis nieuwe settler van maken.
   const settler =
-    naKuddes.settler ?? (nieuweBeurt >= 2 ? { hoogte: 1, positieInLaag: STAD_POSITIE } : undefined);
+    naKuddes.settler ?? (!naKuddes.stadGesticht && nieuweBeurt >= 2 ? { hoogte: 1, positieInLaag: STAD_POSITIE } : undefined);
 
   return {
     ...naKuddes,

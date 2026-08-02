@@ -22,6 +22,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - Elke laag heeft **9 bouwvakken**: middelste = stad (max 1 stad per laag), overige 8 = land improvements.
 - Naast het terreintype van de hele laag (bv. "loofbos", zie hoofdstuk 8) heeft elk los vakje ook een eigen **terrein-subtype** (vlak/bos/heuvel/berg) — een laag is dus geen uniform blok, maar een mix. Dit subtype bepaalt of een specifiek land improvement er neergezet mag worden (zie hoofdstuk 3 en hoofdstuk 11, "Terrein-eisen per land improvement").
 - Je speelt met **1 actieve frontier-stad** tegelijk. Sticht je een nieuwe stad (op een geschikte locatie, verderop), dan schuift het scherm op — je nieuwe stad begint onderaan, als nieuwe frontier.
+- **Geschikte stichtingslocatie**: een nieuwe stad kan alleen gesticht worden op een vakje dat aan **vers water** ligt — een rivier of een meer. Dit is een los, vast vakje-kenmerk (net als het terrein-subtype uit hoofdstuk 3/11), zichtbaar op de kaart zodra de laag ontgrendeld is, zodat een speler er naartoe kan plannen. De worldgen garandeert minstens één zulk vakje binnen elk bereik waar stichten relevant wordt (voor de tutorial: laag 10-12, zie hoofdstuk 10/13) — een speler kan dus nooit pech hebben en eindeloos moeten doorlopen op zoek naar een geschikte plek.
 - Niet-volledig bebouwde lagen **sluiten permanent** zodra je een nieuwe stad start.
 - Oudere, achtergelaten steden leveren **geen** lopende resource-inkomsten meer (bewust, voor het frontier-gevoel) — hun waarde zit in de specialisatie-relics die ze hebben opgeleverd voor je vertrok.
 
@@ -60,7 +61,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 
 ## 5. Resource-economie
 
-**Gedeelde opslag (met cap, uitbreidbaar via opslagplaats-improvement):**
+**Gedeelde opslag (met cap, uitbreidbaar via opslagplaats-improvement):** in de huidige implementatie geldt de cap per grondstof (hout/steen/erts/goud elk apart), niet als gezamenlijke som van de vier — zie hoofdstuk 14 ("Opslag-cap") voor de doorrekening en de reden om dit vooralsnog zo te laten staan.
 - **Hout** (van houtkap) — snel, ververst relatief snel, basis voor vroege/culturele improvements
 - **Steen** (van steengroeve) — langzamer, duurzaam, nodig voor civiele/grote gebouwen
 - **Erts** (van mijnen) — zeldzaamst, snelste uitputting, nodig voor militaire/wetenschappelijke improvements
@@ -196,9 +197,11 @@ Eén nieuw mechaniek per laag, oplopend:
 | 11 | Waarschuwingssignaal bij verval (gescript, ongevaarlijk) |
 | 12 | Militair/verdediging (licht, laagdrempelig) |
 
-**Laag 10 in het bijzonder:** dit is de eerste keer dat de speler de volledige inzet van hoofdstuk 4 voelt — een ineenstorting hier beëindigt de hele tutorial-run, net zoals later in een echte campagne. De tutorial waarschuwt de speler dan ook expliciet wat er op het spel staat: zodra de voedselstatus "kritiek" wordt (de zichtbare waarschuwingsstatus uit hoofdstuk 4, die al een paar beurten vóór een mogelijke instorting verschijnt), krijgt de speler een duidelijke melding dat doorgroeien nu een echte gok is en dat bij een instorting de hele stad — inclusief alle tot dan toe verdiende relics — verloren gaat. Dat de speler dit risico ruim van tevoren kan zien aankomen, is wat deze laag uitdagend houdt zonder oneerlijk te worden.
+**Laag 10 in het bijzonder:** dit is de eerste keer dat de speler de volledige inzet van hoofdstuk 4 voelt — een ineenstorting hier beëindigt de hele tutorial-run, net zoals later in een echte campagne. De tutorial waarschuwt de speler dan ook expliciet wat er op het spel staat: zodra de voedselstatus "kritiek" wordt (de zichtbare waarschuwingsstatus uit hoofdstuk 4, die al een paar beurten vóór een mogelijke instorting verschijnt), krijgt de speler een duidelijke melding dat doorgroeien nu een echte gok is en dat bij een instorting de hele stad — inclusief alle tot dan toe verdiende relics — verloren gaat. Dat de speler dit risico ruim van tevoren kan zien aankomen, is wat deze laag uitdagend houdt zonder oneerlijk te worden. Vanaf deze laag verschijnt ook, ergens tussen laag 10 en 12, minstens één vakje aan vers water (hoofdstuk 2) — de eerste plek waar de speler zijn stad zou kunnen stichten.
 
-Na laag 12: afsluitende scène, opent het campagnemenu (alleen Amerikaanse frontier beschikbaar; overige campagnes ontgrendelen daarna). Tutorial-save blijft apart bestaan/speelbaar.
+**Einddoel: je eerste stad stichten.** De afsluiting van de tutorial is niet langer "bereik laag 12", maar **je eerste stad stichten op de frontier** (hoofdstuk 2/16) — precies waar het spel zijn naam aan ontleent. Zodra de settler op een geschikt (vers-water) vakje staat en de speler genoeg grondstoffen heeft gespaard (hoofdstuk 14), kan hij stichten; de speler wordt daarbij duidelijk gewaarschuwd dat de settler bij het stichten verdwijnt ("de huifkar wordt de stad"). De speler is niet verplicht meteen te stichten zodra dat kan — hij mag ook gewoon verder ontgrendelen (tot en met laag 12) en later stichten. Het stichten kost meer bouwmateriaal dan de start-opslag-cap van 30 toelaat, dus de speler moet eerst een **Opslagplaats** bouwen (hoofdstuk 3/5/14) — een bewuste tussenstap (hoofdstuk 11). Laag 12 blijft wel zijn eigen mechaniek-les (militair/verdediging, zie de tabel hierboven) — die confrontatie hoeft niet meer gewonnen te worden om de tutorial af te sluiten, maar leert de speler nog steeds de militaire basis vóór de latere campagnes.
+
+Bij het stichten: afsluitende scène, opent het campagnemenu (alleen Amerikaanse frontier beschikbaar; overige campagnes ontgrendelen daarna). Tutorial-save blijft apart bestaan/speelbaar. Er volgt in de MVP nog **geen** volledige frontier-verplaatsing (scherm dat opschuift, oude lagen die sluiten, relics die worden toegekend, hoofdstuk 2/13) — dat hoort bij de Amerikaanse campagne; het stichten is in de tutorial het eindpunt zelf.
 
 **Namen:**
 - Hoofdstuktitel: **"De Eerste Vuren"**
@@ -293,6 +296,15 @@ Zowel de settler-actie als de bouwkeuze zijn beperkt tot één keer per beurt (h
 **Settler-jacht op kuddes als alternatief voor de Houtkap-improvement**
 Een losse, directe settler-actie (jagen/hout hakken) naast de bestaande improvement-productie (hoofdstuk 5) geeft de speler een kleinere maar onmiddellijke opbrengst zonder bouwkosten of wegverbinding — nuttig in de vroege beurten van het bouw-ritme (hoofdstuk 16) voordat een Houtkap of Boerderij daadwerkelijk staat en verbonden is. Kuddes zijn bewust eindig (net als de uitputting van land improvements, hoofdstuk 4) zodat jagen een tijdelijke bonus blijft in plaats van een permanente vervanging van boerderijen — vandaar de hogere opbrengst per beurt (3 voedsel) tegenover het structurele, maar onbeperkte houtkappen (1 hout per beurt).
 
+**Opslagplaats als bewuste tussenstap richting het stichten (issue: "stad stichten op de frontier")**
+De stichtingskosten liggen bewust hoger dan de start-opslag-cap van 30 (hoofdstuk 14), zodat de speler niet zomaar op weg kan naar een geschikt vakje en meteen kan stichten zodra hij er staat — hij moet eerst zijn stad economisch uitbouwen (een Opslagplaats bouwen) voordat hij er klaar voor is. Dat past bij de kernspanning van hoofdstuk 4: doorgroeien/uitbouwen kost tijd en blootstelling aan verval-risico, tegenover simpelweg vertrekken zodra het net-lukt. Zonder deze eis zou de Opslagplaats-improvement (al in het ontwerp aanwezig sinds hoofdstuk 3/5, maar tot deze issue nooit daadwerkelijk gebouwd) geen enkele rol spelen in de tutorial.
+
+**De settler als civiele keuze tegenover groei, niet als losse aanwinst (issue: "stad stichten op de frontier")**
+Een nieuwe settler simpelweg los verkrijgbaar maken (bijvoorbeeld via een aparte knop, altijd beschikbaar) zou het stichten van een tweede stad een puur positieve, kosteloze keuze maken zodra de speler er de grondstoffen voor heeft. Door de nieuwe settler in dezelfde civiele wachtrij te zetten als de groei-tier-improvement (Woonwijk) — met hoogstens één van de twee tegelijk in aanbouw — wordt het een echte afweging: investeer je in de stad waar je al staat (groei, meer relic-slots), of rust je een expeditie uit om verder te trekken? Dat past bij hoofdstuk 3, waar Civiel al de categorie is die stads-tiers en beweging (weg/settler) samenbrengt.
+
+**Maximaal één settler per gestichte stad (issue: "stad stichten op de frontier")**
+Zonder deze rem zou een speler in theorie settler na settler kunnen uitrusten vanuit één stad en zo een onbeperkt aantal expedities tegelijk op pad kunnen sturen, wat het "één actieve frontier-stad tegelijk"-uitgangspunt (hoofdstuk 2) zou ondermijnen. Door het aantal beschikbare settlers te koppelen aan het aantal gestichte steden (elke gestichte stad kan er precies één uitrusten), blijft expansie een geleidelijk, door de speler zelf opgebouwd proces in plaats van een instant-vermenigvuldiging — een natuurlijke rem die meegroeit met hoeveel de speler daadwerkelijk heeft opgebouwd.
+
 ---
 
 ## 12. Visuele stijl
@@ -339,6 +351,9 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 - Placeholder-tegels (simpele, consistente stijl — geen definitieve pre-rendered assets nodig om te testen)
 - Alléén de tutorial-content (Het Hertenpad-volk, lagen 1-12) als speelbare inhoud
 - De stad heeft een zichtbare naam (**Holenrots**, zie hoofdstuk 10), te zien via een klik op de stad-tile — geen naam-generator voor toekomstige steden, dat komt pas met meerdere-steden-support
+- **Opslagplaats** (hoofdstuk 3/5/11/14, economische city improvement): verhoogt de gedeelde opslag-cap met +20, herhaalbaar. Eigen wachtrij, los van de civiele wachtrij hieronder.
+- **Stad stichten** (hoofdstuk 2/10/16): op een vakje aan vers water waar de settler fysiek staat, met een bevestigingswaarschuwing (de settler verdwijnt hierbij — "de huifkar wordt de stad"). Vervangt "bereik laag 12" als tutorial-einddoel; opent daarna de afsluitende scène en het campagnemenu. Nog **geen** volledige frontier-verplaatsing (dat blijft hieronder uitgesteld).
+- **Nieuwe settler in de civiele improvement-pool** (hoofdstuk 3/11): concurreert met de groei-tier-improvement (hoogstens één van de twee tegelijk in aanbouw). Alleen beschikbaar als het huidige aantal settlers lager is dan het aantal gestichte steden.
 
 **Nog niet in de MVP** (bewust uitgesteld tot de kernloop staat):
 - Meerdere steden/frontier-verplaatsing
@@ -379,6 +394,7 @@ interface Tile {
   beurtenTotUitputting?: number;
   heeftWeg?: boolean; // door de settler aangelegd (hoofdstuk 16)
   kudde?: { beurtenResterend: number }; // wilde kudde, vanaf laag 4 (hoofdstuk 17)
+  versWater?: boolean; // ligt aan een rivier/meer (hoofdstuk 2) — voorwaarde om hier een stad te stichten
 }
 
 // Positie van de settler-eenheid (hoofdstuk 16) — bestaat pas vanaf beurt 2.
@@ -401,13 +417,24 @@ interface City {
   relics: Relic[];
   vervalStatus: "gezond" | "kritiek";
   vervalBeurtenResterend?: number;
+  // Civiele stadsbouw-wachtrij (hoofdstuk 3/11/16): groei-tier (Woonwijk) of
+  // een nieuwe settler — hoogstens één van de twee tegelijk (concurrerende
+  // civiele keuze, hoofdstuk 11).
+  civielInAanbouw?: { improvement: Improvement; voortgang: Partial<Record<ResourceType, number>> };
+  // Opslagplaats-wachtrij (hoofdstuk 3/5/11/14): los van `civielInAanbouw`
+  // hierboven — Opslagplaats is economisch, geen civiel improvement, en
+  // concurreert dus niet met groei/nieuwe-settler. Herhaalbaar.
+  opslagplaatsInAanbouw?: { improvement: Improvement; voortgang: Partial<Record<ResourceType, number>> };
 }
 
 // GameState (hoofdstuk 16) krijgt naast bovenstaande er ook nog een optionele
 // `settler` bij (afwezig tot beurt 2), een `settlerActieGedaanDitBeurt`-vlag
 // (net als `bouwKeuzeGedaanDitBeurt`, maar dan voor de settler) en
 // `volgendeBouwBeurt` (de eerstvolgende beurt waarop weer een nieuw
-// bouwproject gestart mag worden — het bouw-ritme van hoofdstuk 16).
+// bouwproject gestart mag worden — het bouw-ritme van hoofdstuk 16). Sinds
+// hoofdstuk 2/10 komt daar een optionele `stadGesticht`-vlag bij, gezet
+// zodra de speler een nieuwe stad heeft gesticht — dit vervangt "laag 12
+// bereikt" als tutorial-einddoel-trigger.
 
 // Wachttoren-bemanning (hoofdstuk 6): `City` krijgt een `strijders`-lijst
 // i.p.v. één opgetelde legerwaarde-getal — elke opgeleide Soldaat is
@@ -455,7 +482,7 @@ interface CampaignConfig {
 
 ### Bouw-milestones
 
-De tabel hieronder geeft de huidige stand van de implementatie weer (gecontroleerd tegen de code in `src/`); M0-M11 is de bouwvolgorde waarin de milestones zijn opgepakt, geen open takenlijst — een nieuwe sessie hoeft dus niet bij M0 te beginnen.
+De tabel hieronder geeft de huidige stand van de implementatie weer (gecontroleerd tegen de code in `src/`); M0-M12 is de bouwvolgorde waarin de milestones zijn opgepakt, geen open takenlijst — een nieuwe sessie hoeft dus niet bij M0 te beginnen.
 
 | # | Milestone | Omvat | Status |
 |---|---|---|---|
@@ -471,6 +498,7 @@ De tabel hieronder geeft de huidige stand van de implementatie weer (gecontrolee
 | M9 | Save/load | Eén actieve run lokaal opslaan en hervatten | Klaar |
 | M10 | Wegen & settler | Settler-eenheid + verplaatsing, wegen aanleggen, bouw-ritme (1 nieuw project per 3 beurten), resource-activatie via wegverbinding, uitleg-pop-up bij beurt 2 (hoofdstuk 16) | Klaar |
 | M11 | Kuddes, settler-jacht & beurt-waarschuwing | Wilde kuddes vanaf laag 4, settler-jacht (voedsel) en settler-houtkap (hout) als extra settler-acties, waarschuwing-pop-up bij "Volgende beurt" zolang de settler of de bouwkeuze nog iets te doen heeft (hoofdstuk 11/17) | Klaar |
+| M12 | Stad stichten | Vers-water-vakjes (gegarandeerd tussen laag 10-12), Opslagplaats-improvement, doorgerekende stichtingskosten, settler-in-de-civiele-pool (max 1 per gestichte stad), stichtingsbevestiging + afsluitende tutorial-scène als nieuw einddoel (hoofdstuk 2/3/10/11/14/16) | Klaar |
 
 Elke milestone is bewust klein genoeg om als losse Claude Code-taak opgepakt te worden.
 
@@ -534,7 +562,11 @@ Het aantal beurten per laag loopt zo geleidelijk op (ruwweg 2× van vroeg- naar 
 
 Twee dingen volgen hieruit. Eén: de trage start heeft inderdaad **deels een andere oorzaak** dan de kostenformule (issue-punt 4) — de ~13 beurten tot het eerste Heiligdom zijn een gevolg van de grondstofketen, het bouw-ritme en de wegaanleg, niet van de cultuurdrempel, en geen enkele drempelverlaging brengt laag 2 onder die ~13 beurten. Dat is precies waarom de basisterm hierboven is verlaagd in plaats van op nul gezet: verder verlagen zou de drempel zelf triviaal maken zonder dat eerste, onvermijdelijke wachten te verkorten. Twee: bóven die vloer van ~13 beurten scheelt de nieuwe formule wel degelijk fors — laag 2 valt van ~22 naar ~16 beurten, dus van ~9 naar ~3 beurten ná het eerste Heiligdom, ruim binnen een handvol beurten zoals de issue vraagt.
 
-*Opslag-cap*: start op 30 (gedeeld voor hout/steen/erts/goud), elke opslagplaats-improvement +20, praktisch maximum ~3-4 opslagplaatsen per stad (~110 totaal).
+*Opslag-cap (issue: "stad stichten op de frontier" deel 3, doorgerekend tegen de code)*: start op 30, elke Opslagplaats-improvement +20, praktisch maximum ~3-4 opslagplaatsen per stad (~110 totaal). **Correctie op eerdere beschrijving**: dit is in de daadwerkelijke implementatie een cap **per grondstof** (hout/steen/erts/goud elk apart tot 30, niet hun gezamenlijke som) — anders dan "gedeelde opslag" in hoofdstuk 5 en eerdere versies van dit hoofdstuk suggereren. De opslagplaats-waarde (`OPSLAGPLAATS.kosten`, hoofdstuk 3) is **8 hout, 6 steen**, bouwtijd **3 beurten**; het effect (+20 opslag-cap) geldt voor alle vier grondstoffen tegelijk. Deze architectuur is bewust ongewijzigd gelaten bij het doorrekenen van de stichtingskosten hieronder (een refactor naar een echt gedeelde cap is een aparte, grotere wijziging) — in plaats daarvan zijn de stichtingskosten erop afgestemd.
+
+*Stichtingskosten (hoofdstuk 2/10/14, issue: "stad stichten op de frontier" deel 3)*: **40 hout, 15 steen, 10 erts, 30 voedsel**. Doorgerekend vanaf het voorstel "25 hout, 15 steen, 10 erts, 30 voedsel": met een cap per grondstof (zie hierboven) zaten alle drie de voorgestelde bouwmateriaal-bedragen ruim onder de start-cap van 30, waardoor een speler nooit een Opslagplaats nodig zou hebben — dat ondermijnt de bewuste tussenstap uit hoofdstuk 11. `hout` is daarom verhoogd naar 40 (boven de cap van 30), zodat minstens één Opslagplaats (cap 30 → 50) afgedwongen wordt; steen/erts blijven op de voorgestelde bedragen, ruim haalbaar zonder extra opslag. Voedsel blijft op de voorgestelde 30 — voedsel heeft sowieso geen cap (hoofdstuk 5) en wordt nooit "uitgegeven" door bestaande mechanieken (alleen drempels zoals de groei-drempel controleren de voorraad), dus een gezonde stad staat er tegen de tijd dat laag 10-12 ontgrendeld is toch al ver boven; de eis dwingt vooral af dat de voedselcrisis allang bezworen moet zijn, wat het bestaande verval-risico (hoofdstuk 4) toch al vereist. Indicatieve doorrekening: met één actieve Houtkap (3 hout/beurt) en één Opslagplaats is 40 hout binnen ~13-14 beurten surplus te sparen; 15 steen (één Steengroeve, 2/beurt) binnen ~8 beurten; 10 erts (één Mijn, 2/beurt) binnen ~5 beurten — ruim haalbaar binnen de vele tientallen beurten die toch al nodig zijn om laag 10-12 te ontgrendelen (de cultuurkosten lopen daar al op tot 400-600, zie de cultuurkosten-tabel hierboven), dus een doel waar de speler een paar lagen naartoe werkt zonder dat het sleept.
+
+*Nieuwe settler (hoofdstuk 3/11/16)*: kosten **10 hout, 4 steen**, bouwtijd **4 beurten** — vergelijkbaar met Woonwijk (6 hout, 4 steen, 4 beurten), de improvement waarmee hij in dezelfde civiele wachtrij concurreert.
 
 *Groei-tier kosten (voedsel)*: klein→middel = 100 voedsel + 5 beurten rijptijd; middel→groot = 250 voedsel + 8 beurten rijptijd.
 
@@ -612,6 +644,11 @@ Nieuw spelmechanisme (in de MVP, zie hoofdstuk 13): het bouwen van improvements 
 
 **Tutorial**
 - Bij beurt 2 (zodra de settler verschijnt) krijgt de speler een eenmalige uitleg-pop-up over de settler, wegen en het nieuwe bouw-ritme — los van, en aanvullend op, de bestaande per-beurt basisbegrippen-uitleg (grondstoffen/improvements) uit de eerste beurten.
+
+**Stad stichten (hoofdstuk 2/10/11, issue: "stad stichten op de frontier")**
+- Naast bewegen, weg aanleggen, jagen en hout hakken (hoofdstuk 17) kan de settler, wanneer hij op een geschikt (vers-water) vakje staat, in plaats daarvan **stichten**: een nieuwe stad neerzetten op zijn huidige vakje. Dit is geen herhaalbare per-beurt-actie zoals de andere vier — de speler kan stichten zodra hij er klaar voor is, ongeacht of hij deze beurt al een settler-actie heeft gebruikt.
+- De speler krijgt eerst een duidelijke bevestigingswaarschuwing: **de settler verdwijnt bij het stichten** ("de huifkar wordt de stad"). Pas na bevestigen worden de stichtingskosten (hoofdstuk 14) betaald en verschijnt de nieuwe stad-tile.
+- Een nieuwe settler is daarna alleen te verkrijgen via de civiele improvement-pool (hoofdstuk 3/11), concurrerend met de groei-tier-improvement, en alleen zolang het aantal settlers lager is dan het aantal gestichte steden (hoofdstuk 11: "maximaal één settler per gestichte stad").
 
 ---
 

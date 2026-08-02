@@ -1,5 +1,6 @@
 "use client";
 
+import { kanStichten } from "@/game/economie";
 import { GameState } from "@/game/types";
 
 interface SettlerPaneelProps {
@@ -7,6 +8,7 @@ interface SettlerPaneelProps {
   onLegWegAan: () => void;
   onJaag: () => void;
   onHakHout: () => void;
+  onOpenStichtStad: () => void;
 }
 
 // Settler-bediening (M10, hoofdstuk 16; issue: "de settler unit is actief
@@ -17,7 +19,7 @@ interface SettlerPaneelProps {
 // weg-aanleggen/jagen/hout-hakken-knoppen. Allemaal hoogstens 1 keer per
 // beurt (`settlerActieGedaanDitBeurt`). Verschijnt pas zodra de settler
 // bestaat (vanaf beurt 2, zie economie.ts `volgendeBeurt`).
-export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout }: SettlerPaneelProps) {
+export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout, onOpenStichtStad }: SettlerPaneelProps) {
   const { settler } = state;
   if (!settler) return null;
 
@@ -30,6 +32,12 @@ export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout }:
   // kappen"): allebei alleen mogelijk op het vakje waar de settler nu staat.
   const kudde = huidigeTile?.kudde;
   const kanHakken = huidigeTile?.terrein === "bos";
+  // Stad stichten (hoofdstuk 2/16, issue: "stad stichten op de frontier"):
+  // beschikbaar zodra de settler op een geschikt (vers-water) leeg vakje
+  // staat — los van `settlerActieGedaanDitBeurt`, dit is geen herhaalbare
+  // per-beurt-actie zoals bewegen/jagen/hakken, maar de beslissende laatste
+  // zet.
+  const kanStichtenHier = kanStichten(state);
 
   return (
     <div
@@ -50,6 +58,7 @@ export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout }:
         Laag {settler.hoogte}, vakje {settler.positieInLaag + 1}
         {heeftAlWeg ? " — hier ligt al een weg" : ""}
         {kudde ? ` — wilde kudde (nog ${kudde.beurtenResterend} beurten te jagen)` : ""}
+        {kanStichtenHier ? " — dit vakje ligt aan vers water: hier kan een stad gesticht worden" : ""}
       </span>
       {kanActie && (
         <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
@@ -73,6 +82,11 @@ export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout }:
         {kanHakken && (
           <button className="fc-knop" disabled={!kanActie} onClick={onHakHout} style={{ padding: "0.3rem 0.6rem" }}>
             Hout hakken (+1 hout)
+          </button>
+        )}
+        {kanStichtenHier && (
+          <button className="fc-knop" onClick={onOpenStichtStad} style={{ padding: "0.3rem 0.6rem" }}>
+            Stad stichten
           </button>
         )}
       </div>

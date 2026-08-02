@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import BoerderijKlaarUitlegPopup from "@/components/BoerderijKlaarUitlegPopup";
 import BouwPopup from "@/components/BouwPopup";
-import GroeiPaneel from "@/components/GroeiPaneel";
+import CivielPaneel from "@/components/CivielPaneel";
 import HistoriePaneel from "@/components/HistoriePaneel";
 import HoofdMenu from "@/components/HoofdMenu";
 import IndringersPopup from "@/components/IndringersPopup";
@@ -13,10 +13,12 @@ import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import LaagPopup from "@/components/LaagPopup";
 import MilitairPaneel from "@/components/MilitairPaneel";
 import MilitairUitlegPopup from "@/components/MilitairUitlegPopup";
+import OpslagplaatsPaneel from "@/components/OpslagplaatsPaneel";
 import ResourceHud from "@/components/ResourceHud";
 import SettlerPaneel from "@/components/SettlerPaneel";
 import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
 import SpelActiesMenu from "@/components/SpelActiesMenu";
+import StichtStadPopup from "@/components/StichtStadPopup";
 import StrijderBemanPopup from "@/components/StrijderBemanPopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
@@ -39,6 +41,12 @@ interface GameRootProps {
   // het start scherm gaat") — navigatie zelf blijft bij AppRoot, GameRoot
   // roept dit alleen aan.
   onVerlaten: () => void;
+  // Terug naar het campagnemenu (hoofdstuk 2/10/16, issue: "stad stichten op
+  // de frontier" deel 4: "daarna het campagnemenu") — aangeroepen zodra de
+  // speler de tutorial-voltooid-samenvatting wegklikt na het stichten van
+  // een nieuwe stad. Los van `onVerlaten` hierboven, dat naar het titelscherm
+  // gaat.
+  onTutorialAfgerond: () => void;
 }
 
 // Verbindt de spelstatus (M3: resource-economie) met de HUD, de
@@ -50,13 +58,16 @@ interface GameRootProps {
 // grondstoffenbalk als vaste footer eronder — die scrolt dus nooit mee weg en
 // de stad staat meteen in beeld zonder te scrollen (issue: sticky
 // grondstoffenbalk onderaan, stad direct zichtbaar).
-export default function GameRoot({ onVerlaten }: GameRootProps) {
+export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootProps) {
   const {
     state,
     volgendeBeurt,
     startBouw,
     sluitBouwKeuze,
     startGroei,
+    startNieuweSettler,
+    startOpslagplaats,
+    stichtStad,
     startRecrutering,
     confrontatie,
     verplaatsSettlerNaar,
@@ -146,6 +157,16 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
   // gevallen tonen eerst deze pop-up. "Terug" sluit 'm weer (de speler kan
   // dan alsnog handelen); "Toch doorgaan" roept alsnog `volgendeBeurt` aan.
   const [toonVolgendeBeurtWaarschuwing, setToonVolgendeBeurtWaarschuwing] = useState(false);
+  // Stichtings-bevestiging (hoofdstuk 2/10/16, issue: "stad stichten op de
+  // frontier" deel 4): geopend via de "Stad stichten"-knop in SettlerPaneel,
+  // bevestigd/geannuleerd via StichtStadPopup.
+  const [toonStichtStadPopup, setToonStichtStadPopup] = useState(false);
+  // Tutorial-voltooid-pop-up (issue: "pop-up met summary wat je geleerd
+  // hebt"): sinds het stichten het tutorial-einddoel is (vervangt "bereik
+  // laag 12"), gaat `state.stadGesticht` maar één keer van false naar true —
+  // deze vlag hoeft dus niet apart bevestigd te worden zoals de eenmalige
+  // uitleg-pop-ups hierboven (die blijven immers relevant bij een nieuwe run
+  // via `onTutorialAfgerond`, dat GameRoot altijd laat unmounten).
   // Bouwen gebeurt op de huidige frontier-laag: de hoogste ontgrendelde laag
   // (M5: welke laag dat is, verandert zodra cultuur een nieuwe laag ontgrendelt).
   const actieveLaag = state.lagen.find(
@@ -176,6 +197,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     setToonVolgendeBeurtWaarschuwing(false);
     setStrijderBemanPopupStrijderId(null);
     setWachttorenKiesModusStrijderId(null);
+    setToonStichtStadPopup(false);
   }, [state.beurt]);
 
   const geselecteerdeLaag = geselecteerdeTile
@@ -347,8 +369,10 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     Boolean(state.indringersEvent);
-  // Tutorial-voltooid-samenvatting zodra de confrontatie op laag 12 gewonnen
-  // is (issue: "pop-up met summary wat je geleerd hebt").
+  // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
+  // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
+  // "confrontatie op laag 12 gewonnen" als trigger: het stichten is nu het
+  // tutorial-einddoel, niet het bereiken van laag 12).
   const toonTutorialVoltooidPopup =
     !toonLaagPopup &&
     !toonUitlegPopup &&
@@ -357,8 +381,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     !toonIndringersPopup &&
-    actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
-    state.laatsteConfrontatie?.gewonnen === true &&
+    state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
   // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
   // worden vanaf `volgendeBouwBeurt` — de `?? 1` is puur een veilige default
@@ -426,8 +449,15 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
           onTileClick={handleTileClick}
         />
         <LaagIntroPaneel lagen={state.lagen} />
-        <SettlerPaneel state={state} onLegWegAan={legWegAan} onJaag={jaag} onHakHout={hakHout} />
-        <GroeiPaneel state={state} onStartGroei={startGroei} />
+        <SettlerPaneel
+          state={state}
+          onLegWegAan={legWegAan}
+          onJaag={jaag}
+          onHakHout={hakHout}
+          onOpenStichtStad={() => setToonStichtStadPopup(true)}
+        />
+        <CivielPaneel state={state} onStartGroei={startGroei} onStartNieuweSettler={startNieuweSettler} />
+        <OpslagplaatsPaneel state={state} onStartOpslagplaats={startOpslagplaats} />
         {toonMilitair && (
           <MilitairPaneel
             state={state}
@@ -475,6 +505,15 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
         {wachttorenKiesModusStrijderId && (
           <WachttorenKiesBanner onAnnuleren={() => setWachttorenKiesModusStrijderId(null)} />
         )}
+        {toonStichtStadPopup && (
+          <StichtStadPopup
+            onBevestig={() => {
+              stichtStad();
+              setToonStichtStadPopup(false);
+            }}
+            onAnnuleren={() => setToonStichtStadPopup(false)}
+          />
+        )}
         {toonVolgendeBeurtWaarschuwing && (
           <VolgendeBeurtWaarschuwingPopup
             settlerHeeftNogActie={settlerHeeftNogActie}
@@ -488,6 +527,11 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
             onDoorgaan={() => {
               markeerTutorialVoltooid();
               setTutorialVoltooidBevestigd(true);
+              // Hoofdstuk 9/10/16: "daarna het campagnemenu" — GameRoot
+              // unmount hierdoor (zie AppRoot), dus geen frontier-
+              // verplaatsing binnen deze issue nodig (hoofdstuk 13: dat
+              // blijft bewust post-MVP).
+              onTutorialAfgerond();
             }}
           />
         )}
@@ -506,6 +550,7 @@ export default function GameRoot({ onVerlaten }: GameRootProps) {
             !toonTutorialVoltooidPopup &&
             !strijderBemanPopupStrijderId &&
             !wachttorenKiesModusStrijderId &&
+            !toonStichtStadPopup &&
             !state.bouwKeuzeGedaanDitBeurt &&
             !plaatsingsImprovement &&
             kanBouwen

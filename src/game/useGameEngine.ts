@@ -16,7 +16,10 @@ import {
   sluitIndringersMelding as sluitIndringersMeldingActie,
   startBouw as startBouwActie,
   startGroei as startGroeiActie,
+  startNieuweSettler as startNieuweSettlerActie,
+  startOpslagplaats as startOpslagplaatsActie,
   startRecrutering as startRecruteringActie,
+  stichtStad as stichtStadActie,
   verplaatsSettlerNaar as verplaatsSettlerNaarActie,
   volgendeBeurt as volgendeBeurtActie,
   weigerTribuut as weigerTribuutActie,
@@ -65,6 +68,18 @@ export function useGameEngine() {
 
   const startGroei = useCallback(() => {
     setState((huidig) => startGroeiActie(huidig));
+  }, []);
+
+  const startNieuweSettler = useCallback(() => {
+    setState((huidig) => startNieuweSettlerActie(huidig));
+  }, []);
+
+  const startOpslagplaats = useCallback(() => {
+    setState((huidig) => startOpslagplaatsActie(huidig));
+  }, []);
+
+  const stichtStad = useCallback(() => {
+    setState((huidig) => stichtStadActie(huidig));
   }, []);
 
   const startRecrutering = useCallback(() => {
@@ -129,6 +144,9 @@ export function useGameEngine() {
     startBouw,
     sluitBouwKeuze,
     startGroei,
+    startNieuweSettler,
+    startOpslagplaats,
+    stichtStad,
     startRecrutering,
     confrontatie,
     bevestigIneenstorting,

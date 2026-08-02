@@ -91,6 +91,24 @@ export const TUTORIAL_LAAG_CONTENT: Record<number, LaagContent> = {
 export const AFSLUITENDE_SCENE =
   "Twaalf lagen boven de rivier staat Holenrots nog overeind. De vuren branden. Verder is er, voor nu, niets te zeggen.";
 
+// Stichtings-waarschuwing (hoofdstuk 2/10/16, issue: "stad stichten op de
+// frontier" deel 4): getoond vóór de speler bevestigt — de settler verdwijnt
+// definitief bij het stichten ("de huifkar wordt de stad"), dus dit moet
+// duidelijk zijn vóór de onomkeerbare klik, niet erna.
+export const STICHT_STAD_TITEL = "Hier een nieuwe stad stichten?";
+export const STICHT_STAD_WAARSCHUWING =
+  "De huifkar komt tot stilstand. De wielen zakken weg in de oever. Dit wordt de plek.\n\n" +
+  "Let op: de settler verdwijnt hierbij. Er is geen weg terug — als je hier sticht, is er geen settler meer om verder te trekken, tenzij je er later een nieuwe uitrust.";
+
+// Afsluitende scène na het stichten (hoofdstuk 2/10/16): vervangt de
+// laag-12-afsluiting hierboven als het echte tutorial-einddoel — "je eerste
+// stad stichten op de frontier" (issue-titel) is precies waar het spel zijn
+// naam aan ontleent.
+export const STICHTING_AFSLUITENDE_SCENE =
+  "De huifkar wordt de stad. Vuurbron, noemen ze het, voor het vuur dat er die avond voor het eerst brandt.\n" +
+  "Holenrots ligt nu ver onder hen, stil, achtergelaten maar niet vergeten.\n" +
+  "Het Hertenpad-volk is niet langer op doortocht. Het is aangekomen — voor nu.";
+
 export function laagContent(hoogte: number): LaagContent | undefined {
   return TUTORIAL_LAAG_CONTENT[hoogte];
 }
@@ -112,12 +130,14 @@ export const SETTLER_UITLEG_TEKST =
   "We gaan vooruit de wildenis in. De settlers kunnen bewegen over de kaart, en wegen bouwen. We moeten een weg naar de houtkap bouwen, anders kan het hout de voorraad niet bereiken.";
 
 // Tutorial-voltooid-pop-up (issue: "pop-up met een summary van wat je
-// geleerd hebt"), getoond zodra de confrontatie op laag 12 gewonnen is. De
-// samenvatting zelf doorloopt `TUTORIAL_LAAG_CONTENT` hierboven in plaats van
-// een tweede laag→mechaniek-lijst bij te houden die uit de pas kan lopen.
+// geleerd hebt"), getoond zodra een nieuwe stad gesticht is (hoofdstuk
+// 9/10/16, issue: "stad stichten op de frontier" — vervangt "confrontatie op
+// laag 12 gewonnen" als trigger). De samenvatting zelf doorloopt
+// `TUTORIAL_LAAG_CONTENT` hierboven in plaats van een tweede
+// laag→mechaniek-lijst bij te houden die uit de pas kan lopen.
 export const TUTORIAL_VOLTOOID_TITEL = "De Eerste Vuren — voltooid";
 export const TUTORIAL_VOLTOOID_INTRO =
-  "Het Hertenpad-volk staat op de bergkam. Onderweg hierheen is geleerd:";
+  "Het Hertenpad-volk heeft een nieuwe stad gesticht. Onderweg hierheen is geleerd:";
 
 // Introscherm (issue: "intro en game over scherm"), getoond vóór laag 1 —
 // zet de tutorial-sfeer neer voordat er iets van de mechaniek in beeld komt.
