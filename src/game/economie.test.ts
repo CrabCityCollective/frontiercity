@@ -12,17 +12,25 @@ import {
   onbemandeWachttorenPosities,
   OPSLAG_CAP,
   resterendeBouwBeurten,
+  RUSH_GOUD_PER_BEURT,
+  rushKostenGoud,
+  sluitAmberOntdektMelding,
+  startBouw,
   startNieuweSettler,
   startOpslagplaats,
   startRecrutering,
   STICHTING_KOSTEN,
   stichtStad,
   verplaatsSettlerNaar,
+  versnelBouwMetGoud,
+  versnelCivielMetGoud,
+  versnelOpslagplaatsMetGoud,
   volgendeBeurt,
 } from "./economie";
-import { ECONOMISCH_LAND_IMPROVEMENTS, MILITAIR_LAND_IMPROVEMENTS, SOLDAAT, STERRENCIRKEL } from "./improvements";
+import { AMBERADER, ECONOMISCH_LAND_IMPROVEMENTS, MILITAIR_LAND_IMPROVEMENTS, SOLDAAT, STERRENCIRKEL } from "./improvements";
 import { wetenschapKostenVoorDrempel } from "./techTree";
 import { GameState } from "./types";
+import { AMBER_ONTDEKKING_LAAG, cultuurKostenVoorLaag } from "./world";
 
 // Vervangt `Math.random` tijdelijk door een vaste waarde, zodat de
 // kans-gedreven roofdier-/kuddelogica deterministisch te testen is — altijd
@@ -574,4 +582,112 @@ test("hakHout doet niets op een uitgeputte (ghost_town) Houtkap-tile, ook al bli
 
   assert.equal(naHakken, metUitgeputteHoutkap, "geen verandering: een verlaten vakje levert geen gratis hout meer");
   assert.equal(naHakken.settlerActieGedaanDitBeurt, false);
+});
+
+// Laag 7, positie 0 is in world.ts vastgelegd als de gegarandeerde eerste
+// amberader-vondst (TUTORIAL_AMBER); positie 1 op diezelfde laag is ook
+// heuvel/berg-terrein maar zonder amberader.
+test("Amberader mag alleen gebouwd worden op een vakje met een amberader-vondst, niet op elk heuvel/bergvakje", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag) => (laag.hoogte === 7 ? { ...laag, ontgrendeld: true } : laag)),
+  };
+  const laag7 = state.lagen.find((l) => l.hoogte === 7)!;
+  assert.equal(laag7.tiles[0].amber, true);
+  assert.equal(laag7.tiles[1].amber, false, "heuvel/berg-terrein zonder amberader-vondst");
+
+  const nietGeplaatst = startBouw(state, 7, AMBERADER, 1);
+  assert.equal(
+    nietGeplaatst.lagen.find((l) => l.hoogte === 7)!.tiles[1].status,
+    "leeg",
+    "een gewoon heuvel/bergvakje zonder amberader is geen geldig Amberader-doel"
+  );
+
+  const welGeplaatst = startBouw(state, 7, AMBERADER, 0);
+  assert.equal(welGeplaatst.lagen.find((l) => l.hoogte === 7)!.tiles[0].status, "in_aanbouw");
+});
+
+test("AMBERADER.uitputtingBeurten valt binnen de 'gewoon'-range uit het issue (10-14 beurten)", () => {
+  assert.ok(AMBERADER.uitputtingBeurten! >= 10 && AMBERADER.uitputtingBeurten! <= 14);
+});
+
+test("amberOntdektEvent wordt precies één keer gezet, zodra AMBER_ONTDEKKING_LAAG voor het eerst ontgrendelt", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, cultuur: cultuurKostenVoorLaag(AMBER_ONTDEKKING_LAAG) };
+
+  const naOntgrendeling = volgendeBeurt(state);
+  assert.equal(naOntgrendeling.lagen.find((l) => l.hoogte === AMBER_ONTDEKKING_LAAG)!.ontgrendeld, true);
+  assert.equal(naOntgrendeling.amberOntdektEvent, true);
+
+  const gesloten = sluitAmberOntdektMelding(naOntgrendeling);
+  assert.equal(gesloten.amberOntdektEvent, undefined);
+
+  const nogEenBeurt = volgendeBeurt(gesloten);
+  assert.equal(nogEenBeurt.amberOntdektEvent, undefined, "geen herhaalde melding zodra de laag al ontgrendeld is");
+});
+
+test("versnelBouwMetGoud koopt de volledige resterende bouwtijd van een land-tile af als er genoeg goud is", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag) => (laag.hoogte === 7 ? { ...laag, ontgrendeld: true } : laag)),
+  };
+  state = startBouw(state, 7, AMBERADER, 0);
+  const voortgang = state.lagen.find((l) => l.hoogte === 7)!.tiles[0].bouwVoortgang!;
+  const kosten = rushKostenGoud(AMBERADER, voortgang);
+  state = { ...state, voorraad: { ...state.voorraad, goud: kosten } };
+
+  const naVersnellen = versnelBouwMetGoud(state, 7, 0);
+  const tile = naVersnellen.lagen.find((l) => l.hoogte === 7)!.tiles[0];
+
+  assert.equal(tile.status, "actief");
+  assert.equal(tile.bouwVoortgang, undefined);
+  assert.equal(tile.beurtenTotUitputting, AMBERADER.uitputtingBeurten);
+  assert.equal(naVersnellen.voorraad.goud, 0, `alle ${kosten} goud is uitgegeven`);
+});
+
+test("versnelBouwMetGoud koopt maar een deel van de beurten weg als er niet genoeg goud is voor de volledige rush", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag) => (laag.hoogte === 7 ? { ...laag, ontgrendeld: true } : laag)),
+  };
+  state = startBouw(state, 7, AMBERADER, 0);
+  // AMBERADER kost hout 8/steen 4 over 3 beurten (perBeurt: 3 hout, 2 steen)
+  // — RUSH_GOUD_PER_BEURT goud is precies genoeg voor 1 van de 3 beurten.
+  state = { ...state, voorraad: { ...state.voorraad, goud: RUSH_GOUD_PER_BEURT } };
+
+  const naVersnellen = versnelBouwMetGoud(state, 7, 0);
+  const tile = naVersnellen.lagen.find((l) => l.hoogte === 7)!.tiles[0];
+
+  assert.equal(tile.status, "in_aanbouw", "nog niet voltooid: er is maar goud voor 1 van de 3 resterende beurten");
+  assert.deepEqual(tile.bouwVoortgang, { hout: 5, steen: 2 });
+  assert.equal(naVersnellen.voorraad.goud, 0);
+});
+
+test("versnelOpslagplaatsMetGoud koopt de resterende bouwtijd van een Opslagplaats af en verhoogt de opslag-cap meteen", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 0 } };
+  state = startOpslagplaats(state);
+  const kosten = rushKostenGoud(
+    state.stad.opslagplaatsInAanbouw!.improvement,
+    state.stad.opslagplaatsInAanbouw!.voortgang
+  );
+  state = { ...state, voorraad: { ...state.voorraad, goud: kosten } };
+
+  const naVersnellen = versnelOpslagplaatsMetGoud(state);
+  assert.equal(naVersnellen.stad.opslagplaatsInAanbouw, undefined);
+  assert.equal(naVersnellen.opslagCap, OPSLAG_CAP + 20);
+  assert.equal(naVersnellen.voorraad.goud, 0);
+});
+
+test("versnelCivielMetGoud heeft geen effect op een Nieuwe settler in aanbouw ('soort: unit', buiten bereik van rush-bouwen)", () => {
+  let state = maakInitieleSpelStatus();
+  state = startNieuweSettler(state);
+  assert.equal(state.stad.civielInAanbouw?.improvement.id, "nieuwe-settler");
+  state = { ...state, voorraad: { ...state.voorraad, goud: 1000 } };
+
+  const naVersnellen = versnelCivielMetGoud(state);
+  assert.equal(naVersnellen, state, "geen wijziging: rush-bouwen geldt niet voor units");
 });

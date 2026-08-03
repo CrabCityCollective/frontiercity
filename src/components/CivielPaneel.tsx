@@ -4,11 +4,13 @@ import { NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
 import { GameState } from "@/game/types";
 import { VOEDSEL_DREMPEL_GROEI } from "@/game/world";
 import { KostenIcons } from "./ResourceIcoon";
+import RushMetGoudKnop from "./RushMetGoudKnop";
 
 interface CivielPaneelProps {
   state: GameState;
   onStartGroei: () => void;
   onStartNieuweSettler: () => void;
+  onVersnelCiviel: () => void;
 }
 
 // Civiele keuzes (M6, hoofdstuk 4/11/16): toont de voortgang richting de
@@ -20,7 +22,7 @@ interface CivielPaneelProps {
 // waar je staat, of rust je een expeditie uit om verder te trekken?") in
 // plaats van een stille state-flip. Puur placeholder-styling — geen
 // definitieve UI.
-export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler }: CivielPaneelProps) {
+export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler, onVersnelCiviel }: CivielPaneelProps) {
   const { stad, voedsel, settler } = state;
 
   const kanGroeien = stad.grootte === "klein";
@@ -63,6 +65,18 @@ export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler
             ? "Nieuwe settler wordt uitgerust…"
             : "Woonwijk in aanbouw (groei naar middel)…"}
         </p>
+      )}
+
+      {/* Rush-bouwen met goud (hoofdstuk 5/14, issue: "toevoeging Goud" Deel
+          2) geldt alleen voor land- en city-improvements — een Nieuwe settler
+          is `soort: "unit"` en blijft dus buiten bereik. */}
+      {stad.civielInAanbouw?.improvement.soort === "city" && (
+        <RushMetGoudKnop
+          improvement={stad.civielInAanbouw.improvement}
+          voortgang={stad.civielInAanbouw.voortgang}
+          goudInVoorraad={state.voorraad.goud}
+          onVersnellen={onVersnelCiviel}
+        />
       )}
 
       {!stad.civielInAanbouw && kanGroeien && voedsel >= VOEDSEL_DREMPEL_GROEI && (

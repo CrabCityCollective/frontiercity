@@ -13,6 +13,7 @@ import {
   kiesTech as kiesTechActie,
   legWegAan as legWegAanActie,
   maakInitieleSpelStatus,
+  sluitAmberOntdektMelding as sluitAmberOntdektMeldingActie,
   sluitBouwKeuze as sluitBouwKeuzeActie,
   sluitIndringersMelding as sluitIndringersMeldingActie,
   sluitKuddeMelding as sluitKuddeMeldingActie,
@@ -24,6 +25,9 @@ import {
   startRecrutering as startRecruteringActie,
   stichtStad as stichtStadActie,
   verplaatsSettlerNaar as verplaatsSettlerNaarActie,
+  versnelBouwMetGoud as versnelBouwMetGoudActie,
+  versnelCivielMetGoud as versnelCivielMetGoudActie,
+  versnelOpslagplaatsMetGoud as versnelOpslagplaatsMetGoudActie,
   volgendeBeurt as volgendeBeurtActie,
   weigerTribuut as weigerTribuutActie,
   zetUitlegPopups as zetUitlegPopupsActie,
@@ -125,6 +129,22 @@ export function useGameEngine() {
     setState((huidig) => sluitRoofdierMeldingActie(huidig));
   }, []);
 
+  const sluitAmberOntdektMelding = useCallback(() => {
+    setState((huidig) => sluitAmberOntdektMeldingActie(huidig));
+  }, []);
+
+  const versnelBouwMetGoud = useCallback((hoogte: number, positieInLaag: number) => {
+    setState((huidig) => versnelBouwMetGoudActie(huidig, hoogte, positieInLaag));
+  }, []);
+
+  const versnelCivielMetGoud = useCallback(() => {
+    setState((huidig) => versnelCivielMetGoudActie(huidig));
+  }, []);
+
+  const versnelOpslagplaatsMetGoud = useCallback(() => {
+    setState((huidig) => versnelOpslagplaatsMetGoudActie(huidig));
+  }, []);
+
   const geefTribuut = useCallback(() => {
     setState((huidig) => geefTribuutActie(huidig));
   }, []);
@@ -172,6 +192,10 @@ export function useGameEngine() {
     sluitIndringersMelding,
     sluitKuddeMelding,
     sluitRoofdierMelding,
+    sluitAmberOntdektMelding,
+    versnelBouwMetGoud,
+    versnelCivielMetGoud,
+    versnelOpslagplaatsMetGoud,
     geefTribuut,
     weigerTribuut,
     bevestigGedwongenTribuut,

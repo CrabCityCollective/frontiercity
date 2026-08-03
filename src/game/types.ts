@@ -131,6 +131,14 @@ export interface Tile {
   // Geen terrein-eis op zichzelf: een vlak, bos-, heuvel- of bergvakje kan
   // allemaal aan water liggen, dus los van `terrein` bijgehouden.
   versWater?: boolean;
+  // Ligt hier een amberader — de vondst die de Amberader/goudmijn-improvement
+  // (hoofdstuk 3/14, issue: "toevoeging Goud") nodig heeft, bovenop de gewone
+  // heuvel/berg-terreineis? Net als `versWater` hierboven vast/niet-procedureel
+  // en los van `terrein` bijgehouden: niet elk heuvel/bergvakje heeft een
+  // amberader, in tegenstelling tot een gewone erts-mijn die op elk
+  // heuvel/bergvakje mag. De tutorial-worldgen garandeert minstens één zulk
+  // vakje vanaf laag 7 (zie world.ts).
+  amber?: boolean;
 }
 
 // Positie van de settler-eenheid (M10, hoofdstuk 16). Bestaat pas vanaf beurt
@@ -252,6 +260,14 @@ export interface CampaignConfig {
   // een sleutel (of de hele campagne heeft geen override), dan valt
   // `techNaam()` terug op de tutorial-naam.
   techNamen?: Partial<Record<TechId, string>>;
+  // Zelfde herbruikbaarheid als `techNamen` hierboven, maar voor land/city
+  // improvements (hoofdstuk 3/14, issue: "toevoeging Goud" — de Amberader is
+  // hier het eerste voorbeeld van: functioneel een goudmijn, met "Amberader"
+  // als tutorial-naam). Gesleuteld op `Improvement.id`, niet op een apart
+  // ID-type zoals `TechId` — improvements hebben geen vaste, opgesomde
+  // sleutellijst. Ontbreekt een sleutel (of de hele campagne heeft geen
+  // override), dan valt `improvementNaam()` terug op `Improvement.naam`.
+  improvementNamen?: Partial<Record<string, string>>;
 }
 
 // Gedeelde-opslag-grondstoffen (hoofdstuk 5): hout, steen, erts, goud delen
@@ -389,6 +405,13 @@ export interface GameState {
   // melding is, net als `indringersEvent` hierboven.
   kuddeEvent?: KuddeEvent;
   roofdierEvent?: RoofdierEvent;
+  // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): gezet
+  // door `verwerkLaagOntgrendeling` in economie.ts zodra laag
+  // `AMBER_ONTDEKKING_LAAG` (world.ts) voor het eerst ontgrendeld wordt — de
+  // gegarandeerde eerste Amberader-locatie ligt op die laag. Puur een
+  // meldings-vlag (geen keuze), zelfde patroon als `kuddeEvent` hierboven; de
+  // speler klikt 'm gewoon weg via `sluitAmberOntdektMelding`.
+  amberOntdektEvent?: boolean;
   // Gezet zodra een roofdier de settler daadwerkelijk doodt (hoofdstuk 17,
   // issue: "roofdieren toevoegen"). Voorkomt dat de "settler verschijnt bij
   // beurt 2"-vangnet in `volgendeBeurt` (economie.ts) hem daarna gratis laat

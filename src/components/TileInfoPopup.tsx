@@ -1,6 +1,8 @@
 "use client";
 
+import RushMetGoudKnop from "./RushMetGoudKnop";
 import { TileInfo } from "@/game/tileInfo";
+import { Improvement, ResourceType } from "@/game/types";
 
 interface TileInfoPopupProps {
   tileInfo: TileInfo | null;
@@ -13,6 +15,15 @@ interface TileInfoPopupProps {
   // alleen op bos" e.d.) — legt uit waarom hier niet gebouwd kan worden i.p.v.
   // stilzwijgend de bevestigingsvraag weg te laten.
   terreinWaarschuwing?: string;
+  // Gezet als de aangeklikte tile een land-improvement in aanbouw is
+  // (hoofdstuk 5/14, issue: "toevoeging Goud" Deel 2) — toont de "versnel met
+  // goud"-knop naast de gewone bouwvoortgangstekst.
+  rushVraag?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+    goudInVoorraad: number;
+    onVersnellen: () => void;
+  };
   onBevestigBouw: () => void;
   onAnnuleerBouw: () => void;
   onSluiten: () => void;
@@ -27,6 +38,7 @@ export default function TileInfoPopup({
   tileInfo,
   bouwVraag,
   terreinWaarschuwing,
+  rushVraag,
   onBevestigBouw,
   onAnnuleerBouw,
   onSluiten,
@@ -95,6 +107,15 @@ export default function TileInfoPopup({
               Ander vakje kiezen
             </button>
           </>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && rushVraag && (
+          <RushMetGoudKnop
+            improvement={rushVraag.improvement}
+            voortgang={rushVraag.voortgang}
+            goudInVoorraad={rushVraag.goudInVoorraad}
+            onVersnellen={rushVraag.onVersnellen}
+          />
         )}
 
         {!bouwVraag && !terreinWaarschuwing && (

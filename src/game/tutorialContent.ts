@@ -227,3 +227,12 @@ export const ROOFDIER_VERSCHENEN_TEKST =
 export const ROOFDIER_AANVAL_TITEL = "De settler keert niet terug";
 export const ROOFDIER_AANVAL_TEKST =
   "Het spoor eindigt bij de kudde. Er is geen huifkar meer — een nieuwe moet eerst uitgerust worden.";
+
+// Amberader-ontdekkingsmelding (hoofdstuk 3/14, issue: "toevoeging Goud"):
+// getoond zodra `verwerkLaagOntgrendeling` (economie.ts) laag
+// `AMBER_ONTDEKKING_LAAG` (world.ts) voor het eerst ontgrendelt — zelfde
+// blokkerende meldings-vorm en stijlgids als `KUDDE_TITEL`/`KUDDE_FLAVOR_TEKST`
+// hierboven.
+export const AMBER_ONTDEKKING_TITEL = "Amber gevonden";
+export const AMBER_ONTDEKKING_TEKST =
+  "Onze verkenners vonden een fantastisch glimmend materiaal: Amber. We gaan een mijn bouwen om al het Amber tot het laatste brokje uit de grond te krijgen.";

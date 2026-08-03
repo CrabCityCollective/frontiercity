@@ -3,10 +3,12 @@
 import { OPSLAGPLAATS } from "@/game/improvements";
 import { GameState } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
+import RushMetGoudKnop from "./RushMetGoudKnop";
 
 interface OpslagplaatsPaneelProps {
   state: GameState;
   onStartOpslagplaats: () => void;
+  onVersnelOpslagplaats: () => void;
 }
 
 // Opslagplaats (hoofdstuk 3/5/13/14, issue: "stad stichten op de frontier"
@@ -15,7 +17,11 @@ interface OpslagplaatsPaneelProps {
 // bewuste tussenstap richting het stichten van een nieuwe stad (deel 3: de
 // stichtingskosten liggen hoger dan de start-cap), maar ook los daarvan
 // nuttig. Zelfde altijd-zichtbare-paneel-patroon als CivielPaneel/SettlerPaneel.
-export default function OpslagplaatsPaneel({ state, onStartOpslagplaats }: OpslagplaatsPaneelProps) {
+export default function OpslagplaatsPaneel({
+  state,
+  onStartOpslagplaats,
+  onVersnelOpslagplaats,
+}: OpslagplaatsPaneelProps) {
   const { opslagplaatsInAanbouw } = state.stad;
 
   return (
@@ -38,7 +44,15 @@ export default function OpslagplaatsPaneel({ state, onStartOpslagplaats }: Opsla
       </span>
 
       {opslagplaatsInAanbouw ? (
-        <p style={{ margin: 0 }}>Opslagplaats in aanbouw…</p>
+        <>
+          <p style={{ margin: 0 }}>Opslagplaats in aanbouw…</p>
+          <RushMetGoudKnop
+            improvement={opslagplaatsInAanbouw.improvement}
+            voortgang={opslagplaatsInAanbouw.voortgang}
+            goudInVoorraad={state.voorraad.goud}
+            onVersnellen={onVersnelOpslagplaats}
+          />
+        </>
       ) : (
         <button
           className="fc-knop"

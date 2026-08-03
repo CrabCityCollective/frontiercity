@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import AmberOntdektPopup from "@/components/AmberOntdektPopup";
 import BoerderijKlaarUitlegPopup from "@/components/BoerderijKlaarUitlegPopup";
 import BouwPopup from "@/components/BouwPopup";
 import HistoriePaneel from "@/components/HistoriePaneel";
@@ -84,6 +85,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     sluitIndringersMelding,
     sluitKuddeMelding,
     sluitRoofdierMelding,
+    sluitAmberOntdektMelding,
+    versnelBouwMetGoud,
+    versnelCivielMetGoud,
+    versnelOpslagplaatsMetGoud,
     geefTribuut,
     weigerTribuut,
     bevestigGedwongenTribuut,
@@ -223,6 +228,15 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     ? state.lagen.find((laag) => laag.hoogte === geselecteerdeTile.hoogte)
     : undefined;
 
+  // De ruwe tile achter de aangeklikte tile-info (hoofdstuk 5/14, issue:
+  // "toevoeging Goud" Deel 2) — `tileInfo` hierboven is alleen tekst, dit
+  // geeft de "versnel met goud"-knop toegang tot de echte bouwvoortgang.
+  // Hoogte 0 is de oceaan-rij (geen echte `Layer`, zie `tileInfo` hieronder).
+  const geselecteerdeTileVoorRush =
+    geselecteerdeTile && geselecteerdeTile.hoogte !== 0 && geselecteerdeLaag
+      ? geselecteerdeLaag.tiles[geselecteerdeTile.positieInLaag]
+      : undefined;
+
   // Alleen de relevante lagen op de canvas (issue: "onderkant altijd in
   // view" + "onontdekte tegels weg") — zie world.ts: `zichtbareLagen`.
   const zichtbareLagenState = zichtbareLagen(state.lagen);
@@ -273,8 +287,22 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     doelTileVoorPlaatsing?.status === "leeg" &&
     !improvementPastOpTerrein(plaatsingsImprovement, doelTileVoorPlaatsing.terrein);
 
+  // Amberader-vondst-eis (hoofdstuk 3/14, issue: "toevoeging Goud" Deel 1):
+  // een leeg heuvel/bergvakje voldoet aan de gewone terrein-eis van de
+  // Amberader, maar zonder een amberader-vondst (`tile.amber`, zie world.ts)
+  // is het alsnog geen geldig plaatsingsdoel — apart van `terreinMismatch`
+  // hierboven zodat de UI de juiste reden kan tonen.
+  const amberMismatch =
+    plaatsingsImprovement?.id === "goudmijn" &&
+    doelTileVoorPlaatsing?.status === "leeg" &&
+    !terreinMismatch &&
+    !doelTileVoorPlaatsing.amber;
+
   const isGeldigPlaatsingsDoel =
-    plaatsingsImprovement !== null && doelTileVoorPlaatsing?.status === "leeg" && !terreinMismatch;
+    plaatsingsImprovement !== null &&
+    doelTileVoorPlaatsing?.status === "leeg" &&
+    !terreinMismatch &&
+    !amberMismatch;
 
   // Settler actief zodra de beurt begint (issue: "de settler unit is actief
   // als je aan je beurt begint, de tegels waar je heen kunt lichten op, door
@@ -449,6 +477,21 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonIndringersPopup &&
     !toonKuddePopup &&
     Boolean(state.roofdierEvent);
+  // Amberader-ontdekkingspop-up (hoofdstuk 3/14, issue: "toevoeging Goud") —
+  // zelfde blokkerende vorm en prioriteit als de kudde-/roofdier-pop-ups
+  // hierboven, ook los van de uitleg-toggle: dit is kerninhoud, geen uitleg.
+  const toonAmberOntdektPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonMilitairUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    Boolean(state.amberOntdektEvent);
   // Technologie-keuze-pop-up (hoofdstuk 3/9/11, issue: "tech tree toevoegen"
   // Deel 2) — verschijnt zodra `verwerkTechDrempel` (economie.ts) een drempel
   // bereikt heeft. Net als de indringers-/kudde-/roofdier-pop-ups hierboven
@@ -465,6 +508,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
     Boolean(state.techKeuzeEvent);
   // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
   // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
@@ -481,6 +525,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
@@ -570,6 +615,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
               setToonStadMenuPopup(false);
             }}
             onHaalTerug={haalStrijderTerug}
+            onVersnelCiviel={versnelCivielMetGoud}
+            onVersnelOpslagplaats={versnelOpslagplaatsMetGoud}
             onSluiten={() => setToonStadMenuPopup(false)}
           />
         )}
@@ -592,6 +639,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonRoofdierPopup && state.roofdierEvent && (
           <RoofdierPopup event={state.roofdierEvent} onSluiten={sluitRoofdierMelding} />
         )}
+        {toonAmberOntdektPopup && <AmberOntdektPopup onSluiten={sluitAmberOntdektMelding} />}
         {toonTechKeuzePopup && state.techKeuzeEvent && (
           <TechKeuzePopup
             drempel={state.techKeuzeEvent.drempel}
@@ -670,6 +718,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonIndringersPopup &&
             !toonKuddePopup &&
             !toonRoofdierPopup &&
+            !toonAmberOntdektPopup &&
             !toonTechKeuzePopup &&
             !toonTutorialVoltooidPopup &&
             !strijderBemanPopupStrijderId &&
@@ -689,6 +738,21 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           terreinWaarschuwing={
             terreinMismatch
               ? `${plaatsingsImprovement!.naam} kan hier niet gebouwd worden — vereist ${terreinEisenBeschrijving(plaatsingsImprovement!)}.`
+              : amberMismatch
+                ? `${plaatsingsImprovement!.naam} kan hier niet gebouwd worden — hier is geen amberader gevonden.`
+                : undefined
+          }
+          rushVraag={
+            geselecteerdeTile &&
+            geselecteerdeTileVoorRush?.status === "in_aanbouw" &&
+            geselecteerdeTileVoorRush.improvement &&
+            geselecteerdeTileVoorRush.bouwVoortgang
+              ? {
+                  improvement: geselecteerdeTileVoorRush.improvement,
+                  voortgang: geselecteerdeTileVoorRush.bouwVoortgang,
+                  goudInVoorraad: state.voorraad.goud,
+                  onVersnellen: () => versnelBouwMetGoud(geselecteerdeTile.hoogte, geselecteerdeTile.positieInLaag),
+                }
               : undefined
           }
           onBevestigBouw={bevestigBouw}

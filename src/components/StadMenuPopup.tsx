@@ -17,6 +17,8 @@ interface StadMenuPopupProps {
   onConfrontatie: () => void;
   onKiesStrijder: (strijderId: string) => void;
   onHaalTerug: (strijderId: string) => void;
+  onVersnelCiviel: () => void;
+  onVersnelOpslagplaats: () => void;
   onSluiten: () => void;
 }
 
@@ -40,6 +42,8 @@ export default function StadMenuPopup({
   onConfrontatie,
   onKiesStrijder,
   onHaalTerug,
+  onVersnelCiviel,
+  onVersnelOpslagplaats,
   onSluiten,
 }: StadMenuPopupProps) {
   return (
@@ -76,8 +80,17 @@ export default function StadMenuPopup({
           </button>
         </div>
 
-        <CivielPaneel state={state} onStartGroei={onStartGroei} onStartNieuweSettler={onStartNieuweSettler} />
-        <OpslagplaatsPaneel state={state} onStartOpslagplaats={onStartOpslagplaats} />
+        <CivielPaneel
+          state={state}
+          onStartGroei={onStartGroei}
+          onStartNieuweSettler={onStartNieuweSettler}
+          onVersnelCiviel={onVersnelCiviel}
+        />
+        <OpslagplaatsPaneel
+          state={state}
+          onStartOpslagplaats={onStartOpslagplaats}
+          onVersnelOpslagplaats={onVersnelOpslagplaats}
+        />
         <MilitairPaneel
           state={state}
           legerwaarde={legerwaarde}
