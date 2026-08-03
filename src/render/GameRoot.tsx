@@ -232,7 +232,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     geselecteerdeTile?.hoogte === 0
       ? beschrijfOceaanTile()
       : geselecteerdeTile && geselecteerdeLaag
-        ? beschrijfTile(geselecteerdeLaag, state.lagen, state.stad, geselecteerdeTile.positieInLaag)
+        ? beschrijfTile(geselecteerdeLaag, state.lagen, state.stad, geselecteerdeTile.positieInLaag, state.voorraad)
         : null;
 
   // De tile die de speler heeft aangeklikt terwijl er een improvement klaar

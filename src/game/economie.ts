@@ -480,6 +480,31 @@ export function resterendeBouwBeurten(
   return maxBeurten;
 }
 
+// Of een lopende bouw/rekrutering de eerstvolgende beurt volledig stilligt
+// door een tekort aan grondstoffen (issue: "bouwproces inzichtelijk maken" —
+// "als er geen bouwmaterialen op voorraad zijn ... graag een attentie dat er
+// de volgende beurt niets gebouwd gaat worden"). Zelfde per-beurt-bedrag als
+// `investeerInBouwkosten` hierboven, maar zonder de voorraad te muteren: pas
+// als voor élk resterend grondstoftype de voorraad de per-beurt-investering
+// niet haalt, gebeurt er komende beurt werkelijk niets.
+export function bouwStagneertVolgendeBeurt(
+  improvement: Improvement,
+  voortgang: Partial<Record<ResourceType, number>>,
+  voorraad: Record<MateriaalType, number>
+): boolean {
+  for (const key of Object.keys(voortgang) as ResourceKey[]) {
+    const resterend = voortgang[key] ?? 0;
+    if (resterend <= 0) continue;
+
+    const totaal = improvement.kosten[key] ?? 0;
+    const perBeurt = Math.ceil(totaal / improvement.bouwtijdBeurten);
+    const bedrag = Math.min(perBeurt, resterend);
+
+    if (!isMateriaalType(key) || voorraad[key] >= bedrag) return false;
+  }
+  return true;
+}
+
 // "A2. Zaadselectie" (hoofdstuk 3/9, techTree.ts: boerderij-uitputting 25%
 // trager) wordt hier toegepast — op het moment dat de tile "actief" wordt,
 // niet per beurt tijdens het aftellen (`verwerkUitputting` hieronder telt

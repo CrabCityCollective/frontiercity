@@ -3,8 +3,9 @@
 // verandert geen spelstatus, dus hoort hier naast de andere pure
 // game-logica-modules in plaats van in een component.
 
-import { CATEGORIE_LABELS, TERREIN_LABELS } from "./improvements";
-import { City, Improvement, Layer } from "./types";
+import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "./economie";
+import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS } from "./improvements";
+import { City, Improvement, Layer, MateriaalType, ResourceType, Tile } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
 import { hoogsteOntgrendeldeLaag, isVooruitkijkLaag } from "./world";
 
@@ -37,10 +38,43 @@ function effectBeschrijving(improvement: Improvement, opFrontier = true): string
   return "";
 }
 
+// Beschrijft de resterende grondstoffen en bouwtijd van een tile-in-aanbouw
+// (issue: "bouwproces inzichtelijk maken" — hoeveel grondstoffen nog nodig
+// zijn, en zolang de voorraad het bijhoudt, hoeveel beurten het nog duurt).
+// Alleen zichtbaar via de tile-info-pop-up, dus pas berekend als de speler
+// er daadwerkelijk op klikt — geen doorlopende UI-weergave.
+function bouwVoortgangBeschrijving(
+  tile: Tile & { bouwVoortgang: Partial<Record<ResourceType, number>> },
+  improvement: Improvement,
+  voorraad: Record<MateriaalType, number>
+): string {
+  const resterend = (Object.entries(tile.bouwVoortgang) as [ResourceType, number][]).filter(
+    ([, aantal]) => aantal > 0
+  );
+  if (resterend.length === 0) return "";
+
+  const grondstoffenTekst = resterend
+    .map(([resource, aantal]) => `${aantal} ${MATERIAAL_LABELS[resource as MateriaalType] ?? resource}`)
+    .join(", ");
+
+  if (bouwStagneertVolgendeBeurt(improvement, tile.bouwVoortgang, voorraad)) {
+    return ` Nog nodig: ${grondstoffenTekst}. Let op: door een tekort aan grondstoffen wordt hier de volgende beurt niet aan gebouwd.`;
+  }
+
+  const beurten = resterendeBouwBeurten(improvement, tile.bouwVoortgang);
+  return ` Nog nodig: ${grondstoffenTekst}. Nog ${beurten} ${beurten === 1 ? "beurt" : "beurten"} tot voltooiing.`;
+}
+
 // Geeft de info voor de tile op `positieInLaag` binnen `laag`. Onontgrendelde
 // lagen (fog of war / vooruitkijk) hebben geen tile-detail — daar tonen we
 // alleen wat er over de laag zelf bekend is (hoofdstuk 2).
-export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieInLaag: number): TileInfo {
+export function beschrijfTile(
+  laag: Layer,
+  lagen: Layer[],
+  stad: City,
+  positieInLaag: number,
+  voorraad: Record<MateriaalType, number>
+): TileInfo {
   if (!laag.ontgrendeld) {
     if (isVooruitkijkLaag(laag, lagen)) {
       return {
@@ -79,10 +113,17 @@ export function beschrijfTile(laag: Layer, lagen: Layer[], stad: City, positieIn
   }
 
   if (tile.status === "in_aanbouw" && tile.improvement) {
+    const voortgangTekst = tile.bouwVoortgang
+      ? bouwVoortgangBeschrijving(
+          tile as Tile & { bouwVoortgang: Partial<Record<ResourceType, number>> },
+          tile.improvement,
+          voorraad
+        )
+      : "";
     return {
       titel: tile.improvement.naam,
       ondertitel: `${CATEGORIE_LABELS[tile.improvement.categorie]} — in aanbouw`,
-      tekst: `Nog niet actief. ${effectBeschrijving(tile.improvement)}`.trim(),
+      tekst: `Nog niet actief. ${effectBeschrijving(tile.improvement)}${voortgangTekst}`.trim(),
     };
   }
 
