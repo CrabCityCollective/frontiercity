@@ -428,19 +428,36 @@ function tekenNietVerbondenIndicatorPixel(ctx: CanvasRenderingContext2D): void {
 function tekenTerreinHintPixel(ctx: CanvasRenderingContext2D, terrein: Tile["terrein"], seed: number): void {
   if (terrein === "vlak") return;
 
-  ctx.save();
-  ctx.globalAlpha = 0.55;
   if (terrein === "bos") {
+    ctx.save();
+    ctx.globalAlpha = 0.55;
     const rng = maakSeededRandom(seed);
     tekenBoomPixel(ctx, 8, 12, 7, rng() > 0.5);
-  } else {
-    const rijen = terrein === "berg" ? 5 : 3;
-    const kleur = terrein === "berg" ? "#8f8f88" : "#7a6a4a";
-    for (let i = 0; i < rijen; i++) {
-      blokrij(ctx, 8, 12 - rijen + i + 1, Math.round(((i + 1) / rijen) * 3), kleur);
-    }
+    ctx.restore();
+    return;
   }
-  ctx.restore();
+
+  // Issue: "berg/heuvel niet goed zichtbaar in pixel art" — een vlakke vulling
+  // zonder rand viel op sommige lagen bijna samen met de terreinkleur (bv. de
+  // olijfbruine oevervlakte-ondergrond van laag 1 tegen de vergelijkbaar
+  // gekleurde heuvel-vulling). Elke rij krijgt daarom eerst een bredere,
+  // donkere rand-rij en daarna de smallere vulkleur erbovenop, zodat het
+  // silhouet op elke ondergrond afsteekt — zelfde aanpak als de wegrand-fix
+  // in `tekenWegPixel` hierboven.
+  const rijen = terrein === "berg" ? 6 : 4;
+  const kleur = terrein === "berg" ? "#c9cbc4" : "#b08e52";
+  const rand = "rgba(28, 22, 14, 0.85)";
+  const baseY = 12;
+  for (let i = 0; i < rijen; i++) {
+    const y = baseY - rijen + i + 1;
+    const half = Math.max(1, Math.round(((i + 1) / rijen) * 4));
+    blokrij(ctx, 8, y, half + 1, rand);
+  }
+  for (let i = 0; i < rijen; i++) {
+    const y = baseY - rijen + i + 1;
+    const half = Math.max(1, Math.round(((i + 1) / rijen) * 4));
+    blokrij(ctx, 8, y, half, kleur);
+  }
 }
 
 function tekenHertSilhouetPixel(ctx: CanvasRenderingContext2D, cx: number, baseY: number, h: number): void {
