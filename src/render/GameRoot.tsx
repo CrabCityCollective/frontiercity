@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import BoerderijKlaarUitlegPopup from "@/components/BoerderijKlaarUitlegPopup";
 import BouwPopup from "@/components/BouwPopup";
-import CivielPaneel from "@/components/CivielPaneel";
 import HistoriePaneel from "@/components/HistoriePaneel";
 import HoofdMenu from "@/components/HoofdMenu";
 import IndringersPopup from "@/components/IndringersPopup";
@@ -12,14 +11,14 @@ import IntroScherm from "@/components/IntroScherm";
 import KuddePopup from "@/components/KuddePopup";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import LaagPopup from "@/components/LaagPopup";
-import MilitairPaneel from "@/components/MilitairPaneel";
 import MilitairUitlegPopup from "@/components/MilitairUitlegPopup";
-import OpslagplaatsPaneel from "@/components/OpslagplaatsPaneel";
 import ResourceHud from "@/components/ResourceHud";
 import RoofdierPopup from "@/components/RoofdierPopup";
 import SettlerPaneel from "@/components/SettlerPaneel";
 import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
 import SpelActiesMenu from "@/components/SpelActiesMenu";
+import StadMenuPopup from "@/components/StadMenuPopup";
+import StadUpgradeUitlegPopup from "@/components/StadUpgradeUitlegPopup";
 import StichtStadPopup from "@/components/StichtStadPopup";
 import StrijderBemanPopup from "@/components/StrijderBemanPopup";
 import TechKeuzePopup from "@/components/TechKeuzePopup";
@@ -36,7 +35,7 @@ import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { useGameEngine } from "@/game/useGameEngine";
 import { bereikbarePosities } from "@/game/wegen";
-import { TUTORIAL_LAAG_AANTAL, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
+import { TUTORIAL_LAAG_AANTAL, VOEDSEL_DREMPEL_GROEI, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
 import GameCanvas from "./GameCanvas";
 
 interface GameRootProps {
@@ -91,12 +90,15 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     laden,
   } = useGameEngine();
 
-  // Militair-paneel hoeft niet constant in beeld (issue: "spel-icoontje ...
-  // militaire onderdeel openen, dit hoeft niet constant in beeld") — uit
-  // totdat de speler het bewust opent via SpelActiesMenu. Historiescherm is
-  // een losse volledig-schermige pop-up, geen aan/uit-paneel.
-  const [toonMilitair, setToonMilitair] = useState(false);
+  // Historiescherm is een losse volledig-schermige pop-up, geen aan/uit-paneel.
   const [toonHistorie, setToonHistorie] = useState(false);
+
+  // Stadsmenu-pop-up (issue: "city improvement menu toevoegen"): bundelt alle
+  // stad-acties (civiel/groei, opslagplaats, militair) die voorheen als losse
+  // dozen constant in beeld stonden. Opent zodra de speler op de stad-tile
+  // klikt (zie `handleTileClick` hieronder) — het militair-paneel hoeft
+  // hierdoor niet meer apart getoggled te worden via SpelActiesMenu.
+  const [toonStadMenuPopup, setToonStadMenuPopup] = useState(false);
 
   // Introscherm (issue: "intro en game over scherm"): getoond bij elke start
   // van de tutorial vanuit het menu — niet slechts één keer per browser, zodat
@@ -136,6 +138,11 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // actieve, wegverbonden boerderij meeproduceert (zie economie.ts
   // `heeftWerkendeBoerderij`).
   const [boerderijKlaarBevestigd, setBoerderijKlaarBevestigd] = useState(false);
+  // Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen"):
+  // zelfde eenmalige-confirm-vlag, getoond zodra er voor het eerst genoeg
+  // voedsel is voor de groei-tier klein→middel (zie `toonStadUpgradeUitlegPopup`
+  // hieronder).
+  const [stadUpgradeUitlegBevestigd, setStadUpgradeUitlegBevestigd] = useState(false);
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is"): anders dan de
   // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
@@ -204,6 +211,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     setStrijderBemanPopupStrijderId(null);
     setWachttorenKiesModusStrijderId(null);
     setToonStichtStadPopup(false);
+    setToonStadMenuPopup(false);
   }, [state.beurt]);
 
   const geselecteerdeLaag = geselecteerdeTile
@@ -300,6 +308,16 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
       verplaatsSettlerNaar(hoogte, positieInLaag);
       return;
     }
+
+    // City improvement menu (issue: "city improvement menu toevoegen"): een
+    // klik op de stad-tile zelf (het centrum van een laag, `soort: "city"`)
+    // opent het stadsmenu in plaats van de gewone tile-info-pop-up.
+    const laag = state.lagen.find((l) => l.hoogte === hoogte);
+    if (laag?.tiles[positieInLaag]?.improvement?.soort === "city") {
+      setToonStadMenuPopup(true);
+      return;
+    }
+
     setGeselecteerdeTile({ hoogte, positieInLaag });
   }
 
@@ -361,6 +379,20 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     !militairUitlegBevestigd;
+  // Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen"):
+  // zodra er voor het eerst genoeg voedsel is voor de groei-tier klein→middel
+  // — dezelfde dynamische-trigger-vorm als de andere uitleg-pop-ups hierboven.
+  const toonStadUpgradeUitlegPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonMilitairUitlegPopup &&
+    uitlegAan &&
+    !stadUpgradeUitlegBevestigd &&
+    state.stad.grootte === "klein" &&
+    state.voedsel >= VOEDSEL_DREMPEL_GROEI;
   // Indringers-pop-up (hoofdstuk 6) — verschijnt zodra `verwerkIndringers`
   // (economie.ts) een gebeurtenis op een van de ontgrendelde lagen heeft
   // gezet (niet meer alleen de frontier-laag). Blijft in beeld tot de speler
@@ -374,6 +406,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
     Boolean(state.indringersEvent);
   // Kudde- & roofdier-pop-ups (hoofdstuk 14/17) — zelfde blokkerende vorm en
   // prioriteit als de indringers-pop-up hierboven, ook los van de
@@ -385,6 +418,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
     Boolean(state.kuddeEvent);
   const toonRoofdierPopup =
@@ -394,6 +428,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
     !toonKuddePopup &&
     Boolean(state.roofdierEvent);
@@ -409,6 +444,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
@@ -424,6 +460,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
@@ -481,11 +518,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         uitlegAan={uitlegAan}
         onToggleUitleg={() => zetUitlegPopups(!uitlegAan)}
       />
-      <SpelActiesMenu
-        toonMilitair={toonMilitair}
-        onToggleMilitair={() => setToonMilitair((huidig) => !huidig)}
-        onToonHistorie={() => setToonHistorie(true)}
-      />
+      <SpelActiesMenu onToonHistorie={() => setToonHistorie(true)} />
       <div className="game-scroll-area" ref={scrollRef}>
         <GameCanvas
           lagen={zichtbareLagenState}
@@ -503,17 +536,22 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           onHakHout={hakHout}
           onOpenStichtStad={() => setToonStichtStadPopup(true)}
         />
-        <CivielPaneel state={state} onStartGroei={startGroei} onStartNieuweSettler={startNieuweSettler} />
-        <OpslagplaatsPaneel state={state} onStartOpslagplaats={startOpslagplaats} />
-        {toonMilitair && (
-          <MilitairPaneel
+        {toonStadMenuPopup && (
+          <StadMenuPopup
             state={state}
             legerwaarde={berekenLegerwaarde(state)}
             tegenstanderSterkte={actieveLaag.dreigingsniveau ?? 0}
+            onStartGroei={startGroei}
+            onStartNieuweSettler={startNieuweSettler}
+            onStartOpslagplaats={startOpslagplaats}
             onStartRecrutering={startRecrutering}
             onConfrontatie={confrontatie}
-            onKiesStrijder={(strijderId) => setStrijderBemanPopupStrijderId(strijderId)}
+            onKiesStrijder={(strijderId) => {
+              setStrijderBemanPopupStrijderId(strijderId);
+              setToonStadMenuPopup(false);
+            }}
             onHaalTerug={haalStrijderTerug}
+            onSluiten={() => setToonStadMenuPopup(false)}
           />
         )}
         {toonLaagPopup && (
@@ -552,6 +590,9 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         )}
         {toonBoerderijKlaarUitlegPopup && (
           <BoerderijKlaarUitlegPopup onDoorgaan={() => setBoerderijKlaarBevestigd(true)} />
+        )}
+        {toonStadUpgradeUitlegPopup && (
+          <StadUpgradeUitlegPopup onDoorgaan={() => setStadUpgradeUitlegBevestigd(true)} />
         )}
         {strijderBemanPopupStrijderId && (
           <StrijderBemanPopup
@@ -607,6 +648,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonVoedselWaarschuwingPopup &&
             !toonBoerderijKlaarUitlegPopup &&
             !toonMilitairUitlegPopup &&
+            !toonStadUpgradeUitlegPopup &&
             !toonIndringersPopup &&
             !toonKuddePopup &&
             !toonRoofdierPopup &&
@@ -615,6 +657,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !strijderBemanPopupStrijderId &&
             !wachttorenKiesModusStrijderId &&
             !toonStichtStadPopup &&
+            !toonStadMenuPopup &&
             !state.bouwKeuzeGedaanDitBeurt &&
             !plaatsingsImprovement &&
             kanBouwen

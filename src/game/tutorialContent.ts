@@ -168,6 +168,19 @@ export const BOERDERIJ_KLAAR_TITEL = "Voedsel bereikt het kamp";
 export const BOERDERIJ_KLAAR_TEKST =
   "Voedsel bereikt het kamp, de ergste hongersnood is geweken. De tocht gaat verder. Maar we komen steeds meer vijandelijke stammen tegen. We hebben nu steen en erts nodig uit de heuvels en bergen om een wachttoren te kunnen bouwen, en onze strijders te bewapenen. Bouw een wachttoren, en open het militaire scherm via het menu om strijders op te leiden.";
 
+// Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen" —
+// "op het moment dat je voor het eerst genoeg resources hebt om de stad
+// upgrade uit te voeren, mag er een dynamische pop-up komen die uitlegt dat
+// je kunt upgraden, en wat er aan hebt"): getoond zodra er voor het eerst
+// genoeg voedsel is voor de groei-tier klein→middel (zie world.ts:
+// `VOEDSEL_DREMPEL_GROEI`) — zelfde eenmalige dynamische-trigger-patroon als
+// BOERDERIJ_KLAAR_TITEL/-TEKST hierboven. Eerlijk over de keerzijde (hoofdstuk
+// 4/11: "een bewuste gok, geen gratis extra beloning") in plaats van alleen
+// de voordelen te noemen.
+export const STAD_UPGRADE_UITLEG_TITEL = "De stad kan groeien";
+export const STAD_UPGRADE_UITLEG_TEKST =
+  "Er is genoeg voedsel verzameld om Holenrots te laten groeien naar middel. Open het stadsmenu door op de stad te klikken, en start de groei daar. Het kost hout en steen, en een paar beurten rijptijd. Let op: een grotere stad heeft ook meer mondjes te voeden — zorg dat de voedselproductie meegroeit.";
+
 // Strijder-bemannen-pop-up (nieuwe Wachttoren-functie, hoofdstuk 6: "een
 // wachttoren heeft een strijder nodig om te kunnen functioneren"), getoond
 // zodra de speler in het militaire paneel op een nog niet toegewezen strijder
