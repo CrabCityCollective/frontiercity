@@ -1,10 +1,19 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Frontier City",
   description: "De Eerste Vuren — Het Hertenpad-volk",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Frontier City",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#3d2e26",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
