@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   bemanWachttoren,
+  bouwStagneertVolgendeBeurt,
   heeftGenoegVoorStichten,
   jaag,
   kanStichten,
@@ -130,6 +131,22 @@ test("een tijdelijk tekort aan één grondstof blokkeert niet de voortgang op ee
   state = volgendeBeurt(state);
   assert.equal(state.stad.legerInAanbouw, undefined);
   assert.equal(state.stad.strijders.length, 1);
+});
+
+test("bouwStagneertVolgendeBeurt is alleen true als geen enkel resterend grondstoftype volgende beurt betaald kan worden", () => {
+  let state = maakInitieleSpelStatus();
+  // Genoeg hout, geen erts: het hout-aandeel kan nog wel betaald worden, dus
+  // stokt de opleiding als geheel nog niet.
+  state = { ...state, voorraad: { ...state.voorraad, hout: 10, erts: 0 } };
+  state = startRecrutering(state);
+  const voortgang = state.stad.legerInAanbouw!.voortgang;
+
+  assert.equal(bouwStagneertVolgendeBeurt(SOLDAAT, voortgang, state.voorraad), false);
+
+  // Nu ook geen hout meer: geen enkel resterend grondstoftype is nog
+  // betaalbaar, dus stokt de opleiding volledig.
+  const zonderVoorraad = { ...state.voorraad, hout: 0 };
+  assert.equal(bouwStagneertVolgendeBeurt(SOLDAAT, voortgang, zonderVoorraad), true);
 });
 
 test("de opslag-cap geldt per grondstof, niet als gezamenlijke som (basis van de STICHTING_KOSTEN-doorrekening)", () => {
