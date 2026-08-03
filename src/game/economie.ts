@@ -83,7 +83,7 @@ import {
   wetenschapKostenVoorDrempel,
 } from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
-import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, KuddeEvent, Layer, MateriaalType, ResourceType, RoofdierEvent, Strijder, TechDrempel, TechId, Tile } from "./types";
+import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, KuddeEvent, Layer, MateriaalType, ResourceType, RoofdierEvent, Settler, Strijder, TechDrempel, TechId, Tile } from "./types";
 import {
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
@@ -901,10 +901,35 @@ export function startRecrutering(state: GameState): GameState {
 
 // Of een Wachttoren-vakje bemand is door een van de strijders (nieuwe
 // Wachttoren-functie, hoofdstuk 6: "de wachttoren moet dus bemand zijn").
-function isWachttorenBemand(strijders: Strijder[], hoogte: number, positieInLaag: number): boolean {
+// Geëxporteerd zodat zowel de tile-info-pop-up (tileInfo.ts) als de
+// canvas-tekenaars (render/canvas.ts, render/canvasPixelArt.ts) hetzelfde
+// bemand/onbemand-onderscheid kunnen tonen als hier bepaald wordt.
+export function isWachttorenBemand(strijders: Strijder[], hoogte: number, positieInLaag: number): boolean {
   return strijders.some(
     (strijder) => strijder.wachttoren?.hoogte === hoogte && strijder.wachttoren?.positieInLaag === positieInLaag
   );
+}
+
+// Alle actieve, nog onbemande Wachttoren-tiles over alle lagen heen (nieuwe
+// Wachttoren-functie, hoofdstuk 6, issue: "de wachttorens die beschikbaar
+// zijn moeten allemaal gehighlight worden") — dit zijn precies de geldige
+// klikdoelen tijdens het bemannen (`wachttorenKiesModusStrijderId` in
+// GameRoot), en dus ook de enige tiles die `bemanWachttoren` hieronder
+// daadwerkelijk accepteert.
+export function onbemandeWachttorenPosities(state: GameState): Settler[] {
+  const posities: Settler[] = [];
+  for (const laag of state.lagen) {
+    for (const tile of laag.tiles) {
+      if (
+        tile.status === "actief" &&
+        tile.improvement?.id === "wachttoren" &&
+        !isWachttorenBemand(state.stad.strijders, laag.hoogte, tile.positieInLaag)
+      ) {
+        posities.push({ hoogte: laag.hoogte, positieInLaag: tile.positieInLaag });
+      }
+    }
+  }
+  return posities;
 }
 
 // Aantal actieve, bemande Wachttoren-tiles over alle lagen heen (hoofdstuk

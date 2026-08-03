@@ -9,6 +9,7 @@ import {
   kanStichten,
   kiesTech,
   maakInitieleSpelStatus,
+  onbemandeWachttorenPosities,
   OPSLAG_CAP,
   resterendeBouwBeurten,
   startNieuweSettler,
@@ -109,6 +110,47 @@ test("een soldaat in opleiding is na SOLDAAT.bouwtijdBeurten beurten een inzetba
   const strijderId = state.stad.strijders[0].id;
   state = bemanWachttoren(state, strijderId, 1, 8);
   assert.deepEqual(state.stad.strijders[0].wachttoren, { hoogte: 1, positieInLaag: 8 });
+});
+
+test("onbemandeWachttorenPosities geeft alleen actieve, nog niet-bemande wachttorens terug", () => {
+  let state = metWerkendeEconomie();
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag, idx) =>
+      idx !== 0
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((tile) => {
+              if (tile.positieInLaag === 7 || tile.positieInLaag === 8) {
+                return { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true };
+              }
+              return tile;
+            }),
+          }
+    ),
+  };
+
+  // Vóór er een strijder is, moeten beide gebouwde wachttorens als onbemand
+  // (dus beschikbaar) gelden.
+  assert.deepEqual(
+    onbemandeWachttorenPosities(state).sort((a, b) => a.positieInLaag - b.positieInLaag),
+    [
+      { hoogte: 1, positieInLaag: 7 },
+      { hoogte: 1, positieInLaag: 8 },
+    ]
+  );
+
+  state = startRecrutering(state);
+  for (let i = 0; i < SOLDAAT.bouwtijdBeurten; i++) state = volgendeBeurt(state);
+  const strijderId = state.stad.strijders[0].id;
+  state = bemanWachttoren(state, strijderId, 1, 8);
+
+  // Zodra positie 8 bemand is, blijft alleen positie 7 nog beschikbaar —
+  // precies de lijst die de kaart-highlight (issue: "de wachttorens die
+  // beschikbaar zijn dan allemaal worden gehighlight") en de klik-validatie
+  // in GameRoot gebruiken.
+  assert.deepEqual(onbemandeWachttorenPosities(state), [{ hoogte: 1, positieInLaag: 7 }]);
 });
 
 test("een tijdelijk tekort aan één grondstof blokkeert niet de voortgang op een andere", () => {

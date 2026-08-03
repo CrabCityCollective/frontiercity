@@ -27,6 +27,13 @@ interface GameCanvasProps {
   // die vakjes en stuurt een klik erop naar `onTileClick` als verplaatsing
   // i.p.v. tile-selectie (zie GameRoot).
   settlerBereikbarePosities?: Settler[];
+  // Actieve, nog onbemande Wachttoren-tiles tijdens het bemannen (nieuwe
+  // Wachttoren-functie, hoofdstuk 6, issue: "de wachttorens die beschikbaar
+  // zijn allemaal highlighten") — zelfde patroon als `settlerBereikbarePosities`
+  // hierboven, maar voor de strijder-bemannen-flow: zolang dit gezet is
+  // markeert de canvas deze vakjes en stuurt een klik erop naar `onTileClick`
+  // als bemannen (zie GameRoot).
+  wachttorenBereikbarePosities?: Settler[];
   onTileClick: (hoogte: number, positieInLaag: number) => void;
 }
 
@@ -64,6 +71,7 @@ export default function GameCanvas({
   plaatsingsLaagHoogte,
   settler,
   settlerBereikbarePosities,
+  wachttorenBereikbarePosities,
   onTileClick,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -80,8 +88,18 @@ export default function GameCanvas({
     // dezelfde signatuur/tile-geometrie (zie canvasPixelArt.ts), dus hier
     // alleen kiezen welke van de twee getekend wordt.
     const teken = grafischeStijl() === "pixel-art" ? tekenWereldPixelArt : tekenWereld;
-    teken(ctx, canvas.width, canvas.height, lagen, stad, plaatsingsLaagHoogte, settler, settlerBereikbarePosities);
-  }, [lagen, stad, plaatsingsLaagHoogte, settler, settlerBereikbarePosities]);
+    teken(
+      ctx,
+      canvas.width,
+      canvas.height,
+      lagen,
+      stad,
+      plaatsingsLaagHoogte,
+      settler,
+      settlerBereikbarePosities,
+      wachttorenBereikbarePosities
+    );
+  }, [lagen, stad, plaatsingsLaagHoogte, settler, settlerBereikbarePosities, wachttorenBereikbarePosities]);
 
   function handleClick(event: MouseEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;

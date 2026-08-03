@@ -14,6 +14,7 @@
 // tegel/icoon-illustraties), en blijft zo pixel-voor-pixel identiek ongeacht
 // welke stijl actief is.
 
+import { isWachttorenBemand } from "@/game/economie";
 import { City, Layer, Settler, Tile } from "@/game/types";
 import { isTileVerbondenMetStad } from "@/game/wegen";
 import {
@@ -26,6 +27,7 @@ import {
   tekenBeschikbaarMarkering,
   tekenSettlerBereikbaarMarkering,
   tekenTileGrid,
+  tekenWachttorenBereikbaarMarkering,
   terreinBasisKleur,
 } from "./canvas";
 
@@ -223,7 +225,11 @@ function tekenHeiligdomPixel(ctx: CanvasRenderingContext2D): void {
   vlijn(ctx, 8, 8, 9, "rgba(154, 74, 138, 0.9)");
 }
 
-function tekenWachttorenPixel(ctx: CanvasRenderingContext2D): void {
+// `bemand` (nieuwe Wachttoren-functie, hoofdstuk 6, issue: "ik wil ook in het
+// wachttoren icoontje zien of er een soldaat in zit") — zelfde onderscheid
+// als `tekenWachttoren` in canvas.ts: een gedempte grijze vlag als hij leeg
+// (dus inactief) staat, een warme vlag + strijder-silhouet zodra bemand.
+function tekenWachttorenPixel(ctx: CanvasRenderingContext2D, bemand: boolean): void {
   const baseY = 14;
   schaduw(ctx, 8, baseY + 1, 8);
 
@@ -236,8 +242,14 @@ function tekenWachttorenPixel(ctx: CanvasRenderingContext2D): void {
   ctx.strokeRect(4, 5, 8, 1);
 
   vlijn(ctx, 8, 1, 5, "#3a2c18");
-  blokrij(ctx, 9, 1, 2, "#a94a3a");
-  blokrij(ctx, 9, 2, 2, "#a94a3a");
+  const vlagKleur = bemand ? "#c9552f" : "#5a564e";
+  blokrij(ctx, 9, 1, 2, vlagKleur);
+  blokrij(ctx, 9, 2, 2, vlagKleur);
+
+  if (bemand) {
+    p(ctx, 8, 4, "#2a2016");
+    vlijn(ctx, 8, 5, 6, "#2a2016");
+  }
 }
 
 function tekenSettlerPixel(ctx: CanvasRenderingContext2D): void {
@@ -266,20 +278,20 @@ function tekenSettlerPixel(ctx: CanvasRenderingContext2D): void {
 
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
-  (ctx: CanvasRenderingContext2D, seed: number) => void
+  (ctx: CanvasRenderingContext2D, seed: number, bemand: boolean) => void
 > = {
   houtkap: tekenHoutkapPixel,
   steengroeve: tekenSteengroevePixel,
   mijn: (ctx) => tekenMijnPixel(ctx),
   boerderij: tekenBoerderijPixel,
   heiligdom: (ctx) => tekenHeiligdomPixel(ctx),
-  wachttoren: (ctx) => tekenWachttorenPixel(ctx),
+  wachttoren: (ctx, seed, bemand) => tekenWachttorenPixel(ctx, bemand),
 };
 
-function tekenLandImprovementPixel(ctx: CanvasRenderingContext2D, id: string, seed: number): void {
+function tekenLandImprovementPixel(ctx: CanvasRenderingContext2D, id: string, seed: number, bemand: boolean): void {
   const tekenaar = LAND_IMPROVEMENT_TEKENAARS[id];
   if (tekenaar) {
-    tekenaar(ctx, seed);
+    tekenaar(ctx, seed, bemand);
     return;
   }
   ctx.fillStyle = "#8a8a4a";
@@ -572,7 +584,9 @@ function tekenActieveTilePixel(
   }
 
   if (tile.status === "actief" && tile.improvement?.soort === "land") {
-    tekenLandImprovementPixel(ctx, tile.improvement.id, seed);
+    const bemand =
+      tile.improvement.id === "wachttoren" && isWachttorenBemand(stad.strijders, hoogte, col);
+    tekenLandImprovementPixel(ctx, tile.improvement.id, seed, bemand);
 
     if (tile.beurtenTotUitputting !== undefined) {
       ctx.fillStyle = "rgba(20, 16, 10, 0.7)";
@@ -618,7 +632,8 @@ export function tekenWereldPixelArt(
   stad: City,
   plaatsingsLaagHoogte?: number,
   settler?: Settler,
-  settlerBereikbarePosities?: Settler[]
+  settlerBereikbarePosities?: Settler[],
+  wachttorenBereikbarePosities?: Settler[]
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalLagen = lagen.length;
@@ -659,6 +674,14 @@ export function tekenWereldPixelArt(
 
       if (settlerBereikbarePosities?.some((positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col)) {
         tekenSettlerBereikbaarMarkering(ctx, x, y, tileSize);
+      }
+
+      if (
+        wachttorenBereikbarePosities?.some(
+          (positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col
+        )
+      ) {
+        tekenWachttorenBereikbaarMarkering(ctx, x, y, tileSize);
       }
     }
   }

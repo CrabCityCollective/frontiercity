@@ -28,7 +28,12 @@ import UitlegPopup from "@/components/UitlegPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import VolgendeBeurtWaarschuwingPopup from "@/components/VolgendeBeurtWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
-import { berekenHistorieStatistieken, berekenLegerwaarde, heeftWerkendeBoerderij } from "@/game/economie";
+import {
+  berekenHistorieStatistieken,
+  berekenLegerwaarde,
+  heeftWerkendeBoerderij,
+  onbemandeWachttorenPosities,
+} from "@/game/economie";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
@@ -285,16 +290,28 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !wachttorenKiesModusStrijderId;
   const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.lagen, state.settler!) : [];
 
+  // Actieve, nog onbemande Wachttoren-tiles tijdens het bemannen (nieuwe
+  // Wachttoren-functie, hoofdstuk 6, issue: "de wachttorens die beschikbaar
+  // zijn dan allemaal worden gehighlight ... je kunt dus alleen de
+  // wachttorens kiezen die nog geen strijder hebben") — zelfde
+  // alleen-tijdens-de-modus-berekenen-patroon als `settlerBereikbarePosities`
+  // hierboven, en meteen ook de enige geldige klikdoelen in `handleTileClick`.
+  const wachttorenBereikbarePosities = wachttorenKiesModusStrijderId
+    ? onbemandeWachttorenPosities(state)
+    : [];
+
   function handleTileClick(hoogte: number, positieInLaag: number) {
     // Wachttoren-kies-modus (nieuwe Wachttoren-functie, hoofdstuk 6) heeft
     // voorrang op settler-verplaatsing/tile-selectie: een klik op een
-    // geldig doel (actieve Wachttoren-tile) bemant de gekozen strijder en
-    // sluit de modus af; een klik ernaast laat de modus openstaan zodat de
-    // speler opnieuw kan mikken.
+    // gehighlight, dus nog onbemand, actieve Wachttoren-tile bemant de
+    // gekozen strijder en sluit de modus af; een klik ernaast (of op een al
+    // bemande toren) laat de modus openstaan zodat de speler opnieuw kan
+    // mikken.
     if (wachttorenKiesModusStrijderId) {
-      const laag = state.lagen.find((l) => l.hoogte === hoogte);
-      const tile = laag?.tiles[positieInLaag];
-      if (tile?.status === "actief" && tile.improvement?.id === "wachttoren") {
+      const isGeldigWachttorenDoel = wachttorenBereikbarePosities.some(
+        (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
+      );
+      if (isGeldigWachttorenDoel) {
         bemanWachttoren(wachttorenKiesModusStrijderId, hoogte, positieInLaag);
         setWachttorenKiesModusStrijderId(null);
       }
@@ -526,6 +543,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           plaatsingsLaagHoogte={plaatsingsImprovement ? actieveLaag.hoogte : undefined}
           settler={state.settler}
           settlerBereikbarePosities={settlerBereikbarePosities}
+          wachttorenBereikbarePosities={wachttorenBereikbarePosities}
           onTileClick={handleTileClick}
         />
         <LaagIntroPaneel lagen={state.lagen} />

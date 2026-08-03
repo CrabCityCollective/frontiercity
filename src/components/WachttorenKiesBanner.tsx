@@ -25,7 +25,7 @@ export default function WachttorenKiesBanner({ onAnnuleren }: WachttorenKiesBann
         zIndex: 40,
       }}
     >
-      <span>Klik op een actieve wachttoren op de kaart om de strijder te bemannen.</span>
+      <span>Klik op een gemarkeerde, nog onbemande wachttoren op de kaart om de strijder te bemannen.</span>
       <button className="fc-knop" onClick={onAnnuleren} style={{ padding: "0.3rem 0.6rem" }}>
         Annuleren
       </button>
