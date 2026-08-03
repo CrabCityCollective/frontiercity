@@ -3,7 +3,7 @@
 // verandert geen spelstatus, dus hoort hier naast de andere pure
 // game-logica-modules in plaats van in een component.
 
-import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "./economie";
+import { bouwStagneertVolgendeBeurt, isWachttorenBemand, resterendeBouwBeurten } from "./economie";
 import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS } from "./improvements";
 import { City, Improvement, Layer, MateriaalType, ResourceType, Tile } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
@@ -141,10 +141,20 @@ export function beschrijfTile(
           ? " Verbonden met de stad via een weg."
           : " Nog niet verbonden met de stad — legt pas iets af zodra de settler op dit vakje zelf een weg heeft aangelegd, verbonden met het wegennetwerk naar de stad."
         : "";
+    // Bemand/onbemand-status (nieuwe Wachttoren-functie, hoofdstuk 6, issue:
+    // "in de pop-up kunnen zien of er een strijder aanwezig is en dus actief
+    // is") — alleen relevant voor de Wachttoren zelf, andere improvements
+    // hebben geen bemanningsconcept.
+    const bemandStatus =
+      tile.improvement.id === "wachttoren"
+        ? isWachttorenBemand(stad.strijders, laag.hoogte, positieInLaag)
+          ? " Bemand door een strijder — actief."
+          : " Nog niet bemand door een strijder — daardoor momenteel niet actief."
+        : "";
     return {
       titel: tile.improvement.naam,
       ondertitel: CATEGORIE_LABELS[tile.improvement.categorie],
-      tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${wegStatus}${uitputting}`.trim(),
+      tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${bemandStatus}${wegStatus}${uitputting}`.trim(),
     };
   }
 
