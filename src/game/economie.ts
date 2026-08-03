@@ -149,9 +149,13 @@ const STRIJDER_VERPLAATSING_BEURTEN = 2;
 // op kunt jagen voor voedsel"): een losse settler-actie naast bewegen/weg
 // aanleggen. Bewuste MVP-placeholders, net als de overige tuning-getallen
 // hierboven. Kuddes verschijnen pas vanaf `KUDDE_MIN_LAAG` (issue: "vanaf
-// laag 4 mogen kuddes voorkomen").
+// laag 4 mogen kuddes voorkomen"). KUDDE_KANS verlaagd van 0,15 naar 0,05
+// (issue: "kudde frequentie verlagen") — bij de oude 15%/beurt, zonder
+// natuurlijk verval van een ongejaagde kudde (alleen leegjagen of overbouwen
+// verwijdert er een), stapelden kuddes zich in de praktijk sneller op dan een
+// actief jagende speler kon bijhouden. Zie hoofdstuk 14 voor de doorrekening.
 const KUDDE_MIN_LAAG = 4;
-const KUDDE_KANS = 0.15;
+const KUDDE_KANS = 0.05;
 const KUDDE_JACHT_BEURTEN = 4;
 const KUDDE_VOEDSEL_PER_BEURT = 3;
 // Settler-houtkap (issue: "ook mag je je settlers inzetten om hout te
