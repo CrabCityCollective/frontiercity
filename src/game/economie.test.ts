@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   bemanWachttoren,
   bouwStagneertVolgendeBeurt,
+  hakHout,
   heeftGenoegVoorStichten,
   jaag,
   kanStichten,
@@ -498,4 +499,37 @@ test('"vuur-temmen" verhoogt de boerderij-opbrengst met 20%', () => {
   const voedselMetTech = metTech.voedsel - state.voedsel;
 
   assert.ok(voedselMetTech > voedselZonderTech, "de boerderij-opbrengst met 'vuur-temmen' moet hoger liggen");
+});
+
+// Laag 1, positie 2 is vast terrein-subtype "bos" (world.ts, TUTORIAL_TERREIN).
+test("hakHout levert 1 hout op als de settler op een leeg bos-vakje staat", () => {
+  const state: GameState = { ...maakInitieleSpelStatus(), settler: { hoogte: 1, positieInLaag: 2 } };
+
+  const naHakken = hakHout(state);
+
+  assert.equal(naHakken.voorraad.hout, state.voorraad.hout + 1);
+  assert.equal(naHakken.settlerActieGedaanDitBeurt, true);
+});
+
+test("hakHout doet niets op een uitgeputte (ghost_town) Houtkap-tile, ook al blijft het terrein bos", () => {
+  const state = maakInitieleSpelStatus();
+  const metUitgeputteHoutkap: GameState = {
+    ...state,
+    settler: { hoogte: 1, positieInLaag: 2 },
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte !== 1
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 2 ? { ...tile, status: "ghost_town" as const, improvement: HOUTKAP } : tile
+            ),
+          }
+    ),
+  };
+
+  const naHakken = hakHout(metUitgeputteHoutkap);
+
+  assert.equal(naHakken, metUitgeputteHoutkap, "geen verandering: een verlaten vakje levert geen gratis hout meer");
+  assert.equal(naHakken.settlerActieGedaanDitBeurt, false);
 });

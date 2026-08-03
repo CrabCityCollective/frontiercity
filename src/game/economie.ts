@@ -1441,13 +1441,19 @@ export function jaag(state: GameState): GameState {
 // je settlers inzetten om hout te kappen"): een directe, kleinere opbrengst
 // dan de Houtkap-improvement, zonder te bouwen. Zelfde
 // eenmalige-actie-per-beurt-regel als `jaag`/`legWegAan` hierboven.
+//
+// Uitgeputte Houtkap (issue: "settler houthakken op verlaten tegel"): een
+// `ghost_town`-vakje is een uitgeputte Houtkap-improvement — het terrein
+// blijft "bos" (zie types.ts), maar het bos zelf is daar al leeggekapt. Zonder
+// deze check kon de settler zo'n vakje voor onbeperkt gratis hout blijven
+// gebruiken, wat de uitputtings-mechaniek (hoofdstuk 4) omzeilt.
 export function hakHout(state: GameState): GameState {
   if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
 
   const { hoogte, positieInLaag } = state.settler;
   const laag = state.lagen.find((l) => l.hoogte === hoogte);
   const tile = laag?.tiles[positieInLaag];
-  if (!laag || !tile || tile.terrein !== "bos") return state;
+  if (!laag || !tile || tile.terrein !== "bos" || tile.status === "ghost_town") return state;
 
   const voorraad = {
     ...state.voorraad,
