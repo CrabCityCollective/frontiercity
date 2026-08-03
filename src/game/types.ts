@@ -165,13 +165,12 @@ export interface Relic {
 // het militaire paneel gezet (kies een strijder → kies een wachttoren).
 // Toewijzen is omkeerbaar (hoofdstuk 6/11, issue: "wachttorens, bemanning en
 // bevoorrading"): een bemande strijder kan teruggehaald worden
-// (`haalStrijderTerug` in economie.ts), waarna hij niet meteen elders
-// inzetbaar is — `onderwegBeurtenResterend` telt af tot hij weer aan een
-// (andere) Wachttoren toegewezen kan worden.
+// (`haalStrijderTerug` in economie.ts) en meteen elders opnieuw bemand —
+// verplaatsen tussen wachttorens kost geen beurten (issue: "wachttoren
+// tweaks").
 export interface Strijder {
   id: string;
   wachttoren?: { hoogte: number; positieInLaag: number };
-  onderwegBeurtenResterend?: number;
 }
 
 export interface City {
@@ -275,12 +274,17 @@ export interface IndringersTribuut {
 // het tribuut alsnog betaald — zie `weigerTribuut`/`bevestigGedwongenTribuut`
 // in economie.ts. Zodra meerdere steden bestaan (post-MVP), kan "weigeren"
 // hier in plaats daarvan echt tot stadsverlies leiden.
+// `fase: "betaald"` (issue: "wachttoren tweaks") is het laatste, bevestigende
+// scherm nadat de speler heeft gekozen om het tribuut te geven (bewust of
+// afgedwongen): toont het bedrag dat afgeschreven gaat worden, en trekt dat
+// pas daadwerkelijk van de voorraad af zodra de speler deze melding sluit
+// (zie `geefTribuut` in economie.ts).
 export interface IndringersEvent {
   laagHoogte: number;
   stamNaam: string;
   heeftWachttoren: boolean;
   tribuut?: IndringersTribuut;
-  fase: "gemeld" | "geforceerd";
+  fase: "gemeld" | "geforceerd" | "betaald";
 }
 
 // Kudde-melding (hoofdstuk 17: "verschijnt een kudde, dan meldt een pop-up

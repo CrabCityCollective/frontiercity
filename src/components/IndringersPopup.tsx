@@ -9,21 +9,25 @@ interface IndringersPopupProps {
   onGeefTribuut: () => void;
   onWeigerTribuut: () => void;
   onBevestigGedwongenTribuut: () => void;
+  onSluitTribuutBetaling: () => void;
   onSluiten: () => void;
 }
 
 // Indringers-pop-up (hoofdstuk 6): verschijnt zodra `verwerkIndringers`
 // (economie.ts) toeslaat op een van de ontgrendelde lagen (niet meer alleen
-// de frontier-laag). Eén component met drie varianten, geschakeld op
+// de frontier-laag). Eén component met vier varianten, geschakeld op
 // `event.heeftWachttoren`/`event.fase`, omdat ze hetzelfde blokkerende
 // meldings-frame delen (zelfde patroon als
 // VoedselWaarschuwingPopup/MilitairUitlegPopup) en alleen in tekst/knoppen
-// verschillen.
+// verschillen. `fase: "betaald"` (issue: "wachttoren tweaks") is het laatste
+// bevestigingsscherm — pas het sluiten daarvan (`onSluitTribuutBetaling`)
+// trekt het tribuut daadwerkelijk van de voorraad af.
 export default function IndringersPopup({
   event,
   onGeefTribuut,
   onWeigerTribuut,
   onBevestigGedwongenTribuut,
+  onSluitTribuutBetaling,
   onSluiten,
 }: IndringersPopupProps) {
   const resourceLabel = event.tribuut ? MATERIAAL_LABELS[event.tribuut.resource].toLowerCase() : "";
@@ -98,6 +102,22 @@ export default function IndringersPopup({
               style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}
             >
               Begrepen
+            </button>
+          </>
+        )}
+
+        {!event.heeftWachttoren && event.tribuut && event.fase === "betaald" && (
+          <>
+            <p style={{ margin: 0, lineHeight: 1.6 }}>
+              Je stuurt {event.tribuut.aantal} {resourceLabel} mee als tribuut. Zodra je deze melding sluit, gaat dit
+              van je voorraad af.
+            </p>
+            <button
+              className="fc-knop"
+              onClick={onSluitTribuutBetaling}
+              style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}
+            >
+              Sluiten
             </button>
           </>
         )}

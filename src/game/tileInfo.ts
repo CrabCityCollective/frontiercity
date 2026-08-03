@@ -3,7 +3,12 @@
 // verandert geen spelstatus, dus hoort hier naast de andere pure
 // game-logica-modules in plaats van in een component.
 
-import { bouwStagneertVolgendeBeurt, isWachttorenBemand, resterendeBouwBeurten } from "./economie";
+import {
+  bouwStagneertVolgendeBeurt,
+  isWachttorenBemand,
+  resterendeBouwBeurten,
+  WACHTTOREN_VOEDSEL_VERBRUIK,
+} from "./economie";
 import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS } from "./improvements";
 import { City, Improvement, Layer, MateriaalType, ResourceType, Tile } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
@@ -120,10 +125,17 @@ export function beschrijfTile(
           voorraad
         )
       : "";
+    // Voedselverbruik van een Wachttoren (issue: "wachttoren tweaks" — moet
+    // ook zichtbaar zijn zolang hij nog in aanbouw is, niet pas zodra hij
+    // actief en bemand is).
+    const wachttorenVoedselTekst =
+      tile.improvement.id === "wachttoren"
+        ? ` Verbruikt ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt zodra bemand.`
+        : "";
     return {
       titel: tile.improvement.naam,
       ondertitel: `${CATEGORIE_LABELS[tile.improvement.categorie]} — in aanbouw`,
-      tekst: `Nog niet actief. ${effectBeschrijving(tile.improvement)}${voortgangTekst}`.trim(),
+      tekst: `Nog niet actief. ${effectBeschrijving(tile.improvement)}${wachttorenVoedselTekst}${voortgangTekst}`.trim(),
     };
   }
 
@@ -144,12 +156,14 @@ export function beschrijfTile(
     // Bemand/onbemand-status (nieuwe Wachttoren-functie, hoofdstuk 6, issue:
     // "in de pop-up kunnen zien of er een strijder aanwezig is en dus actief
     // is") — alleen relevant voor de Wachttoren zelf, andere improvements
-    // hebben geen bemanningsconcept.
+    // hebben geen bemanningsconcept. Vermeldt ook het voedselverbruik
+    // (issue: "wachttoren tweaks" — moet inzichtelijk zijn dat een Wachttoren
+    // voedsel kost).
     const bemandStatus =
       tile.improvement.id === "wachttoren"
         ? isWachttorenBemand(stad.strijders, laag.hoogte, positieInLaag)
-          ? " Bemand door een strijder — actief."
-          : " Nog niet bemand door een strijder — daardoor momenteel niet actief."
+          ? ` Bemand door een strijder — actief, verbruikt ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
+          : ` Nog niet bemand door een strijder — daardoor momenteel niet actief. Zodra bemand, verbruikt hij ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
         : "";
     return {
       titel: tile.improvement.naam,
