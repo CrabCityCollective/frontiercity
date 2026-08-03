@@ -1,13 +1,9 @@
 "use client";
 
 import { NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
-import { GameState, Improvement } from "@/game/types";
+import { GameState } from "@/game/types";
 import { VOEDSEL_DREMPEL_GROEI } from "@/game/world";
-
-function formatteerKosten(improvement: Improvement): string {
-  const delen = Object.entries(improvement.kosten).map(([type, waarde]) => `${waarde} ${type}`);
-  return delen.length > 0 ? delen.join(", ") : "gratis";
-}
+import { KostenIcons } from "./ResourceIcoon";
 
 interface CivielPaneelProps {
   state: GameState;
@@ -71,7 +67,7 @@ export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler
 
       {!stad.civielInAanbouw && kanGroeien && voedsel >= VOEDSEL_DREMPEL_GROEI && (
         <button className="fc-knop" onClick={onStartGroei} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
-          Start groei naar middel ({formatteerKosten(WOONWIJK)}, {WOONWIJK.bouwtijdBeurten} beurten)
+          Start groei naar middel (<KostenIcons kosten={WOONWIJK.kosten} />, {WOONWIJK.bouwtijdBeurten} beurten)
         </button>
       )}
 
@@ -87,8 +83,8 @@ export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler
           onClick={onStartNieuweSettler}
           style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
         >
-          Rust een nieuwe settler uit ({formatteerKosten(NIEUWE_SETTLER)}, {NIEUWE_SETTLER.bouwtijdBeurten}{" "}
-          beurten)
+          Rust een nieuwe settler uit (<KostenIcons kosten={NIEUWE_SETTLER.kosten} />,{" "}
+          {NIEUWE_SETTLER.bouwtijdBeurten} beurten)
         </button>
       )}
     </div>

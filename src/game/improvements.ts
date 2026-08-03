@@ -11,7 +11,7 @@
 // land-improvements (weg/brug) vallen buiten de MVP-scope — zie hoofdstuk 3
 // en hoofdstuk 13 van het design-document.
 
-import { Categorie, Improvement, Layer, MateriaalType, TechId, TerreinType } from "./types";
+import { Categorie, Improvement, Layer, MateriaalType, ResourceType, TechId, TerreinType } from "./types";
 
 // Nederlandse labels per categorie, gedeeld tussen de bouw-pop-up (M2) en de
 // tile-info-pop-up (klik-op-tile) zodat beide dezelfde terminologie tonen.
@@ -41,6 +41,18 @@ export const MATERIAAL_LABELS: Record<MateriaalType, string> = {
   steen: "Steen",
   erts: "Erts",
   goud: "Goud",
+};
+
+// Nederlandse labels voor alle resource-types (hoofdstuk 5/13), inclusief de
+// niet-gedeelde-opslag-valuta's (voedsel/cultuur/wetenschap) — gebruikt door
+// ResourceIcoon (issue: "icoontjes tonen i.p.v. steen, erts etc. in de
+// grondstoffenbalk en in bouwkosten-pop-ups") zodat elk icoontje bij klikken
+// dezelfde naam toont als hier.
+export const RESOURCE_LABELS: Record<ResourceType, string> = {
+  ...MATERIAAL_LABELS,
+  voedsel: "Voedsel",
+  cultuur: "Cultuur",
+  wetenschap: "Wetenschap",
 };
 
 // Of `improvement` op een vakje met dit terrein geplaatst mag worden (issue:

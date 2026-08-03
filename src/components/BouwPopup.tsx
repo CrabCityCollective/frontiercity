@@ -7,6 +7,7 @@ import {
   terreinEisenBeschrijving,
 } from "@/game/improvements";
 import { Categorie, Improvement, Layer, TechId } from "@/game/types";
+import { KostenIcons } from "./ResourceIcoon";
 
 const CATEGORIEEN = Object.keys(CATEGORIE_LABELS) as Categorie[];
 
@@ -68,11 +69,6 @@ function CategorieIcoon({ categorie }: { categorie: Categorie }) {
     default:
       return null;
   }
-}
-
-function formatteerKosten(improvement: Improvement): string {
-  const delen = Object.entries(improvement.kosten).map(([type, waarde]) => `${waarde} ${type}`);
-  return delen.length > 0 ? delen.join(", ") : "gratis";
 }
 
 interface BouwPopupProps {
@@ -224,7 +220,7 @@ export default function BouwPopup({
                   const terreinEis = terreinEisenBeschrijving(improvement);
                   return (
                     <button key={improvement.id} className="fc-knop" onClick={() => onBouwStarten(improvement)}>
-                      {improvement.naam} ({formatteerKosten(improvement)}, {improvement.bouwtijdBeurten}{" "}
+                      {improvement.naam} (<KostenIcons kosten={improvement.kosten} />, {improvement.bouwtijdBeurten}{" "}
                       beurten)
                       {terreinEis && (
                         <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>

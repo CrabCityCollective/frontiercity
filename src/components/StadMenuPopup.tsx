@@ -9,6 +9,7 @@ interface StadMenuPopupProps {
   state: GameState;
   legerwaarde: number;
   tegenstanderSterkte: number;
+  confrontatieOntgrendeld: boolean;
   onStartGroei: () => void;
   onStartNieuweSettler: () => void;
   onStartOpslagplaats: () => void;
@@ -31,6 +32,7 @@ export default function StadMenuPopup({
   state,
   legerwaarde,
   tegenstanderSterkte,
+  confrontatieOntgrendeld,
   onStartGroei,
   onStartNieuweSettler,
   onStartOpslagplaats,
@@ -80,6 +82,7 @@ export default function StadMenuPopup({
           state={state}
           legerwaarde={legerwaarde}
           tegenstanderSterkte={tegenstanderSterkte}
+          confrontatieOntgrendeld={confrontatieOntgrendeld}
           onStartRecrutering={onStartRecrutering}
           onConfrontatie={onConfrontatie}
           onKiesStrijder={onKiesStrijder}

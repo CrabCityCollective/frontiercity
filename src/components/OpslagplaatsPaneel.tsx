@@ -1,12 +1,8 @@
 "use client";
 
 import { OPSLAGPLAATS } from "@/game/improvements";
-import { Improvement, GameState } from "@/game/types";
-
-function formatteerKosten(improvement: Improvement): string {
-  const delen = Object.entries(improvement.kosten).map(([type, waarde]) => `${waarde} ${type}`);
-  return delen.length > 0 ? delen.join(", ") : "gratis";
-}
+import { GameState } from "@/game/types";
+import { KostenIcons } from "./ResourceIcoon";
 
 interface OpslagplaatsPaneelProps {
   state: GameState;
@@ -49,7 +45,7 @@ export default function OpslagplaatsPaneel({ state, onStartOpslagplaats }: Opsla
           onClick={onStartOpslagplaats}
           style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
         >
-          Bouw Opslagplaats ({formatteerKosten(OPSLAGPLAATS)}, {OPSLAGPLAATS.bouwtijdBeurten} beurten, +
+          Bouw Opslagplaats (<KostenIcons kosten={OPSLAGPLAATS.kosten} />, {OPSLAGPLAATS.bouwtijdBeurten} beurten, +
           {OPSLAGPLAATS.effect.waarde} opslag-cap)
         </button>
       )}
