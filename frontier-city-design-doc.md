@@ -7,8 +7,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 ## 1. Kernconcept
 
 - Je bouwt een beschaving **omhoog**, laag voor laag, in plaats van uit te breiden over een platte kaart.
-- Elke beurt kies je een **categorie** (Economisch, Wetenschappelijk, Militair, Civiel, Cultureel), krijgt daarna **2-3 concrete opties** binnen die categorie te zien, en kiest er één.
-- Drie soorten improvements: **city improvements** (in het centrum-vakje van een laag), **land improvements** (de omliggende vakjes — boerderijen, mijnen, af en toe een nieuwe stad), en **units**.
+- Drie soorten improvements: **city improvements** (in het centrum-vakje van een laag), **land improvements** (de omliggende vakjes — boerderijen, mijnen, af en toe een nieuwe stad), en **units**. Elke soort heeft zijn eigen interactie: voor een leeg land-vakje kies je eerst een **categorie** (Economisch, Wetenschappelijk, Militair, Civiel, Cultureel) en zie je daarna **alle land improvements** binnen die categorie die op dat moment geldig zijn (hoofdstuk 11); city improvements kies je via de pop-up die opent zodra je op de stad klikt, en units via hun eigen bestaande mechanisme (bv. het militaire scherm, hoofdstuk 6).
 - **Win-conditie**: bereik de oceaan aan de overkant van een procedureel gegenereerd continent.
 
 ---
@@ -189,7 +188,7 @@ Eén nieuw mechaniek per laag, oplopend:
 | Laag | Mechaniek |
 |---|---|
 | 1 | Land improvement bouwen |
-| 2 | Categorie-keuze (2-3 opties) |
+| 2 | Categorie-keuze voor land improvements (alle geldige opties binnen de categorie) |
 | 3-4 | Drie bouwmaterialen (hout/steen/erts) |
 | 5 | Uitputting (laagdrempelig voorbeeld) |
 | 6-7 | Cultuur → laag ontgrendelen |
@@ -220,8 +219,8 @@ Een aantal kernbeslissingen is bewust gemaakt na afweging van alternatieven. Hie
 **Boom-structuur i.p.v. letterlijke stapel-toren**
 Een letterlijke verticale stapel van alle improvements door elkaar zou visueel rommelig worden zodra city- en land-improvements samen op één kolom staan. De boom/frontier-band-structuur (stad als stam, land improvements als uitlopers, nieuwe steden als nieuwe stammen) houdt de drie improvement-soorten visueel en conceptueel gescheiden, terwijl de "naar boven groeien"-fantasie behouden blijft.
 
-**Categorie kiezen, dán pas 2-3 concrete opties zien**
-Eén keuzemoment (direct een specifieke improvement kiezen) zou minder diepte geven dan twee gelaagde momenten: eerst een richting (categorie) bepalen, dan een concrete keuze binnen die richting maken. Dit geeft zowel sturing (je kunt een strategie volgen) als variatie (je weet nooit precies welke opties je zult zien) — vergelijkbaar met de kaartbeloningen in Slay the Spire, maar met een extra beslislaag.
+**Land improvements: categorie kiezen, dán alle geldige concrete opties zien (niet een willekeurige subset)**
+Dit geldt specifiek voor **land improvements** — city improvements en units lopen niet via dit mechanisme (zie hoofdstuk 1). Eén keuzemoment (direct een specifieke improvement kiezen) zou minder diepte geven dan twee gelaagde momenten: eerst een richting (categorie) bepalen, dan een concrete keuze binnen die richting maken. Een eerdere versie toonde daarna een willekeurige subset van 2-3 opties uit de categorie-pool, maar dat kon ertoe leiden dat de speler precies de land improvement niet aangeboden kreeg die zijn economie op dat moment nodig had (bijvoorbeeld een tekort aan erts terwijl er geen mijn in de aanbieding zat) — dat voelde niet als een interessante keuze, maar als een gemiste kans. Door in plaats daarvan alle geldige land improvements binnen een categorie te tonen (gefilterd op vervulde voorwaarden zoals terreineisen, maar niet meer willekeurig beperkt), wordt resource-planning een echte, uitvoerbare vaardigheid: met 4-6 land improvement-types per categorie (hoofdstuk 3) blijft de lijst vanzelf behapbaar voor een mobiel scherm. De onvoorspelbaarheid van het spel blijft intact via andere systemen: verborgen zeldzaamheid, procedurele worldgen, de vertakkende Anker-verhalen, en de indringers-trekking (hoofdstuk 6/9/14).
 
 **Geen resource-inkomsten en geen veiligheidsnet van achtergelaten steden**
 Dit is een bewuste keuze om het "frontier"-gevoel scherp te houden: als oude steden gewoon door bleven produceren, zou er een veilige, passieve thuisbasis ontstaan en verdwijnt de noodzaak om steeds verder te trekken. Door specialisatie-relics wél permanent te maken (als beloning), maar lopende inkomsten niet, blijft vooruitgang komen uit wat je hebt veroverd, niet uit wat je passief bezit.
@@ -350,7 +349,7 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 
 **Wel in de MVP:**
 - Eén stad, één actieve band van 9 vakjes, meerdere lagen (geen frontier-stadswissel nog)
-- Categorie kiezen → 2-3 opties → bouwen (met productiewachtrij)
+- Land improvements: categorie kiezen → alle geldige opties binnen die categorie tonen → bouwen (met productiewachtrij). City improvements en units lopen niet via deze flow (stad-pop-up resp. eigen mechanisme, hoofdstuk 1/11).
 - Drie bouwmaterialen (hout/steen/erts) + gedeelde opslag-cap, losstaande voedselvoorraad
 - Uitputting van land improvements → permanente ghost-town-tiles
 - Cultuur → laag ontgrendelen; fog of war
@@ -521,7 +520,7 @@ De tabel hieronder geeft de huidige stand van de implementatie weer (gecontrolee
 |---|---|---|---|
 | M0 | Project-setup | Next.js + TypeScript scaffolding, canvas-rendering basis, repo-structuur | Klaar |
 | M1 | Grid & laag-rendering | 9-tile band, meerdere lagen, fog of war, placeholder-tegels tonen | Klaar |
-| M2 | Categorie-keuze-UI | Categorie kiezen → 2-3 opties tonen → bouwen starten | Klaar |
+| M2 | Categorie-keuze-UI | Categorie kiezen → alle geldige land improvements binnen die categorie tonen → bouwen starten | Klaar |
 | M3 | Resource-economie | 3 materialen + opslag-cap, voedsel, productiewachtrij | Klaar |
 | M4 | Uitputting & ghost towns | Land improvements putten uit, worden ghost-town-tiles | Klaar |
 | M5 | Cultuur & laag-ontgrendeling | Cultuur verzamelen, nieuwe laag ontgrendelen | Klaar |

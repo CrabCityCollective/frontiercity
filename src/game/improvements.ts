@@ -301,11 +301,13 @@ function kanImprovementOpLaag(improvement: Improvement, laag: Layer): boolean {
   );
 }
 
-// Opties voor de categorie-keuze-UI (hoofdstuk 11: eerst categorie, dan 2-3
-// concrete opties). Sluit improvements uit die al op deze laag gebouwd zijn,
-// én improvements met een terrein-eis (zie `Improvement.terreinEisen`) die
-// geen enkel leeg vakje op deze laag kan plaatsen — anders zou de speler een
-// optie kunnen kiezen die nergens neergezet kan worden.
+// Opties voor de categorie-keuze-UI (hoofdstuk 11: eerst categorie, dan alle
+// op dat moment geldige land improvements binnen die categorie — geen
+// willekeurige subset meer). Sluit improvements uit die al op deze laag
+// gebouwd zijn, én improvements met een terrein-eis (zie
+// `Improvement.terreinEisen`) die geen enkel leeg vakje op deze laag kan
+// plaatsen — anders zou de speler een optie kunnen kiezen die nergens
+// neergezet kan worden.
 //
 // `bouwbaarBuitenFrontier`-improvements (hoofdstuk 6/11: momenteel alleen de
 // Wachttoren) zijn hierop een uitzondering: die tellen als beschikbaar zodra
@@ -331,41 +333,4 @@ export function beschikbareOpties(
         ? alleLagen.some((l) => l.ontgrendeld && kanImprovementOpLaag(improvement, l))
         : kanImprovementOpLaag(improvement, laag)
     );
-}
-
-function shuffle<T>(items: T[]): T[] {
-  const kopie = [...items];
-  for (let i = kopie.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [kopie[i], kopie[j]] = [kopie[j], kopie[i]];
-  }
-  return kopie;
-}
-
-// Willekeurige subset van 2 of 3 concrete opties binnen een categorie
-// (hoofdstuk 11: eerst categorie, dán 2-3 willekeurige opties). Geeft minder
-// terug als de categorie nog geen 2 beschikbare opties heeft.
-//
-// `verplichteId` (issue: "alleen de eerste beurt de houtkap altijd tussen de
-// te kiezen improvements staat, om de speler nog even bij de hand te nemen")
-// forceert die ene improvement in de uitkomst als hij beschikbaar is — de
-// rest van de opties blijft willekeurig.
-export function willekeurigeOpties(
-  categorie: Improvement["categorie"],
-  laag: Layer,
-  alleLagen: Layer[],
-  verplichteId?: string,
-  technologieen: TechId[] = []
-): Improvement[] {
-  const beschikbaar = beschikbareOpties(categorie, laag, alleLagen, technologieen);
-  const aantal = Math.random() < 0.5 ? 2 : 3;
-
-  const verplicht = verplichteId ? beschikbaar.find((improvement) => improvement.id === verplichteId) : undefined;
-  if (!verplicht) return shuffle(beschikbaar).slice(0, aantal);
-
-  const overigen = shuffle(beschikbaar.filter((improvement) => improvement.id !== verplichteId)).slice(
-    0,
-    aantal - 1
-  );
-  return shuffle([verplicht, ...overigen]);
 }
