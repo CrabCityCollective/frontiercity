@@ -31,7 +31,10 @@ export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout, o
   // kunt jagen voor voedsel" / "ook mag je je settlers inzetten om hout te
   // kappen"): allebei alleen mogelijk op het vakje waar de settler nu staat.
   const kudde = huidigeTile?.kudde;
-  const kanHakken = huidigeTile?.terrein === "bos";
+  // Uitgeputte Houtkap (issue: "settler houthakken op verlaten tegel"): een
+  // `ghost_town`-vakje behoudt terrein "bos" maar is al leeggekapt, dus de
+  // knop mag daar niet verschijnen (zelfde eis als `hakHout` in economie.ts).
+  const kanHakken = huidigeTile?.terrein === "bos" && huidigeTile.status !== "ghost_town";
   // Roofdier (hoofdstuk 14/17, issue: "roofdieren toevoegen"): zichtbaar op
   // de kaart (canvas.ts) én hier in tekst, zodat de speler ook zonder de
   // waarschuwings-pop-up nog eens terug te lezen weet hoeveel beurten er nog
