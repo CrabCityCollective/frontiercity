@@ -481,10 +481,26 @@ function tekenVersWaterMarkeringPixel(ctx: CanvasRenderingContext2D, seed: numbe
   }
 }
 
+// Issue: "niet duidelijk als er nu een weg ligt" — een volle, ononderbroken
+// aardebaan met een donkere rand boven en onder in plaats van verspreide
+// halftransparante stippen, zodat de weg op elke ondergrondkleur duidelijk
+// afsteekt.
 function tekenWegPixel(ctx: CanvasRenderingContext2D, seed: number): void {
   const rng = maakSeededRandom(seed);
-  for (let gx = 0; gx < PIX; gx += 2) {
-    p(ctx, gx, 13 + Math.round(rng()), "rgba(196, 168, 120, 0.6)");
+  const boven = 11;
+  const onder = 14;
+
+  hlijn(ctx, 0, PIX - 1, boven, "#3a2a18");
+  for (let gy = boven + 1; gy < onder; gy++) {
+    hlijn(ctx, 0, PIX - 1, gy, "#c8a878");
+  }
+  hlijn(ctx, 0, PIX - 1, onder, "#3a2a18");
+
+  for (let gx = 0; gx < PIX; gx++) {
+    if (rng() > 0.5) {
+      const gy = boven + 1 + Math.floor(rng() * (onder - boven - 1));
+      p(ctx, gx, gy, rng() > 0.5 ? "rgba(140, 112, 74, 0.8)" : "rgba(230, 208, 172, 0.7)");
+    }
   }
 }
 
