@@ -5,7 +5,6 @@ import {
   beschikbareOpties,
   CATEGORIE_LABELS,
   terreinEisenBeschrijving,
-  willekeurigeOpties,
 } from "@/game/improvements";
 import { Categorie, Improvement, Layer, TechId } from "@/game/types";
 
@@ -83,10 +82,6 @@ interface BouwPopupProps {
   // ergens op een ontgrendelde laag geplaatst kunnen worden, niet alleen op
   // `laag` (de frontier) zelf.
   alleLagen: Layer[];
-  // Beurtnummer (issue: "alleen de eerste beurt de houtkap altijd tussen de
-  // te kiezen improvements staat") — gebruikt om in beurt 1 de Houtkap-optie
-  // te garanderen binnen de economische categorie.
-  beurt: number;
   // Gekozen technologieën (hoofdstuk 3/9, issue: "tech tree toevoegen" Deel
   // 2) — bepaalt of tech-gated improvements (momenteel alleen de
   // Voorraadkuil, ontgrendeld door "aardewerk") als optie meegenomen worden.
@@ -96,18 +91,20 @@ interface BouwPopupProps {
   onSluiten: () => void;
 }
 
-// Bouw-pop-up (hoofdstuk 11): verschijnt over de kaart bij het begin van elke
-// beurt en dwingt de vaste twee-staps-keuze af — eerst een categorie, dan 2-3
-// willekeurige concrete opties binnen die categorie. De speler kiest
-// hoogstens 1 improvement per beurt (of sluit de pop-up zonder te bouwen).
-// Na het kiezen van een concrete improvement neemt GameRoot het over: de
-// pop-up verdwijnt (zie `plaatsingsImprovement` in GameRoot) en de speler
-// wijst zelf een lege tile op de kaart aan om hem neer te zetten — pas dan
-// wordt `bouwKeuzeGedaanDitBeurt` gezet.
+// Bouw-pop-up (hoofdstuk 1/11): verschijnt over de kaart bij het begin van
+// elke beurt en dwingt de vaste twee-staps-keuze voor land improvements af —
+// eerst een categorie, dan alle op dat moment geldige concrete land-
+// improvement-opties binnen die categorie (niet langer een willekeurige
+// subset van 2-3). City improvements en units lopen niet via deze pop-up
+// (city improvements via de stad-pop-up, `StadMenuPopup`; units via hun eigen
+// mechanisme). De speler kiest hoogstens 1 improvement per beurt (of sluit de
+// pop-up zonder te bouwen). Na het kiezen van een concrete improvement neemt
+// GameRoot het over: de pop-up verdwijnt (zie `plaatsingsImprovement` in
+// GameRoot) en de speler wijst zelf een lege tile op de kaart aan om hem neer
+// te zetten — pas dan wordt `bouwKeuzeGedaanDitBeurt` gezet.
 export default function BouwPopup({
   laag,
   alleLagen,
-  beurt,
   technologieen,
   zichtbaar,
   onBouwStarten,
@@ -116,8 +113,8 @@ export default function BouwPopup({
   const [gekozenCategorie, setGekozenCategorie] = useState<Categorie | null>(null);
   const [opties, setOpties] = useState<Improvement[]>([]);
 
-  // Nieuwe beurt: begin weer bij de categorie-stap met een verse
-  // willekeurige trekking, niet de opties van de vorige beurt.
+  // Nieuwe beurt: begin weer bij de categorie-stap, niet bij de opties van de
+  // vorige beurt.
   useEffect(() => {
     if (zichtbaar) {
       setGekozenCategorie(null);
@@ -131,8 +128,7 @@ export default function BouwPopup({
 
   function kiesCategorie(categorie: Categorie) {
     setGekozenCategorie(categorie);
-    const verplichteId = beurt === 1 && categorie === "economisch" ? "houtkap" : undefined;
-    setOpties(willekeurigeOpties(categorie, laag, alleLagen, verplichteId, technologieen));
+    setOpties(beschikbareOpties(categorie, laag, alleLagen, technologieen));
   }
 
   return (

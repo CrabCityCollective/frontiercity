@@ -639,7 +639,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         <BouwPopup
           laag={actieveLaag}
           alleLagen={state.lagen}
-          beurt={state.beurt}
           technologieen={state.technologieen}
           zichtbaar={
             !toonLaagPopup &&
