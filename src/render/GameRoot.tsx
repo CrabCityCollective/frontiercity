@@ -559,6 +559,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             state={state}
             legerwaarde={berekenLegerwaarde(state)}
             tegenstanderSterkte={actieveLaag.dreigingsniveau ?? 0}
+            confrontatieOntgrendeld={actieveLaag.hoogte >= TUTORIAL_LAAG_AANTAL}
             onStartGroei={startGroei}
             onStartNieuweSettler={startNieuweSettler}
             onStartOpslagplaats={startOpslagplaats}

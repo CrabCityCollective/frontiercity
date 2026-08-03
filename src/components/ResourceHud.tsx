@@ -4,6 +4,7 @@ import { MATERIAAL_LABELS } from "@/game/improvements";
 import { wetenschapKostenVoorDrempel } from "@/game/techTree";
 import { GameState, MateriaalType, TechDrempel } from "@/game/types";
 import { cultuurKostenVoorLaag, hoogsteOntgrendeldeLaag } from "@/game/world";
+import ResourceIcoon from "./ResourceIcoon";
 
 interface ResourceHudProps {
   state: GameState;
@@ -16,28 +17,34 @@ export default function ResourceHud({ state, onVolgendeBeurt }: ResourceHudProps
   const volgendeLaagHoogte = hoogsteOntgrendeldeLaag(state.lagen) + 1;
   const cultuurLabel =
     volgendeLaagHoogte <= state.lagen.length
-      ? `Cultuur: ${state.cultuur} / ${cultuurKostenVoorLaag(volgendeLaagHoogte)} (laag ${volgendeLaagHoogte})`
-      : `Cultuur: ${state.cultuur} (alle lagen ontgrendeld)`;
+      ? `${state.cultuur} / ${cultuurKostenVoorLaag(volgendeLaagHoogte)} (laag ${volgendeLaagHoogte})`
+      : `${state.cultuur} (alle lagen ontgrendeld)`;
   // Wetenschap → technologie-boom (hoofdstuk 3/9, issue: "tech tree
   // toevoegen") — zelfde label-patroon als cultuur hierboven, maar naar een
   // drempel (1-3) in plaats van een laag.
   const volgendeDrempel = (state.technologieen.length + 1) as TechDrempel;
   const wetenschapLabel =
     volgendeDrempel <= 3
-      ? `Wetenschap: ${state.wetenschap} / ${wetenschapKostenVoorDrempel(volgendeDrempel)} (drempel ${volgendeDrempel})`
-      : `Wetenschap: ${state.wetenschap} (technologie-boom compleet)`;
+      ? `${state.wetenschap} / ${wetenschapKostenVoorDrempel(volgendeDrempel)} (drempel ${volgendeDrempel})`
+      : `${state.wetenschap} (technologie-boom compleet)`;
 
   return (
     <div className="resource-hud">
       <div className="resource-hud__items">
         {(Object.keys(MATERIAAL_LABELS) as MateriaalType[]).map((type) => (
-          <span key={type}>
-            {MATERIAAL_LABELS[type]}: {state.voorraad[type]} / {state.opslagCap}
+          <span key={type} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+            <ResourceIcoon type={type} /> {state.voorraad[type]} / {state.opslagCap}
           </span>
         ))}
-        <span>Voedsel: {state.voedsel}</span>
-        <span>{cultuurLabel}</span>
-        <span>{wetenschapLabel}</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+          <ResourceIcoon type="voedsel" /> {state.voedsel}
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+          <ResourceIcoon type="cultuur" /> {cultuurLabel}
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+          <ResourceIcoon type="wetenschap" /> {wetenschapLabel}
+        </span>
       </div>
       <div className="resource-hud__beurt">
         <span>Beurt: {state.beurt}</span>

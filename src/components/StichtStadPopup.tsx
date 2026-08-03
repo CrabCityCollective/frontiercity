@@ -2,6 +2,7 @@
 
 import { STICHTING_KOSTEN } from "@/game/economie";
 import { STICHT_STAD_TITEL, STICHT_STAD_WAARSCHUWING } from "@/game/tutorialContent";
+import { KostenIcons } from "./ResourceIcoon";
 
 interface StichtStadPopupProps {
   onBevestig: () => void;
@@ -42,9 +43,19 @@ export default function StichtStadPopup({ onBevestig, onAnnuleren }: StichtStadP
           {STICHT_STAD_TITEL}
         </strong>
         <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: "pre-line" }}>{STICHT_STAD_WAARSCHUWING}</p>
-        <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--kleur-tekst-gedempt)" }}>
-          Kosten: {STICHTING_KOSTEN.hout} hout, {STICHTING_KOSTEN.steen} steen, {STICHTING_KOSTEN.erts} erts,{" "}
-          {STICHTING_KOSTEN.voedsel} voedsel.
+        <p
+          style={{
+            margin: 0,
+            fontSize: "0.85rem",
+            color: "var(--kleur-tekst-gedempt)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          Kosten: <KostenIcons kosten={STICHTING_KOSTEN} />
         </p>
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
           <button className="fc-knop" onClick={onBevestig} style={{ padding: "0.5rem 1.5rem" }}>

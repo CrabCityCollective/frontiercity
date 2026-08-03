@@ -1,18 +1,22 @@
 "use client";
 
+import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "@/game/economie";
 import { SOLDAAT } from "@/game/improvements";
-import { resterendeBouwBeurten } from "@/game/economie";
-import { GameState } from "@/game/types";
-
-function formatteerKosten(kosten: typeof SOLDAAT.kosten): string {
-  const delen = Object.entries(kosten).map(([type, waarde]) => `${waarde} ${type}`);
-  return delen.length > 0 ? delen.join(", ") : "gratis";
-}
+import { GameState, ResourceType } from "@/game/types";
+import { KostenIcons } from "./ResourceIcoon";
 
 interface MilitairPaneelProps {
   state: GameState;
   legerwaarde: number;
   tegenstanderSterkte: number;
+  // Of de "Confrontatie aangaan"-knop al ontgrendeld is (issue: "de button
+  // Confrontatie aangaan moet aan het begin in de tutorial nog uitgegrijsd
+  // zijn. Pas als je een andere stam tegenkomt, mag deze button actief
+  // worden."). Gezet door GameRoot zodra de frontier laag 12 (De Bergkam)
+  // bereikt — precies het moment waarop de laag-flavor-tekst voor het eerst
+  // iemand van buiten het Hertenpad-volk introduceert, en dus ook het moment
+  // waarop MilitairUitlegPopup verschijnt.
+  confrontatieOntgrendeld: boolean;
   onStartRecrutering: () => void;
   onConfrontatie: () => void;
   // Klik op een nog niet toegewezen (en niet onderweg-zijnde) strijder-
@@ -34,12 +38,27 @@ export default function MilitairPaneel({
   state,
   legerwaarde,
   tegenstanderSterkte,
+  confrontatieOntgrendeld,
   onStartRecrutering,
   onConfrontatie,
   onKiesStrijder,
   onHaalTerug,
 }: MilitairPaneelProps) {
   const { stad, laatsteConfrontatie } = state;
+  // Nog benodigde grondstoffen voor de lopende Soldaat-opleiding, en of die
+  // volgende beurt stilligt door een tekort (issue: "wil ik graag zien welke
+  // materialen nog nodig zijn ... en een attentie als de materialen niet
+  // aanwezig zijn om de strijder af te maken volgende beurt") — zelfde
+  // helpers als de tile-bouw-info (tileInfo.ts), hier toegepast op
+  // `legerInAanbouw` in plaats van een land-tile.
+  const legerResterend = stad.legerInAanbouw
+    ? (Object.entries(stad.legerInAanbouw.voortgang) as [ResourceType, number][]).filter(
+        ([, aantal]) => aantal > 0
+      )
+    : [];
+  const legerStagneert = stad.legerInAanbouw
+    ? bouwStagneertVolgendeBeurt(stad.legerInAanbouw.improvement, stad.legerInAanbouw.voortgang, state.voorraad)
+    : false;
 
   return (
     <div
@@ -95,18 +114,37 @@ export default function MilitairPaneel({
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
         {stad.legerInAanbouw ? (
-          <span>
-            Soldaat in opleiding… (nog {resterendeBouwBeurten(stad.legerInAanbouw.improvement, stad.legerInAanbouw.voortgang)}{" "}
-            beurten)
+          <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+            Soldaat in opleiding… Nog nodig: <KostenIcons kosten={Object.fromEntries(legerResterend)} />
+            {legerStagneert ? (
+              <span style={{ color: "var(--kleur-gevaar)" }}>
+                ⚠ Tekort aan grondstoffen — volgende beurt wordt hier niet aan gewerkt.
+              </span>
+            ) : (
+              <span>
+                (nog {resterendeBouwBeurten(stad.legerInAanbouw.improvement, stad.legerInAanbouw.voortgang)}{" "}
+                beurten)
+              </span>
+            )}
           </span>
         ) : (
           <button className="fc-knop" onClick={onStartRecrutering} style={{ padding: "0.35rem 0.75rem" }}>
-            Soldaat rekruteren ({formatteerKosten(SOLDAAT.kosten)}, {SOLDAAT.bouwtijdBeurten} beurten)
+            Soldaat rekruteren (<KostenIcons kosten={SOLDAAT.kosten} />, {SOLDAAT.bouwtijdBeurten} beurten)
           </button>
         )}
-        <button className="fc-knop" onClick={onConfrontatie} style={{ padding: "0.35rem 0.75rem" }}>
+        <button
+          className="fc-knop"
+          disabled={!confrontatieOntgrendeld}
+          onClick={onConfrontatie}
+          title={
+            confrontatieOntgrendeld
+              ? undefined
+              : "Nog niet beschikbaar — pas als je een andere stam tegenkomt kun je de confrontatie aangaan."
+          }
+          style={{ padding: "0.35rem 0.75rem", opacity: confrontatieOntgrendeld ? 1 : 0.5 }}
+        >
           Confrontatie aangaan
         </button>
       </div>
