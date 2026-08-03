@@ -77,7 +77,7 @@ const TERREIN_BASIS: Record<string, string> = {
   bergkam: "#9aa0a0",
 };
 
-function terreinBasisKleur(terreinType: string): string {
+export function terreinBasisKleur(terreinType: string): string {
   return TERREIN_BASIS[terreinType] ?? "#6b5b3e";
 }
 
@@ -487,7 +487,7 @@ function tekenLandImprovement(
 // waar de reis begint, geen bebouwbare tiles. Zelfde geschilderde
 // verloop+textuur-aanpak als `tekenTerreinOndergrond`, maar met een
 // blauw/groen waterpalet en golflijnen in plaats van verfvlekken.
-const OCEAAN_BASIS = "#2e4a52";
+export const OCEAAN_BASIS = "#2e4a52";
 
 export function tekenOceaanTile(
   ctx: CanvasRenderingContext2D,
@@ -895,7 +895,7 @@ function tekenVersWaterMarkering(
   ctx.restore();
 }
 
-function tekenTileGrid(
+export function tekenTileGrid(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -910,7 +910,7 @@ function tekenTileGrid(
 // plek voor een gekozen improvement (klik-op-tile-plaatsing, zie GameRoot:
 // `plaatsingsImprovement`) — een gouden rand zodat duidelijk is waar je nog
 // mag klikken, zonder de tile-tekening zelf aan te passen.
-function tekenBeschikbaarMarkering(
+export function tekenBeschikbaarMarkering(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -927,7 +927,7 @@ function tekenBeschikbaarMarkering(
 // "de tegels waar je heen kunt lichten op") — een koele blauwe gloed +
 // rand, bewust een andere kleur dan de gouden bouwplaatsings-markering
 // hierboven zodat de twee klik-modi nooit door elkaar lopen.
-function tekenSettlerBereikbaarMarkering(
+export function tekenSettlerBereikbaarMarkering(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,

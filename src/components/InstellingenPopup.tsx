@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { standaardUitlegAan, zetStandaardUitleg } from "@/game/save";
+import { grafischeStijl, standaardUitlegAan, zetGrafischeStijl, zetStandaardUitleg } from "@/game/save";
 
 interface InstellingenPopupProps {
   onSluiten: () => void;
@@ -15,11 +15,23 @@ interface InstellingenPopupProps {
 // tijdens het spelen zelf is een los, tijdelijk overschrijven daarvan.
 export default function InstellingenPopup({ onSluiten }: InstellingenPopupProps) {
   const [uitlegAan, setUitlegAan] = useState(standaardUitlegAan);
+  // Grafische stijl (issue: "pixel art style placeholders i.p.v. vector
+  // style ... nog heen en weer kunnen schakelen"): zet direct de globale
+  // instelling (save.ts: `grafischeStijl`) — GameCanvas leest die bij elke
+  // (her)start van een scherm, dus de nieuwe stijl geldt meteen voor de
+  // eerstvolgende keer dat de kaart getekend wordt.
+  const [stijl, setStijl] = useState(grafischeStijl);
 
   function toggle() {
     const nieuweWaarde = !uitlegAan;
     setUitlegAan(nieuweWaarde);
     zetStandaardUitleg(nieuweWaarde);
+  }
+
+  function toggleStijl() {
+    const nieuweStijl = stijl === "vector" ? "pixel-art" : "vector";
+    setStijl(nieuweStijl);
+    zetGrafischeStijl(nieuweStijl);
   }
 
   return (
@@ -60,6 +72,18 @@ export default function InstellingenPopup({ onSluiten }: InstellingenPopupProps)
         >
           <input type="checkbox" checked={uitlegAan} onChange={toggle} />
           Uitleg pop-ups standaard aan voor nieuwe potjes
+        </label>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.5rem",
+            cursor: "pointer",
+          }}
+        >
+          <input type="checkbox" checked={stijl === "pixel-art"} onChange={toggleStijl} />
+          Pixel-art grafische stijl (i.p.v. geschilderd)
         </label>
         <button className="fc-knop" onClick={onSluiten} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Sluiten
