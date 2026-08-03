@@ -20,7 +20,6 @@ import SpelActiesMenu from "@/components/SpelActiesMenu";
 import StadMenuPopup from "@/components/StadMenuPopup";
 import StadUpgradeUitlegPopup from "@/components/StadUpgradeUitlegPopup";
 import StichtStadPopup from "@/components/StichtStadPopup";
-import StrijderBemanPopup from "@/components/StrijderBemanPopup";
 import TechKeuzePopup from "@/components/TechKeuzePopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
@@ -85,6 +84,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     sluitKuddeMelding,
     sluitRoofdierMelding,
     geefTribuut,
+    kiesGeefTribuut,
     weigerTribuut,
     bevestigGedwongenTribuut,
     bemanWachttoren,
@@ -160,12 +160,11 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     if (state.stad.vervalStatus === "gezond") setVoedselWaarschuwingBevestigd(false);
   }, [state.stad.vervalStatus]);
   // Strijder-bemannen-flow (nieuwe Wachttoren-functie, hoofdstuk 6): klik op
-  // een strijder-icoontje in MilitairPaneel zet `strijderBemanPopupStrijderId`
-  // — de pop-up vraagt te bevestigen; "Kies een wachttoren" schakelt door
-  // naar `wachttorenKiesModusStrijderId`, waarna een klik op een actieve
-  // Wachttoren-tile op de kaart (zie `handleTileClick` hieronder) die
+  // een strijder-icoontje in MilitairPaneel zet `wachttorenKiesModusStrijderId`
+  // meteen (issue: "wachttoren tweaks" — een tussenliggende bevestigings-
+  // pop-up voegde hier geen nieuwe informatie toe), waarna een klik op een
+  // actieve Wachttoren-tile op de kaart (zie `handleTileClick` hieronder) die
   // strijder daadwerkelijk bemant.
-  const [strijderBemanPopupStrijderId, setStrijderBemanPopupStrijderId] = useState<string | null>(null);
   const [wachttorenKiesModusStrijderId, setWachttorenKiesModusStrijderId] = useState<string | null>(null);
   // "Volgende beurt"-waarschuwing (issue: "als je op volgende beurt drukt,
   // dan moet er eerst gecheckt worden of je settler nog mag lopen of iets
@@ -213,7 +212,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     setPlaatsingsImprovement(null);
     setGeselecteerdeTile(null);
     setToonVolgendeBeurtWaarschuwing(false);
-    setStrijderBemanPopupStrijderId(null);
     setWachttorenKiesModusStrijderId(null);
     setToonStichtStadPopup(false);
     setToonStadMenuPopup(false);
@@ -566,7 +564,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             onStartRecrutering={startRecrutering}
             onConfrontatie={confrontatie}
             onKiesStrijder={(strijderId) => {
-              setStrijderBemanPopupStrijderId(strijderId);
+              setWachttorenKiesModusStrijderId(strijderId);
               setToonStadMenuPopup(false);
             }}
             onHaalTerug={haalStrijderTerug}
@@ -580,9 +578,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonIndringersPopup && state.indringersEvent && (
           <IndringersPopup
             event={state.indringersEvent}
-            onGeefTribuut={geefTribuut}
+            onGeefTribuut={kiesGeefTribuut}
             onWeigerTribuut={weigerTribuut}
             onBevestigGedwongenTribuut={bevestigGedwongenTribuut}
+            onSluitTribuutBetaling={geefTribuut}
             onSluiten={sluitIndringersMelding}
           />
         )}
@@ -612,15 +611,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         )}
         {toonStadUpgradeUitlegPopup && (
           <StadUpgradeUitlegPopup onDoorgaan={() => setStadUpgradeUitlegBevestigd(true)} />
-        )}
-        {strijderBemanPopupStrijderId && (
-          <StrijderBemanPopup
-            onKiesWachttoren={() => {
-              setWachttorenKiesModusStrijderId(strijderBemanPopupStrijderId);
-              setStrijderBemanPopupStrijderId(null);
-            }}
-            onAnnuleren={() => setStrijderBemanPopupStrijderId(null)}
-          />
         )}
         {wachttorenKiesModusStrijderId && (
           <WachttorenKiesBanner onAnnuleren={() => setWachttorenKiesModusStrijderId(null)} />
@@ -672,7 +662,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonRoofdierPopup &&
             !toonTechKeuzePopup &&
             !toonTutorialVoltooidPopup &&
-            !strijderBemanPopupStrijderId &&
             !wachttorenKiesModusStrijderId &&
             !toonStichtStadPopup &&
             !toonStadMenuPopup &&

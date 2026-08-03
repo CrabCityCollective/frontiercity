@@ -5,10 +5,11 @@ interface WachttorenKiesBannerProps {
 }
 
 // Niet-blokkerende banner (nieuwe Wachttoren-functie, hoofdstuk 6): getoond
-// terwijl de speler, na "Kies een wachttoren" in StrijderBemanPopup, een
-// vakje op de kaart moet aanklikken. Anders dan de overige pop-ups blokkeert
-// dit niet het hele scherm — de speler moet de kaart juist kunnen zien om
-// een wachttoren aan te klikken (zie GameRoot: `handleTileClick`).
+// zodra de speler in het militaire paneel op een nog niet toegewezen strijder
+// klikt, terwijl hij een vakje op de kaart moet aanklikken. Anders dan de
+// overige pop-ups blokkeert dit niet het hele scherm — de speler moet de
+// kaart juist kunnen zien om een wachttoren aan te klikken (zie GameRoot:
+// `handleTileClick`).
 export default function WachttorenKiesBanner({ onAnnuleren }: WachttorenKiesBannerProps) {
   return (
     <div

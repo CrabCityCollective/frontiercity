@@ -12,8 +12,8 @@ interface StichtStadPopupProps {
 // Stichtings-bevestiging (hoofdstuk 2/10/16, issue: "stad stichten op de
 // frontier" deel 4): getoond zodra de speler op "Stad stichten" in
 // SettlerPaneel klikt. Waarschuwt expliciet dat de settler verdwijnt — een
-// onomkeerbare actie, dus net als StrijderBemanPopup een tussenstap in
-// plaats van een directe klik-en-klaar-knop.
+// onomkeerbare actie, dus een tussenstap in plaats van een directe
+// klik-en-klaar-knop.
 export default function StichtStadPopup({ onBevestig, onAnnuleren }: StichtStadPopupProps) {
   return (
     <div

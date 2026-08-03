@@ -10,6 +10,7 @@ import {
   haalStrijderTerug as haalStrijderTerugActie,
   hakHout as hakHoutActie,
   jaag as jaagActie,
+  kiesGeefTribuut as kiesGeefTribuutActie,
   kiesTech as kiesTechActie,
   legWegAan as legWegAanActie,
   maakInitieleSpelStatus,
@@ -129,6 +130,10 @@ export function useGameEngine() {
     setState((huidig) => geefTribuutActie(huidig));
   }, []);
 
+  const kiesGeefTribuut = useCallback(() => {
+    setState((huidig) => kiesGeefTribuutActie(huidig));
+  }, []);
+
   const weigerTribuut = useCallback(() => {
     setState((huidig) => weigerTribuutActie(huidig));
   }, []);
@@ -173,6 +178,7 @@ export function useGameEngine() {
     sluitKuddeMelding,
     sluitRoofdierMelding,
     geefTribuut,
+    kiesGeefTribuut,
     weigerTribuut,
     bevestigGedwongenTribuut,
     bemanWachttoren,
