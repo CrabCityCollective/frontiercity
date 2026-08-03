@@ -1,9 +1,11 @@
 "use client";
 
 import { MouseEvent, useEffect, useRef } from "react";
+import { grafischeStijl } from "@/game/save";
 import { City, Layer, Settler } from "@/game/types";
 import { BAND_WIDTH_TILES } from "@/game/world";
 import { tekenWereld } from "./canvas";
+import { tekenWereldPixelArt } from "./canvasPixelArt";
 
 const TILE_SIZE = 64;
 
@@ -73,7 +75,12 @@ export default function GameCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    tekenWereld(ctx, canvas.width, canvas.height, lagen, stad, plaatsingsLaagHoogte, settler, settlerBereikbarePosities);
+    // Grafische stijl (issue: "pixel art style placeholders i.p.v. vector
+    // style ... nog heen en weer kunnen schakelen"): beide tekenaars delen
+    // dezelfde signatuur/tile-geometrie (zie canvasPixelArt.ts), dus hier
+    // alleen kiezen welke van de twee getekend wordt.
+    const teken = grafischeStijl() === "pixel-art" ? tekenWereldPixelArt : tekenWereld;
+    teken(ctx, canvas.width, canvas.height, lagen, stad, plaatsingsLaagHoogte, settler, settlerBereikbarePosities);
   }, [lagen, stad, plaatsingsLaagHoogte, settler, settlerBereikbarePosities]);
 
   function handleClick(event: MouseEvent<HTMLCanvasElement>) {

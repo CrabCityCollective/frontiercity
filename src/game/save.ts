@@ -95,3 +95,31 @@ export function zetStandaardUitleg(aan: boolean): void {
     // Zie hierboven bij saveSpel: bewust genegeerd.
   }
 }
+
+// Grafische stijl (issue: "pixel art style placeholders i.p.v. vector style
+// ... ik wil misschien later nog heen en weer kunnen schakelen"): een losse,
+// globale instelling naast de save zelf (net als `STANDAARD_UITLEG_KEY`
+// hierboven) — geldt meteen voor elke lopende/nieuwe run, geen deel van
+// `GameState`. De vector-stijl (canvas.ts) blijft de standaard; ontbreekt de
+// sleutel nog (eerste bezoek of een oude save), dan valt dit terug op
+// "vector" in plaats van de nieuwere pixel-art-stijl.
+export type GrafischeStijl = "vector" | "pixel-art";
+
+const GRAFISCHE_STIJL_KEY = "frontier-city:grafische-stijl";
+
+export function grafischeStijl(): GrafischeStijl {
+  try {
+    const ruw = window.localStorage.getItem(GRAFISCHE_STIJL_KEY);
+    return ruw === "pixel-art" ? "pixel-art" : "vector";
+  } catch {
+    return "vector";
+  }
+}
+
+export function zetGrafischeStijl(stijl: GrafischeStijl): void {
+  try {
+    window.localStorage.setItem(GRAFISCHE_STIJL_KEY, stijl);
+  } catch {
+    // Zie hierboven bij saveSpel: bewust genegeerd.
+  }
+}
