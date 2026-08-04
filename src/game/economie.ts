@@ -1244,7 +1244,7 @@ const INDRINGERS_MIN_LAAG = 2;
 // hoofdstuk 6 ("actief én bemand") en hoofdstuk 16 (land improvements worden
 // pas actief via een wegverbinding) op. Een gebouwde maar onbemande of
 // onverbonden Wachttoren biedt geen bescherming.
-function heeftBeschermendeWachttoren(state: GameState, laag: Layer): boolean {
+function heeftWerkendeWachttorenOpLaag(state: GameState, laag: Layer): boolean {
   return laag.tiles.some(
     (tile) =>
       tile.status === "actief" &&
@@ -1252,6 +1252,18 @@ function heeftBeschermendeWachttoren(state: GameState, laag: Layer): boolean {
       isWachttorenBemand(state.stad.strijders, laag.hoogte, tile.positieInLaag) &&
       isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)
   );
+}
+
+// Een laag is beschermd door een werkende Wachttoren op de laag zelf, óf door
+// een werkende Wachttoren op de laag erboven (issue: "wachttoren beschermt 2
+// lagen" — zonder deze uitbreiding moest de speler op praktisch elke
+// ontgrendelde laag apart een toren bouwen om overal gedekt te zijn). Een
+// toren beschermt dus zijn eigen laag én de laag daaronder, nooit de laag
+// erboven — dat blijft aan een eigen toren op die hogere laag.
+function heeftBeschermendeWachttoren(state: GameState, laag: Layer): boolean {
+  if (heeftWerkendeWachttorenOpLaag(state, laag)) return true;
+  const laagErboven = state.lagen.find((l) => l.hoogte === laag.hoogte + 1);
+  return laagErboven !== undefined && heeftWerkendeWachttorenOpLaag(state, laagErboven);
 }
 
 // Het grondstof-type waar de speler op dit moment het meest van heeft, met

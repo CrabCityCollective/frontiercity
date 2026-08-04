@@ -245,9 +245,13 @@ export const WETENSCHAPPELIJK_LAND_IMPROVEMENTS: Improvement[] = [STERRENCIRKEL]
 // 6) volledig de indringers-tribuut-eis van `verwerkIndringers` in
 // economie.ts, mits hij ook bemand én wegverbonden is met de stad — welke
 // laag getroffen wordt, doet er niet toe (hoofdstuk 6: elke ontgrendelde laag
-// komt in aanmerking, niet alleen de frontier-laag). Geen `uitputtingBeurten`
-// (hoofdstuk 4/6): een Wachttoren, net als het Heiligdom hierboven, blijft
-// permanent actief in plaats van uit te putten.
+// komt in aanmerking, niet alleen de frontier-laag). Sinds issue "wachttoren
+// beschermt 2 lagen" beschermt een werkende Wachttoren behalve zijn eigen
+// laag ook de laag eronder (zie `heeftBeschermendeWachttoren` in
+// economie.ts) — anders had de speler op vrijwel elke laag apart een toren
+// nodig. Geen `uitputtingBeurten` (hoofdstuk 4/6): een Wachttoren, net als
+// het Heiligdom hierboven, blijft permanent actief in plaats van uit te
+// putten.
 //
 // `bouwbaarBuitenFrontier` (hoofdstuk 6/11, issue: "wachttorens, bemanning en
 // bevoorrading"): een expliciete uitzondering op de algemene frontier-only
