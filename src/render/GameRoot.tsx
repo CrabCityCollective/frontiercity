@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import AmberOntdektPopup from "@/components/AmberOntdektPopup";
 import BoerderijKlaarUitlegPopup from "@/components/BoerderijKlaarUitlegPopup";
 import BouwPopup from "@/components/BouwPopup";
+import GoddelijkeRaadgevingPopup from "@/components/GoddelijkeRaadgevingPopup";
 import HistoriePaneel from "@/components/HistoriePaneel";
 import HoofdMenu from "@/components/HoofdMenu";
 import IndringersPopup from "@/components/IndringersPopup";
@@ -25,6 +26,7 @@ import TechKeuzePopup from "@/components/TechKeuzePopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
 import UitlegPopup from "@/components/UitlegPopup";
+import VijandAanDeHorizonPopup from "@/components/VijandAanDeHorizonPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import VolgendeBeurtWaarschuwingPopup from "@/components/VolgendeBeurtWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
@@ -153,6 +155,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // voedsel is voor de groei-tier klein→middel (zie `toonStadUpgradeUitlegPopup`
   // hieronder).
   const [stadUpgradeUitlegBevestigd, setStadUpgradeUitlegBevestigd] = useState(false);
+  // "De vijand aan de horizon"- en "Goddelijke raadgeving"-pop-ups (issue:
+  // "tutorial popups wijzigen"): zelfde eenmalige-confirm-vlaggen, getoond
+  // zodra respectievelijk laag 2 (Militair/Wachttoren) en laag 3
+  // (Wetenschappelijk/Sterrencirkel) voor het eerst ontgrendeld worden — zie
+  // `toonVijandAanDeHorizonPopup`/`toonGoddelijkeRaadgevingPopup` hieronder.
+  const [vijandAanDeHorizonBevestigd, setVijandAanDeHorizonBevestigd] = useState(false);
+  const [goddelijkeRaadgevingBevestigd, setGoddelijkeRaadgevingBevestigd] = useState(false);
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is"): anders dan de
   // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
@@ -398,15 +407,40 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     state.stad.vervalStatus === "kritiek" &&
     !voedselWaarschuwingBevestigd;
+  // "De vijand aan de horizon"-pop-up (issue: "tutorial popups wijzigen"):
+  // zodra laag 2 voor het eerst ontgrendelt — het moment waarop Militair/de
+  // Wachttoren beschikbaar komt (zie improvements.ts: `minLaag`).
+  const toonVijandAanDeHorizonPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    uitlegAan &&
+    !vijandAanDeHorizonBevestigd &&
+    hoogsteOntgrendeldeLaag(state.lagen) >= 2;
+  // "Goddelijke raadgeving"-pop-up (issue: "tutorial popups wijzigen"): zodra
+  // laag 3 voor het eerst ontgrendelt — het moment waarop Wetenschappelijk/de
+  // Sterrencirkel beschikbaar komt (zie improvements.ts: `minLaag`).
+  const toonGoddelijkeRaadgevingPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    uitlegAan &&
+    !goddelijkeRaadgevingBevestigd &&
+    hoogsteOntgrendeldeLaag(state.lagen) >= 3;
   // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"):
   // zodra er voor het eerst een actieve, wegverbonden boerderij meeproduceert
-  // — de introductie van de militaire mechaniek (Wachttoren + militair
-  // scherm).
+  // — de introductie van het Heiligdom/cultuur (issue: "tutorial popups
+  // wijzigen").
   const toonBoerderijKlaarUitlegPopup =
     !toonLaagPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
     uitlegAan &&
     !boerderijKlaarBevestigd &&
     heeftWerkendeBoerderij(state);
@@ -418,6 +452,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     uitlegAan &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
@@ -430,6 +466,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     uitlegAan &&
@@ -447,6 +485,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
@@ -459,6 +499,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
@@ -469,6 +511,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
@@ -483,6 +527,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
@@ -500,6 +546,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
@@ -517,6 +565,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
@@ -654,6 +704,12 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             onDoorgaan={() => setVoedselWaarschuwingBevestigd(true)}
           />
         )}
+        {toonVijandAanDeHorizonPopup && (
+          <VijandAanDeHorizonPopup onDoorgaan={() => setVijandAanDeHorizonBevestigd(true)} />
+        )}
+        {toonGoddelijkeRaadgevingPopup && (
+          <GoddelijkeRaadgevingPopup onDoorgaan={() => setGoddelijkeRaadgevingBevestigd(true)} />
+        )}
         {toonBoerderijKlaarUitlegPopup && (
           <BoerderijKlaarUitlegPopup onDoorgaan={() => setBoerderijKlaarBevestigd(true)} />
         )}
@@ -702,6 +758,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonUitlegPopup &&
             !toonSettlerUitlegPopup &&
             !toonVoedselWaarschuwingPopup &&
+            !toonVijandAanDeHorizonPopup &&
+            !toonGoddelijkeRaadgevingPopup &&
             !toonBoerderijKlaarUitlegPopup &&
             !toonMilitairUitlegPopup &&
             !toonStadUpgradeUitlegPopup &&
