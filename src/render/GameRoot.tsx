@@ -656,7 +656,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         uitlegAan={uitlegAan}
         onToggleUitleg={() => zetUitlegPopups(!uitlegAan)}
       />
-      <SpelActiesMenu onToonHistorie={() => setToonHistorie(true)} />
+      <SpelActiesMenu onToonHistorie={() => setToonHistorie((open) => !open)} />
       <div className="game-scroll-area" ref={scrollRef}>
         <GameCanvas
           lagen={zichtbareLagenState}
