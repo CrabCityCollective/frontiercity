@@ -9,6 +9,6 @@
 // GameState.uitlegPopupsAan) — puur verklarende UI-content, geen nieuw
 // spelmechanisme (blijft binnen de MVP-scope uit CLAUDE.md).
 
-export const OPENINGS_UITLEG_TITEL = "De eerste tocht";
+export const OPENINGS_UITLEG_TITEL = "Bouwmaterialen";
 export const OPENINGS_UITLEG_TEKST =
   "De stam gaat op pad, maar de materialen om te overleven zijn schaars. We hebben hout nodig, om te kunnen bouwen. Iedere 3 beurten krijg je de mogelijkheid om iets te bouwen om grondstoffen te vergaren. Onderin het scherm zie je je voorraad: hout, steen, erts, voedsel en cultuur. Begin eerst met de houtkap in een bos.";

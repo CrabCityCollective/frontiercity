@@ -140,14 +140,13 @@ export const TUTORIAL_VOLTOOID_TITEL = "De Eerste Vuren — voltooid";
 export const TUTORIAL_VOLTOOID_INTRO =
   "Het Hertenpad-volk heeft een nieuwe stad gesticht. Onderweg hierheen is geleerd:";
 
-// Introscherm (issue: "intro en game over scherm"), getoond vóór laag 1 —
-// zet de tutorial-sfeer neer voordat er iets van de mechaniek in beeld komt.
+// Introscherm (issue: "intro en game over scherm", tekst bijgewerkt in issue
+// "tutorial popups wijzigen"), getoond vóór laag 1 — zet de tutorial-sfeer
+// neer voordat er iets van de mechaniek in beeld komt.
 export const INTRO_TITEL = "De Eerste Vuren";
 export const INTRO_SUBTITEL = "Het Hertenpad-volk";
 export const INTRO_FLAVOR_TEKST =
-  "De rivier buigt. Het gras wordt water, dan weer gras.\n" +
-  "Hier zet het Hertenpad-volk de eerste palen in de grond.\n" +
-  "Boven hen wachten twaalf lagen, nog in mist.";
+  "Onze voorouders hebben aons lang op deze kust gewoond, maar de tijd is aangebroken om het binnenland in te trekken, op zoek naar nieuw land. Ruimte en Glorie voor onze stam! Het zal niet makkelijk worden, maar dankzij de goddelijke begeleiding zullen we de moeilijkheden kunnen doorstaan. (let op, deze tutorial is niet makkelijk)";
 
 // Voedselwaarschuwing-pop-up (issue: "uitleg pop-ups dynamisch tonen" —
 // vervangt de vroegere vaste beurt-3-pop-up): getoond zodra de stad voor het
@@ -158,15 +157,34 @@ export const VOEDSEL_WAARSCHUWING_TITEL = "De voorraad slinkt";
 export const VOEDSEL_WAARSCHUWING_TEKST =
   "De bodem van de voedselvoorraad komt behoorlijk dichtbij. Als het voedsel op, verlaat de stam het kamp, en gaat iedereen op zijn houtje de wildernis in. Bouw een boerderij om de voedselvoorraad weer aan te vullen. Vergeet niet de boerderij met een weg te verbinden.";
 
-// Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"):
-// getoond zodra er voor het eerst een actieve, wegverbonden boerderij
-// meeproduceert (zie economie.ts `heeftWerkendeBoerderij`) — de voedselcrisis
-// is dan bezworen, en dit is meteen de introductie van de militaire
-// mechaniek (Wachttoren + militair scherm), die vanaf dit punt relevant
-// wordt (hoofdstuk 6: indringers-dreiging vanaf laag 2).
+// Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen",
+// tekst bijgewerkt in issue "tutorial popups wijzigen"): getoond zodra er
+// voor het eerst een actieve, wegverbonden boerderij meeproduceert (zie
+// economie.ts `heeftWerkendeBoerderij`) — de voedselcrisis is dan bezworen,
+// en dit introduceert nu het Heiligdom/cultuur (in plaats van de Wachttoren:
+// die introductie hoort sinds "tutorial popups wijzigen" bij het ontgrendelen
+// van laag 2 zelf, zie VIJAND_AAN_DE_HORIZON_TITEL/-TEKST hieronder).
 export const BOERDERIJ_KLAAR_TITEL = "Voedsel bereikt het kamp";
 export const BOERDERIJ_KLAAR_TEKST =
-  "Voedsel bereikt het kamp, de ergste hongersnood is geweken. De tocht gaat verder. Maar we komen steeds meer vijandelijke stammen tegen. We hebben nu steen en erts nodig uit de heuvels en bergen om een wachttoren te kunnen bouwen, en onze strijders te bewapenen. Bouw een wachttoren, en open het militaire scherm via het menu om strijders op te leiden.";
+  "Voedsel bereikt het kamp, de ergste hongersnood is geweken. De tijd is nu gekomen om de wilde stammen te verenigen onder de glorie van onze voorouders. Bouw een Heiligdom, opdat ons licht over de wereld gaat stralen. (een Heiligdom heeft voldoende steen nodig om te bouwen)";
+
+// Goddelijke-raadgeving-pop-up (issue: "tutorial popups wijzigen"): getoond
+// zodra laag 3 ontgrendelt (zie GameRoot: `toonGoddelijkeRaadgevingPopup`) —
+// dit is het moment waarop Wetenschappelijk (en dus de Sterrencirkel, zie
+// improvements.ts: `STERRENCIRKEL.minLaag`) voor het eerst beschikbaar komt
+// in de bouw-pop-up, ervoor stond de categorie uitgegrijsd.
+export const GODDELIJKE_RAADGEVING_TITEL = "Goddelijke raadgeving";
+export const GODDELIJKE_RAADGEVING_TEKST =
+  "Hoe meer land we tot onze beschikking hebben, hoe meer de goden ons leren over wereld. Bouw een Sterrencirkel om kennis neer te laten dalen op aarde.";
+
+// De-vijand-aan-de-horizon-pop-up (issue: "tutorial popups wijzigen"):
+// getoond zodra laag 2 ontgrendelt (zie GameRoot: `toonVijandAanDeHorizonPopup`)
+// — dit is het moment waarop Militair (en dus de Wachttoren, zie
+// improvements.ts: `MILITAIR_LAND_IMPROVEMENTS[0].minLaag`) voor het eerst
+// beschikbaar komt in de bouw-pop-up, ervoor stond de categorie uitgegrijsd.
+export const VIJAND_AAN_DE_HORIZON_TITEL = "De vijand aan de horizon";
+export const VIJAND_AAN_DE_HORIZON_TEKST =
+  "Niet alle wilde stammen zitten op onze opmars te wachten, ze proberen ons gebied binnen te dringen. We hebben nu steen en erts nodig uit de heuvels en bergen om een Wachttoren te kunnen bouwen, en onze strijders te bewapenen. Bouw een wachttoren, en open het militaire scherm via het menu om strijders op te leiden";
 
 // Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen" —
 // "op het moment dat je voor het eerst genoeg resources hebt om de stad

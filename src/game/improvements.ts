@@ -12,6 +12,7 @@
 // en hoofdstuk 13 van het design-document.
 
 import { CampaignConfig, Categorie, Improvement, Layer, MateriaalType, ResourceType, TechId, Tile, TerreinType } from "./types";
+import { hoogsteOntgrendeldeLaag } from "./world";
 
 // Nederlandse labels per categorie, gedeeld tussen de bouw-pop-up (M2) en de
 // tile-info-pop-up (klik-op-tile) zodat beide dezelfde terminologie tonen.
@@ -227,6 +228,12 @@ export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
 // bouwtijd. De naam "Sterrencirkel" (een stenen cirkel waar het volk de
 // sterren en seizoenen bestudeert) sluit aan bij de Riven/Myst-tutorialsfeer
 // (hoofdstuk 12) en is verder ongewijzigd overgenomen uit het issue.
+//
+// `minLaag: 3` (issue: "tutorial popups wijzigen"): in de tutorial is
+// Wetenschappelijk pas vanaf laag 3 beschikbaar (uitgegrijsd ervoor via
+// `beschikbareOpties` hieronder) — het ontgrendelen van laag 3 gaat gepaard
+// met de "Goddelijke raadgeving"-pop-up (tutorialContent.ts) die precies naar
+// de Sterrencirkel verwijst.
 export const STERRENCIRKEL: Improvement = {
   id: "sterrencirkel",
   naam: "Sterrencirkel",
@@ -235,6 +242,7 @@ export const STERRENCIRKEL: Improvement = {
   kosten: { hout: 6, steen: 2 },
   bouwtijdBeurten: 2,
   effect: { type: "productie", resource: "wetenschap", waarde: 2 },
+  minLaag: 3,
 };
 
 export const WETENSCHAPPELIJK_LAND_IMPROVEMENTS: Improvement[] = [STERRENCIRKEL];
@@ -259,6 +267,11 @@ export const WETENSCHAPPELIJK_LAND_IMPROVEMENTS: Improvement[] = [STERRENCIRKEL]
 // worden zodra de frontier verder trekt, terwijl indringers overal kunnen
 // toeslaan. Thematisch passend: forten werden juist áchter de oprukkende
 // grens aangelegd, niet aan de voorste rand.
+//
+// `minLaag: 2` (issue: "tutorial popups wijzigen"): in de tutorial is
+// Militair (en dus de Wachttoren) pas vanaf laag 2 beschikbaar (uitgegrijsd
+// ervoor via `beschikbareOpties` hieronder) — het ontgrendelen van laag 2
+// gaat gepaard met de "De vijand aan de horizon"-pop-up (tutorialContent.ts).
 export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
   {
     id: "wachttoren",
@@ -269,6 +282,7 @@ export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
     bouwtijdBeurten: 2,
     effect: { type: "verdediging", waarde: 3 },
     bouwbaarBuitenFrontier: true,
+    minLaag: 2,
   },
 ];
 
@@ -375,14 +389,23 @@ function kanImprovementOpLaag(improvement: Improvement, laag: Layer): boolean {
 // Voorraadkuil, ontgrendeld door "aardewerk") uit zolang die tech nog niet
 // gekozen is — een lege array (de default) sluit dus elke tech-gated
 // improvement uit, precies het gedrag vóórdat er ooit een tech gekozen is.
+//
+// `minLaag` (issue: "tutorial popups wijzigen") sluit op dezelfde manier
+// improvements uit zolang de hoogst ontgrendelde laag (frontier) de vereiste
+// hoogte nog niet bereikt heeft — momenteel de Sterrencirkel (laag 3) en de
+// Wachttoren (laag 2). Heeft een categorie hierdoor geen enkele optie meer
+// over, dan toont de bouw-pop-up (BouwPopup.tsx) 'm uitgegrijsd, precies
+// zoals bij een categorie zonder geldig leeg vakje.
 export function beschikbareOpties(
   categorie: Improvement["categorie"],
   laag: Layer,
   alleLagen: Layer[],
   technologieen: TechId[] = []
 ): Improvement[] {
+  const frontierHoogte = hoogsteOntgrendeldeLaag(alleLagen);
   return IMPROVEMENT_POOLS[categorie]
     .filter((improvement) => !improvement.vereisteTech || technologieen.includes(improvement.vereisteTech))
+    .filter((improvement) => !improvement.minLaag || frontierHoogte >= improvement.minLaag)
     .filter((improvement) =>
       improvement.bouwbaarBuitenFrontier
         ? alleLagen.some((l) => l.ontgrendeld && kanImprovementOpLaag(improvement, l))

@@ -86,6 +86,15 @@ export interface Improvement {
   // ontgrendeld door "aardewerk". `undefined` = altijd beschikbaar (los van
   // de technologie-boom), zoals bijna elke andere improvement.
   vereisteTech?: TechId;
+  // Alleen beschikbaar in de bouw-opties zodra deze laaghoogte ontgrendeld is
+  // (issue: "tutorial popups wijzigen" — Sterrencirkel/Wetenschappelijk pas
+  // vanaf laag 3, Wachttoren/Militair pas vanaf laag 2, allebei uitgegrijsd
+  // ervoor). `undefined` = altijd beschikbaar, zoals bijna elke andere
+  // improvement. Gebruikt de hoogst ontgrendelde laag (frontier), niet de
+  // laag waar de speler op dat moment op bouwt — zelfde reden als
+  // `bouwbaarBuitenFrontier`: eenmaal ontgrendeld blijft de categorie
+  // beschikbaar, ook op een oudere laag.
+  minLaag?: number;
 }
 
 export interface Tile {
