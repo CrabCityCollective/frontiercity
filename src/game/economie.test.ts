@@ -726,6 +726,8 @@ test("versnelCivielMetGoud heeft geen effect op een Nieuwe settler in aanbouw ('
 
   const naVersnellen = versnelCivielMetGoud(state);
   assert.equal(naVersnellen, state, "geen wijziging: rush-bouwen geldt niet voor units");
+});
+
 test("kiesGeefTribuut trekt nog niets van de voorraad af — pas geefTribuut (na het sluiten van de bevestiging) doet dat (issue: wachttoren tweaks)", () => {
   let state: GameState = {
     ...maakInitieleSpelStatus(),
