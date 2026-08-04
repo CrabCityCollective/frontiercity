@@ -728,6 +728,40 @@ test("versnelCivielMetGoud heeft geen effect op een Nieuwe settler in aanbouw ('
   assert.equal(naVersnellen, state, "geen wijziging: rush-bouwen geldt niet voor units");
 });
 
+test("een werkende Wachttoren beschermt ook de laag eronder, niet alleen zijn eigen laag (issue: wachttoren beschermt 2 lagen)", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    stad: { ...state.stad, strijders: [{ id: "strijder-1", wachttoren: { hoogte: 2, positieInLaag: 4 } }] },
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte === 2
+        ? {
+            ...laag,
+            ontgrendeld: true,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 4
+                ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
+                : tile
+            ),
+          }
+        : laag
+    ),
+  };
+
+  // Kans 0 dwingt zowel het incident zelf als de laag-trekking af. Laag 2
+  // bevat verder niets dan de Wachttoren en doet dus niet mee in de trekking
+  // (`isAlleenWachttorenLaag`) — met alleen laag 1 en 2 ontgrendeld valt het
+  // incident daardoor gegarandeerd op laag 1, de laag onder de Wachttoren.
+  state = metVasteRandom(0, () => volgendeBeurt(state));
+
+  assert.equal(state.indringersEvent?.laagHoogte, 1);
+  assert.equal(
+    state.indringersEvent?.heeftWachttoren,
+    true,
+    "de bemande, wegverbonden Wachttoren op laag 2 moet ook laag 1 (de laag eronder) beschermen"
+  );
+});
+
 test("kiesGeefTribuut trekt nog niets van de voorraad af — pas geefTribuut (na het sluiten van de bevestiging) doet dat (issue: wachttoren tweaks)", () => {
   let state: GameState = {
     ...maakInitieleSpelStatus(),

@@ -32,7 +32,7 @@ function effectBeschrijving(improvement: Improvement, opFrontier = true): string
     return `Levert +${effect.waarde} ${effect.resource} per beurt.`;
   }
   if (effect.type === "verdediging" && effect.waarde) {
-    return `Geeft +${effect.waarde} verdediging bij een militaire confrontatie, en beschermt deze hele laag tegen indringers-tribuut.`;
+    return `Geeft +${effect.waarde} verdediging bij een militaire confrontatie, en beschermt deze laag én de laag eronder tegen indringers-tribuut.`;
   }
   if (effect.type === "opslag" && effect.waarde) {
     return `Verhoogt de opslag-cap met +${effect.waarde}, direct bij voltooiing.`;
