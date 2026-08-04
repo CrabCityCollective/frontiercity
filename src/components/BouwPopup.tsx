@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { WACHTTOREN_VOEDSEL_VERBRUIK } from "@/game/economie";
 import {
   beschikbareOpties,
   CATEGORIE_LABELS,
@@ -231,6 +232,11 @@ export default function BouwPopup({
                       {improvement.bouwbaarBuitenFrontier && (
                         <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
                           Kan op elke ontgrendelde laag gebouwd worden
+                        </span>
+                      )}
+                      {improvement.id === "wachttoren" && (
+                        <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                          Verbruikt {WACHTTOREN_VOEDSEL_VERBRUIK} voedsel/beurt zodra bemand
                         </span>
                       )}
                     </button>

@@ -19,14 +19,15 @@ interface MilitairPaneelProps {
   confrontatieOntgrendeld: boolean;
   onStartRecrutering: () => void;
   onConfrontatie: () => void;
-  // Klik op een nog niet toegewezen (en niet onderweg-zijnde) strijder-
-  // icoontje (nieuwe Wachttoren-functie, hoofdstuk 6) — GameRoot opent daarop
-  // de "welke wachttoren wil je bemannen?"-pop-up.
+  // Klik op een nog niet toegewezen strijder-icoontje (nieuwe Wachttoren-
+  // functie, hoofdstuk 6) — GameRoot zet daarop meteen de wachttoren-kies-
+  // modus aan (zie WachttorenKiesBanner).
   onKiesStrijder: (strijderId: string) => void;
   // Klik op een al bemande strijder (hoofdstuk 6/11, issue: "wachttorens,
   // bemanning en bevoorrading" — toewijzing is niet langer onomkeerbaar):
-  // haalt hem meteen terug van zijn Wachttoren, waarna hij een paar beurten
-  // onderweg is voordat hij elders opnieuw bemand kan worden.
+  // haalt hem meteen terug van zijn Wachttoren, waarna hij direct weer
+  // inzetbaar is voor een andere Wachttoren (issue: "wachttoren tweaks" —
+  // verplaatsen kost geen beurten).
   onHaalTerug: (strijderId: string) => void;
 }
 
@@ -80,37 +81,30 @@ export default function MilitairPaneel({
       {stad.strijders.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
           <span style={{ color: "var(--kleur-tekst-gedempt)" }}>Strijders:</span>
-          {stad.strijders.map((strijder) => {
-            // Toewijzing is omkeerbaar (hoofdstuk 6/11, issue: "wachttorens,
-            // bemanning en bevoorrading"): een bemande strijder is klikbaar
-            // om terug te halen; een onderweg-zijnde strijder (na terughalen)
-            // is tijdelijk niet klikbaar, net als tijdens het bemannen zelf.
-            const onderweg = Boolean(strijder.onderwegBeurtenResterend);
-            return (
-              <button
-                key={strijder.id}
-                className="fc-knop"
-                disabled={onderweg}
-                onClick={() => (strijder.wachttoren ? onHaalTerug(strijder.id) : onKiesStrijder(strijder.id))}
-                title={
-                  onderweg
-                    ? `Onderweg — nog ${strijder.onderwegBeurtenResterend} beurten voordat hij weer bemand kan worden`
-                    : strijder.wachttoren
-                      ? `Bemant wachttoren op laag ${strijder.wachttoren.hoogte} — klik om terug te halen`
-                      : "Wijs deze strijder toe aan een wachttoren"
-                }
-                aria-label="Strijder"
-                style={{
-                  padding: "0.3rem 0.5rem",
-                  fontSize: "1rem",
-                  lineHeight: 1,
-                  opacity: onderweg ? 0.5 : 1,
-                }}
-              >
-                {onderweg ? "🚶" : "🛡"}
-              </button>
-            );
-          })}
+          {stad.strijders.map((strijder) => (
+            // Toewijzing is omkeerbaar en instant (hoofdstuk 6/11, issue:
+            // "wachttorens, bemanning en bevoorrading" / "wachttoren
+            // tweaks"): een bemande strijder is klikbaar om terug te halen,
+            // en meteen daarna weer klikbaar om elders bemand te worden.
+            <button
+              key={strijder.id}
+              className="fc-knop"
+              onClick={() => (strijder.wachttoren ? onHaalTerug(strijder.id) : onKiesStrijder(strijder.id))}
+              title={
+                strijder.wachttoren
+                  ? `Bemant wachttoren op laag ${strijder.wachttoren.hoogte} — klik om terug te halen`
+                  : "Wijs deze strijder toe aan een wachttoren"
+              }
+              aria-label="Strijder"
+              style={{
+                padding: "0.3rem 0.5rem",
+                fontSize: "1rem",
+                lineHeight: 1,
+              }}
+            >
+              🛡
+            </button>
+          ))}
         </div>
       )}
 

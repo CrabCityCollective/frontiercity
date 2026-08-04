@@ -2,11 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   bemanWachttoren,
+  bevestigGedwongenTribuut,
   bouwStagneertVolgendeBeurt,
+  geefTribuut,
+  haalStrijderTerug,
   hakHout,
   heeftGenoegVoorStichten,
   jaag,
   kanStichten,
+  kiesGeefTribuut,
   kiesTech,
   maakInitieleSpelStatus,
   onbemandeWachttorenPosities,
@@ -26,6 +30,7 @@ import {
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
   volgendeBeurt,
+  weigerTribuut,
 } from "./economie";
 import { AMBERADER, ECONOMISCH_LAND_IMPROVEMENTS, MILITAIR_LAND_IMPROVEMENTS, SOLDAAT, STERRENCIRKEL } from "./improvements";
 import { wetenschapKostenVoorDrempel } from "./techTree";
@@ -118,6 +123,37 @@ test("een soldaat in opleiding is na SOLDAAT.bouwtijdBeurten beurten een inzetba
   const strijderId = state.stad.strijders[0].id;
   state = bemanWachttoren(state, strijderId, 1, 8);
   assert.deepEqual(state.stad.strijders[0].wachttoren, { hoogte: 1, positieInLaag: 8 });
+});
+
+test("haalStrijderTerug maakt een strijder meteen weer inzetbaar op een andere wachttoren, zonder beurten te wachten (issue: wachttoren tweaks)", () => {
+  let state = metWerkendeEconomie();
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag, idx) =>
+      idx !== 0
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 7 || tile.positieInLaag === 8
+                ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
+                : tile
+            ),
+          }
+    ),
+  };
+  state = startRecrutering(state);
+  for (let i = 0; i < SOLDAAT.bouwtijdBeurten; i++) state = volgendeBeurt(state);
+  const strijderId = state.stad.strijders[0].id;
+
+  state = bemanWachttoren(state, strijderId, 1, 8);
+  state = haalStrijderTerug(state, strijderId);
+  assert.equal(state.stad.strijders[0].wachttoren, undefined);
+
+  // Geen tussenliggende beurt nodig: meteen op een andere wachttoren zetten
+  // moet meteen lukken.
+  state = bemanWachttoren(state, strijderId, 1, 7);
+  assert.deepEqual(state.stad.strijders[0].wachttoren, { hoogte: 1, positieInLaag: 7 });
 });
 
 test("onbemandeWachttorenPosities geeft alleen actieve, nog niet-bemande wachttorens terug", () => {
@@ -690,4 +726,49 @@ test("versnelCivielMetGoud heeft geen effect op een Nieuwe settler in aanbouw ('
 
   const naVersnellen = versnelCivielMetGoud(state);
   assert.equal(naVersnellen, state, "geen wijziging: rush-bouwen geldt niet voor units");
+test("kiesGeefTribuut trekt nog niets van de voorraad af — pas geefTribuut (na het sluiten van de bevestiging) doet dat (issue: wachttoren tweaks)", () => {
+  let state: GameState = {
+    ...maakInitieleSpelStatus(),
+    voorraad: { hout: 10, steen: 0, erts: 0, goud: 0 },
+    indringersEvent: {
+      laagHoogte: 2,
+      stamNaam: "de stam van de Halve Maan",
+      heeftWachttoren: false,
+      tribuut: { resource: "hout", aantal: 5 },
+      fase: "gemeld",
+    },
+  };
+
+  state = kiesGeefTribuut(state);
+  assert.equal(state.indringersEvent?.fase, "betaald");
+  assert.equal(state.voorraad.hout, 10, "de voorraad mag nog niet veranderd zijn na de keuze om te betalen");
+
+  state = geefTribuut(state);
+  assert.equal(state.voorraad.hout, 5, "pas na het sluiten van de bevestiging gaat het tribuut van de voorraad af");
+  assert.equal(state.indringersEvent, undefined);
+});
+
+test("een afgedwongen tribuut (na weigeren) trekt ook pas af zodra de laatste bevestiging gesloten wordt", () => {
+  let state: GameState = {
+    ...maakInitieleSpelStatus(),
+    voorraad: { hout: 10, steen: 0, erts: 0, goud: 0 },
+    indringersEvent: {
+      laagHoogte: 2,
+      stamNaam: "de stam van de Bloedhoeven",
+      heeftWachttoren: false,
+      tribuut: { resource: "hout", aantal: 5 },
+      fase: "gemeld",
+    },
+  };
+
+  state = weigerTribuut(state);
+  assert.equal(state.indringersEvent?.fase, "geforceerd");
+
+  state = bevestigGedwongenTribuut(state);
+  assert.equal(state.indringersEvent?.fase, "betaald");
+  assert.equal(state.voorraad.hout, 10, "de voorraad mag nog niet veranderd zijn vóór de laatste bevestiging");
+
+  state = geefTribuut(state);
+  assert.equal(state.voorraad.hout, 5);
+  assert.equal(state.indringersEvent, undefined);
 });

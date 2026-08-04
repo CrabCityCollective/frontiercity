@@ -128,7 +128,7 @@ const VOEDSEL_WAARSCHUWING_BEURTEN = 5;
 // wachttorens die realistisch nodig zijn (hoofdstuk 11 heeft de volledige
 // onderbouwing, hoofdstuk 14 de cijfers) — vandaar geen aanpassing elders in
 // de voedseleconomie nodig.
-const WACHTTOREN_VOEDSEL_VERBRUIK = 1;
+export const WACHTTOREN_VOEDSEL_VERBRUIK = 1;
 
 // Militair-tuning (M7, hoofdstuk 6/14): net als de verval-tuning bewuste
 // MVP-placeholders. `WINKANS_MIN`/`WINKANS_MAX` zorgen dat een confrontatie
@@ -138,13 +138,6 @@ const WINKANS_MAX = 0.95;
 const BUIT_GOUD_FACTOR = 0.5;
 const SCHADE_TILES_AANTAL = 2;
 const SCHADE_BEURTEN = 3;
-
-// Strijder-verplaatsing (hoofdstuk 6/11/14, issue: "wachttorens, bemanning en
-// bevoorrading"): een teruggehaalde strijder is dit aantal beurten onderweg
-// voordat hij weer aan een (andere) Wachttoren toegewezen kan worden — maakt
-// terughalen een herziene keuze in plaats van gratis heen-en-weer schuiven,
-// zonder er een straf van te maken (zie `haalStrijderTerug` hieronder).
-const STRIJDER_VERPLAATSING_BEURTEN = 2;
 
 // Kuddes & settler-jacht (hoofdstuk 16/17; issue: "kuddes met dieren waar je
 // op kunt jagen voor voedsel"): een losse settler-actie naast bewegen/weg
@@ -1447,10 +1440,43 @@ export function sluitIndringersMelding(state: GameState): GameState {
   return { ...state, indringersEvent: undefined };
 }
 
-// Geeft het geëiste tribuut: trekt het af van de gedeelde opslag (nooit onder
-// nul) en sluit de melding. Gebruikt zowel voor de bewuste "Geef tribuut"-
-// keuze als voor de afgedwongen betaling na een geweigerd tribuut zonder
-// vorige stad (`bevestigGedwongenTribuut` hieronder).
+// Kiest bewust om het geëiste tribuut te geven (hoofdstuk 6, issue:
+// "wachttoren tweaks" — het bedrag gaat pas van de voorraad af zodra de
+// speler de melding daadwerkelijk sluit): zet de melding op `fase: "betaald"`
+// zodat de pop-up het af te schrijven bedrag nog eens bevestigt, zonder de
+// voorraad al aan te passen. Zie `geefTribuut` hieronder voor de
+// daadwerkelijke afschrijving.
+export function kiesGeefTribuut(state: GameState): GameState {
+  const event = state.indringersEvent;
+  if (!event?.tribuut || event.fase !== "gemeld") return state;
+  return { ...state, indringersEvent: { ...event, fase: "betaald" } };
+}
+
+// Weigert het tribuut (hoofdstuk 6): normaal verwoesten de indringers de stad
+// en valt de speler terug op de vorige stad, als die er is. De MVP kent nog
+// maar één stad (hoofdstuk 13) — zonder toevlucht wordt het tribuut alsnog
+// betaald, wat hier eerst zichtbaar wordt gemaakt (`fase: "geforceerd"`)
+// zodat de pop-up dat kan uitleggen vóór `bevestigGedwongenTribuut` verder gaat.
+export function weigerTribuut(state: GameState): GameState {
+  const event = state.indringersEvent;
+  if (!event?.tribuut) return state;
+  return { ...state, indringersEvent: { ...event, fase: "geforceerd" } };
+}
+
+// Bevestigt het afgedwongen tribuut na `weigerTribuut` hierboven — zelfde
+// vervolgstap als `kiesGeefTribuut` (naar `fase: "betaald"`, nog geen
+// afschrijving), maar bewust als losse actie zodat de UI het onderscheid kan
+// tonen (bewuste keuze vs. afgedwongen).
+export function bevestigGedwongenTribuut(state: GameState): GameState {
+  const event = state.indringersEvent;
+  if (!event?.tribuut || event.fase !== "geforceerd") return state;
+  return { ...state, indringersEvent: { ...event, fase: "betaald" } };
+}
+
+// Sluit de "betaald"-melding en trekt op dát moment pas het tribuut af van de
+// gedeelde opslag (nooit onder nul) — issue: "wachttoren tweaks": de voorraad
+// mag pas veranderen zodra de speler de pop-up daadwerkelijk wegklikt, niet
+// al bij de keuze om te betalen.
 export function geefTribuut(state: GameState): GameState {
   const event = state.indringersEvent;
   if (!event?.tribuut) return state;
@@ -1458,24 +1484,6 @@ export function geefTribuut(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
   voorraad[event.tribuut.resource] = Math.max(0, voorraad[event.tribuut.resource] - event.tribuut.aantal);
   return { ...state, voorraad, indringersEvent: undefined };
-}
-
-// Weigert het tribuut (hoofdstuk 6): normaal verwoesten de indringers de stad
-// en valt de speler terug op de vorige stad, als die er is. De MVP kent nog
-// maar één stad (hoofdstuk 13) — zonder toevlucht wordt het tribuut alsnog
-// betaald, wat hier eerst zichtbaar wordt gemaakt (`fase: "geforceerd"`)
-// zodat de pop-up dat kan uitleggen vóór `bevestigGedwongenTribuut` het int.
-export function weigerTribuut(state: GameState): GameState {
-  const event = state.indringersEvent;
-  if (!event?.tribuut) return state;
-  return { ...state, indringersEvent: { ...event, fase: "geforceerd" } };
-}
-
-// Int het afgedwongen tribuut na `weigerTribuut` hierboven — zelfde effect als
-// `geefTribuut`, maar bewust als losse actie zodat de UI het onderscheid kan
-// tonen (bewuste keuze vs. afgedwongen).
-export function bevestigGedwongenTribuut(state: GameState): GameState {
-  return geefTribuut(state);
 }
 
 // Start de bouw van een land improvement op de tile die de speler zelf heeft
@@ -1811,12 +1819,13 @@ export function heeftWerkendeBoerderij(state: GameState): boolean {
 
 // Bemant een Wachttoren met een specifieke strijder (nieuwe Wachttoren-functie,
 // hoofdstuk 6): via het militaire paneel kiest de speler eerst een nog
-// onbemande, niet-onderweg-zijnde strijder, dan een actieve, nog onbemande
-// Wachttoren-tile op de kaart. Geeft de ongewijzigde status terug bij een
-// ongeldige combinatie (strijder bestaat niet, is al bemand, is nog onderweg
-// na een eerdere `haalStrijderTerug`, of het doel is geen actieve, onbemande
-// Wachttoren). Toewijzen is sinds hoofdstuk 6/11 omkeerbaar (issue:
-// "wachttorens, bemanning en bevoorrading") via `haalStrijderTerug` hieronder.
+// onbemande strijder, dan een actieve, nog onbemande Wachttoren-tile op de
+// kaart. Geeft de ongewijzigde status terug bij een ongeldige combinatie
+// (strijder bestaat niet, is al bemand, of het doel is geen actieve,
+// onbemande Wachttoren). Toewijzen is sinds hoofdstuk 6/11 omkeerbaar (issue:
+// "wachttorens, bemanning en bevoorrading") via `haalStrijderTerug` hieronder
+// — net als bemannen zelf gebeurt dat instant, zonder beurten te kosten
+// (issue: "wachttoren tweaks").
 export function bemanWachttoren(
   state: GameState,
   strijderId: string,
@@ -1824,7 +1833,7 @@ export function bemanWachttoren(
   positieInLaag: number
 ): GameState {
   const strijder = state.stad.strijders.find((s) => s.id === strijderId);
-  if (!strijder || strijder.wachttoren || strijder.onderwegBeurtenResterend) return state;
+  if (!strijder || strijder.wachttoren) return state;
 
   const laag = state.lagen.find((l) => l.hoogte === hoogte);
   const tile = laag?.tiles[positieInLaag];
@@ -1842,34 +1851,16 @@ export function bemanWachttoren(
 // "wachttorens, bemanning en bevoorrading" — vervangt de eerdere onomkeerbare
 // toewijzing). De Wachttoren zelf raakt meteen onbemand (en dus, tenzij een
 // andere strijder hem overneemt, onbeschermd — zie `heeftBeschermendeWachttoren`),
-// maar de strijder is niet meteen elders inzetbaar: `onderwegBeurtenResterend`
-// (`STRIJDER_VERPLAATSING_BEURTEN` hierboven) telt af via `verwerkStrijdersOnderweg`
-// in `volgendeBeurt`, zodat terughalen een herziene keuze is, geen gratis
-// heen-en-weer-schuiven. Geen effect op een strijder die niet bemand is.
+// en de strijder is meteen weer elders inzetbaar: verplaatsen tussen
+// wachttorens kost geen beurten (issue: "wachttoren tweaks" — een eerdere
+// versie liet de strijder hier nog een paar beurten "onderweg" zijn, maar dat
+// voegde alleen wachttijd toe zonder de keuze zelf interessanter te maken).
+// Geen effect op een strijder die niet bemand is.
 export function haalStrijderTerug(state: GameState, strijderId: string): GameState {
   const strijder = state.stad.strijders.find((s) => s.id === strijderId);
   if (!strijder || !strijder.wachttoren) return state;
 
-  const strijders = state.stad.strijders.map((s) =>
-    s.id === strijderId
-      ? { ...s, wachttoren: undefined, onderwegBeurtenResterend: STRIJDER_VERPLAATSING_BEURTEN }
-      : s
-  );
-
-  return { ...state, stad: { ...state.stad, strijders } };
-}
-
-// Telt de resterende verplaatsingstijd van elke onderweg-zijnde strijder af
-// (hoofdstuk 6/11/14, na `haalStrijderTerug` hierboven) — op nul is de
-// strijder weer inzetbaar voor `bemanWachttoren`. Onderdeel van de
-// `volgendeBeurt`-pijplijn, net als de overige per-beurt-tellers in dit
-// bestand (uitputting, groei, rekrutering).
-function verwerkStrijdersOnderweg(state: GameState): GameState {
-  const strijders = state.stad.strijders.map((strijder) => {
-    if (!strijder.onderwegBeurtenResterend) return strijder;
-    const resterend = strijder.onderwegBeurtenResterend - 1;
-    return { ...strijder, onderwegBeurtenResterend: resterend > 0 ? resterend : undefined };
-  });
+  const strijders = state.stad.strijders.map((s) => (s.id === strijderId ? { ...s, wachttoren: undefined } : s));
 
   return { ...state, stad: { ...state.stad, strijders } };
 }
@@ -1897,11 +1888,10 @@ export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
 // afgaat" — een tile/weg die deze beurt klaarkomt telt zo al mee vóór de
 // instort-check), dan de civiele stadsbouwwachtrij (M6/hoofdstuk 16: groei óf
 // een nieuwe settler), de Opslagplaats-wachtrij (hoofdstuk 14) en de
-// Soldaat-rekruteringswachtrij (M7), de strijder-verplaatsingstellers
-// (hoofdstuk 6/11, `verwerkStrijdersOnderweg` na `haalStrijderTerug`), dan de
-// indringers-kans (hoofdstuk 6) en de kuddes-kans (hoofdstuk 16/17), dan de
-// beurtteller ophogen. Zet ook de bouwkeuze-vlag (hoofdstuk 11) weer terug,
-// zodat de bouw-pop-up bij het begin van de nieuwe beurt weer verschijnt.
+// Soldaat-rekruteringswachtrij (M7), dan de indringers-kans (hoofdstuk 6) en
+// de kuddes-kans (hoofdstuk 16/17), dan de beurtteller ophogen. Zet ook de
+// bouwkeuze-vlag (hoofdstuk 11) weer terug, zodat de bouw-pop-up bij het
+// begin van de nieuwe beurt weer verschijnt.
 //
 // Stort de stad deze beurt volledig in, dan geeft `verwerkVerval` al een
 // verse, gereset spelstatus terug (issue: "run eindigen wanneer stad
@@ -1920,8 +1910,7 @@ export function volgendeBeurt(state: GameState): GameState {
   const naCiviel = verwerkCivielInAanbouw(naVerval);
   const naOpslagplaats = verwerkOpslagplaats(naCiviel);
   const naRecrutering = verwerkRecrutering(naOpslagplaats);
-  const naStrijdersOnderweg = verwerkStrijdersOnderweg(naRecrutering);
-  const naIndringers = verwerkIndringers(naStrijdersOnderweg);
+  const naIndringers = verwerkIndringers(naRecrutering);
   const naKuddes = verwerkKuddes(naIndringers);
   const naRoofdieren = verwerkRoofdieren(naKuddes);
   const nieuweBeurt = naRoofdieren.beurt + 1;
