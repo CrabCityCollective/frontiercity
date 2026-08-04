@@ -29,29 +29,31 @@ export default function ResourceHud({ state, onVolgendeBeurt }: ResourceHudProps
       : `${state.wetenschap} (technologie-boom compleet)`;
 
   return (
-    <div className="resource-hud">
-      <div className="resource-hud__items">
-        {(Object.keys(MATERIAAL_LABELS) as MateriaalType[]).map((type) => (
-          <span key={type} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-            <ResourceIcoon type={type} /> {state.voorraad[type]} / {state.opslagCap}
+    <>
+      <div className="resource-hud">
+        <div className="resource-hud__items">
+          {(Object.keys(MATERIAAL_LABELS) as MateriaalType[]).map((type) => (
+            <span key={type} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+              <ResourceIcoon type={type} /> {state.voorraad[type]} / {state.opslagCap}
+            </span>
+          ))}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+            <ResourceIcoon type="voedsel" /> {state.voedsel}
           </span>
-        ))}
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-          <ResourceIcoon type="voedsel" /> {state.voedsel}
-        </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-          <ResourceIcoon type="cultuur" /> {cultuurLabel}
-        </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-          <ResourceIcoon type="wetenschap" /> {wetenschapLabel}
-        </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+            <ResourceIcoon type="cultuur" /> {cultuurLabel}
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+            <ResourceIcoon type="wetenschap" /> {wetenschapLabel}
+          </span>
+        </div>
       </div>
-      <div className="resource-hud__beurt">
-        <span>Beurt: {state.beurt}</span>
-        <button className="fc-knop" onClick={onVolgendeBeurt} style={{ padding: "0.35rem 0.75rem" }}>
+      <div className="beurt-blok">
+        <span className="beurt-blok__label">Beurt: {state.beurt}</span>
+        <button className="fc-knop beurt-blok__knop" onClick={onVolgendeBeurt}>
           Volgende beurt
         </button>
       </div>
-    </div>
+    </>
   );
 }

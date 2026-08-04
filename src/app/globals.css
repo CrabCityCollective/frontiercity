@@ -84,9 +84,8 @@ main {
 }
 
 /* Grondstoffenbalk (zie ResourceHud): rij van materiaal/voedsel/cultuur-
-   labels plus de beurtteller en -knop. Wrapt op smalle (mobiele) schermen
-   i.p.v. buiten beeld te schuiven (issue: "balk met resources is niet
-   responsive"), de beurt+knop-groep krijgt dan een eigen volle rij. */
+   labels. Wrapt op smalle (mobiele) schermen i.p.v. buiten beeld te
+   schuiven (issue: "balk met resources is niet responsive"). */
 .resource-hud {
   display: flex;
   flex-wrap: wrap;
@@ -97,7 +96,6 @@ main {
   color: var(--kleur-tekst);
   font-size: 0.9rem;
   border-top: 3px solid var(--kleur-oker);
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.45);
 }
 
 .resource-hud__items {
@@ -106,11 +104,32 @@ main {
   gap: 0.25rem 0.75rem;
 }
 
-.resource-hud__beurt {
+/* Apart blok direct onder de grondstoffenbalk (issue: "button voor volgende
+   beurt, en het beurt-nummer samen in een apart blok, direct onder de
+   map") met een brede, gecentreerde knop zodat hij op mobiel makkelijk te
+   raken is. */
+.beurt-blok {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  margin-left: auto;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem 0.85rem;
+  background: var(--kleur-aarde-donker);
+  border-top: 2px solid var(--kleur-rand);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.beurt-blok__label {
+  color: var(--kleur-tekst);
+  font-size: 0.9rem;
+}
+
+.beurt-blok__knop {
+  width: 100%;
+  max-width: 480px;
+  padding: 0.75rem 1rem;
+  font-size: 1.05rem;
+  text-align: center;
 }
 
 @media (max-width: 520px) {
@@ -124,10 +143,8 @@ main {
     gap: 0.2rem 0.5rem;
   }
 
-  .resource-hud__beurt {
-    margin-left: 0;
-    width: 100%;
-    justify-content: space-between;
+  .beurt-blok__label {
+    font-size: 0.8rem;
   }
 }
 
