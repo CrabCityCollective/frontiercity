@@ -92,7 +92,10 @@ main {
    speler moet de voorraad kunnen aflezen tijdens het maken van een
    bouwkeuze. `.game-viewport` is een flex-container, dus z-index werkt hier
    ook zonder expliciete `position` op deze flex-items. Blijft ruim onder de
-   volledige-schermoverlays (menu's, titelscherm: zIndex 40+). */
+   volledige-schermoverlays (menu's, titelscherm: zIndex 40+).
+   Let op: `.beurt-blok` hieronder blijft bewust ónder de pop-up-overlays
+   (issue: "pop-up overlay moet wel over de beurt button") — alleen deze
+   balk hoort erboven te blijven. */
 .resource-hud {
   display: flex;
   flex-wrap: wrap;
@@ -126,10 +129,12 @@ main {
   border-top: 2px solid var(--kleur-rand);
   border-bottom: 3px solid var(--kleur-oker);
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.45);
-  /* Zelfde reden als .resource-hud hierboven: blijft zichtbaar boven de
-     bouw-pop-up-overlay. */
+  /* Anders dan .resource-hud hierboven: dit blok hoort ÓNDER de pop-up-
+     overlays te blijven (issue: "pop-up overlay moet wel over de beurt
+     button block, alleen niet over de resource balk") — zonder deze regel
+     stak de "Volgende beurt"-knop altijd boven elke pop-up uit. */
   position: relative;
-  z-index: 21;
+  z-index: 1;
 }
 
 .beurt-blok__label {
