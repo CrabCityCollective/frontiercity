@@ -86,7 +86,13 @@ main {
 /* Grondstoffenbalk (zie ResourceHud): rij van materiaal/voedsel/cultuur-
    labels. Wrapt op smalle (mobiele) schermen i.p.v. buiten beeld te
    schuiven (issue: "balk met resources is niet responsive"). Staat onder
-   het beurt-blok (issue: "volgende beurt button naar boven"). */
+   het beurt-blok (issue: "volgende beurt button naar boven"). z-index boven
+   de bouw-pop-up en vergelijkbare kaart-overlays (allemaal zIndex 20, zie
+   o.a. BouwPopup) — issue: "bouwmaterialen zichtbaar bij bouwscherm": de
+   speler moet de voorraad kunnen aflezen tijdens het maken van een
+   bouwkeuze. `.game-viewport` is een flex-container, dus z-index werkt hier
+   ook zonder expliciete `position` op deze flex-items. Blijft ruim onder de
+   volledige-schermoverlays (menu's, titelscherm: zIndex 40+). */
 .resource-hud {
   display: flex;
   flex-wrap: wrap;
@@ -96,6 +102,8 @@ main {
   background: linear-gradient(180deg, var(--kleur-aarde-paneel), var(--kleur-aarde-donker));
   color: var(--kleur-tekst);
   font-size: 0.9rem;
+  position: relative;
+  z-index: 21;
 }
 
 .resource-hud__items {
@@ -118,6 +126,10 @@ main {
   border-top: 2px solid var(--kleur-rand);
   border-bottom: 3px solid var(--kleur-oker);
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.45);
+  /* Zelfde reden als .resource-hud hierboven: blijft zichtbaar boven de
+     bouw-pop-up-overlay. */
+  position: relative;
+  z-index: 21;
 }
 
 .beurt-blok__label {
