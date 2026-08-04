@@ -1709,7 +1709,7 @@ export function hakHout(state: GameState): GameState {
 // Voedsel blijft op de voorgestelde 30: aangezien voedsel nooit "uitgegeven"
 // wordt (hoofdstuk 5 — alleen drempels zoals `VOEDSEL_DREMPEL_GROEI`
 // controleren de voorraad, ze verlagen 'm niet) is een gezonde stad tegen de
-// tijd dat laag 10-12 ontgrendeld is sowieso al ver voorbij 30 voedsel, op
+// tijd dat laag 13 ontgrendeld is sowieso al ver voorbij 30 voedsel, op
 // straffe van een eerdere ineenstorting (hoofdstuk 4) — de eis dwingt dus
 // vooral af dat de voedselcrisis allang opgelost moet zijn, wat de bestaande
 // verval-mechaniek toch al vereist. Hem hoger zetten dan 30 zou daar weinig

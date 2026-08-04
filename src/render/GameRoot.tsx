@@ -14,6 +14,7 @@ import KuddePopup from "@/components/KuddePopup";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import LaagPopup from "@/components/LaagPopup";
 import MilitairUitlegPopup from "@/components/MilitairUitlegPopup";
+import OceaanUitlegPopup from "@/components/OceaanUitlegPopup";
 import ResourceHud from "@/components/ResourceHud";
 import RoofdierPopup from "@/components/RoofdierPopup";
 import SettlerPaneel from "@/components/SettlerPaneel";
@@ -44,7 +45,13 @@ import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { useGameEngine } from "@/game/useGameEngine";
 import { bereikbarePosities } from "@/game/wegen";
-import { TUTORIAL_LAAG_AANTAL, VOEDSEL_DREMPEL_GROEI, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
+import {
+  MILITAIR_CONFRONTATIE_LAAG,
+  TUTORIAL_LAAG_AANTAL,
+  VOEDSEL_DREMPEL_GROEI,
+  hoogsteOntgrendeldeLaag,
+  zichtbareLagen,
+} from "@/game/world";
 import GameCanvas from "./GameCanvas";
 
 interface GameRootProps {
@@ -143,6 +150,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // halen ervan"): allebei eenmalige confirm-vlaggen per sessie, zelfde
   // patroon als `laatstBevestigdeLaag` hierboven.
   const [militairUitlegBevestigd, setMilitairUitlegBevestigd] = useState(false);
+  // Oceaan-uitleg-pop-up (issue: "tutorial laatste stad aan oceaan"): zelfde
+  // eenmalige-confirm-vlag, getoond zodra de laatste laag (de oceaan aan de
+  // overkant) bereikt is.
+  const [oceaanUitlegBevestigd, setOceaanUitlegBevestigd] = useState(false);
   const [tutorialVoltooidBevestigd, setTutorialVoltooidBevestigd] = useState(false);
   // Settler-uitleg-pop-up (M10, hoofdstuk 16): zelfde eenmalige-confirm-vlag
   // als de twee hierboven, getoond zodra de settler in beurt 2 verschijnt.
@@ -477,8 +488,24 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     uitlegAan &&
-    actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
+    actieveLaag.hoogte === MILITAIR_CONFRONTATIE_LAAG &&
     !militairUitlegBevestigd;
+  // Oceaan-uitleg direct na de laag-pop-up van de laatste laag (issue:
+  // "tutorial laatste stad aan oceaan" — de enige plek met vers water, dus
+  // de enige plek waar de laatste stad gesticht kan worden).
+  const toonOceaanUitlegPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonMilitairUitlegPopup &&
+    uitlegAan &&
+    actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
+    !oceaanUitlegBevestigd;
   // Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen"):
   // zodra er voor het eerst genoeg voedsel is voor de groei-tier klein→middel
   // — dezelfde dynamische-trigger-vorm als de andere uitleg-pop-ups hierboven.
@@ -492,6 +519,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
+    !toonOceaanUitlegPopup &&
     uitlegAan &&
     !stadUpgradeUitlegBevestigd &&
     state.stad.grootte === "klein" &&
@@ -512,6 +540,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
+    !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     Boolean(state.indringersEvent);
   // Kudde- & roofdier-pop-ups (hoofdstuk 14/17) — zelfde blokkerende vorm en
@@ -527,6 +556,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
+    !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
     Boolean(state.kuddeEvent);
@@ -540,6 +570,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
+    !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
     !toonKuddePopup &&
@@ -557,6 +588,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
+    !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
     !toonKuddePopup &&
@@ -577,6 +609,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
+    !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
     !toonKuddePopup &&
@@ -597,6 +630,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
+    !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
     !toonKuddePopup &&
@@ -680,7 +714,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             state={state}
             legerwaarde={berekenLegerwaarde(state)}
             tegenstanderSterkte={actieveLaag.dreigingsniveau ?? 0}
-            confrontatieOntgrendeld={actieveLaag.hoogte >= TUTORIAL_LAAG_AANTAL}
+            confrontatieOntgrendeld={actieveLaag.hoogte >= MILITAIR_CONFRONTATIE_LAAG}
             onStartGroei={startGroei}
             onStartNieuweSettler={startNieuweSettler}
             onStartOpslagplaats={startOpslagplaats}
@@ -700,6 +734,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           <LaagPopup hoogte={actieveLaag.hoogte} onDoorgaan={() => setLaatstBevestigdeLaag(actieveLaag.hoogte)} />
         )}
         {toonMilitairUitlegPopup && <MilitairUitlegPopup onDoorgaan={() => setMilitairUitlegBevestigd(true)} />}
+        {toonOceaanUitlegPopup && <OceaanUitlegPopup onDoorgaan={() => setOceaanUitlegBevestigd(true)} />}
         {toonIndringersPopup && state.indringersEvent && (
           <IndringersPopup
             event={state.indringersEvent}
@@ -794,6 +829,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonBoerderijKlaarUitlegPopup &&
             !toonStrijdersOpleidenPopup &&
             !toonMilitairUitlegPopup &&
+            !toonOceaanUitlegPopup &&
             !toonStadUpgradeUitlegPopup &&
             !toonIndringersPopup &&
             !toonKuddePopup &&

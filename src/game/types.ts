@@ -136,9 +136,11 @@ export interface Tile {
   // Ligt dit vakje aan vers water — een rivier of een meer (hoofdstuk 2:
   // "een stad kan alleen gesticht worden op een vakje dat aan vers water
   // ligt")? Vast, niet-procedureel (net als `terrein`) — de tutorial-worldgen
-  // garandeert minstens één zulk vakje tussen laag 10 en 12 (zie world.ts).
-  // Geen terrein-eis op zichzelf: een vlak, bos-, heuvel- of bergvakje kan
-  // allemaal aan water liggen, dus los van `terrein` bijgehouden.
+  // garandeert precies één zulk vakje, uitsluitend op de allerlaatste laag
+  // (de oceaan aan de overkant, zie world.ts `TUTORIAL_VERS_WATER`) — de
+  // enige plek in de hele tutorial met vers water. Geen terrein-eis op
+  // zichzelf: een vlak, bos-, heuvel- of bergvakje kan allemaal aan water
+  // liggen, dus los van `terrein` bijgehouden.
   versWater?: boolean;
   // Ligt hier een amberader — de vondst die de Amberader/goudmijn-improvement
   // (hoofdstuk 3/14, issue: "toevoeging Goud") nodig heeft, bovenop de gewone
