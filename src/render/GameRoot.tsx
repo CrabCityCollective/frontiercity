@@ -22,6 +22,7 @@ import SpelActiesMenu from "@/components/SpelActiesMenu";
 import StadMenuPopup from "@/components/StadMenuPopup";
 import StadUpgradeUitlegPopup from "@/components/StadUpgradeUitlegPopup";
 import StichtStadPopup from "@/components/StichtStadPopup";
+import StrijdersOpleidenPopup from "@/components/StrijdersOpleidenPopup";
 import TechKeuzePopup from "@/components/TechKeuzePopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
@@ -33,6 +34,7 @@ import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import {
   berekenHistorieStatistieken,
   berekenLegerwaarde,
+  heeftGebouwdeMijn,
   heeftWerkendeBoerderij,
   onbemandeWachttorenPosities,
 } from "@/game/economie";
@@ -150,6 +152,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // actieve, wegverbonden boerderij meeproduceert (zie economie.ts
   // `heeftWerkendeBoerderij`).
   const [boerderijKlaarBevestigd, setBoerderijKlaarBevestigd] = useState(false);
+  // Strijders-opleiden-uitleg-pop-up (issue: "pop-ups wijzigen"): zelfde
+  // eenmalige-confirm-vlag, getoond zodra er voor het eerst een gebouwde mijn
+  // staat (zie economie.ts `heeftGebouwdeMijn`).
+  const [strijdersOpleidenBevestigd, setStrijdersOpleidenBevestigd] = useState(false);
   // Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen"):
   // zelfde eenmalige-confirm-vlag, getoond zodra er voor het eerst genoeg
   // voedsel is voor de groei-tier klein→middel (zie `toonStadUpgradeUitlegPopup`
@@ -444,6 +450,20 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !boerderijKlaarBevestigd &&
     heeftWerkendeBoerderij(state);
+  // Strijders-opleiden-uitleg-pop-up (issue: "pop-ups wijzigen"): zodra er
+  // voor het eerst een gebouwde mijn staat — het moment waarop het bouwen van
+  // een Wachttoren en het opleiden van een strijder allebei relevant worden.
+  const toonStrijdersOpleidenPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    uitlegAan &&
+    !strijdersOpleidenBevestigd &&
+    heeftGebouwdeMijn(state);
   // Militaire-uitleg direct na de laag-pop-up van laag 12 (issue: "als je op
   // het laatst in de tutorial bij de militaire confrontatie bent, uitleg
   // over hoe je het moet aanpakken").
@@ -455,6 +475,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
     uitlegAan &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     !militairUitlegBevestigd;
@@ -469,6 +490,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
     uitlegAan &&
     !stadUpgradeUitlegBevestigd &&
@@ -488,6 +510,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     Boolean(state.indringersEvent);
@@ -502,6 +525,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -514,6 +538,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -530,6 +555,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -549,6 +575,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -568,6 +595,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
     !toonMilitairUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -713,6 +741,9 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonBoerderijKlaarUitlegPopup && (
           <BoerderijKlaarUitlegPopup onDoorgaan={() => setBoerderijKlaarBevestigd(true)} />
         )}
+        {toonStrijdersOpleidenPopup && (
+          <StrijdersOpleidenPopup onDoorgaan={() => setStrijdersOpleidenBevestigd(true)} />
+        )}
         {toonStadUpgradeUitlegPopup && (
           <StadUpgradeUitlegPopup onDoorgaan={() => setStadUpgradeUitlegBevestigd(true)} />
         )}
@@ -761,6 +792,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonVijandAanDeHorizonPopup &&
             !toonGoddelijkeRaadgevingPopup &&
             !toonBoerderijKlaarUitlegPopup &&
+            !toonStrijdersOpleidenPopup &&
             !toonMilitairUitlegPopup &&
             !toonStadUpgradeUitlegPopup &&
             !toonIndringersPopup &&
