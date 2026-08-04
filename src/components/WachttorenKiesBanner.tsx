@@ -9,7 +9,10 @@ interface WachttorenKiesBannerProps {
 // klikt, terwijl hij een vakje op de kaart moet aanklikken. Anders dan de
 // overige pop-ups blokkeert dit niet het hele scherm — de speler moet de
 // kaart juist kunnen zien om een wachttoren aan te klikken (zie GameRoot:
-// `handleTileClick`).
+// `handleTileClick`). De uitleg zelf staat sinds "pop-ups wijzigen" al vooraf
+// in STRIJDERS_OPLEIDEN_TEKST (tutorialContent.ts) — deze banner biedt alleen
+// nog de Annuleren-knop, nodig omdat de speler anders vast kan komen te
+// zitten in de kies-modus als er geen onbemande wachttoren beschikbaar is.
 export default function WachttorenKiesBanner({ onAnnuleren }: WachttorenKiesBannerProps) {
   return (
     <div
@@ -26,7 +29,6 @@ export default function WachttorenKiesBanner({ onAnnuleren }: WachttorenKiesBann
         zIndex: 40,
       }}
     >
-      <span>Klik op een gemarkeerde, nog onbemande wachttoren op de kaart om de strijder te bemannen.</span>
       <button className="fc-knop" onClick={onAnnuleren} style={{ padding: "0.3rem 0.6rem" }}>
         Annuleren
       </button>

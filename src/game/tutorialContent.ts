@@ -184,7 +184,17 @@ export const GODDELIJKE_RAADGEVING_TEKST =
 // beschikbaar komt in de bouw-pop-up, ervoor stond de categorie uitgegrijsd.
 export const VIJAND_AAN_DE_HORIZON_TITEL = "De vijand aan de horizon";
 export const VIJAND_AAN_DE_HORIZON_TEKST =
-  "Niet alle wilde stammen zitten op onze opmars te wachten, ze proberen ons gebied binnen te dringen. We hebben nu steen en erts nodig uit de heuvels en bergen om een Wachttoren te kunnen bouwen, en onze strijders te bewapenen. Bouw een wachttoren, en open het militaire scherm via het menu om strijders op te leiden";
+  "Niet alle wilde stammen zitten op onze opmars te wachten, ze proberen ons gebied binnen te dringen. We hebben nu erts nodig uit de heuvels en bergen. Bouw een mijn. Dat is het eerste wat we nu nodig hebben.";
+
+// Strijders-opleiden-uitleg-pop-up (issue: "pop-ups wijzigen"): getoond zodra
+// er voor het eerst een gebouwde mijn staat (zie economie.ts
+// `heeftGebouwdeMijn`) — dit is het moment waarop het bouwen van een
+// Wachttoren en het opleiden van een strijder allebei relevant worden, ná de
+// erts-introductie hierboven maar vóór VIJAND_AAN_DE_HORIZON een wachttoren
+// noemde.
+export const STRIJDERS_OPLEIDEN_TITEL = "Strijders opleiden";
+export const STRIJDERS_OPLEIDEN_TEKST =
+  "Bouw nu een wachttoren. Leidt tegelijkertijd een strijder op. Klik op de stad en begin de opleiding van een strijder. Als de strijder klaar is, verschijnt hij in het stadscherm, en vanaf daar kun je hem toewijzen aan een wachttoren die nog niet bemand is.";
 
 // Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen" —
 // "op het moment dat je voor het eerst genoeg resources hebt om de stad

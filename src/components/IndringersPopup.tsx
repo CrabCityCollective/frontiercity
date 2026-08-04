@@ -75,7 +75,7 @@ export default function IndringersPopup({
         {!event.heeftWachttoren && event.tribuut && event.fase === "gemeld" && (
           <>
             <p style={{ margin: 0, lineHeight: 1.6 }}>
-              {event.stamNaam} dringt laag {event.laagHoogte} binnen. Er staat geen wachttoren — ze eisen{" "}
+              {event.stamNaam} dringt laag {event.laagHoogte} binnen. Er staat geen bemande wachttoren — ze eisen{" "}
               {event.tribuut.aantal} {resourceLabel} als tribuut. Geef je het, dan trekken ze zich terug. Weiger je,
               dan verwoesten ze de stad.
             </p>

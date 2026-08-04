@@ -1829,6 +1829,17 @@ export function heeftWerkendeBoerderij(state: GameState): boolean {
   );
 }
 
+// Of er al een voltooide mijn staat (issue: "pop-ups wijzigen" — trigger voor
+// STRIJDERS_OPLEIDEN_TEKST in tutorialContent.ts). Anders dan
+// `heeftWerkendeBoerderij` hierboven telt hier niet mee of de mijn al
+// wegverbonden is: het gaat om het moment van bouwen zelf, niet om erts dat
+// al daadwerkelijk de stad bereikt.
+export function heeftGebouwdeMijn(state: GameState): boolean {
+  return state.lagen.some((laag) =>
+    laag.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "mijn")
+  );
+}
+
 // Bemant een Wachttoren met een specifieke strijder (nieuwe Wachttoren-functie,
 // hoofdstuk 6): via het militaire paneel kiest de speler eerst een nog
 // onbemande strijder, dan een actieve, nog onbemande Wachttoren-tile op de
