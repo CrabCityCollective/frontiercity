@@ -30,6 +30,12 @@ export default function ResourceHud({ state, onVolgendeBeurt }: ResourceHudProps
 
   return (
     <>
+      <div className="beurt-blok">
+        <span className="beurt-blok__label">Beurt: {state.beurt}</span>
+        <button className="fc-knop beurt-blok__knop" onClick={onVolgendeBeurt}>
+          Volgende beurt
+        </button>
+      </div>
       <div className="resource-hud">
         <div className="resource-hud__items">
           {(Object.keys(MATERIAAL_LABELS) as MateriaalType[]).map((type) => (
@@ -47,12 +53,6 @@ export default function ResourceHud({ state, onVolgendeBeurt }: ResourceHudProps
             <ResourceIcoon type="wetenschap" /> {wetenschapLabel}
           </span>
         </div>
-      </div>
-      <div className="beurt-blok">
-        <span className="beurt-blok__label">Beurt: {state.beurt}</span>
-        <button className="fc-knop beurt-blok__knop" onClick={onVolgendeBeurt}>
-          Volgende beurt
-        </button>
       </div>
     </>
   );
