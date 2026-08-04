@@ -5,6 +5,7 @@ import { WACHTTOREN_VOEDSEL_VERBRUIK } from "@/game/economie";
 import {
   beschikbareOpties,
   CATEGORIE_LABELS,
+  improvementNaam,
   terreinEisenBeschrijving,
 } from "@/game/improvements";
 import { Categorie, Improvement, Layer, TechId } from "@/game/types";
@@ -221,8 +222,8 @@ export default function BouwPopup({
                   const terreinEis = terreinEisenBeschrijving(improvement);
                   return (
                     <button key={improvement.id} className="fc-knop" onClick={() => onBouwStarten(improvement)}>
-                      {improvement.naam} (<KostenIcons kosten={improvement.kosten} />, {improvement.bouwtijdBeurten}{" "}
-                      beurten)
+                      {improvementNaam(improvement)} (<KostenIcons kosten={improvement.kosten} />,{" "}
+                      {improvement.bouwtijdBeurten} beurten)
                       {terreinEis && (
                         <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
                           Alleen op {terreinEis}

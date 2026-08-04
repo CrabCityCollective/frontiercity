@@ -11,7 +11,7 @@
 // land-improvements (weg/brug) vallen buiten de MVP-scope — zie hoofdstuk 3
 // en hoofdstuk 13 van het design-document.
 
-import { Categorie, Improvement, Layer, MateriaalType, ResourceType, TechId, TerreinType } from "./types";
+import { CampaignConfig, Categorie, Improvement, Layer, MateriaalType, ResourceType, TechId, Tile, TerreinType } from "./types";
 
 // Nederlandse labels per categorie, gedeeld tussen de bouw-pop-up (M2) en de
 // tile-info-pop-up (klik-op-tile) zodat beide dezelfde terminologie tonen.
@@ -68,6 +68,26 @@ export function improvementPastOpTerrein(improvement: Improvement, terrein: Terr
 export function terreinEisenBeschrijving(improvement: Improvement): string | undefined {
   if (!improvement.terreinEisen || improvement.terreinEisen.length === 0) return undefined;
   return improvement.terreinEisen.map((terrein) => TERREIN_LABELS[terrein]).join(" of ");
+}
+
+// Of `improvement` op dit specifieke vakje geplaatst mag worden: de gewone
+// terrein-eis hierboven, plus — alleen voor de Amberader (issue: "toevoeging
+// Goud" Deel 1) — de aanvullende amberader-vondst-eis (`tile.amber`, zie
+// world.ts). Een gewone Mijn mag op elk heuvel/bergvakje, maar een Amberader
+// alleen op de schaarse vakjes die daadwerkelijk een amberader hebben — het
+// enige improvement met een vakje-specifieke eis bovenop het terreintype.
+export function improvementPastOpTile(improvement: Improvement, tile: Tile): boolean {
+  if (!improvementPastOpTerrein(improvement, tile.terrein)) return false;
+  if (improvement.id === "goudmijn") return Boolean(tile.amber);
+  return true;
+}
+
+// Weergavenaam van `improvement`, met per-campagne override (hoofdstuk 3/14,
+// issue: "toevoeging Goud" — zelfde herbruikbaarheids-patroon als `techNaam()`
+// in techTree.ts). Ontbreekt een override (of de hele campagne), dan valt dit
+// terug op de tutorial-naam die al op het improvement zelf staat.
+export function improvementNaam(improvement: Improvement, campagne?: CampaignConfig): string {
+  return campagne?.improvementNamen?.[improvement.id] ?? improvement.naam;
 }
 
 // `uitputtingBeurten` (hoofdstuk 4/14: exacte cijfers nog niet vastgelegd in
@@ -148,7 +168,28 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     terreinEisen: ["vlak"],
     vereisteTech: "aardewerk",
   },
+  // Amberader (hoofdstuk 3/14, issue: "toevoeging Goud" Deel 1): functioneel
+  // een goudmijn — interne sleutel `goudmijn`, tutorial-weergavenaam
+  // "Amberader" (val terug via `improvementNaam()` hierboven). Zelfde
+  // terrein-eis en bouwkosten als de gewone Mijn hierboven (heuvel/berg, hout
+  // 8/steen 4, bouwtijd 3), maar schaarser: `improvementPastOpTile` eist
+  // daarnaast `tile.amber` (zie world.ts) — niet elk heuvel/bergvakje heeft
+  // een amberader. `uitputtingBeurten` 12 ligt in het midden van de
+  // "gewoon"-range (10-14 beurten, hoofdstuk 14) uit het issue.
+  {
+    id: "goudmijn",
+    naam: "Amberader",
+    categorie: "economisch",
+    soort: "land",
+    kosten: { hout: 8, steen: 4 },
+    bouwtijdBeurten: 3,
+    effect: { type: "productie", resource: "goud", waarde: 2 },
+    uitputtingBeurten: 12,
+    terreinEisen: ["heuvel", "berg"],
+  },
 ];
+
+export const AMBERADER = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "goudmijn")!;
 
 export const VOORRAADKUIL = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "voorraadkuil")!;
 
@@ -308,9 +349,7 @@ const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
 function kanImprovementOpLaag(improvement: Improvement, laag: Layer): boolean {
   const reedsGebouwd = laag.tiles.some((tile) => tile.improvement?.id === improvement.id);
   if (reedsGebouwd) return false;
-  return laag.tiles.some(
-    (tile) => tile.status === "leeg" && improvementPastOpTerrein(improvement, tile.terrein)
-  );
+  return laag.tiles.some((tile) => tile.status === "leeg" && improvementPastOpTile(improvement, tile));
 }
 
 // Opties voor de categorie-keuze-UI (hoofdstuk 11: eerst categorie, dan alle

@@ -31,7 +31,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 
 | Categorie | City improvement (vb.) | Land improvement (vb.) | Unit | Relic (permanent, bij specialisatie) |
 |---|---|---|---|---|
-| **Economisch** | Markt, opslagplaats | Boerderij, mijn, houtkap, (met "aardewerk"-tech) Voorraadkuil | Karavaan | Goedkopere improvements in elke volgende stad |
+| **Economisch** | Markt, opslagplaats | Boerderij, mijn, houtkap, Amberader/goudmijn (interne sleutel `goudmijn`, tutorial-naam "Amberader" — hoofdstuk 14), (met "aardewerk"-tech) Voorraadkuil | Karavaan | Goedkopere improvements in elke volgende stad |
 | **Wetenschappelijk** | Bibliotheek, observatorium, universiteit | Sterrencirkel (produceert wetenschap, put niet uit — zie hoofdstuk 4/6) | Verkenner (tijdelijke extra vooruitkijk) | Permanent groter vooruitkijk-bereik |
 | **Militair** | Barakken, muur, wapensmid | Wachttoren (verdedigt de hele laag tegen indringers, put niet uit — zie hoofdstuk 6) | Soldaat, ruiter, artillerie | Extra unit-slot / gratis startgarnizoen |
 | **Civiel** | Aquaduct, riolering, woonwijk (= groei-tiers) | Weg, brug | Ingenieur (versnelt bouw) | Snellere groei-rijptijd in volgende steden |
@@ -41,6 +41,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - Pool-grootte per categorie (basisversie): 6-8 city improvements, 4-6 land improvement-types, 2-3 units.
 - Latere campagnes vervangen een deel van de generieke opties door thema-specifieke varianten.
 - **Terrein-eisen**: sommige land improvements zijn beperkt tot een vakje-terreinsubtype (hoofdstuk 2) — houtkap alleen op **bos**, mijn en steengroeve alleen op **heuvel of berg**, boerderij alleen op **vlakke grond**, Voorraadkuil alleen op **vlakke grond**. Overige land improvements (heiligdom, sterrencirkel, wachttoren) hebben geen terrein-eis. Zie hoofdstuk 11 voor de reden achter deze keuze.
+- **Amberader/goudmijn** (issue: "toevoeging Goud"): dezelfde terrein-eis en bouwkosten als een gewone mijn (heuvel/berg), maar met een aanvullende, vakje-specifieke eis bovenop het terreintype — niet elk heuvel/bergvakje heeft een amberader-vondst, in tegenstelling tot een gewone erts-mijn die op elk heuvel/bergvakje mag. Zie hoofdstuk 14 voor de exacte plaatsingskans t.o.v. erts en de gegarandeerde eerste locatie vanaf laag 7, en hoofdstuk 11 voor waarom goud, net als erts, een uitputtend improvement is.
 - **Wetenschap in de MVP** (issue: "tech tree toevoegen"): de wetenschap-relic uit de tabel hierboven ("permanent groter vooruitkijk-bereik") blijft, net als de Verkenner-unit, een latere post-MVP-uitwerking (hoofdstuk 13: "vooruitkijk-mechaniek verder dan 1 laag"). De MVP-functie van wetenschap is in plaats daarvan de **technologie-boom** (hoofdstuk 9/11/13/14): 3 drempels van elk 2 keuzes, geproduceerd door de Sterrencirkel.
 
 ---
@@ -75,6 +76,8 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - **Wetenschap** → technologie-boom (3 drempels van elk 2 keuzes, permanente effecten — hoofdstuk 3/9/11/14; het vooruitkijk-bereik uit een eerdere versie van dit document is post-MVP, hoofdstuk 13)
 
 **Bouwen**: geen instant-klik, maar een productiewachtrij — verbruikt elke beurt bouwmateriaal tot voltooiing. Hogere materiaalinkomsten = snellere bouw. Ingenieur-unit versnelt dit extra. Militair heeft bewust géén eigen valuta: puur directe krachtsvergelijking op het moment zelf.
+
+**Rush-bouwen met goud** (issue: "toevoeging Goud" Deel 2 — de eerste functie van goud): een lopend bouwproject in de productiewachtrij hierboven kan versneld worden door **5 goud per weggekochte beurt** te betalen — de speler koopt zo een deel of de hele resterende bouwtijd in één keer af (bijv. nog 3 beurten te gaan × 5 goud = 15 goud voor directe voltooiing), of desgewenst maar een deel van de beurten als het goud niet toereikend is voor alles. Geldt uitsluitend voor **land improvements en city improvements** — nooit voor de technologieboom (hoofdstuk 3/9/11), die drempel houdt bewust zijn eigen tempo (zie hoofdstuk 11). Een duidelijke "versnel met goud"-knop bij een lopend bouwproject toont zowel de volledige rush-kosten als de daadwerkelijke goudvoorraad van de speler.
 
 ---
 
@@ -315,6 +318,12 @@ Een nieuwe settler simpelweg los verkrijgbaar maken (bijvoorbeeld via een aparte
 **Maximaal één settler per gestichte stad (issue: "stad stichten op de frontier")**
 Zonder deze rem zou een speler in theorie settler na settler kunnen uitrusten vanuit één stad en zo een onbeperkt aantal expedities tegelijk op pad kunnen sturen, wat het "één actieve frontier-stad tegelijk"-uitgangspunt (hoofdstuk 2) zou ondermijnen. Door het aantal beschikbare settlers te koppelen aan het aantal gestichte steden (elke gestichte stad kan er precies één uitrusten), blijft expansie een geleidelijk, door de speler zelf opgebouwd proces in plaats van een instant-vermenigvuldiging — een natuurlijke rem die meegroeit met hoeveel de speler daadwerkelijk heeft opgebouwd.
 
+**Amberader/goudmijn is uitputtend, net als de andere mijn (issue: "toevoeging Goud")**
+Een goudader is, net als een ertsader, een fysieke, eindige vondst — het hele nut ligt in het opgebruiken van een hulpbron (zie hierboven, "Wachttoren en Heiligdom putten niet uit"). Dat plaatst de Amberader nadrukkelijk in dezelfde categorie als mijn/boerderij/houtkap/steengroeve, niet bij de niet-uitputtende Sterrencirkel of het Heiligdom, die allebei een blijvende aanwezigheid voorstellen (een observatorium, een cultusplek) in plaats van een oogst. De extra, vakje-specifieke amberader-vondst-eis (bovenop de gewone heuvel/berg-terreineis van een mijn, hoofdstuk 3/14) maakt een Amberader-locatie bovendien schaarser dan een gewone erts-mijn-locatie — precies zoals hoofdstuk 7 een goudmijn al noemt als voorbeeld van iets om "op te gokken".
+
+**Rush-bouwen met goud raakt de bouwwachtrij, niet de technologieboom (issue: "toevoeging Goud")**
+Goud kopen tijd af binnen een systeem dat toch al met tijd werkt: de productiewachtrij (hoofdstuk 5) is een aantal beurten per improvement, en rush-bouwen verkort dat aantal — een direct, evenredig ruilmiddel. De technologieboom (hoofdstuk 3/9) is bewust een zwaardere drempel dan cultuur (zie hierboven, "Wetenschapscurve bewust zwaarder dan de cultuurcurve"): elke technologie levert een permanente, structurele bonus op, en die drempel moet zijn eigen tempo houden om die zwaarte te behouden. Zou goud die drempel ook kunnen omzeilen, dan zou de bewust zwaardere wetenschapscurve zijn functie verliezen zodra een speler genoeg goud heeft opgespaard — rush-bouwen blijft daarom uitdrukkelijk beperkt tot land- en city-improvements in de bouwwachtrij.
+
 ---
 
 ## 12. Visuele stijl
@@ -419,6 +428,7 @@ interface Tile {
   heeftWeg?: boolean; // door de settler aangelegd (hoofdstuk 16)
   kudde?: { beurtenResterend: number }; // wilde kudde, vanaf laag 4 (hoofdstuk 17)
   versWater?: boolean; // ligt aan een rivier/meer (hoofdstuk 2) — voorwaarde om hier een stad te stichten
+  amber?: boolean; // ligt hier een amberader (hoofdstuk 3/14, issue: "toevoeging Goud") — vondst-eis van de Amberader/goudmijn, bovenop de gewone heuvel/berg-terreineis
 }
 
 // Positie van de settler-eenheid (hoofdstuk 16) — bestaat pas vanaf beurt 2.
@@ -497,6 +507,7 @@ interface CampaignConfig {
   multipliers: Partial<{ uitputtingssnelheid: number; pushbackFrequentie: number; zeldzaamheidLegendarisch: number }>;
   ankers?: StoryAnchor[]; // post-MVP
   techNamen?: Partial<Record<TechId, string>>; // per-campagne naam-override voor de technologie-boom (hoofdstuk 3/9), zelfde aanpak als `tegelSet`
+  improvementNamen?: Partial<Record<string, string>>; // per-campagne naam-override voor land/city improvements (hoofdstuk 3/14, issue: "toevoeging Goud"), zelfde aanpak als `techNamen` — Amberader ("Amberader" tutorial-naam, interne sleutel `goudmijn`) is hier het eerste voorbeeld van
 }
 ```
 
@@ -558,6 +569,9 @@ Binnen de gekozen range wordt random getrokken; een bergengte/obstakel-zone word
 | Boerderij (voedsel) | 15-20 | 10-14 | 30-35 |
 | Houtkap (hout) | 12-16 (nooit volledig 0, wel afnemend) | 8-11 | 25-30 |
 | Steengroeve (steen) | 10-14 | 7-10 | 22-27 |
+| Amberader/goudmijn (goud, issue: "toevoeging Goud") | 10-14 | 6-10 | 22-28 (+ oogstvenster, zoals bij andere legendarische vondsten — hoofdstuk 7) |
+
+De rijk/legendarisch-kolommen hierboven blijven, net als bij de andere mijn/boerderij/houtkap/steengroeve-rijen, een MVP-placeholder voor de zeldzaamheid-uitwerking (hoofdstuk 7/13: nog niet geïmplementeerd) — de huidige code kent alleen de "gewoon"-waarde toe (`uitputtingBeurten: 12`, het midden van de 10-14-range).
 
 *Cultuurkosten*: `kosten(laag) = 3 + 5 × (laag − 1)²` — kwadratisch, cumulatieve drempel (cultuur wordt nooit "uitgegeven", zie hoofdstuk 5). Vervangt de eerdere exponentiële formule (basis 20, ×1,4 per laag); zie hoofdstuk 11 ("Kwadratisch in plaats van exponentieel cultuurkosten") voor de onderbouwing. De basisterm is sindsdien verder verlaagd van 15 naar 3 (issue: "de eerste cultuurdrempel is te hoog"; hoofdstuk 11, "Basisterm van de cultuurkosten verlaagd") — de kwadratische factor (5) is ongewijzigd, dus de curve vanaf ruwweg laag 6-8 verandert nauwelijks, terwijl laag 2-5 fors goedkoper worden. Culturele pushback-lagen: ×2 van het normale (dan al kwadratisch opgelopen) bedrag.
 
@@ -636,6 +650,16 @@ Het verschil met de vergelijkbare cultuurlaag loopt op van ~6 naar ~9 beurten �
 *Kuddes (hoofdstuk 17, issue: "kudde frequentie verlagen")*: kans op een nieuwe wilde kudde per beurt, zodra laag 4 of hoger ontgrendeld is = **5%** (MVP-richtwaarde, tunebaar; `A2a. Veeteelt` vermenigvuldigt dit met 1,5×, hoofdstuk 3/9) — verlaagd vanaf de eerdere 15%. Een kudde kent geen eigen verval: alleen volledig leegjagen (4 jachtbeurten) of overbouwen verwijdert er een, dus het aantal tegelijk aanwezige kuddes is in de praktijk de kans vermenigvuldigd met hoe lang een kudde gemiddeld blijft staan, niet alleen de kans zelf. Bij 15%/beurt en een speler die niet elke kudde meteen kan leegjagen (settler-reistijd tussen lagen, concurrerende settler-acties zoals wegen aanleggen) liep dat gemiddelde aantal in de praktijk op tot ruim boven de bedoelde 1-2 tegelijk; bij 5%/beurt daalt dat evenredig naar het beoogde tempo — een speler die actief jaagt houdt zo doorgaans 1, hooguit 2 kuddes tegelijk op de ontgrendelde lagen. Voedselaanvulling via jagen blijft daarmee overeind (elke individuele kudde levert nog steeds 4×3 = 12 voedsel over de gebruikelijke jachtbeurten, hoofdstuk 17) — alleen het aánbod aan kuddes wordt schaarser, niet de opbrengst per kudde. Minder kuddes betekent ook minder jachtmomenten en dus minder kans op een roofdier-encounter (hieronder); dat is een geaccepteerd neveneffect van deze frequentie-tweak, geen reden om de roofdier-kans zelf aan te passen.
 
 *Roofdieren (hoofdstuk 17)*: kans op een roofdier per jachtactie op laag 5 of hoger = **15%** (MVP-richtwaarde, tunebaar) — geen aparte per-beurt- of per-laag-kans, alleen getrokken op het moment dat de settler daadwerkelijk jaagt. Het roofdier verschijnt op het jachtvakje zelf en valt pas de beurt erna aan, wat de speler één beurt geeft om de settler weg te bewegen voordat hij sterft.
+
+**Amberader/goudmijn & rush-bouwen (hoofdstuk 3/11/14, issue: "toevoeging Goud")**
+
+*Plaatsingskans t.o.v. erts*: de tutorial-worldgen is (net als het overige terrein, hoofdstuk 8/11) volledig vast, geen procedurele kansberekening — de schaarste van een Amberader-locatie is daarom uitgedrukt als een verhouding tussen vaste vakjes, niet als een percentage. Van de 33 heuvel/bergvakjes over de hele 12-laags tutorial (elk daarvan een geldige erts-mijn-locatie) hebben er precies **3** een amberader-vondst — ruwweg **1 op de 11**, tegenover "elk heuvel/bergvakje" voor een gewone mijn. Bij een latere procedurele campagne (hoofdstuk 8) vertaalt deze verhouding zich naar een vergelijkbare kans per geschikt vakje.
+
+*Gegarandeerde eerste locatie*: de eerste amberader-vondst ligt vast op **laag 7**, positie 0 — net als de vers-water-garantie voor stad-stichten op laag 10-12 (hoofdstuk 2/6) een vaste worldgen-toewijzing, geen kans. Zodra laag 7 voor het eerst ontgrendelt, toont het spel de ontdekkingspop-up (hoofdstuk 3, flavor-tekst in tutorialContent.ts).
+
+*Amberader-bouwprofiel*: kosten en bouwtijd gelijk aan de gewone Mijn (**8 hout, 4 steen**, bouwtijd **3 beurten**), effect **2 goud/beurt** — zelfde opbrengst-schaal als Mijn (2 erts/beurt).
+
+*Rush-bouwen-prijs*: **5 goud per weggekochte beurt** (`RUSH_GOUD_PER_BEURT`, tunebaar). Van toepassing op elke lopende land- of city-improvement in de bouwwachtrij (hoofdstuk 5); nooit op de technologieboom (hoofdstuk 11).
 
 **Lange mars (Anker 3, na Terugvechten — Amerikaanse campagne)**
 - Uitgestrekt over 3-4 opeenvolgende lagen in plaats van één piekmoment.

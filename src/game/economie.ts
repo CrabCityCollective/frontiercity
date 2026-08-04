@@ -65,7 +65,7 @@
 // (hoofdstuk 14) — de waarden hieronder zijn bewuste MVP-placeholders, geen
 // definitieve balans.
 
-import { improvementPastOpTerrein, NIEUWE_SETTLER, OPSLAGPLAATS, SOLDAAT, WOONWIJK } from "./improvements";
+import { improvementPastOpTile, NIEUWE_SETTLER, OPSLAGPLAATS, SOLDAAT, WOONWIJK } from "./improvements";
 import { standaardUitlegAan } from "./save";
 import {
   boerderijOpbrengstFactor,
@@ -85,6 +85,7 @@ import {
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
 import { City, ConfrontatieResultaat, GameState, Improvement, IndringersTribuut, KuddeEvent, Layer, MateriaalType, ResourceType, RoofdierEvent, Settler, Strijder, TechDrempel, TechId, Tile } from "./types";
 import {
+  AMBER_ONTDEKKING_LAAG,
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
   isGeschiktVoorStichten,
@@ -346,6 +347,7 @@ function verwerkProductie(state: GameState): GameState {
 function verwerkLaagOntgrendeling(state: GameState): GameState {
   let lagen = state.lagen;
   let volgendeHoogte = hoogsteOntgrendeldeLaag(lagen) + 1;
+  let amberOntdektEvent = state.amberOntdektEvent;
 
   while (
     volgendeHoogte <= lagen.length &&
@@ -354,10 +356,24 @@ function verwerkLaagOntgrendeling(state: GameState): GameState {
     lagen = lagen.map((laag) =>
       laag.hoogte === volgendeHoogte ? { ...laag, ontgrendeld: true } : laag
     );
+    // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
+    // gegarandeerde eerste Amberader-locatie ligt op `AMBER_ONTDEKKING_LAAG`
+    // (world.ts) — deze `while`-lus loopt precies één keer door die hoogte
+    // heen op het moment dat hij ontgrendelt, dus dit triggert vanzelf maar
+    // één keer per run, net als de laag-ontgrendeling zelf.
+    if (volgendeHoogte === AMBER_ONTDEKKING_LAAG) {
+      amberOntdektEvent = true;
+    }
     volgendeHoogte += 1;
   }
 
-  return lagen === state.lagen ? state : { ...state, lagen };
+  return lagen === state.lagen ? state : { ...state, lagen, amberOntdektEvent };
+}
+
+// Sluit de Amberader-ontdekkingsmelding (hoofdstuk 3/14) — puur een
+// UI-bevestiging, zelfde patroon als `sluitKuddeMelding` hierboven.
+export function sluitAmberOntdektMelding(state: GameState): GameState {
+  return { ...state, amberOntdektEvent: undefined };
 }
 
 // Technologie-boom (hoofdstuk 3/9/11, issue: "tech tree toevoegen" Deel 2):
@@ -502,19 +518,70 @@ export function bouwStagneertVolgendeBeurt(
   return true;
 }
 
+// Goud-rush-bouwen (hoofdstuk 5/14, issue: "toevoeging Goud" Deel 2): koopt
+// resterende beurten van een lopend land- of city-improvement af met goud in
+// plaats van te wachten op de normale per-beurt-investering hierboven. Alleen
+// voor `soort: "land"`/`"city"` — de aanroepers (`versnelBouwMetGoud` e.a.
+// verderop) sluiten `soort: "unit"` (Soldaat, Nieuwe settler) en de
+// technologieboom (die geen eigen bouwwachtrij kent) uit, precies zoals het
+// issue vraagt: die drempels houden hun eigen tempo.
+export const RUSH_GOUD_PER_BEURT = 5;
+
+// Hoeveel goud nodig is om de volledige resterende bouwtijd in één keer af te
+// kopen — gebruikt door de UI om te tonen wat volledig rushen kost naast wat
+// de speler daadwerkelijk in voorraad heeft.
+export function rushKostenGoud(
+  improvement: Improvement,
+  voortgang: Partial<Record<ResourceType, number>>
+): number {
+  return resterendeBouwBeurten(improvement, voortgang) * RUSH_GOUD_PER_BEURT;
+}
+
+// Koopt zoveel mogelijk van de resterende bouwtijd af (nooit meer dan nodig,
+// nooit meer dan het beschikbare goud toelaat) — de speler kan dus ook maar
+// een deel van de beurten wegkopen als het goud niet toereikend is voor de
+// volledige rush. Dezelfde per-beurt-bedragen als `investeerInBouwkosten`
+// hierboven, maar zonder de grondstofvoorraad aan te spreken: goud vervangt
+// hier de resterende materiaalbetaling, in plaats van ernaast te komen.
+function pasVersnellingToe(
+  improvement: Improvement,
+  voortgang: Partial<Record<ResourceType, number>>,
+  beschikbaarGoud: number
+): (BouwInvestering & { gouduitgegeven: number }) | null {
+  const resterendeBeurten = resterendeBouwBeurten(improvement, voortgang);
+  const beurten = Math.min(resterendeBeurten, Math.floor(beschikbaarGoud / RUSH_GOUD_PER_BEURT));
+  if (beurten <= 0) return null;
+
+  const nieuweVoortgang = { ...voortgang };
+  for (const key of Object.keys(voortgang) as ResourceKey[]) {
+    const resterend = nieuweVoortgang[key] ?? 0;
+    if (resterend <= 0) continue;
+    const totaal = improvement.kosten[key] ?? 0;
+    const perBeurt = Math.ceil(totaal / improvement.bouwtijdBeurten);
+    nieuweVoortgang[key] = Math.max(0, resterend - perBeurt * beurten);
+  }
+
+  const voltooid = (Object.values(nieuweVoortgang) as number[]).every((rest) => rest <= 0);
+  return { nieuweVoortgang, voltooid, gouduitgegeven: beurten * RUSH_GOUD_PER_BEURT };
+}
+
 // "A2. Zaadselectie" (hoofdstuk 3/9, techTree.ts: boerderij-uitputting 25%
 // trager) wordt hier toegepast — op het moment dat de tile "actief" wordt,
 // niet per beurt tijdens het aftellen (`verwerkUitputting` hieronder telt
 // gewoon 1 per beurt af, ongeacht de tech): de totale levensduur wordt langer
 // verlengd, precies zoals de bestaande `uitputtingBeurten`-waarden al een
 // vaste levensduur per improvement-type zijn.
-function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number>, technologieen: TechId[]): Tile {
-  const improvement = tile.improvement;
-  if (!improvement || !tile.bouwVoortgang) return tile;
-
-  const resultaat = investeerInBouwkosten(improvement, tile.bouwVoortgang, voorraad);
-  if (!resultaat) return tile;
-
+// Past een `BouwInvestering`-uitkomst toe op een tile — gedeeld tussen de
+// normale per-beurt-verwerking (`verwerkTileInAanbouw` hieronder) en
+// goud-rush-bouwen (`versnelBouwMetGoud` verderop), zodat een gerushte tile
+// exact dezelfde voltooiingslogica krijgt als een normaal-voltooide tile
+// (o.a. de boerderij-uitputtingsfactor hieronder).
+function pasTileInvesteringToe(
+  tile: Tile,
+  improvement: Improvement,
+  resultaat: BouwInvestering,
+  technologieen: TechId[]
+): Tile {
   if (resultaat.voltooid) {
     const beurtenTotUitputting =
       improvement.uitputtingBeurten !== undefined && improvement.id === "boerderij"
@@ -529,6 +596,16 @@ function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number
   }
 
   return { ...tile, bouwVoortgang: resultaat.nieuweVoortgang };
+}
+
+function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number>, technologieen: TechId[]): Tile {
+  const improvement = tile.improvement;
+  if (!improvement || !tile.bouwVoortgang) return tile;
+
+  const resultaat = investeerInBouwkosten(improvement, tile.bouwVoortgang, voorraad);
+  if (!resultaat) return tile;
+
+  return pasTileInvesteringToe(tile, improvement, resultaat, technologieen);
 }
 
 // Telt de resterende levensduur van elke actief-producerende land-improvement
@@ -591,6 +668,37 @@ function verwerkBouwwachtrij(state: GameState): GameState {
       return nieuweTile;
     }),
   }));
+
+  return { ...state, lagen, voorraad, opslagCap };
+}
+
+// Koopt de resterende bouwtijd van een land-tile-in-aanbouw af met goud
+// (hoofdstuk 5/14, issue: "toevoeging Goud" Deel 2) — negeert de aanroep
+// stilzwijgend als de tile niet (meer) in aanbouw is of er geen goud te
+// besteden valt, zelfde veilige-aanroep-conventie als `startBouw`. Land
+// improvements zijn altijd `soort: "land"`, dus geen aparte uitsluiting nodig
+// zoals bij de civiele wachtrij (`versnelCivielMetGoud` hieronder, die ook
+// `soort: "unit"` kan bevatten).
+export function versnelBouwMetGoud(state: GameState, hoogte: number, positieInLaag: number): GameState {
+  const laag = state.lagen.find((l) => l.hoogte === hoogte);
+  const tile = laag?.tiles[positieInLaag];
+  if (!tile || tile.status !== "in_aanbouw" || !tile.improvement || !tile.bouwVoortgang) return state;
+
+  const resultaat = pasVersnellingToe(tile.improvement, tile.bouwVoortgang, state.voorraad.goud);
+  if (!resultaat) return state;
+
+  const nieuweTile = pasTileInvesteringToe(tile, tile.improvement, resultaat, state.technologieen);
+  const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };
+  let opslagCap = state.opslagCap;
+  if (nieuweTile.status === "actief" && nieuweTile.improvement?.effect.type === "opslag") {
+    opslagCap += nieuweTile.improvement.effect.waarde ?? 0;
+  }
+
+  const lagen = state.lagen.map((l) =>
+    l.hoogte !== hoogte
+      ? l
+      : { ...l, tiles: l.tiles.map((t, index) => (index === positieInLaag ? nieuweTile : t)) }
+  );
 
   return { ...state, lagen, voorraad, opslagCap };
 }
@@ -737,6 +845,38 @@ function verwerkCivielInAanbouw(state: GameState): GameState {
   };
 }
 
+// Koopt de resterende bouwtijd van de civiele wachtrij af met goud (hoofdstuk
+// 5/14, issue: "toevoeging Goud" Deel 2) — alleen als er een Woonwijk
+// (`soort: "city"`) loopt. Een Nieuwe settler (`soort: "unit"`) is bewust
+// uitgesloten: rush-bouwen geldt uitsluitend voor land- en city-improvements,
+// niet voor units.
+export function versnelCivielMetGoud(state: GameState): GameState {
+  const civielInAanbouw = state.stad.civielInAanbouw;
+  if (!civielInAanbouw || civielInAanbouw.improvement.soort !== "city") return state;
+
+  const resultaat = pasVersnellingToe(civielInAanbouw.improvement, civielInAanbouw.voortgang, state.voorraad.goud);
+  if (!resultaat) return state;
+
+  const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };
+
+  if (resultaat.voltooid) {
+    return {
+      ...state,
+      voorraad,
+      stad: { ...state.stad, grootte: "middel", civielInAanbouw: undefined },
+    };
+  }
+
+  return {
+    ...state,
+    voorraad,
+    stad: {
+      ...state.stad,
+      civielInAanbouw: { ...civielInAanbouw, voortgang: resultaat.nieuweVoortgang },
+    },
+  };
+}
+
 // Betaalt de bouwkosten van een lopende Opslagplaats (hoofdstuk 3/5/13/14,
 // issue: "stad stichten op de frontier" deel 2). Eigen wachtrij, los van
 // `civielInAanbouw` — Opslagplaats is economisch, geen civiel improvement
@@ -748,6 +888,42 @@ function verwerkOpslagplaats(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
   const resultaat = investeerInBouwkosten(opslagplaatsInAanbouw.improvement, opslagplaatsInAanbouw.voortgang, voorraad);
   if (!resultaat) return state;
+
+  if (resultaat.voltooid) {
+    return {
+      ...state,
+      voorraad,
+      opslagCap: state.opslagCap + (OPSLAGPLAATS.effect.waarde ?? 0),
+      stad: { ...state.stad, opslagplaatsInAanbouw: undefined },
+    };
+  }
+
+  return {
+    ...state,
+    voorraad,
+    stad: {
+      ...state.stad,
+      opslagplaatsInAanbouw: { ...opslagplaatsInAanbouw, voortgang: resultaat.nieuweVoortgang },
+    },
+  };
+}
+
+// Koopt de resterende bouwtijd van een lopende Opslagplaats af met goud
+// (hoofdstuk 5/14, issue: "toevoeging Goud" Deel 2) — Opslagplaats is altijd
+// een city improvement (hoofdstuk 3), dus geen `soort`-uitsluiting nodig zoals
+// bij de civiele wachtrij hierboven.
+export function versnelOpslagplaatsMetGoud(state: GameState): GameState {
+  const opslagplaatsInAanbouw = state.stad.opslagplaatsInAanbouw;
+  if (!opslagplaatsInAanbouw) return state;
+
+  const resultaat = pasVersnellingToe(
+    opslagplaatsInAanbouw.improvement,
+    opslagplaatsInAanbouw.voortgang,
+    state.voorraad.goud
+  );
+  if (!resultaat) return state;
+
+  const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };
 
   if (resultaat.voltooid) {
     return {
@@ -1335,7 +1511,7 @@ export function startBouw(
 
     const doelTile = laag.tiles[positieInLaag];
     if (!doelTile || doelTile.status !== "leeg") return laag;
-    if (!improvementPastOpTerrein(improvement, doelTile.terrein)) return laag;
+    if (!improvementPastOpTile(improvement, doelTile)) return laag;
 
     const tiles = laag.tiles.map((tile, index) => {
       if (index !== positieInLaag) return tile;

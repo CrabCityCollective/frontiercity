@@ -76,6 +76,32 @@ function versWaterVoorTile(hoogte: number, positieInLaag: number): boolean {
   return TUTORIAL_VERS_WATER[hoogte]?.includes(positieInLaag) ?? false;
 }
 
+// Laag waarop de eerste Amberader-locatie gegarandeerd zichtbaar/beschikbaar
+// wordt (issue: "toevoeging Goud" Deel 1) — gedeeld met `verwerkLaagOntgrendeling`
+// in economie.ts, die op precies deze laag de ontdekkings-pop-up (hoofdstuk
+// 3/14) triggert.
+export const AMBER_ONTDEKKING_LAAG = 7;
+
+// Vakjes met een amberader — de vondst-eis van de Amberader/goudmijn-
+// improvement (hoofdstuk 3/14), bovenop de gewone heuvel/berg-terreineis van
+// een mijn (zie `improvementPastOpTile` in improvements.ts). Bewust schaarser
+// dan gewone erts-mijn-locaties: van de 33 heuvel/berg-vakjes in de hele
+// tutorial (`TUTORIAL_TILE_TERREIN` hierboven) hebben er hier maar drie een
+// amberader, tegenover "elk heuvel/bergvakje" voor een gewone mijn. Vast,
+// niet-procedureel (net als `TUTORIAL_VERS_WATER` hierboven) en bewust zo
+// gekozen dat laag `AMBER_ONTDEKKING_LAAG` de eerste is met zo'n vakje — de
+// speler heeft dus nooit pech en hoeft nooit voorbij die laag te zoeken naar
+// de eerste kans op een Amberader.
+const TUTORIAL_AMBER: Record<number, number[]> = {
+  7: [0],
+  8: [5],
+  11: [2],
+};
+
+function amberVoorTile(hoogte: number, positieInLaag: number): boolean {
+  return TUTORIAL_AMBER[hoogte]?.includes(positieInLaag) ?? false;
+}
+
 // Dreigingsniveau per laag (M7, hoofdstuk 6): de tegenstandersterkte bij een
 // militaire confrontatie op die laag, gebruikt door `confrontatie` in
 // economie.ts. Vastgelegde tutorial-waarden, oplopend met de hoogte — net
@@ -92,6 +118,7 @@ function maakLegeTiles(hoogte: number): Tile[] {
     terrein: terreinVoorTile(hoogte, positieInLaag),
     status: "leeg" as const,
     versWater: versWaterVoorTile(hoogte, positieInLaag),
+    amber: amberVoorTile(hoogte, positieInLaag),
   }));
 }
 
