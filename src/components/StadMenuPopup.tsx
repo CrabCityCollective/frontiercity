@@ -1,5 +1,6 @@
 "use client";
 
+import BezetteLaagPaneel from "./BezetteLaagPaneel";
 import CivielPaneel from "./CivielPaneel";
 import MilitairPaneel from "./MilitairPaneel";
 import OpslagplaatsPaneel from "./OpslagplaatsPaneel";
@@ -9,16 +10,20 @@ interface StadMenuPopupProps {
   state: GameState;
   legerwaarde: number;
   tegenstanderSterkte: number;
-  confrontatieOntgrendeld: boolean;
   onStartGroei: () => void;
   onStartNieuweSettler: () => void;
   onStartOpslagplaats: () => void;
   onStartRecrutering: () => void;
-  onConfrontatie: () => void;
   onKiesStrijder: (strijderId: string) => void;
+  onKiesStrijderVoorLegerkamp: (strijderId: string) => void;
   onHaalTerug: (strijderId: string) => void;
   onVersnelCiviel: () => void;
   onVersnelOpslagplaats: () => void;
+  onStartVerkennerRecrutering: () => void;
+  onActiveerVerkenningsModus: () => void;
+  verkenningsModusActief: boolean;
+  onStartMissionarisRecrutering: () => void;
+  onConfrontatieBezetteLaag: (positieInLaag: number) => void;
   onSluiten: () => void;
 }
 
@@ -34,16 +39,20 @@ export default function StadMenuPopup({
   state,
   legerwaarde,
   tegenstanderSterkte,
-  confrontatieOntgrendeld,
   onStartGroei,
   onStartNieuweSettler,
   onStartOpslagplaats,
   onStartRecrutering,
-  onConfrontatie,
   onKiesStrijder,
+  onKiesStrijderVoorLegerkamp,
   onHaalTerug,
   onVersnelCiviel,
   onVersnelOpslagplaats,
+  onStartVerkennerRecrutering,
+  onActiveerVerkenningsModus,
+  verkenningsModusActief,
+  onStartMissionarisRecrutering,
+  onConfrontatieBezetteLaag,
   onSluiten,
 }: StadMenuPopupProps) {
   return (
@@ -95,11 +104,18 @@ export default function StadMenuPopup({
           state={state}
           legerwaarde={legerwaarde}
           tegenstanderSterkte={tegenstanderSterkte}
-          confrontatieOntgrendeld={confrontatieOntgrendeld}
           onStartRecrutering={onStartRecrutering}
-          onConfrontatie={onConfrontatie}
           onKiesStrijder={onKiesStrijder}
+          onKiesStrijderVoorLegerkamp={onKiesStrijderVoorLegerkamp}
           onHaalTerug={onHaalTerug}
+        />
+        <BezetteLaagPaneel
+          state={state}
+          onStartVerkennerRecrutering={onStartVerkennerRecrutering}
+          onActiveerVerkenningsModus={onActiveerVerkenningsModus}
+          verkenningsModusActief={verkenningsModusActief}
+          onStartMissionarisRecrutering={onStartMissionarisRecrutering}
+          onConfrontatieBezetteLaag={onConfrontatieBezetteLaag}
         />
       </div>
     </div>

@@ -80,7 +80,7 @@ export const TUTORIAL_LAAG_CONTENT: Record<number, LaagContent> = {
   },
   12: {
     naam: "De Bergkam",
-    mechaniek: "Militair/verdediging",
+    mechaniek: "Bezette Laag & Confrontatie",
     flavorTekst: "Op de bergkam staat voor het eerst iemand die niet van het Hertenpad-volk is.",
   },
   // Laatste laag van de tutorial (issue: "tutorial laatste stad aan
@@ -126,19 +126,30 @@ export function laagContent(hoogte: number): LaagContent | undefined {
   return TUTORIAL_LAAG_CONTENT[hoogte];
 }
 
-// Militaire-uitleg-pop-up (issue: "pop-up met uitleg hoe je de militaire
-// confrontatie moet aanpakken"), getoond zodra laag 12 bereikt is, direct na
-// de gewone laag-pop-up hierboven. Militair is de enige tutorial-mechaniek
-// met een voorbereidingsstap (rekruteren) vóór de speler kan handelen, vandaar
-// een gerichte extra uitleg naast de algemene laag-flavor.
-export const MILITAIR_UITLEG_TITEL = "Hoe pak je dit aan?";
-export const MILITAIR_UITLEG_TEKST =
-  "Open het militaire paneel via het menu-icoon. Rekruteer een Soldaat zolang de legerwaarde onder de dreiging op de bergkam ligt — dat kost grondstoffen en een paar beurten. Ga de confrontatie pas aan zodra de winkans je bevalt. Verlies is geen einde: één vakje raakt beschadigd, maar het Hertenpad-volk mag het opnieuw proberen.";
+// Bezette-Laag-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Laag,
+// missionaris en verkenner", Deel 2), getoond zodra laag 12 "in beeld komt"
+// (dezelfde soort trigger als de gegarandeerde Amberader-vondst op laag 7),
+// direct na de gewone laag-pop-up hierboven — vervangt de eerdere, kleinere
+// MILITAIR_UITLEG_*-pop-up volledig.
+export const BEZETTE_LAAG_TITEL = "De Bergkam is bezet";
+export const BEZETTE_LAAG_TEKST =
+  "Op de bergkam staan wachttorens en heiligdommen die niet van het Hertenpad-volk zijn — en her en der een verlaten huisje. Hier kun je niet zomaar bouwen of verkennen, en cultuur werkt hier anders: ze stapelt niet meer op zolang deze laag bezet blijft. Leid een Verkenner op om de bergkam vakje voor vakje te onthullen, en een Missionaris om de heiligdommen te belegeren. Vijandelijke wachttorens vereisen een Confrontatie — en daarvoor heb je eerst een eigen, bemande wachttoren op de laag eronder nodig.";
+
+// Vijandelijk-Heiligdom-onthuld-/vernietigd-pop-up (Deel 4) — zelfde
+// blokkerende overlay als hierboven, maar twee losse momenten van dezelfde
+// dreiging (zelfde patroon als ROOFDIER_VERSCHENEN_*/ROOFDIER_AANVAL_*
+// hieronder).
+export const VIJANDELIJK_HEILIGDOM_ONTHULD_TITEL = "Een vijandelijk heiligdom";
+export const VIJANDELIJK_HEILIGDOM_ONTHULD_TEKST =
+  "Verkenning heeft een heiligdom blootgelegd dat niet het onze is. Zolang je minstens één Missionaris hebt opgeleid, stroomt nieuwe cultuur van je eigen heiligdommen naar een belegeringsmeter voor dit doel — zonder Missionaris gebeurt er niets.";
+export const VIJANDELIJK_HEILIGDOM_VERNIETIGD_TITEL = "Het heiligdom valt stil";
+export const VIJANDELIJK_HEILIGDOM_VERNIETIGD_TEKST =
+  "De belegeringsmeter is vol. Het vreemde heiligdom valt stil — geen dreiging meer, geen doel meer.";
 
 // Oceaan-uitleg-pop-up (issue: "tutorial laatste stad aan oceaan"), getoond
 // zodra de laatste laag (de oceaan aan de overkant) bereikt is, direct na de
 // gewone laag-pop-up hierboven — zelfde eenmalige-uitleg-patroon als
-// MILITAIR_UITLEG_* hierboven. Dit is de enige laag met vers water in de hele
+// BEZETTE_LAAG_* hierboven. Dit is de enige laag met vers water in de hele
 // tutorial, en dus de enige plek waar de laatste stad gesticht kan worden;
 // deze tekst maakt dat expliciet, samen met het feit dat stichten hier de run
 // beëindigt (zie ook STICHT_STAD_WAARSCHUWING hieronder voor de
@@ -149,7 +160,7 @@ export const OCEAAN_UITLEG_TEKST =
 
 // Settler-uitleg-pop-up (M10, hoofdstuk 16: settler-mechaniek + bouw-ritme),
 // getoond zodra de settler in beurt 2 verschijnt. Zelfde eenmalige-confirm-
-// patroon als MILITAIR_UITLEG_* hierboven.
+// patroon als BEZETTE_LAAG_* hierboven.
 export const SETTLER_UITLEG_TITEL = "De settler";
 export const SETTLER_UITLEG_TEKST =
   "We gaan vooruit de wildenis in. De settlers kunnen bewegen over de kaart, en wegen bouwen. We moeten een weg naar de houtkap bouwen, anders kan het hout de voorraad niet bereiken.";

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import AmberOntdektPopup from "@/components/AmberOntdektPopup";
+import BezetteLaagPopup from "@/components/BezetteLaagPopup";
 import BoerderijKlaarUitlegPopup from "@/components/BoerderijKlaarUitlegPopup";
 import BouwPopup from "@/components/BouwPopup";
 import GoddelijkeRaadgevingPopup from "@/components/GoddelijkeRaadgevingPopup";
@@ -13,7 +14,6 @@ import IntroScherm from "@/components/IntroScherm";
 import KuddePopup from "@/components/KuddePopup";
 import LaagIntroPaneel from "@/components/LaagIntroPaneel";
 import LaagPopup from "@/components/LaagPopup";
-import MilitairUitlegPopup from "@/components/MilitairUitlegPopup";
 import OceaanUitlegPopup from "@/components/OceaanUitlegPopup";
 import ResourceHud from "@/components/ResourceHud";
 import RoofdierPopup from "@/components/RoofdierPopup";
@@ -29,6 +29,7 @@ import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
 import UitlegPopup from "@/components/UitlegPopup";
 import VijandAanDeHorizonPopup from "@/components/VijandAanDeHorizonPopup";
+import VijandelijkHeiligdomPopup from "@/components/VijandelijkHeiligdomPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import VolgendeBeurtWaarschuwingPopup from "@/components/VolgendeBeurtWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
@@ -37,7 +38,9 @@ import {
   berekenLegerwaarde,
   heeftGebouwdeMijn,
   heeftWerkendeBoerderij,
+  onbemandeLegerkampPosities,
   onbemandeWachttorenPosities,
+  verhuldeBezetteLaagPosities,
 } from "@/game/economie";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
@@ -45,13 +48,7 @@ import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { useGameEngine } from "@/game/useGameEngine";
 import { bereikbarePosities } from "@/game/wegen";
-import {
-  MILITAIR_CONFRONTATIE_LAAG,
-  TUTORIAL_LAAG_AANTAL,
-  VOEDSEL_DREMPEL_GROEI,
-  hoogsteOntgrendeldeLaag,
-  zichtbareLagen,
-} from "@/game/world";
+import { TUTORIAL_LAAG_AANTAL, VOEDSEL_DREMPEL_GROEI, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
 import GameCanvas from "./GameCanvas";
 
 interface GameRootProps {
@@ -87,7 +84,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     startOpslagplaats,
     stichtStad,
     startRecrutering,
-    confrontatie,
     verplaatsSettlerNaar,
     legWegAan,
     jaag,
@@ -107,6 +103,14 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     haalStrijderTerug,
     zetUitlegPopups,
     kiesTech,
+    verken,
+    startVerkennerRecrutering,
+    startMissionarisRecrutering,
+    bemanLegerkamp,
+    confrontatieBezetteLaag,
+    sluitBezetteLaagOntdektMelding,
+    sluitVijandelijkHeiligdomOnthuldMelding,
+    sluitVijandelijkHeiligdomVernietigdMelding,
     opslaan,
     laden,
   } = useGameEngine();
@@ -145,11 +149,14 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // uitleg-pop-ups hieronder (settler/voedsel/boerderij/militair).
   const [openingsUitlegBevestigd, setOpeningsUitlegBevestigd] = useState(false);
 
-  // Militaire-uitleg-pop-up en tutorial-voltooid-pop-up (issue: "pop-up met
-  // uitleg over de militaire confrontatie" + "pop-up met summary na het
-  // halen ervan"): allebei eenmalige confirm-vlaggen per sessie, zelfde
-  // patroon als `laatstBevestigdeLaag` hierboven.
-  const [militairUitlegBevestigd, setMilitairUitlegBevestigd] = useState(false);
+  // Tutorial-voltooid-pop-up (issue: "pop-up met summary na het halen
+  // ervan"): eenmalige confirm-vlag per sessie, zelfde patroon als
+  // `laatstBevestigdeLaag` hierboven. De Bezette-Laag-intro (hoofdstuk 6,
+  // issue: "De Bezette Laag, missionaris en verkenner", Deel 2 — vervangt de
+  // eerdere MilitairUitlegPopup) is zelf géén eenmalige-uitleg-vlag maar een
+  // persistente `GameState`-melding (`bezetteLaagOntdektEvent`), net als
+  // `amberOntdektEvent`: kerninhoud, geen uitleg die met de uitleg-toggle
+  // uit mag.
   // Oceaan-uitleg-pop-up (issue: "tutorial laatste stad aan oceaan"): zelfde
   // eenmalige-confirm-vlag, getoond zodra de laatste laag (de oceaan aan de
   // overkant) bereikt is.
@@ -197,6 +204,14 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // actieve Wachttoren-tile op de kaart (zie `handleTileClick` hieronder) die
   // strijder daadwerkelijk bemant.
   const [wachttorenKiesModusStrijderId, setWachttorenKiesModusStrijderId] = useState<string | null>(null);
+  // Legerkamp-toewijzingsflow (hoofdstuk 6, issue: "De Bezette Laag,
+  // missionaris en verkenner", Deel 5) — zelfde soort kies-modus als
+  // hierboven, maar voor een Legerkamp-tile i.p.v. een Wachttoren-tile.
+  const [legerkampKiesModusStrijderId, setLegerkampKiesModusStrijderId] = useState<string | null>(null);
+  // Verkenning-kies-modus (Deel 3): geactiveerd via de "Verkennen"-knop in
+  // BezetteLaagPaneel, waarna een klik op een verhuld vakje van de Bezette
+  // Laag (zie `handleTileClick` hieronder) dat vakje daadwerkelijk verkent.
+  const [verkenningsModusActief, setVerkenningsModusActief] = useState(false);
   // "Volgende beurt"-waarschuwing (issue: "als je op volgende beurt drukt,
   // dan moet er eerst gecheckt worden of je settler nog mag lopen of iets
   // mag doen die beurt ... en of je nog een improvement mocht neerzetten"):
@@ -244,6 +259,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     setGeselecteerdeTile(null);
     setToonVolgendeBeurtWaarschuwing(false);
     setWachttorenKiesModusStrijderId(null);
+    setLegerkampKiesModusStrijderId(null);
+    setVerkenningsModusActief(false);
     setToonStichtStadPopup(false);
     setToonStadMenuPopup(false);
   }, [state.beurt]);
@@ -339,7 +356,9 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     Boolean(state.settler) &&
     !state.settlerActieGedaanDitBeurt &&
     !plaatsingsImprovement &&
-    !wachttorenKiesModusStrijderId;
+    !wachttorenKiesModusStrijderId &&
+    !legerkampKiesModusStrijderId &&
+    !verkenningsModusActief;
   const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.lagen, state.settler!) : [];
 
   // Actieve, nog onbemande Wachttoren-tiles tijdens het bemannen (nieuwe
@@ -351,14 +370,21 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   const wachttorenBereikbarePosities = wachttorenKiesModusStrijderId
     ? onbemandeWachttorenPosities(state)
     : [];
+  // Actieve, nog onbemande Legerkamp-tiles tijdens het bemannen (hoofdstuk 6,
+  // issue: "De Bezette Laag, missionaris en verkenner", Deel 5) — zelfde
+  // patroon als `wachttorenBereikbarePosities` hierboven.
+  const legerkampBereikbarePosities = legerkampKiesModusStrijderId ? onbemandeLegerkampPosities(state) : [];
+  // Nog verhulde vakjes van de actieve Bezette Laag tijdens Verkenning (Deel
+  // 3) — zelfde patroon.
+  const verkenningBereikbarePosities = verkenningsModusActief ? verhuldeBezetteLaagPosities(state) : [];
 
   function handleTileClick(hoogte: number, positieInLaag: number) {
-    // Wachttoren-kies-modus (nieuwe Wachttoren-functie, hoofdstuk 6) heeft
-    // voorrang op settler-verplaatsing/tile-selectie: een klik op een
-    // gehighlight, dus nog onbemand, actieve Wachttoren-tile bemant de
-    // gekozen strijder en sluit de modus af; een klik ernaast (of op een al
-    // bemande toren) laat de modus openstaan zodat de speler opnieuw kan
-    // mikken.
+    // Wachttoren-/Legerkamp-kies-modus en Verkenning (nieuwe Wachttoren-
+    // functie hoofdstuk 6; Bezette Laag hoofdstuk 6, issue: "De Bezette Laag,
+    // missionaris en verkenner") hebben voorrang op settler-verplaatsing/
+    // tile-selectie: een klik op een gehighlight, dus geldig, vakje voert de
+    // bijbehorende actie uit en sluit de modus af; een klik ernaast laat de
+    // modus openstaan zodat de speler opnieuw kan mikken.
     if (wachttorenKiesModusStrijderId) {
       const isGeldigWachttorenDoel = wachttorenBereikbarePosities.some(
         (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
@@ -366,6 +392,28 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
       if (isGeldigWachttorenDoel) {
         bemanWachttoren(wachttorenKiesModusStrijderId, hoogte, positieInLaag);
         setWachttorenKiesModusStrijderId(null);
+      }
+      return;
+    }
+
+    if (legerkampKiesModusStrijderId) {
+      const isGeldigLegerkampDoel = legerkampBereikbarePosities.some(
+        (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
+      );
+      if (isGeldigLegerkampDoel) {
+        bemanLegerkamp(legerkampKiesModusStrijderId, hoogte, positieInLaag);
+        setLegerkampKiesModusStrijderId(null);
+      }
+      return;
+    }
+
+    if (verkenningsModusActief) {
+      const isGeldigVerkenningsDoel = verkenningBereikbarePosities.some(
+        (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
+      );
+      if (isGeldigVerkenningsDoel) {
+        verken(positieInLaag);
+        setVerkenningsModusActief(false);
       }
       return;
     }
@@ -475,10 +523,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !strijdersOpleidenBevestigd &&
     heeftGebouwdeMijn(state);
-  // Militaire-uitleg direct na de laag-pop-up van laag 12 (issue: "als je op
-  // het laatst in de tutorial bij de militaire confrontatie bent, uitleg
-  // over hoe je het moet aanpakken").
-  const toonMilitairUitlegPopup =
+  // Bezette-Laag-intro (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 2 — vervangt de eerdere, kleinere MilitairUitlegPopup):
+  // verschijnt zodra `verwerkLaagOntgrendeling` (economie.ts) laag 12 "in
+  // beeld" brengt. Los van de uitleg-toggle (kerninhoud, geen uitleg, net als
+  // de indringers-/amberader-pop-ups) — daarom hier bewust géén `uitlegAan`-
+  // check, ook al staat de flag qua prioriteit tussen de uitleg-pop-ups in.
+  const toonBezetteLaagOntdektPopup =
     !toonLaagPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
@@ -487,9 +538,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
-    uitlegAan &&
-    actieveLaag.hoogte === MILITAIR_CONFRONTATIE_LAAG &&
-    !militairUitlegBevestigd;
+    Boolean(state.bezetteLaagOntdektEvent);
   // Oceaan-uitleg direct na de laag-pop-up van de laatste laag (issue:
   // "tutorial laatste stad aan oceaan" — de enige plek met vers water, dus
   // de enige plek waar de laatste stad gesticht kan worden).
@@ -502,7 +551,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
-    !toonMilitairUitlegPopup &&
+    !toonBezetteLaagOntdektPopup &&
     uitlegAan &&
     actieveLaag.hoogte === TUTORIAL_LAAG_AANTAL &&
     !oceaanUitlegBevestigd;
@@ -518,7 +567,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
-    !toonMilitairUitlegPopup &&
+    !toonBezetteLaagOntdektPopup &&
     !toonOceaanUitlegPopup &&
     uitlegAan &&
     !stadUpgradeUitlegBevestigd &&
@@ -539,7 +588,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
-    !toonMilitairUitlegPopup &&
+    !toonBezetteLaagOntdektPopup &&
     !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     Boolean(state.indringersEvent);
@@ -555,7 +604,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
-    !toonMilitairUitlegPopup &&
+    !toonBezetteLaagOntdektPopup &&
     !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -569,7 +618,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
-    !toonMilitairUitlegPopup &&
+    !toonBezetteLaagOntdektPopup &&
     !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -587,7 +636,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
-    !toonMilitairUitlegPopup &&
+    !toonBezetteLaagOntdektPopup &&
     !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -608,7 +657,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
-    !toonMilitairUitlegPopup &&
+    !toonBezetteLaagOntdektPopup &&
     !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -616,6 +665,49 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonRoofdierPopup &&
     !toonAmberOntdektPopup &&
     Boolean(state.techKeuzeEvent);
+  // Vijandelijk-Heiligdom-onthuld-/vernietigd-pop-ups (hoofdstuk 6, issue:
+  // "De Bezette Laag, missionaris en verkenner", Deel 4) — zelfde
+  // blokkerende vorm en prioriteit als de overige kerninhoud-meldingen
+  // hierboven. "Onthuld" gaat voor "vernietigd" (kan in theorie dezelfde
+  // beurt allebei gezet zijn — onthullen via Verkenning, vernietigen via de
+  // belegeringsmeter — de speler ziet dan eerst de onthulling).
+  const toonVijandelijkHeiligdomOnthuldPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteLaagOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    Boolean(state.vijandelijkHeiligdomOnthuldEvent);
+  const toonVijandelijkHeiligdomVernietigdPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteLaagOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    Boolean(state.vijandelijkHeiligdomVernietigdEvent);
   // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
   // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
   // "confrontatie op laag 12 gewonnen" als trigger: het stichten is nu het
@@ -629,7 +721,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
-    !toonMilitairUitlegPopup &&
+    !toonBezetteLaagOntdektPopup &&
     !toonOceaanUitlegPopup &&
     !toonStadUpgradeUitlegPopup &&
     !toonIndringersPopup &&
@@ -637,6 +729,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonRoofdierPopup &&
     !toonAmberOntdektPopup &&
     !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVernietigdPopup &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
   // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
@@ -699,6 +793,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           settler={state.settler}
           settlerBereikbarePosities={settlerBereikbarePosities}
           wachttorenBereikbarePosities={wachttorenBereikbarePosities}
+          legerkampBereikbarePosities={legerkampBereikbarePosities}
+          verkenningBereikbarePosities={verkenningBereikbarePosities}
           onTileClick={handleTileClick}
         />
         <LaagIntroPaneel lagen={state.lagen} />
@@ -714,26 +810,42 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             state={state}
             legerwaarde={berekenLegerwaarde(state)}
             tegenstanderSterkte={actieveLaag.dreigingsniveau ?? 0}
-            confrontatieOntgrendeld={actieveLaag.hoogte >= MILITAIR_CONFRONTATIE_LAAG}
             onStartGroei={startGroei}
             onStartNieuweSettler={startNieuweSettler}
             onStartOpslagplaats={startOpslagplaats}
             onStartRecrutering={startRecrutering}
-            onConfrontatie={confrontatie}
             onKiesStrijder={(strijderId) => {
               setWachttorenKiesModusStrijderId(strijderId);
+              setToonStadMenuPopup(false);
+            }}
+            onKiesStrijderVoorLegerkamp={(strijderId) => {
+              setLegerkampKiesModusStrijderId(strijderId);
               setToonStadMenuPopup(false);
             }}
             onHaalTerug={haalStrijderTerug}
             onVersnelCiviel={versnelCivielMetGoud}
             onVersnelOpslagplaats={versnelOpslagplaatsMetGoud}
+            onStartVerkennerRecrutering={startVerkennerRecrutering}
+            onActiveerVerkenningsModus={() => {
+              setVerkenningsModusActief(true);
+              setToonStadMenuPopup(false);
+            }}
+            verkenningsModusActief={verkenningsModusActief}
+            onStartMissionarisRecrutering={startMissionarisRecrutering}
+            onConfrontatieBezetteLaag={confrontatieBezetteLaag}
             onSluiten={() => setToonStadMenuPopup(false)}
           />
         )}
         {toonLaagPopup && (
           <LaagPopup hoogte={actieveLaag.hoogte} onDoorgaan={() => setLaatstBevestigdeLaag(actieveLaag.hoogte)} />
         )}
-        {toonMilitairUitlegPopup && <MilitairUitlegPopup onDoorgaan={() => setMilitairUitlegBevestigd(true)} />}
+        {toonBezetteLaagOntdektPopup && <BezetteLaagPopup onDoorgaan={sluitBezetteLaagOntdektMelding} />}
+        {toonVijandelijkHeiligdomOnthuldPopup && (
+          <VijandelijkHeiligdomPopup fase="onthuld" onSluiten={sluitVijandelijkHeiligdomOnthuldMelding} />
+        )}
+        {toonVijandelijkHeiligdomVernietigdPopup && (
+          <VijandelijkHeiligdomPopup fase="vernietigd" onSluiten={sluitVijandelijkHeiligdomVernietigdMelding} />
+        )}
         {toonOceaanUitlegPopup && <OceaanUitlegPopup onDoorgaan={() => setOceaanUitlegBevestigd(true)} />}
         {toonIndringersPopup && state.indringersEvent && (
           <IndringersPopup
@@ -785,6 +897,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {wachttorenKiesModusStrijderId && (
           <WachttorenKiesBanner onAnnuleren={() => setWachttorenKiesModusStrijderId(null)} />
         )}
+        {legerkampKiesModusStrijderId && (
+          <WachttorenKiesBanner onAnnuleren={() => setLegerkampKiesModusStrijderId(null)} />
+        )}
+        {verkenningsModusActief && <WachttorenKiesBanner onAnnuleren={() => setVerkenningsModusActief(false)} />}
         {toonStichtStadPopup && (
           <StichtStadPopup
             onBevestig={() => {
@@ -828,7 +944,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonGoddelijkeRaadgevingPopup &&
             !toonBoerderijKlaarUitlegPopup &&
             !toonStrijdersOpleidenPopup &&
-            !toonMilitairUitlegPopup &&
+            !toonBezetteLaagOntdektPopup &&
             !toonOceaanUitlegPopup &&
             !toonStadUpgradeUitlegPopup &&
             !toonIndringersPopup &&
@@ -836,8 +952,12 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonRoofdierPopup &&
             !toonAmberOntdektPopup &&
             !toonTechKeuzePopup &&
+            !toonVijandelijkHeiligdomOnthuldPopup &&
+            !toonVijandelijkHeiligdomVernietigdPopup &&
             !toonTutorialVoltooidPopup &&
             !wachttorenKiesModusStrijderId &&
+            !legerkampKiesModusStrijderId &&
+            !verkenningsModusActief &&
             !toonStichtStadPopup &&
             !toonStadMenuPopup &&
             !state.bouwKeuzeGedaanDitBeurt &&

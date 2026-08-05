@@ -12,7 +12,7 @@ interface TutorialVoltooidPopupProps {
 }
 
 // Tutorial-voltooid-pop-up (issue: "pop-up met een summary van wat je
-// geleerd hebt", getoond na het winnen van de confrontatie op laag 12): vat
+// geleerd hebt", getoond na het stichten van een nieuwe stad): vat
 // de mechanieken samen door dezelfde `TUTORIAL_LAAG_CONTENT` te doorlopen als
 // LaagPopup/LaagIntroPaneel, in plaats van een tweede lijst bij te houden die
 // uit de pas kan lopen met die twee.

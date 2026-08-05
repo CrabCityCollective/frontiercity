@@ -2,10 +2,11 @@
 
 import { useCallback, useState } from "react";
 import {
+  bemanLegerkamp as bemanLegerkampActie,
   bemanWachttoren as bemanWachttorenActie,
   bevestigGedwongenTribuut as bevestigGedwongenTribuutActie,
   bevestigIneenstorting as bevestigIneenstortingActie,
-  confrontatie as confrontatieActie,
+  confrontatieBezetteLaag as confrontatieBezetteLaagActie,
   geefTribuut as geefTribuutActie,
   haalStrijderTerug as haalStrijderTerugActie,
   hakHout as hakHoutActie,
@@ -15,16 +16,22 @@ import {
   legWegAan as legWegAanActie,
   maakInitieleSpelStatus,
   sluitAmberOntdektMelding as sluitAmberOntdektMeldingActie,
+  sluitBezetteLaagOntdektMelding as sluitBezetteLaagOntdektMeldingActie,
   sluitBouwKeuze as sluitBouwKeuzeActie,
   sluitIndringersMelding as sluitIndringersMeldingActie,
   sluitKuddeMelding as sluitKuddeMeldingActie,
   sluitRoofdierMelding as sluitRoofdierMeldingActie,
+  sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
+  sluitVijandelijkHeiligdomVernietigdMelding as sluitVijandelijkHeiligdomVernietigdMeldingActie,
   startBouw as startBouwActie,
   startGroei as startGroeiActie,
+  startMissionarisRecrutering as startMissionarisRecruteringActie,
   startNieuweSettler as startNieuweSettlerActie,
   startOpslagplaats as startOpslagplaatsActie,
   startRecrutering as startRecruteringActie,
+  startVerkennerRecrutering as startVerkennerRecruteringActie,
   stichtStad as stichtStadActie,
+  verken as verkenActie,
   verplaatsSettlerNaar as verplaatsSettlerNaarActie,
   versnelBouwMetGoud as versnelBouwMetGoudActie,
   versnelCivielMetGoud as versnelCivielMetGoudActie,
@@ -94,8 +101,8 @@ export function useGameEngine() {
     setState((huidig) => startRecruteringActie(huidig));
   }, []);
 
-  const confrontatie = useCallback(() => {
-    setState((huidig) => confrontatieActie(huidig));
+  const confrontatieBezetteLaag = useCallback((positieInLaag: number) => {
+    setState((huidig) => confrontatieBezetteLaagActie(huidig, positieInLaag));
   }, []);
 
   const bevestigIneenstorting = useCallback(() => {
@@ -178,6 +185,37 @@ export function useGameEngine() {
     setState((huidig) => kiesTechActie(huidig, techId));
   }, []);
 
+  // Bezette Laag, Missionaris & Verkenner (hoofdstuk 6, issue: "De Bezette
+  // Laag, missionaris en verkenner") — zelfde dunne wrapper-conventie als
+  // hierboven.
+  const verken = useCallback((positieInLaag: number) => {
+    setState((huidig) => verkenActie(huidig, positieInLaag));
+  }, []);
+
+  const startVerkennerRecrutering = useCallback(() => {
+    setState((huidig) => startVerkennerRecruteringActie(huidig));
+  }, []);
+
+  const startMissionarisRecrutering = useCallback(() => {
+    setState((huidig) => startMissionarisRecruteringActie(huidig));
+  }, []);
+
+  const bemanLegerkamp = useCallback((strijderId: string, hoogte: number, positieInLaag: number) => {
+    setState((huidig) => bemanLegerkampActie(huidig, strijderId, hoogte, positieInLaag));
+  }, []);
+
+  const sluitBezetteLaagOntdektMelding = useCallback(() => {
+    setState((huidig) => sluitBezetteLaagOntdektMeldingActie(huidig));
+  }, []);
+
+  const sluitVijandelijkHeiligdomOnthuldMelding = useCallback(() => {
+    setState((huidig) => sluitVijandelijkHeiligdomOnthuldMeldingActie(huidig));
+  }, []);
+
+  const sluitVijandelijkHeiligdomVernietigdMelding = useCallback(() => {
+    setState((huidig) => sluitVijandelijkHeiligdomVernietigdMeldingActie(huidig));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -188,7 +226,6 @@ export function useGameEngine() {
     startOpslagplaats,
     stichtStad,
     startRecrutering,
-    confrontatie,
     bevestigIneenstorting,
     verplaatsSettlerNaar,
     legWegAan,
@@ -209,6 +246,14 @@ export function useGameEngine() {
     haalStrijderTerug,
     zetUitlegPopups,
     kiesTech,
+    verken,
+    startVerkennerRecrutering,
+    startMissionarisRecrutering,
+    bemanLegerkamp,
+    confrontatieBezetteLaag,
+    sluitBezetteLaagOntdektMelding,
+    sluitVijandelijkHeiligdomOnthuldMelding,
+    sluitVijandelijkHeiligdomVernietigdMelding,
     opslaan,
     laden,
   };
