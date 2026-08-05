@@ -40,6 +40,25 @@ function effectBeschrijving(improvement: Improvement, opFrontier = true): string
   if (effect.type === "stad") {
     return "Het centrum van je nederzetting.";
   }
+  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 1/4/5) — vijandelijke tile-varianten en het cosmetische
+  // huisje hebben geen productie-/verdedigingseffect, maar wel een eigen
+  // korte omschrijving.
+  if (effect.type === "dreiging") {
+    return "Een vijandelijke Wachttoren. Vereist een eigen, bemande Wachttoren op de laag eronder om een Confrontatie aan te gaan.";
+  }
+  if (effect.type === "belegeringsdoel") {
+    return "Een vijandelijk Heiligdom. Belegeringsdoel zolang je minstens één Missionaris hebt.";
+  }
+  if (effect.type === "legerkamp") {
+    return "Elke hieraan toegewezen Soldaat telt mee als legerwaarde bij een Confrontatie tegen een Bezette Laag, ongeacht op welke laag dit Legerkamp staat.";
+  }
+  if (effect.type === "ontgrendelt-missionaris") {
+    return "Ontgrendelt de Missionaris als trainbare eenheid.";
+  }
+  if (effect.type === "decoratief") {
+    return "Een verlaten huisje. Geen functie, niet interactief.";
+  }
   return "";
 }
 
@@ -80,7 +99,24 @@ export function beschrijfTile(
   positieInLaag: number,
   voorraad: Record<MateriaalType, number>
 ): TileInfo {
-  if (!laag.ontgrendeld) {
+  const tile = laag.tiles[positieInLaag];
+
+  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 1): een eigen, per-tegel verhullingslaag — de laag zelf
+  // blijft `ontgrendeld: false` zolang ze bezet is, dus dit moet vóór de
+  // gewone fog-of-war-check hieronder afgehandeld worden. Een onthuld vakje
+  // (`tile.verhuld === false`) valt gewoon door naar de normale
+  // tile-detail-logica verderop, want `tile.status`/`tile.improvement` zijn
+  // dan al echt gezet (zie `verken` in economie.ts).
+  if (laag.bezet) {
+    if (tile.verhuld) {
+      return {
+        titel: "Verhuld vakje",
+        ondertitel: `Bezette Laag ${laag.hoogte}`,
+        tekst: "Dit vakje is nog niet verkend. Leid een Verkenner op en verken het om te zien wat hier ligt.",
+      };
+    }
+  } else if (!laag.ontgrendeld) {
     if (isVooruitkijkLaag(laag, lagen)) {
       return {
         titel: `Laag ${laag.hoogte} — nog niet ontgrendeld`,
@@ -94,7 +130,13 @@ export function beschrijfTile(
     };
   }
 
-  const tile = laag.tiles[positieInLaag];
+  if (tile.status === "ruine") {
+    return {
+      titel: "Ruïne",
+      ondertitel: "Voormalige Wachttoren",
+      tekst: "Een verloren Confrontatie tegen een Bezette Laag verwoestte deze Wachttoren. Herbouwbaar tegen de normale kosten en bouwtijd.",
+    };
+  }
 
   if (tile.improvement?.soort === "city") {
     // `tile.improvement.naam` i.p.v. het meegegeven `stad.naam`: sinds het
@@ -177,6 +219,18 @@ export function beschrijfTile(
       titel: "Wilde kudde",
       ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
       tekst: `Verplaats de settler hierheen en jaag voor voedsel. Nog ${tile.kudde.beurtenResterend} beurten te jagen voordat de kudde verder trekt.`,
+    };
+  }
+
+  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 1/2): het neutrale, onthulde vakje (geen vijandelijke/
+  // cosmetische inhoud, zie world.ts) — bouwen blijft hier onmogelijk zolang
+  // de laag bezet is, ongeacht de normale frontier-only-regel hieronder.
+  if (laag.bezet) {
+    return {
+      titel: "Leeg vakje",
+      ondertitel: `Bezette Laag ${laag.hoogte}`,
+      tekst: "Hier ligt geen vijandelijke of cosmetische inhoud. Zolang de laag bezet is, kun je hier niet bouwen.",
     };
   }
 

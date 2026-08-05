@@ -51,6 +51,15 @@ export type TechDrempel = 1 | 2 | 3;
 // mogen worden (zie `Improvement.terreinEisen`).
 export type TerreinType = "vlak" | "bos" | "heuvel" | "berg";
 
+// Vaste, verhulde inhoud van een vakje binnen een Bezette Laag (hoofdstuk 6,
+// issue: "De Bezette Laag, missionaris en verkenner"), bepaald bij het
+// ontstaan van de laag (zie world.ts) en pas zichtbaar zodra Verkenning het
+// vakje onthult (`Tile.verhuld` hieronder). `undefined` op een vakje binnen
+// een Bezette Laag betekent: geen bijzondere inhoud, gewoon een leeg vakje
+// zodra onthuld — dat houdt één vakje per Bezette Laag "neutraal" in plaats
+// van dat alle 9 vakjes vijandelijke/cosmetische inhoud moeten dragen.
+export type BezetteLaagInhoud = "wachttoren" | "heiligdom" | "huisje";
+
 export interface EffectDefinition {
   type: string;
   resource?: ResourceType;
@@ -95,6 +104,16 @@ export interface Improvement {
   // `bouwbaarBuitenFrontier`: eenmaal ontgrendeld blijft de categorie
   // beschikbaar, ook op een oudere laag.
   minLaag?: number;
+  // Vijandelijke skin-variant (hoofdstuk 6, issue: "De Bezette Laag,
+  // missionaris en verkenner", Deel 1): hergebruikt de bestaande Wachttoren-
+  // en Heiligdom-tegel-typen met andere kleur/naam voor de vijandelijke tiles
+  // op een Bezette Laag — geen nieuwe game-logica voor het uiterlijk zelf,
+  // alleen een vlag zodat canvas-rendering en de Confrontatie/Belegering-
+  // doelherkenning ze kunnen onderscheiden van de eigen Wachttoren/Heiligdom.
+  // Nooit onderdeel van IMPROVEMENT_POOLS/beschikbareOpties — deze tiles
+  // worden alleen door Verkenning/wereldgeneratie geplaatst, nooit door de
+  // speler gebouwd.
+  vijandelijk?: boolean;
 }
 
 export interface Tile {
@@ -105,7 +124,14 @@ export interface Tile {
   // plaatsingslogica, maar houdt het veld overal aanwezig i.p.v. optioneel).
   terrein: TerreinType;
   improvement?: Improvement;
-  status: "leeg" | "in_aanbouw" | "actief" | "ghost_town";
+  // "ruine" (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 5): een eigen, beschermende Wachttoren die een verloren
+  // Confrontatie tegen een Bezette Laag meemaakte — anders dan "ghost_town"
+  // (permanent onbebouwbaar) mag hier, net als op een gewoon "leeg" vakje,
+  // een nieuwe Wachttoren (of iets anders) tegen de normale kosten/bouwtijd
+  // herbouwd worden (zie `kanImprovementOpLaag`/`startBouw` in
+  // improvements.ts/economie.ts).
+  status: "leeg" | "in_aanbouw" | "actief" | "ghost_town" | "ruine";
   beurtenTotUitputting?: number;
   // Alleen aanwezig terwijl status "in_aanbouw" is (M3: productiewachtrij).
   // Houdt bij hoeveel van elke grondstof nog geïnvesteerd moet worden.
@@ -133,6 +159,15 @@ export interface Tile {
   roofdier?: {
     beurtenTotAanval: number;
   };
+  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 1): een eigen, per-tegel verhullingslaag, los van de
+  // gewone laag-brede fog-of-war (`Layer.ontgrendeld`, hoofdstuk 2). Alleen
+  // relevant op vakjes binnen een Bezette Laag (`Layer.bezet`). `verhuld:
+  // true` betekent nog niet onthuld via Verkenning — `bezetteLaagInhoud`
+  // (hierboven gedefinieerd) ligt dan al vast, maar `tile.improvement` zelf
+  // blijft leeg tot onthulling (zie `verken` in economie.ts).
+  verhuld?: boolean;
+  bezetteLaagInhoud?: BezetteLaagInhoud;
   // Ligt dit vakje aan vers water — een rivier of een meer (hoofdstuk 2:
   // "een stad kan alleen gesticht worden op een vakje dat aan vers water
   // ligt")? Vast, niet-procedureel (net als `terrein`) — de tutorial-worldgen
@@ -167,8 +202,28 @@ export interface Layer {
   terreinType: string;
   // Sterkte van de tegenstander bij een militaire confrontatie op deze laag
   // (M7, hoofdstuk 6). Was al als optioneel veld voorbereid; vanaf M7
-  // daadwerkelijk gevuld (zie wereld.ts) en dus niet meer ongebruikt.
+  // daadwerkelijk gevuld (zie wereld.ts) en dus niet meer ongebruikt. Wordt
+  // sinds "De Bezette Laag" ook hergebruikt als de legerwaarde van een
+  // vijandelijke Wachttoren op deze laag (economie.ts: `confrontatieBezetteLaag`)
+  // — dezelfde precedent-waarde als een gewone Confrontatie op de frontier.
   dreigingsniveau?: number;
+  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner"): generiek, herbruikbaar mechanisme (ook voor latere
+  // campagnes) — `true` zolang deze laag geblokkeerd is door vijandelijke
+  // Wachttoren-/Heiligdom-tiles die eerst via Verkenning/Confrontatie/
+  // Belegering opgelost moeten worden (zie world.ts voor de tutorial-
+  // scripting op laag 12, en economie.ts `verwerkLaagOntgrendeling` voor de
+  // bevriezing van de normale cultuur-ontgrendeling). Wordt `false` zodra
+  // alle vijandelijke Heiligdommen vernietigd zijn (Deel 6) — de laag telt
+  // dan als normaal ontgrendeld.
+  bezet?: boolean;
+  // Cumulatieve belegeringsvoortgang tegen de vijandelijke Heiligdommen op
+  // deze Bezette Laag (Deel 4) — vult zich met cultuur-inkomen dat anders
+  // verloren zou gaan, maar uitsluitend zolang de speler minstens één
+  // Missionaris heeft (zie `verwerkBelegering` in economie.ts). Bereikt de
+  // drempel, dan wordt één vijandelijk Heiligdom vernietigd en begint de
+  // meter weer bij 0.
+  belegeringsVoortgang?: number;
 }
 
 export interface Relic {
@@ -190,6 +245,14 @@ export interface Relic {
 export interface Strijder {
   id: string;
   wachttoren?: { hoogte: number; positieInLaag: number };
+  // Legerkamp-toewijzing (hoofdstuk 6, issue: "De Bezette Laag, missionaris
+  // en verkenner", Deel 5) — zelfde soort interactie als `wachttoren`
+  // hierboven (omkeerbaar, instant), maar telt in plaats van de gewone
+  // Wachttoren-verdedigingsbonus mee als extra legerwaarde bij een
+  // Confrontatie tegen een Bezette Laag, ongeacht op welke laag het
+  // Legerkamp staat. Een strijder heeft hoogstens één van de twee
+  // toewijzingen tegelijk.
+  legerkamp?: { hoogte: number; positieInLaag: number };
 }
 
 export interface City {
@@ -228,6 +291,28 @@ export interface City {
   // `GameState.opslagCap` direct met `OPSLAGPLAATS.effect.waarde` (zie
   // economie.ts) — geen apart telveld nodig, de cap zelf is de optelsom.
   opslagplaatsInAanbouw?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+  };
+  // Verkenner-eenheden (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 3) — wetenschappelijke units, trainbaar via hetzelfde
+  // wachtrij-patroon als Soldaat (`verkennerInAanbouw`/`strijders`
+  // hierboven), zonder toewijzingsconcept (geen "wachttoren"-achtig veld
+  // nodig): hun enige functie is de Verkenning-actie beschikbaar maken zodra
+  // er minstens één bestaat (zie `kanVerkennen` in economie.ts).
+  verkenners: { id: string }[];
+  verkennerInAanbouw?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+  };
+  // Missionaris-eenheden (Deel 4) — culturele units, alleen trainbaar zodra
+  // er een voltooid Offer Altaar staat (zie `heeftOfferAltaar`/
+  // `startMissionarisRecrutering` in economie.ts). Net als Verkenner
+  // hierboven geen toewijzingsconcept: alleen hun bestaan telt (de
+  // "vereenvoudiging" uit Deel 4 van het issue) om cultuur-inkomen om te
+  // leiden naar de belegeringsmeter van een Bezette Laag.
+  missionarissen: { id: string }[];
+  missionarisInAanbouw?: {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
@@ -435,6 +520,23 @@ export interface GameState {
   // krijgen via de civiele improvement-pool (`startNieuweSettler`), zoals
   // hoofdstuk 17 beschrijft.
   settlerVerlorenAanRoofdier?: boolean;
+  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 3): Verkenning is een losse actie, gescheiden van de
+  // settler-acties (`settlerActieGedaanDitBeurt` hierboven) — hoogstens 1
+  // keer per beurt, zelfde patroon, teruggezet door `volgendeBeurt`.
+  verkenningGedaanDitBeurt: boolean;
+  // Dynamische pop-up-meldingen voor de Bezette Laag (Deel 2/4) — zelfde
+  // meldings-vlag-patroon als `amberOntdektEvent` hierboven: `undefined`/
+  // `false` zolang er geen (onopgeloste) melding is.
+  bezetteLaagOntdektEvent?: boolean;
+  vijandelijkHeiligdomOnthuldEvent?: boolean;
+  vijandelijkHeiligdomVernietigdEvent?: boolean;
+  // Resultaat van de laatst afgehandelde Confrontatie tegen een Bezette Laag
+  // (Deel 5) — los van `laatsteConfrontatie` hierboven (dat blijft de gewone
+  // frontier-Confrontatie) omdat de twee losstaande systemen zijn met een
+  // eigen eigen-legerwaarde-formule en een eigen verlies-effect (ruïne i.p.v.
+  // versnelde uitputting).
+  laatsteConfrontatieBezetteLaag?: ConfrontatieResultaat;
   // Per-run instelling (issue: "een setting waarmee je deze uitleg pop-ups
   // aan en uit kunt zetten ... voor deze run specifiek") — schakelt alle
   // tutorial-uitleg-pop-ups (openings-uitleg, settler, voedsel/boerderij,

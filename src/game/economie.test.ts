@@ -1,18 +1,26 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  bemanLegerkamp,
   bemanWachttoren,
+  BELEGERINGSDREMPEL,
+  berekenLegerkampLegerwaarde,
   bevestigGedwongenTribuut,
   bouwStagneertVolgendeBeurt,
+  confrontatieBezetteLaag,
   geefTribuut,
   haalStrijderTerug,
   hakHout,
   heeftGenoegVoorStichten,
+  heeftOfferAltaar,
   jaag,
+  kanConfrontatieBezetteLaag,
   kanStichten,
+  kanVerkennen,
   kiesGeefTribuut,
   kiesTech,
   maakInitieleSpelStatus,
+  onbemandeLegerkampPosities,
   onbemandeWachttorenPosities,
   OPSLAG_CAP,
   resterendeBouwBeurten,
@@ -20,22 +28,35 @@ import {
   rushKostenGoud,
   sluitAmberOntdektMelding,
   startBouw,
+  startMissionarisRecrutering,
   startNieuweSettler,
   startOpslagplaats,
   startRecrutering,
+  startVerkennerRecrutering,
   STICHTING_KOSTEN,
   stichtStad,
+  verken,
   verplaatsSettlerNaar,
   versnelBouwMetGoud,
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
+  VERKENNING_KOSTEN_WETENSCHAP,
+  vijandelijkeWachttorenPosities,
   volgendeBeurt,
   weigerTribuut,
 } from "./economie";
-import { AMBERADER, ECONOMISCH_LAND_IMPROVEMENTS, MILITAIR_LAND_IMPROVEMENTS, SOLDAAT, STERRENCIRKEL } from "./improvements";
+import {
+  AMBERADER,
+  CULTUREEL_LAND_IMPROVEMENTS,
+  ECONOMISCH_LAND_IMPROVEMENTS,
+  MILITAIR_LAND_IMPROVEMENTS,
+  SOLDAAT,
+  STERRENCIRKEL,
+  VIJANDELIJK_HEILIGDOM,
+} from "./improvements";
 import { wetenschapKostenVoorDrempel } from "./techTree";
 import { GameState } from "./types";
-import { AMBER_ONTDEKKING_LAAG, cultuurKostenVoorLaag } from "./world";
+import { AMBER_ONTDEKKING_LAAG, BEZETTE_LAAG_HOOGTE, cultuurKostenVoorLaag } from "./world";
 
 // Vervangt `Math.random` tijdelijk door een vaste waarde, zodat de
 // kans-gedreven roofdier-/kuddelogica deterministisch te testen is — altijd
@@ -55,6 +76,8 @@ const HOUTKAP = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "houtkap")!;
 const MIJN = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "mijn")!;
 const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
 const WACHTTOREN = MILITAIR_LAND_IMPROVEMENTS.find((i) => i.id === "wachttoren")!;
+const LEGERKAMP = MILITAIR_LAND_IMPROVEMENTS.find((i) => i.id === "legerkamp")!;
+const HEILIGDOM = CULTUREEL_LAND_IMPROVEMENTS.find((i) => i.id === "heiligdom")!;
 
 // Bouwt een startstatus met een Houtkap (positie 2), Mijn (positie 6) en
 // Boerderij (positie 0) al actief en wegverbonden met de stad (positie 4),
@@ -807,4 +830,392 @@ test("een afgedwongen tribuut (na weigeren) trekt ook pas af zodra de laatste be
   state = geefTribuut(state);
   assert.equal(state.voorraad.hout, 5);
   assert.equal(state.indringersEvent, undefined);
+});
+
+// --- Bezette Laag, Missionaris & Verkenner (hoofdstuk 6) -------------------
+
+// Duwt de cultuur naar de drempel van BEZETTE_LAAG_HOOGTE en verwerkt één
+// beurt, zodat de laag "in beeld komt" (Deel 2) — gedeelde opzet voor de
+// tests hieronder, zelfde patroon als `metWerkendeEconomie` hierboven.
+function metBezetteLaagInBeeld(): GameState {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, cultuur: cultuurKostenVoorLaag(BEZETTE_LAAG_HOOGTE), voedsel: 10_000 };
+  return volgendeBeurt(state);
+}
+
+function metBezetteLaagEnVerkenner(): GameState {
+  const state = metBezetteLaagInBeeld();
+  return { ...state, wetenschap: 100, stad: { ...state.stad, verkenners: [{ id: "verkenner-0" }] } };
+}
+
+// Zet een actieve, wegverbonden Heiligdom op laag 1 (positie 2, met een
+// brugvakje naar de stad), voor tests die cultuur-inkomen nodig hebben.
+function metActiefHeiligdomOpLaag1(state: GameState): GameState {
+  return {
+    ...state,
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte !== 1
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((tile) => {
+              if (tile.positieInLaag === 2) {
+                return { ...tile, status: "actief" as const, improvement: HEILIGDOM, heeftWeg: true };
+              }
+              if (tile.positieInLaag === 3) return { ...tile, heeftWeg: true };
+              return tile;
+            }),
+          }
+    ),
+  };
+}
+
+test('laag 12 komt "in beeld" als Bezette Laag i.p.v. normaal te ontgrendelen zodra de cultuurdrempel gehaald wordt', () => {
+  const state = metBezetteLaagInBeeld();
+  const laag12 = state.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!;
+
+  assert.equal(laag12.ontgrendeld, false, "de laag blijft vergrendeld — de frontier blijft op laag 11 staan");
+  assert.equal(laag12.bezet, true);
+  assert.equal(state.bezetteLaagOntdektEvent, true);
+  assert.equal(laag12.tiles.every((t) => t.verhuld), true, "elk vakje is individueel verhuld");
+
+  const inhoudTypes = laag12.tiles.map((t) => t.bezetteLaagInhoud).filter(Boolean);
+  assert.equal(inhoudTypes.length, 8, "8 van de 9 vakjes dragen vaste vijandelijke/cosmetische inhoud");
+  assert.equal(laag12.tiles[4].bezetteLaagInhoud, undefined, "het middelste vakje blijft neutraal");
+
+  assert.equal(state.lagen.find((l) => l.hoogte === 11)!.ontgrendeld, true, "laag 11 ontgrendelt gewoon normaal");
+  assert.equal(state.lagen.find((l) => l.hoogte === 13)!.ontgrendeld, false, "laag 13 blijft geblokkeerd achter de Bezette Laag");
+});
+
+test("cultuur-voortgang bevriest volledig zolang de Bezette Laag actief is, ook met Heiligdom-productie elders", () => {
+  let state = metBezetteLaagInBeeld();
+  const bevrorenCultuur = state.cultuur;
+
+  state = metActiefHeiligdomOpLaag1(state);
+  state = volgendeBeurt(state);
+
+  assert.equal(state.cultuur, bevrorenCultuur, "cultuur blijft precies gelijk — bevroren, niet verloren, niet oplopend");
+});
+
+test("kanVerkennen vereist een Bezette Laag, minstens één Verkenner, genoeg wetenschap en de 1x-per-beurt-limiet", () => {
+  const zonderVerkenner = metBezetteLaagInBeeld();
+  assert.equal(kanVerkennen(zonderVerkenner), false);
+
+  const state = metBezetteLaagEnVerkenner();
+  assert.equal(kanVerkennen(state), true);
+  assert.equal(kanVerkennen({ ...state, wetenschap: 0 }), false);
+  assert.equal(kanVerkennen({ ...state, verkenningGedaanDitBeurt: true }), false);
+});
+
+test("verken onthult het gekozen vakje als de vaste vijandelijke inhoud, kost wetenschap, en mag maar 1x per beurt", () => {
+  let state = metBezetteLaagEnVerkenner();
+  const wetenschapVoor = state.wetenschap;
+  const laag12 = () => state.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!;
+
+  // Positie 0 is in world.ts vastgelegd als "wachttoren" (TUTORIAL_BEZETTE_LAAG_INHOUD).
+  state = verken(state, 0);
+  assert.equal(laag12().tiles[0].verhuld, false);
+  assert.equal(laag12().tiles[0].improvement?.id, "vijandelijke-wachttoren");
+  assert.equal(laag12().tiles[0].status, "actief");
+  assert.equal(state.wetenschap, wetenschapVoor - VERKENNING_KOSTEN_WETENSCHAP);
+  assert.equal(state.verkenningGedaanDitBeurt, true);
+
+  const naTweedeVerkenning = verken(state, 1);
+  assert.equal(naTweedeVerkenning, state, "een tweede Verkenning dezelfde beurt heeft geen effect");
+
+  state = volgendeBeurt(state);
+  assert.equal(state.verkenningGedaanDitBeurt, false, "volgende beurt mag weer");
+});
+
+test("verken op het neutrale middelste vakje onthult gewoon een leeg vakje", () => {
+  let state = metBezetteLaagEnVerkenner();
+  state = verken(state, 4);
+  const tile = state.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!.tiles[4];
+  assert.equal(tile.verhuld, false);
+  assert.equal(tile.improvement, undefined);
+});
+
+test("verken op een vakje met vijandelijk Heiligdom meldt dit via vijandelijkHeiligdomOnthuldEvent", () => {
+  let state = metBezetteLaagEnVerkenner();
+  // Positie 1 is in world.ts vastgelegd als "heiligdom".
+  state = verken(state, 1);
+  assert.equal(state.vijandelijkHeiligdomOnthuldEvent, true);
+});
+
+test("heeftOfferAltaar en startMissionarisRecrutering: Missionaris is pas trainbaar na een voltooid Offer Altaar", () => {
+  let state = maakInitieleSpelStatus();
+  assert.equal(heeftOfferAltaar(state), false);
+  assert.equal(startMissionarisRecrutering(state), state, "geen effect zonder Offer Altaar");
+
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag, idx) =>
+      idx !== 0
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 2 ? { ...tile, status: "actief" as const, improvement: HEILIGDOM } : tile
+            ),
+          }
+    ),
+  };
+  // Nog steeds geen Offer Altaar (dit is een gewoon Heiligdom) — nog steeds geen effect.
+  assert.equal(startMissionarisRecrutering(state), state);
+});
+
+test("Verkenner is direct trainbaar (geen vereiste), en levert na de bouwtijd een inzetbare eenheid op", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 20 } };
+  state = startVerkennerRecrutering(state);
+  assert.equal(state.stad.verkennerInAanbouw?.improvement.id, "verkenner");
+  const bouwtijd = state.stad.verkennerInAanbouw!.improvement.bouwtijdBeurten;
+
+  for (let i = 0; i < bouwtijd; i++) {
+    state = volgendeBeurt(state);
+  }
+  assert.equal(state.stad.verkennerInAanbouw, undefined);
+  assert.equal(state.stad.verkenners.length, 1);
+});
+
+test("zonder Missionaris blijft de belegeringsmeter op 0, ondanks cultuurproductie elders", () => {
+  let state = metBezetteLaagInBeeld();
+  state = metActiefHeiligdomOpLaag1(state);
+  state = volgendeBeurt(state);
+  const laag12 = state.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!;
+  assert.equal(laag12.belegeringsVoortgang, 0);
+});
+
+test("met minstens één Missionaris wordt cultuur-inkomen omgeleid naar de belegeringsmeter i.p.v. verloren te gaan", () => {
+  let state = metBezetteLaagInBeeld();
+  state = metActiefHeiligdomOpLaag1(state);
+  state = { ...state, stad: { ...state.stad, missionarissen: [{ id: "missionaris-0" }] } };
+  state = volgendeBeurt(state);
+
+  const laag12 = state.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!;
+  // Laag 1 is niet de frontier (die staat op 11 zolang de laag bezet is),
+  // dus de halve opbrengst geldt — zelfde regel als `verwerkProductie`.
+  assert.equal(laag12.belegeringsVoortgang, (HEILIGDOM.effect.waarde ?? 0) / 2);
+});
+
+test("bij het bereiken van de belegeringsdrempel wordt het onthulde vijandelijke Heiligdom vernietigd en begint de meter opnieuw", () => {
+  let state = metBezetteLaagEnVerkenner();
+  state = verken(state, 1); // onthult het vijandelijke Heiligdom op positie 1
+  state = metActiefHeiligdomOpLaag1(state);
+  state = {
+    ...state,
+    stad: { ...state.stad, missionarissen: [{ id: "missionaris-0" }] },
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte !== BEZETTE_LAAG_HOOGTE ? laag : { ...laag, belegeringsVoortgang: BELEGERINGSDREMPEL - 1 }
+    ),
+  };
+
+  state = volgendeBeurt(state);
+
+  const laag12 = state.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!;
+  const heiligdomTile = laag12.tiles[1];
+  assert.equal(heiligdomTile.status, "leeg", "opgeruimd — geen dreiging/doel meer");
+  assert.equal(heiligdomTile.improvement, undefined);
+  assert.equal(state.vijandelijkHeiligdomVernietigdEvent, true);
+  assert.equal(laag12.belegeringsVoortgang, 0, "de meter begint weer bij 0 voor het tweede Heiligdom (positie 6)");
+  assert.equal(laag12.bezet, true, "nog niet opgelost: het tweede Heiligdom (positie 6) staat nog, al dan niet onthuld");
+});
+
+test("Deel 6: zodra alle vijandelijke Heiligdommen vernietigd zijn, wordt de hele Bezette Laag in één keer onthuld en eindigt de Bezette-status", () => {
+  let state = metBezetteLaagEnVerkenner();
+  state = {
+    ...state,
+    stad: { ...state.stad, missionarissen: [{ id: "missionaris-0" }] },
+    lagen: state.lagen.map((laag) => {
+      if (laag.hoogte !== BEZETTE_LAAG_HOOGTE) return laag;
+      return {
+        ...laag,
+        belegeringsVoortgang: BELEGERINGSDREMPEL - 1,
+        tiles: laag.tiles.map((tile) =>
+          tile.positieInLaag === 1 || tile.positieInLaag === 6
+            ? { ...tile, verhuld: false, status: "actief" as const, improvement: VIJANDELIJK_HEILIGDOM }
+            : tile
+        ),
+      };
+    }),
+  };
+  state = metActiefHeiligdomOpLaag1(state);
+
+  // Bevries alle willekeurige incidenten (indringers/kuddes/roofdieren) zodat
+  // deze lange lus deterministisch blijft — puur voor de leesbaarheid van
+  // deze test, niet omdat het mechanisme zelf random-afhankelijk is.
+  state = metVasteRandom(0.99, () => {
+    let s = state;
+    for (let i = 0; i < BELEGERINGSDREMPEL + 1; i++) s = volgendeBeurt(s);
+    return s;
+  });
+
+  const laag12 = state.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!;
+  assert.equal(laag12.bezet, false);
+  assert.equal(laag12.ontgrendeld, true);
+  assert.equal(laag12.tiles.every((t) => !t.verhuld), true, "ook nog niet individueel verkende vakjes zijn nu onthuld");
+  // Positie 0 werd nooit expliciet verkend, maar draagt "wachttoren" volgens
+  // de vaste tutorial-indeling (world.ts) en moet dus na de massale
+  // onthulling alsnog als vijandelijke Wachttoren zichtbaar zijn.
+  assert.equal(laag12.tiles[0].improvement?.id, "vijandelijke-wachttoren");
+  assert.equal(laag12.tiles[2].improvement?.id, "bezette-laag-huisje");
+});
+
+// Bouwt een vaste, wegverbonden corridor (positie 4, elke laag 1..totHoogte)
+// zodat een improvement op `totHoogte` als wegverbonden geldt (zie
+// wegen.ts: de stad zelf is alleen op hoogte 1 automatisch "doorgang").
+function metWegCorridorNaarLaag(state: GameState, totHoogte: number): GameState {
+  return {
+    ...state,
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte >= 1 && laag.hoogte <= totHoogte
+        ? { ...laag, tiles: laag.tiles.map((t) => (t.positieInLaag === 4 ? { ...t, heeftWeg: true } : t)) }
+        : laag
+    ),
+  };
+}
+
+function metBeschermendeWachttorenOpLaag11(state: GameState): GameState {
+  let s = metWegCorridorNaarLaag(state, 11);
+  s = {
+    ...s,
+    stad: { ...s.stad, strijders: [{ id: "strijder-wachter", wachttoren: { hoogte: 11, positieInLaag: 4 } }] },
+    lagen: s.lagen.map((laag) =>
+      laag.hoogte !== 11
+        ? laag
+        : {
+            ...laag,
+            ontgrendeld: true,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 4 ? { ...tile, status: "actief" as const, improvement: WACHTTOREN } : tile
+            ),
+          }
+    ),
+  };
+  return s;
+}
+
+test("kanConfrontatieBezetteLaag vereist een voltooide, bemande, wegverbonden eigen Wachttoren op de laag direct onder de Bezette Laag", () => {
+  let state = metBezetteLaagEnVerkenner();
+  state = verken(state, 0); // onthult de vijandelijke Wachttoren op positie 0
+
+  assert.equal(kanConfrontatieBezetteLaag(state, 0), false, "geen eigen Wachttoren op laag 11: nog niet beschikbaar");
+
+  state = metBeschermendeWachttorenOpLaag11(state);
+  assert.equal(kanConfrontatieBezetteLaag(state, 0), true);
+  // Een niet-onthuld of niet-vijandelijk-Wachttoren-vakje is nooit een geldig doel.
+  assert.equal(kanConfrontatieBezetteLaag(state, 3), false);
+});
+
+test("confrontatieBezetteLaag: winst ruimt de vijandelijke Wachttoren-tile op (geen dreiging/doel meer)", () => {
+  let state = metBezetteLaagEnVerkenner();
+  state = verken(state, 0);
+  state = metBeschermendeWachttorenOpLaag11(state);
+
+  const naWinst = metVasteRandom(0, () => confrontatieBezetteLaag(state, 0));
+  assert.equal(naWinst.laatsteConfrontatieBezetteLaag?.gewonnen, true);
+  const doelTile = naWinst.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!.tiles[0];
+  assert.equal(doelTile.status, "leeg");
+  assert.equal(doelTile.improvement, undefined);
+  // De eigen Wachttoren en zijn bemanning blijven bij winst gewoon intact.
+  const wachttorenTile = naWinst.lagen.find((l) => l.hoogte === 11)!.tiles[4];
+  assert.equal(wachttorenTile.status, "actief");
+  assert.equal(naWinst.stad.strijders.length, 1);
+});
+
+test("confrontatieBezetteLaag: verlies maakt de eigen Wachttoren een ruïne en kost de bemannende strijder permanent, maar spaart Legerkamp-strijders", () => {
+  let state = metBezetteLaagEnVerkenner();
+  state = verken(state, 0);
+  state = metBeschermendeWachttorenOpLaag11(state);
+  // Een tweede, aan een Legerkamp toegewezen strijder — moet bij verlies
+  // gewoon behouden blijven (alleen de Wachttoren-bemanning gaat verloren).
+  state = {
+    ...state,
+    stad: {
+      ...state.stad,
+      strijders: [
+        ...state.stad.strijders,
+        { id: "strijder-legerkamp", legerkamp: { hoogte: 1, positieInLaag: 0 } },
+      ],
+    },
+    lagen: state.lagen.map((laag, idx) =>
+      idx !== 0
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 0 ? { ...tile, status: "actief" as const, improvement: LEGERKAMP } : tile
+            ),
+          }
+    ),
+  };
+
+  const naVerlies = metVasteRandom(0.999999, () => confrontatieBezetteLaag(state, 0));
+  assert.equal(naVerlies.laatsteConfrontatieBezetteLaag?.gewonnen, false);
+
+  const wachttorenTile = naVerlies.lagen.find((l) => l.hoogte === 11)!.tiles[4];
+  assert.equal(wachttorenTile.status, "ruine");
+  assert.equal(wachttorenTile.improvement, undefined);
+
+  assert.equal(naVerlies.stad.strijders.length, 1, "de Wachttoren-bemanning is blijvend verloren");
+  assert.equal(naVerlies.stad.strijders[0].id, "strijder-legerkamp", "de Legerkamp-strijder blijft behouden");
+
+  // De vijandelijke Wachttoren-tile zelf blijft gewoon staan (geen doel meer
+  // beschadigd of opgeruimd) — alleen de eigen verdediging is geraakt.
+  const vijandTile = naVerlies.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!.tiles[0];
+  assert.equal(vijandTile.improvement?.id, "vijandelijke-wachttoren");
+});
+
+test("een ruïne-tile is, net als een leeg vakje, weer normaal herbouwbaar tegen de normale kosten/bouwtijd", () => {
+  let state = metBezetteLaagEnVerkenner();
+  state = verken(state, 0);
+  state = metBeschermendeWachttorenOpLaag11(state);
+  state = metVasteRandom(0.999999, () => confrontatieBezetteLaag(state, 0));
+
+  const naHerbouw = startBouw(state, 11, WACHTTOREN, 4);
+  const tile = naHerbouw.lagen.find((l) => l.hoogte === 11)!.tiles[4];
+  assert.equal(tile.status, "in_aanbouw");
+  assert.equal(tile.improvement?.id, "wachttoren");
+});
+
+test("bemanLegerkamp en onbemandeLegerkampPosities: dezelfde soort omkeerbare toewijzing als bij een Wachttoren", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    stad: { ...state.stad, strijders: [{ id: "strijder-0" }] },
+    lagen: state.lagen.map((laag, idx) =>
+      idx !== 0
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 0 ? { ...tile, status: "actief" as const, improvement: LEGERKAMP } : tile
+            ),
+          }
+    ),
+  };
+
+  assert.deepEqual(onbemandeLegerkampPosities(state), [{ hoogte: 1, positieInLaag: 0 }]);
+  assert.equal(berekenLegerkampLegerwaarde(state), 0, "nog niemand toegewezen");
+
+  state = bemanLegerkamp(state, "strijder-0", 1, 0);
+  assert.deepEqual(state.stad.strijders[0].legerkamp, { hoogte: 1, positieInLaag: 0 });
+  assert.deepEqual(onbemandeLegerkampPosities(state), []);
+  assert.equal(berekenLegerkampLegerwaarde(state), SOLDAAT.effect.waarde);
+
+  state = haalStrijderTerug(state, "strijder-0");
+  assert.equal(state.stad.strijders[0].legerkamp, undefined);
+  assert.equal(berekenLegerkampLegerwaarde(state), 0);
+});
+
+test("vijandelijkeWachttorenPosities geeft alleen onthulde, nog niet opgeruimde vijandelijke Wachttoren-tiles terug", () => {
+  let state = metBezetteLaagEnVerkenner();
+  assert.deepEqual(vijandelijkeWachttorenPosities(state), []);
+
+  state = verken(state, 0);
+  assert.deepEqual(vijandelijkeWachttorenPosities(state), [{ hoogte: BEZETTE_LAAG_HOOGTE, positieInLaag: 0 }]);
+
+  state = metBeschermendeWachttorenOpLaag11(state);
+  state = metVasteRandom(0, () => confrontatieBezetteLaag(state, 0));
+  assert.deepEqual(vijandelijkeWachttorenPosities(state), [], "na winst telt de tile niet meer mee als doel");
 });

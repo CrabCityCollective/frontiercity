@@ -15,6 +15,7 @@
 // welke stijl actief is.
 
 import { isWachttorenBemand } from "@/game/economie";
+import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Layer, Settler, Tile } from "@/game/types";
 import { isTileVerbondenMetStad } from "@/game/wegen";
 import {
@@ -25,8 +26,10 @@ import {
   OCEAAN_BASIS,
   maakSeededRandom,
   tekenBeschikbaarMarkering,
+  tekenLegerkampBereikbaarMarkering,
   tekenSettlerBereikbaarMarkering,
   tekenTileGrid,
+  tekenVerkenningBereikbaarMarkering,
   tekenWachttorenBereikbaarMarkering,
   terreinBasisKleur,
 } from "./canvas";
@@ -276,6 +279,71 @@ function tekenSettlerPixel(ctx: CanvasRenderingContext2D): void {
   }
 }
 
+// Offer Altaar (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+// verkenner", Deel 4) — pixel-art variant van `tekenOfferAltaar` in
+// canvas.ts: een lage stenen slab met een klein offervuur.
+function tekenOfferAltaarPixel(ctx: CanvasRenderingContext2D): void {
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 9);
+  hlijn(ctx, 5, 11, baseY - 2, "#6b6055");
+  hlijn(ctx, 4, 12, baseY - 1, "#6b6055");
+  hlijn(ctx, 4, 12, baseY, "#6b6055");
+  tekenKampvuurPixel(ctx, 8, baseY - 3);
+}
+
+// Legerkamp (Deel 5) — pixel-art variant van `tekenLegerkampIcon`.
+function tekenLegerkampPixel(ctx: CanvasRenderingContext2D): void {
+  tekenTentPixel(ctx, 8, 14, 6, "#5a6b46");
+}
+
+// Cosmetisch huisje van een Bezette Laag (Deel 1) — pixel-art variant van
+// `tekenBezetteLaagHuisje`: klein, stil, geen kampvuur.
+function tekenBezetteLaagHuisjePixel(ctx: CanvasRenderingContext2D): void {
+  tekenTentPixel(ctx, 8, 14, 4, "#8a7a68");
+}
+
+// Vijandelijke Wachttoren-/Heiligdom-varianten van een Bezette Laag (Deel 1)
+// — pixel-art variant: hergebruikt dezelfde vorm als de eigen versies, maar
+// met de killere rode/grijze palet uit canvas.ts.
+function tekenVijandelijkeWachttorenPixel(ctx: CanvasRenderingContext2D): void {
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 8);
+
+  vlijn(ctx, 5, 6, baseY, "#3a2c2c");
+  vlijn(ctx, 11, 6, baseY, "#3a2c2c");
+  hlijn(ctx, 6, 10, 10, "#3a2c2c");
+
+  hlijn(ctx, 4, 12, 5, "#4a3838");
+  ctx.strokeStyle = "#241818";
+  ctx.strokeRect(4, 5, 8, 1);
+
+  vlijn(ctx, 8, 1, 5, "#241818");
+  blokrij(ctx, 9, 1, 2, "#a0242c");
+  blokrij(ctx, 9, 2, 2, "#a0242c");
+}
+
+function tekenVijandelijkHeiligdomPixel(ctx: CanvasRenderingContext2D): void {
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 7);
+
+  const rijen = 9;
+  for (let i = 0; i < rijen; i++) {
+    const t = i / (rijen - 1);
+    const half = Math.max(1, Math.round(1 + t * 2));
+    blokrij(ctx, 8, baseY - rijen + i + 1, half + 1, "#2c2020");
+    blokrij(ctx, 8, baseY - rijen + i + 1, half, "#5a4a4a");
+  }
+
+  p(ctx, 4, 6, "rgba(200, 60, 60, 0.4)");
+  p(ctx, 12, 7, "rgba(200, 60, 60, 0.4)");
+  p(ctx, 5, 10, "rgba(200, 60, 60, 0.35)");
+  p(ctx, 11, 4, "rgba(200, 60, 60, 0.35)");
+
+  ctx.strokeStyle = "rgba(200, 60, 60, 0.9)";
+  ctx.strokeRect(7, 5, 2, 2);
+  vlijn(ctx, 8, 8, 9, "rgba(200, 60, 60, 0.9)");
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, seed: number, bemand: boolean) => void
@@ -286,6 +354,11 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   boerderij: tekenBoerderijPixel,
   heiligdom: (ctx) => tekenHeiligdomPixel(ctx),
   wachttoren: (ctx, seed, bemand) => tekenWachttorenPixel(ctx, bemand),
+  "offer-altaar": (ctx) => tekenOfferAltaarPixel(ctx),
+  legerkamp: (ctx) => tekenLegerkampPixel(ctx),
+  "vijandelijke-wachttoren": (ctx) => tekenVijandelijkeWachttorenPixel(ctx),
+  "vijandelijk-heiligdom": (ctx) => tekenVijandelijkHeiligdomPixel(ctx),
+  "bezette-laag-huisje": (ctx) => tekenBezetteLaagHuisjePixel(ctx),
 };
 
 function tekenLandImprovementPixel(ctx: CanvasRenderingContext2D, id: string, seed: number, bemand: boolean): void {
@@ -374,6 +447,25 @@ function tekenGhostTownPixel(ctx: CanvasRenderingContext2D, seed: number): void 
   }
 }
 
+// Ruïne (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner",
+// Deel 5) — pixel-art variant van `tekenRuine` in canvas.ts: zelfde
+// rubble-silhouet als `tekenGhostTownPixel` hierboven, maar met een warme
+// rust-/asgloed i.p.v. het koude grijs.
+function tekenRuinePixel(ctx: CanvasRenderingContext2D, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  ctx.fillStyle = "rgba(40, 20, 14, 0.5)";
+  ctx.fillRect(0, 0, PIX, PIX);
+
+  ctx.strokeStyle = "#5a3c2c";
+  ctx.strokeRect(5, 6, 6, 8);
+  vlijn(ctx, 6, 6, 8, "#5a3c2c");
+  vlijn(ctx, 10, 5, 9, "#5a3c2c");
+
+  for (let i = 0; i < 4; i++) {
+    p(ctx, 5 + Math.floor(rng() * 6), 12 + Math.floor(rng() * 2), `rgba(224, 120, 60, ${(0.3 + rng() * 0.2).toFixed(2)})`);
+  }
+}
+
 // Waarschuwingsdriehoek voor de "kritiek"-verval-status (M6, hoofdstuk 4/13).
 function tekenVervalIndicatorPixel(ctx: CanvasRenderingContext2D): void {
   const rijen = 6;
@@ -399,6 +491,26 @@ function tekenFogTilePixel(ctx: CanvasRenderingContext2D, seed: number): void {
   }
   for (let i = 0; i < 4; i++) {
     p(ctx, Math.floor(rng() * PIX), Math.floor(rng() * PIX * 0.6), `rgba(230, 220, 200, ${(0.16 + rng() * 0.16).toFixed(2)})`);
+  }
+}
+
+// Verhuld vakje van een Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag,
+// missionaris en verkenner", Deel 1) — pixel-art variant van
+// `tekenVerhuldeTile` in canvas.ts: zelfde opbouw als `tekenFogTilePixel`
+// hierboven, met een dreigende rossige gloed i.p.v. het neutrale grijs.
+function tekenVerhuldeTilePixel(ctx: CanvasRenderingContext2D, seed: number): void {
+  ctx.fillStyle = "#1a0f0b";
+  ctx.fillRect(0, 0, PIX, PIX);
+
+  const rng = maakSeededRandom(seed);
+  for (let i = 0; i < 3; i++) {
+    const mx = Math.floor(rng() * (PIX - 2));
+    const my = Math.floor(rng() * (PIX - 3)) + 2;
+    ctx.fillStyle = "rgba(160, 70, 60, 0.18)";
+    ctx.fillRect(mx, my, 2, 2);
+  }
+  for (let i = 0; i < 3; i++) {
+    p(ctx, Math.floor(rng() * PIX), Math.floor(rng() * PIX * 0.6), `rgba(220, 140, 110, ${(0.14 + rng() * 0.14).toFixed(2)})`);
   }
 }
 
@@ -575,6 +687,11 @@ function tekenActieveTilePixel(
     return;
   }
 
+  if (tile.status === "ruine") {
+    tekenRuinePixel(ctx, seed);
+    return;
+  }
+
   if (tile.improvement?.soort === "city") {
     tekenStadTilePixel(ctx, stad.grootte);
     if (stad.vervalStatus === "kritiek") {
@@ -633,7 +750,9 @@ export function tekenWereldPixelArt(
   plaatsingsLaagHoogte?: number,
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
-  wachttorenBereikbarePosities?: Settler[]
+  wachttorenBereikbarePosities?: Settler[],
+  legerkampBereikbarePosities?: Settler[],
+  verkenningBereikbarePosities?: Settler[]
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalLagen = lagen.length;
@@ -653,7 +772,18 @@ export function tekenWereldPixelArt(
       const x = col * tileSize;
       tileCtx.clearRect(0, 0, PIX, PIX);
 
-      if (!laag.ontgrendeld && !vooruitkijk) {
+      // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+      // verkenner", Deel 1) — zelfde per-tegel-verhullingslaag als
+      // `tekenWereld` in canvas.ts.
+      if (laag.bezet) {
+        const tile = laag.tiles[col];
+        if (tile.verhuld) {
+          tekenVerhuldeTilePixel(tileCtx, tileSeed(col, laag.hoogte));
+        } else {
+          const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
+          tekenActieveTilePixel(tileCtx, tile, laag.terreinType, stad, col, laag.hoogte, verbonden);
+        }
+      } else if (!laag.ontgrendeld && !vooruitkijk) {
         tekenFogTilePixel(tileCtx, tileSeed(col, laag.hoogte));
       } else if (!laag.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTilePixel(tileCtx, laag.terreinType);
@@ -668,7 +798,7 @@ export function tekenWereldPixelArt(
       blit(ctx, tileCanvas, x, y, tileSize);
       tekenTileGrid(ctx, x, y, tileSize);
 
-      if (laag.hoogte === plaatsingsLaagHoogte && laag.tiles[col].status === "leeg") {
+      if (laag.hoogte === plaatsingsLaagHoogte && isBebouwbaarLeeg(laag.tiles[col])) {
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
       }
 
@@ -682,6 +812,22 @@ export function tekenWereldPixelArt(
         )
       ) {
         tekenWachttorenBereikbaarMarkering(ctx, x, y, tileSize);
+      }
+
+      if (
+        legerkampBereikbarePosities?.some(
+          (positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col
+        )
+      ) {
+        tekenLegerkampBereikbaarMarkering(ctx, x, y, tileSize);
+      }
+
+      if (
+        verkenningBereikbarePosities?.some(
+          (positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col
+        )
+      ) {
+        tekenVerkenningBereikbaarMarkering(ctx, x, y, tileSize);
       }
     }
   }

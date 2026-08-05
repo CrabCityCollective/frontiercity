@@ -65,7 +65,21 @@
 // (hoofdstuk 14) — de waarden hieronder zijn bewuste MVP-placeholders, geen
 // definitieve balans.
 
-import { improvementPastOpTile, NIEUWE_SETTLER, OPSLAGPLAATS, SOLDAAT, WOONWIJK } from "./improvements";
+import {
+  BEZETTE_LAAG_HUISJE,
+  improvementPastOpTile,
+  isBebouwbaarLeeg,
+  LEGERKAMP,
+  MISSIONARIS,
+  NIEUWE_SETTLER,
+  OFFER_ALTAAR,
+  OPSLAGPLAATS,
+  SOLDAAT,
+  VERKENNER,
+  VIJANDELIJK_HEILIGDOM,
+  VIJANDELIJKE_WACHTTOREN,
+  WOONWIJK,
+} from "./improvements";
 import { standaardUitlegAan } from "./save";
 import {
   boerderijOpbrengstFactor,
@@ -88,6 +102,8 @@ import {
   AMBER_ONTDEKKING_LAAG,
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
+  initialiseerBezetteLaag,
+  isBezetteLaagHoogte,
   isGeschiktVoorStichten,
   maakInitieleWereld,
   STAD_POSITIE,
@@ -133,11 +149,17 @@ export const WACHTTOREN_VOEDSEL_VERBRUIK = 1;
 // Militair-tuning (M7, hoofdstuk 6/14): net als de verval-tuning bewuste
 // MVP-placeholders. `WINKANS_MIN`/`WINKANS_MAX` zorgen dat een confrontatie
 // nooit een gegarandeerde uitkomst is, ook bij extreme krachtsverschillen.
+// Hergebruikt door `confrontatieBezetteLaag` hieronder (Deel 5) — dezelfde
+// winkans-formule, alleen een andere eigen-legerwaarde-berekening.
 const WINKANS_MIN = 0.05;
 const WINKANS_MAX = 0.95;
-const BUIT_GOUD_FACTOR = 0.5;
-const SCHADE_TILES_AANTAL = 2;
-const SCHADE_BEURTEN = 3;
+
+// Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+// verkenner"): kosten van één Verkenning (Deel 3) en de belegeringsdrempel
+// tegen een vijandelijk Heiligdom (Deel 4) — beide MVP-richtwaarden,
+// expliciet tunebaar genoemd in het issue (hoofdstuk 14).
+export const VERKENNING_KOSTEN_WETENSCHAP = 10;
+export const BELEGERINGSDREMPEL = 30;
 
 // Kuddes & settler-jacht (hoofdstuk 16/17; issue: "kuddes met dieren waar je
 // op kunt jagen voor voedsel"): een losse settler-actie naast bewegen/weg
@@ -193,6 +215,8 @@ export function maakInitieleSpelStatus(): GameState {
       relics: [],
       vervalStatus: "gezond",
       strijders: [],
+      verkenners: [],
+      missionarissen: [],
     },
     lagen: maakInitieleWereld(),
     voorraad: { ...STARTVOORRAAD },
@@ -204,6 +228,7 @@ export function maakInitieleSpelStatus(): GameState {
     beurt: 1,
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,
+    verkenningGedaanDitBeurt: false,
     volgendeBouwBeurt: 1,
     // Standaard-instelling (issue: "een setting waarmee je deze uitleg
     // pop-ups aan en uit kunt zetten ... standaard voor alle nieuwe potjes")
@@ -297,12 +322,55 @@ function steenOpbrengst(waarde: number, technologieen: TechId[]): number {
 // issue: "tech tree toevoegen" Deel 1) volgt voor wetenschap exact hetzelfde
 // patroon — "zelfde patroon als Heiligdom voor cultuur", inclusief deze
 // frontier-halvering.
+// Totale cultuurproductie van dit beurt: alle actieve, (voor land-
+// improvements) wegverbonden tiles met een cultuur-productie-effect, met
+// dezelfde frontier-halvering als hieronder in `verwerkProductie`. Los van
+// `verwerkProductie` zodat `verwerkBelegering` (hoofdstuk 6, issue: "De
+// Bezette Laag, missionaris en verkenner", Deel 4) dezelfde berekening kan
+// hergebruiken om te bepalen hoeveel cultuur-inkomen er deze beurt naar de
+// belegeringsmeter omgeleid wordt zodra een Bezette Laag actief is — zelfde
+// patroon als `berekenVoedselProductie` hierboven.
+function berekenCultuurProductieDitBeurt(state: GameState): number {
+  let productie = 0;
+  const frontierHoogte = hoogsteOntgrendeldeLaag(state.lagen);
+
+  for (const laag of state.lagen) {
+    for (const tile of laag.tiles) {
+      const effect = tile.improvement?.effect;
+      if (
+        tile.status !== "actief" ||
+        effect?.type !== "productie" ||
+        effect.resource !== "cultuur" ||
+        !effect.waarde
+      ) {
+        continue;
+      }
+      if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)) {
+        continue;
+      }
+      productie += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+    }
+  }
+
+  return productie;
+}
+
 function verwerkProductie(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
   let voedsel = state.voedsel;
   let cultuur = state.cultuur;
   let wetenschap = state.wetenschap;
   const frontierHoogte = hoogsteOntgrendeldeLaag(state.lagen);
+  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 2): zolang er een actieve Bezette Laag is, bevriest de
+  // cumulatieve cultuurteller volledig — nieuwe cultuurproductie wordt hier
+  // dus bewust overgeslagen (niet toegevoegd aan `cultuur`). `verwerkBelegering`
+  // hieronder in de `volgendeBeurt`-pijplijn bepaalt zelf, via
+  // `berekenCultuurProductieDitBeurt`, of diezelfde productie (met Missionaris)
+  // alsnog naar de belegeringsmeter omgeleid wordt, of (zonder Missionaris)
+  // gewoon verloren gaat — "bevroren, maar niet verloren" geldt alleen voor
+  // de reeds opgebouwde `cultuur`-waarde zelf, niet voor nieuwe productie.
+  const bezetteLaag = state.lagen.find((l) => l.bezet);
 
   for (const laag of state.lagen) {
     for (const tile of laag.tiles) {
@@ -320,7 +388,9 @@ function verwerkProductie(state: GameState): GameState {
       }
 
       if (effect.resource === "cultuur") {
-        cultuur += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+        if (!bezetteLaag) {
+          cultuur += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+        }
       } else if (effect.resource === "wetenschap") {
         wetenschap += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
       } else if (isMateriaalType(effect.resource)) {
@@ -348,11 +418,31 @@ function verwerkLaagOntgrendeling(state: GameState): GameState {
   let lagen = state.lagen;
   let volgendeHoogte = hoogsteOntgrendeldeLaag(lagen) + 1;
   let amberOntdektEvent = state.amberOntdektEvent;
+  let bezetteLaagOntdektEvent = state.bezetteLaagOntdektEvent;
 
   while (
     volgendeHoogte <= lagen.length &&
     state.cultuur >= cultuurKostenVoorLaag(volgendeHoogte)
   ) {
+    const huidigeLaag = lagen.find((laag) => laag.hoogte === volgendeHoogte)!;
+
+    // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+    // verkenner", Deel 2): in plaats van normaal te ontgrendelen, komt deze
+    // laag "in beeld" — dezelfde soort trigger als de gegarandeerde
+    // Amberader-vondst hieronder. De laag blijft `ontgrendeld: false` (dus
+    // de frontier blijft op de laag eronder staan) tot alle vijandelijke
+    // Heiligdommen vernietigd zijn (`verwerkBelegering` hieronder in de
+    // `volgendeBeurt`-pijplijn) — de `while`-lus stopt hier dus altijd,
+    // zowel de eerste keer (initialisatie) als op elke latere beurt zolang
+    // de laag nog bezet is.
+    if (isBezetteLaagHoogte(volgendeHoogte)) {
+      if (!huidigeLaag.bezet) {
+        lagen = lagen.map((laag) => (laag.hoogte === volgendeHoogte ? initialiseerBezetteLaag(laag) : laag));
+        bezetteLaagOntdektEvent = true;
+      }
+      break;
+    }
+
     lagen = lagen.map((laag) =>
       laag.hoogte === volgendeHoogte ? { ...laag, ontgrendeld: true } : laag
     );
@@ -367,13 +457,207 @@ function verwerkLaagOntgrendeling(state: GameState): GameState {
     volgendeHoogte += 1;
   }
 
-  return lagen === state.lagen ? state : { ...state, lagen, amberOntdektEvent };
+  return lagen === state.lagen && bezetteLaagOntdektEvent === state.bezetteLaagOntdektEvent
+    ? state
+    : { ...state, lagen, amberOntdektEvent, bezetteLaagOntdektEvent };
+}
+
+// Sluit de "Bezette Laag ontdekt"-melding (Deel 2) — puur een
+// UI-bevestiging, zelfde patroon als `sluitAmberOntdektMelding` hieronder.
+export function sluitBezetteLaagOntdektMelding(state: GameState): GameState {
+  return { ...state, bezetteLaagOntdektEvent: undefined };
 }
 
 // Sluit de Amberader-ontdekkingsmelding (hoofdstuk 3/14) — puur een
 // UI-bevestiging, zelfde patroon als `sluitKuddeMelding` hierboven.
 export function sluitAmberOntdektMelding(state: GameState): GameState {
   return { ...state, amberOntdektEvent: undefined };
+}
+
+// Of er een voltooid Offer Altaar staat (Deel 4) — net als
+// `heeftGebouwdeMijn` verderop telt hier niet mee of het wegverbonden is:
+// het gaat om het moment van bouwen zelf, niet om lopende productie (het
+// Offer Altaar produceert toch niets, zie improvements.ts).
+export function heeftOfferAltaar(state: GameState): boolean {
+  return state.lagen.some((laag) =>
+    laag.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "offer-altaar")
+  );
+}
+
+// Belegering tegen de vijandelijke Heiligdommen van een Bezette Laag
+// (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel 4).
+// Zolang de speler geen Missionaris heeft, blijft de bevroren cultuurteller
+// (`verwerkProductie` hierboven) gewoon bevroren en gebeurt hier niets —
+// zodra er wél minstens één Missionaris is, wordt de cultuurproductie van
+// deze beurt (dezelfde berekening als `verwerkProductie` normaal zou
+// toepassen) omgeleid naar de belegeringsmeter. Bereikt de meter de drempel,
+// dan wordt het eerst-onthulde nog-actieve vijandelijke Heiligdom vernietigd
+// (positie als tie-break, bij gebrek aan een onthullings-tijdstempel) en
+// begint de meter weer bij 0 voor het volgende, indien er nog een resterend
+// is — vandaar de `while`-lus, net als `verwerkLaagOntgrendeling` hierboven.
+function verwerkBelegering(state: GameState): GameState {
+  const bezetteLaag = state.lagen.find((l) => l.bezet);
+  if (!bezetteLaag) return state;
+  if (state.stad.missionarissen.length === 0) return state;
+
+  const toevoeging = berekenCultuurProductieDitBeurt(state);
+  if (toevoeging <= 0) return state;
+
+  let voortgang = (bezetteLaag.belegeringsVoortgang ?? 0) + toevoeging;
+  let tiles = bezetteLaag.tiles;
+  let vijandelijkHeiligdomVernietigdEvent = state.vijandelijkHeiligdomVernietigdEvent;
+
+  while (voortgang >= BELEGERINGSDREMPEL) {
+    const doelIndex = tiles.findIndex(
+      (tile) => tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom"
+    );
+    if (doelIndex === -1) break; // geen resterend doel: meter blijft op de drempel staan
+
+    tiles = tiles.map((tile, index) =>
+      index === doelIndex ? { ...tile, status: "leeg" as const, improvement: undefined } : tile
+    );
+    voortgang -= BELEGERINGSDREMPEL;
+    vijandelijkHeiligdomVernietigdEvent = true;
+  }
+
+  // Einde van de Bezette Laag (Deel 6): zodra geen vijandelijk Heiligdom meer
+  // over is — noch onthuld-en-actief, noch nog verhuld — wordt de hele laag
+  // in één keer volledig onthuld (ook nog niet individueel verkende
+  // vakjes), eindigt de Bezette-status en telt de laag vanaf dan als normaal
+  // ontgrendeld. Nog niet geconfronteerde vijandelijke Wachttoren-tiles en de
+  // cosmetische huisjes blijven daarna gewoon staan (permanent, want alleen
+  // een gewonnen Confrontatie maakt een Wachttoren-tile weer leeg — zie
+  // `confrontatieBezetteLaag`).
+  const heeftNogHeiligdom = tiles.some(
+    (tile) =>
+      (tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom") ||
+      (tile.verhuld && tile.bezetteLaagInhoud === "heiligdom")
+  );
+  // `bezetteLaag` (hierboven) bestaat alleen zolang `laag.bezet` nog waar is
+  // — deze functie draait dus nooit meer opnieuw op een al opgeloste laag,
+  // dus geen aparte "was dit al opgelost?"-check nodig.
+  const opgelost = !heeftNogHeiligdom;
+
+  if (opgelost) {
+    tiles = tiles.map((tile) =>
+      !tile.verhuld
+        ? tile
+        : {
+            ...tile,
+            verhuld: false,
+            improvement:
+              tile.bezetteLaagInhoud === "wachttoren"
+                ? VIJANDELIJKE_WACHTTOREN
+                : tile.bezetteLaagInhoud === "huisje"
+                  ? BEZETTE_LAAG_HUISJE
+                  : undefined,
+            status:
+              tile.bezetteLaagInhoud === "wachttoren" || tile.bezetteLaagInhoud === "huisje"
+                ? ("actief" as const)
+                : tile.status,
+          }
+    );
+  }
+
+  const lagen = state.lagen.map((laag) =>
+    laag.hoogte === bezetteLaag.hoogte
+      ? {
+          ...laag,
+          tiles,
+          belegeringsVoortgang: voortgang,
+          bezet: opgelost ? false : laag.bezet,
+          ontgrendeld: opgelost ? true : laag.ontgrendeld,
+        }
+      : laag
+  );
+
+  return { ...state, lagen, vijandelijkHeiligdomVernietigdEvent };
+}
+
+// Sluit de "vijandelijk Heiligdom vernietigd"-melding (Deel 4) — puur een
+// UI-bevestiging.
+export function sluitVijandelijkHeiligdomVernietigdMelding(state: GameState): GameState {
+  return { ...state, vijandelijkHeiligdomVernietigdEvent: undefined };
+}
+
+// Sluit de "vijandelijk Heiligdom onthuld"-melding (Deel 3/4), gezet door
+// `verken` verderop zodra een onthuld vakje een vijandelijk Heiligdom
+// blijkt te zijn.
+export function sluitVijandelijkHeiligdomOnthuldMelding(state: GameState): GameState {
+  return { ...state, vijandelijkHeiligdomOnthuldEvent: undefined };
+}
+
+// Of Verkenning uitgevoerd kan worden (Deel 3): een actieve Bezette Laag,
+// minstens één Verkenner, en de beurt-limiet (hoogstens 1 keer per beurt,
+// zelfde soort limiet als de settler-acties) nog niet gebruikt.
+export function kanVerkennen(state: GameState): boolean {
+  return (
+    state.lagen.some((l) => l.bezet) &&
+    state.stad.verkenners.length > 0 &&
+    !state.verkenningGedaanDitBeurt &&
+    state.wetenschap >= VERKENNING_KOSTEN_WETENSCHAP
+  );
+}
+
+// Alle nog verhulde vakjes van de actieve Bezette Laag — de geldige
+// klik-doelen tijdens Verkenning (zelfde soort "bereikbare posities"-lijst
+// als `onbemandeWachttorenPosities`).
+export function verhuldeBezetteLaagPosities(state: GameState): Settler[] {
+  const bezetteLaag = state.lagen.find((l) => l.bezet);
+  if (!bezetteLaag) return [];
+  return bezetteLaag.tiles.filter((tile) => tile.verhuld).map((tile) => ({ hoogte: bezetteLaag.hoogte, positieInLaag: tile.positieInLaag }));
+}
+
+// Voert een Verkenning uit op één door de speler gekozen, nog verhuld vakje
+// van de actieve Bezette Laag (Deel 3): kost `VERKENNING_KOSTEN_WETENSCHAP`
+// wetenschap (dezelfde pool als de technologie-boom, hoofdstuk 3/9 — een
+// bewuste afweging tussen verder verkennen en voortgang in de techboom),
+// onthult het vakje als Wachttoren, Heiligdom of cosmetisch huisje (of, op
+// het neutrale vakje, blijft het gewoon een leeg vakje). Negeert de aanroep
+// stilzwijgend bij een ongeldige aanroep — zelfde veilige-aanroep-conventie
+// als `startBouw`/`bemanWachttoren`.
+export function verken(state: GameState, positieInLaag: number): GameState {
+  if (!kanVerkennen(state)) return state;
+
+  const bezetteLaag = state.lagen.find((l) => l.bezet)!;
+  const tile = bezetteLaag.tiles[positieInLaag];
+  if (!tile?.verhuld) return state;
+
+  const inhoudImprovement =
+    tile.bezetteLaagInhoud === "wachttoren"
+      ? VIJANDELIJKE_WACHTTOREN
+      : tile.bezetteLaagInhoud === "heiligdom"
+        ? VIJANDELIJK_HEILIGDOM
+        : tile.bezetteLaagInhoud === "huisje"
+          ? BEZETTE_LAAG_HUISJE
+          : undefined;
+
+  const lagen = state.lagen.map((laag) =>
+    laag.hoogte !== bezetteLaag.hoogte
+      ? laag
+      : {
+          ...laag,
+          tiles: laag.tiles.map((t, index) =>
+            index !== positieInLaag
+              ? t
+              : {
+                  ...t,
+                  verhuld: false,
+                  improvement: inhoudImprovement,
+                  status: inhoudImprovement ? ("actief" as const) : t.status,
+                }
+          ),
+        }
+  );
+
+  return {
+    ...state,
+    lagen,
+    wetenschap: state.wetenschap - VERKENNING_KOSTEN_WETENSCHAP,
+    verkenningGedaanDitBeurt: true,
+    vijandelijkHeiligdomOnthuldEvent:
+      tile.bezetteLaagInhoud === "heiligdom" ? true : state.vijandelijkHeiligdomOnthuldEvent,
+  };
 }
 
 // Technologie-boom (hoofdstuk 3/9/11, issue: "tech tree toevoegen" Deel 2):
@@ -983,6 +1267,66 @@ function verwerkRecrutering(state: GameState): GameState {
   };
 }
 
+// Betaalt de bouwkosten van een lopende Verkenner-rekrutering (hoofdstuk 6,
+// issue: "De Bezette Laag, missionaris en verkenner", Deel 3) — zelfde
+// wachtrij-patroon als `verwerkRecrutering` hierboven, eigen wachtrij
+// (`verkennerInAanbouw`) omdat een Verkenner een andere unit is dan Soldaat.
+function verwerkVerkennerRecrutering(state: GameState): GameState {
+  const verkennerInAanbouw = state.stad.verkennerInAanbouw;
+  if (!verkennerInAanbouw) return state;
+
+  const voorraad = { ...state.voorraad };
+  const resultaat = investeerInBouwkosten(verkennerInAanbouw.improvement, verkennerInAanbouw.voortgang, voorraad);
+  if (!resultaat) return state;
+
+  if (resultaat.voltooid) {
+    return {
+      ...state,
+      voorraad,
+      stad: {
+        ...state.stad,
+        verkenners: [...state.stad.verkenners, { id: `verkenner-${state.stad.verkenners.length}` }],
+        verkennerInAanbouw: undefined,
+      },
+    };
+  }
+
+  return {
+    ...state,
+    voorraad,
+    stad: { ...state.stad, verkennerInAanbouw: { ...verkennerInAanbouw, voortgang: resultaat.nieuweVoortgang } },
+  };
+}
+
+// Betaalt de bouwkosten van een lopende Missionaris-rekrutering (Deel 4) —
+// zelfde patroon als `verwerkVerkennerRecrutering` hierboven.
+function verwerkMissionarisRecrutering(state: GameState): GameState {
+  const missionarisInAanbouw = state.stad.missionarisInAanbouw;
+  if (!missionarisInAanbouw) return state;
+
+  const voorraad = { ...state.voorraad };
+  const resultaat = investeerInBouwkosten(missionarisInAanbouw.improvement, missionarisInAanbouw.voortgang, voorraad);
+  if (!resultaat) return state;
+
+  if (resultaat.voltooid) {
+    return {
+      ...state,
+      voorraad,
+      stad: {
+        ...state.stad,
+        missionarissen: [...state.stad.missionarissen, { id: `missionaris-${state.stad.missionarissen.length}` }],
+        missionarisInAanbouw: undefined,
+      },
+    };
+  }
+
+  return {
+    ...state,
+    voorraad,
+    stad: { ...state.stad, missionarisInAanbouw: { ...missionarisInAanbouw, voortgang: resultaat.nieuweVoortgang } },
+  };
+}
+
 // Start de groei-tier klein→middel (M6), als de voedseldrempel gehaald is en
 // er niet al een groei loopt. Dit is een bewuste spelerskeuze, geen
 // automatische ontgrendeling zoals cultuur (M5) — hoofdstuk 11: "doorgroeien
@@ -1069,6 +1413,31 @@ export function startRecrutering(state: GameState): GameState {
       ...state.stad,
       legerInAanbouw: { improvement: SOLDAAT, voortgang: { ...SOLDAAT.kosten } },
     },
+  };
+}
+
+// Start het rekruteren van een Verkenner (hoofdstuk 6, issue: "De Bezette
+// Laag, missionaris en verkenner", Deel 3) — geen vereiste zoals het Offer
+// Altaar bij Missionaris hieronder, altijd trainbaar zodra er niet al een
+// Verkenner in opleiding is.
+export function startVerkennerRecrutering(state: GameState): GameState {
+  if (state.stad.verkennerInAanbouw) return state;
+
+  return {
+    ...state,
+    stad: { ...state.stad, verkennerInAanbouw: { improvement: VERKENNER, voortgang: { ...VERKENNER.kosten } } },
+  };
+}
+
+// Start het rekruteren van een Missionaris (Deel 4) — alleen mogelijk zodra
+// er een voltooid Offer Altaar staat (`heeftOfferAltaar` hierboven), net als
+// de Missionaris-unit zelf tot nu toe nooit daadwerkelijk trainbaar was.
+export function startMissionarisRecrutering(state: GameState): GameState {
+  if (state.stad.missionarisInAanbouw || !heeftOfferAltaar(state)) return state;
+
+  return {
+    ...state,
+    stad: { ...state.stad, missionarisInAanbouw: { improvement: MISSIONARIS, voortgang: { ...MISSIONARIS.kosten } } },
   };
 }
 
@@ -1162,65 +1531,168 @@ function berekenWinkans(eigenLegerwaarde: number, tegenstanderSterkte: number): 
   return Math.min(WINKANS_MAX, Math.max(WINKANS_MIN, ruweKans));
 }
 
-// Militaire confrontatie (M7, hoofdstuk 6): vergelijkt de eigen legerwaarde
-// met de dreiging op de actieve (hoogst ontgrendelde) laag via een winkans —
-// nooit een gegarandeerde uitkomst (WINKANS_MIN/MAX). Winst levert direct
-// buit (goud) op. Verlies is geen instant game-over: het versnelt de
-// uitputting van een beperkt aantal actieve land-tiles (schade), wat de
-// bestaande verval-cyclus (M6) dichterbij kan brengen in plaats van de stad
-// meteen te laten instorten.
-export function confrontatie(state: GameState): GameState {
-  const actieveLaag = state.lagen.find(
-    (laag) => laag.hoogte === hoogsteOntgrendeldeLaag(state.lagen)
+// Legerkamp-toewijzing (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+// verkenner", Deel 5) — zelfde soort interactie als Wachttoren-bemanning
+// hierboven (`isWachttorenBemand`/`onbemandeWachttorenPosities`/
+// `bemanWachttoren`), maar voor het Legerkamp: elke toegewezen Soldaat telt
+// mee als extra legerwaarde bij een Confrontatie tegen een Bezette Laag,
+// ongeacht op welke laag het Legerkamp staat.
+export function isLegerkampBemand(strijders: Strijder[], hoogte: number, positieInLaag: number): boolean {
+  return strijders.some(
+    (strijder) => strijder.legerkamp?.hoogte === hoogte && strijder.legerkamp?.positieInLaag === positieInLaag
   );
-  const tegenstanderSterkte = actieveLaag?.dreigingsniveau ?? 0;
-  const eigenLegerwaarde = berekenLegerwaarde(state);
+}
+
+export function onbemandeLegerkampPosities(state: GameState): Settler[] {
+  const posities: Settler[] = [];
+  for (const laag of state.lagen) {
+    for (const tile of laag.tiles) {
+      if (
+        tile.status === "actief" &&
+        tile.improvement?.id === "legerkamp" &&
+        !isLegerkampBemand(state.stad.strijders, laag.hoogte, tile.positieInLaag)
+      ) {
+        posities.push({ hoogte: laag.hoogte, positieInLaag: tile.positieInLaag });
+      }
+    }
+  }
+  return posities;
+}
+
+// Wijst een strijder toe aan een Legerkamp — een strijder heeft hoogstens
+// één toewijzing tegelijk (Wachttoren óf Legerkamp), net als de gewone
+// Wachttoren-bemanning omkeerbaar en instant via `haalStrijderTerug`
+// hieronder.
+export function bemanLegerkamp(state: GameState, strijderId: string, hoogte: number, positieInLaag: number): GameState {
+  const strijder = state.stad.strijders.find((s) => s.id === strijderId);
+  if (!strijder || strijder.wachttoren || strijder.legerkamp) return state;
+
+  const laag = state.lagen.find((l) => l.hoogte === hoogte);
+  const tile = laag?.tiles[positieInLaag];
+  if (!tile || tile.status !== "actief" || tile.improvement?.id !== "legerkamp") return state;
+  if (isLegerkampBemand(state.stad.strijders, hoogte, positieInLaag)) return state;
+
+  const strijders = state.stad.strijders.map((s) =>
+    s.id === strijderId ? { ...s, legerkamp: { hoogte, positieInLaag } } : s
+  );
+
+  return { ...state, stad: { ...state.stad, strijders } };
+}
+
+// Opgetelde legerwaarde van alle Legerkamp-toegewezen Soldaten (Deel 5) —
+// dezelfde per-strijder-waarde als de gewone `berekenLegerwaarde` hierboven,
+// maar losstaand: alleen toegewezen strijders tellen hier mee, in
+// tegenstelling tot de gewone legerwaarde die altijd alle strijders meetelt.
+export function berekenLegerkampLegerwaarde(state: GameState): number {
+  const aantal = state.stad.strijders.filter((s) => s.legerkamp).length;
+  return aantal * ((SOLDAAT.effect.waarde ?? 0) + legerwaardeBonusPerStrijder(state.technologieen));
+}
+
+// Alle onthulde, nog niet vernietigde vijandelijke Wachttoren-tiles van de
+// actieve Bezette Laag (Deel 5) — de mogelijke Confrontatie-doelen.
+export function vijandelijkeWachttorenPosities(state: GameState): Settler[] {
+  const bezetteLaag = state.lagen.find((l) => l.bezet);
+  if (!bezetteLaag) return [];
+  return bezetteLaag.tiles
+    .filter((tile) => tile.status === "actief" && tile.improvement?.id === "vijandelijke-wachttoren")
+    .map((tile) => ({ hoogte: bezetteLaag.hoogte, positieInLaag: tile.positieInLaag }));
+}
+
+// Of een Confrontatie tegen deze specifieke vijandelijke Wachttoren-tile
+// mogelijk is (Deel 5): vereist een voltooide, bemande, wegverbonden eigen
+// Wachttoren op de laag direct onder de Bezette Laag (hoofdstuk 6:
+// "beschermt ook de laag eronder") — zonder die eigen Wachttoren is de actie
+// niet beschikbaar (uitgegrijsd/geblokkeerd), geen mislukte poging.
+export function kanConfrontatieBezetteLaag(state: GameState, positieInLaag: number): boolean {
+  const bezetteLaag = state.lagen.find((l) => l.bezet);
+  if (!bezetteLaag) return false;
+  const tile = bezetteLaag.tiles[positieInLaag];
+  if (tile?.status !== "actief" || tile.improvement?.id !== "vijandelijke-wachttoren") return false;
+
+  const laagOnder = state.lagen.find((l) => l.hoogte === bezetteLaag.hoogte - 1);
+  return laagOnder !== undefined && heeftWerkendeWachttorenOpLaag(state, laagOnder);
+}
+
+// Confrontatie tegen een vijandelijke Wachttoren op een Bezette Laag
+// (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel 5)
+// — een apart systeem van de gewone Wachttoren-/indringers-mechaniek
+// hierboven, met een eigen eigen-legerwaarde-formule: de verdedigingsbonus
+// van de beschermende eigen Wachttoren op de laag eronder, plus de
+// opgetelde legerwaarde van alle Legerkamp-toegewezen Soldaten (ongeacht op
+// welke laag het Legerkamp staat) — gebruikt verder dezelfde winkans-formule
+// (`berekenWinkans` hierboven, hoofdstuk 14: geclamped 5%-95%).
+// Tegenstandersterkte = `Layer.dreigingsniveau` van de Bezette Laag zelf —
+// dezelfde precedent-waarde als de bestaande, oplopende dreigingsniveau-
+// formule (world.ts) elders al gebruikt, en daardoor automatisch
+// vergelijkbaar met de zwaarste tegenstander die de speler tot dan toe in de
+// tutorial is tegengekomen.
+//
+// Winst: de vijandelijke Wachttoren-tile wordt "opgeruimd" (leeg, geen
+// dreiging/doel meer). Verlies: de eigen beschermende Wachttoren wordt een
+// ruïne (op dezelfde plek herbouwbaar tegen de normale kosten/bouwtijd) en
+// de strijder die hem bemande is blijvend verloren — geen reassignment,
+// anders dan de normale, omkeerbare bemannings-regel (hoofdstuk 6).
+// Legerkamp-toegewezen strijders blijven bij verlies gewoon behouden.
+export function confrontatieBezetteLaag(state: GameState, positieInLaag: number): GameState {
+  if (!kanConfrontatieBezetteLaag(state, positieInLaag)) return state;
+
+  const bezetteLaag = state.lagen.find((l) => l.bezet)!;
+  const laagOnder = state.lagen.find((l) => l.hoogte === bezetteLaag.hoogte - 1)!;
+  const beschermendeWachttoren = laagOnder.tiles.find(
+    (tile) =>
+      tile.status === "actief" &&
+      tile.improvement?.id === "wachttoren" &&
+      isWachttorenBemand(state.stad.strijders, laagOnder.hoogte, tile.positieInLaag) &&
+      isTileVerbondenMetStad(state.lagen, laagOnder.hoogte, tile.positieInLaag)
+  )!;
+
+  const tegenstanderSterkte = bezetteLaag.dreigingsniveau ?? 0;
+  const eigenLegerwaarde =
+    (beschermendeWachttoren.improvement?.effect.waarde ?? 0) + berekenLegerkampLegerwaarde(state);
   const winkans = berekenWinkans(eigenLegerwaarde, tegenstanderSterkte);
   const gewonnen = Math.random() < winkans;
 
-  if (gewonnen) {
-    const buitGoud = Math.round(tegenstanderSterkte * BUIT_GOUD_FACTOR);
-    const voorraad = {
-      ...state.voorraad,
-      goud: Math.min(state.opslagCap, state.voorraad.goud + buitGoud),
-    };
-    const laatsteConfrontatie: ConfrontatieResultaat = {
-      winkans,
-      gewonnen,
-      eigenLegerwaarde,
-      tegenstanderSterkte,
-      buitGoud,
-    };
-    return { ...state, voorraad, laatsteConfrontatie };
-  }
-
-  let geraakt = 0;
-  const lagen = state.lagen.map((laag) => ({
-    ...laag,
-    tiles: laag.tiles.map((tile) => {
-      if (
-        geraakt >= SCHADE_TILES_AANTAL ||
-        tile.status !== "actief" ||
-        tile.improvement?.soort !== "land" ||
-        tile.beurtenTotUitputting === undefined ||
-        !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)
-      ) {
-        return tile;
-      }
-
-      geraakt += 1;
-      return { ...tile, beurtenTotUitputting: Math.max(1, tile.beurtenTotUitputting - SCHADE_BEURTEN) };
-    }),
-  }));
-
-  const laatsteConfrontatie: ConfrontatieResultaat = {
+  const laatsteConfrontatieBezetteLaag: ConfrontatieResultaat = {
     winkans,
     gewonnen,
     eigenLegerwaarde,
     tegenstanderSterkte,
-    geraakteTiles: geraakt,
   };
-  return { ...state, lagen, laatsteConfrontatie };
+
+  if (gewonnen) {
+    const lagen = state.lagen.map((laag) =>
+      laag.hoogte !== bezetteLaag.hoogte
+        ? laag
+        : {
+            ...laag,
+            tiles: laag.tiles.map((t, i) =>
+              i === positieInLaag ? { ...t, status: "leeg" as const, improvement: undefined } : t
+            ),
+          }
+    );
+    return { ...state, lagen, laatsteConfrontatieBezetteLaag };
+  }
+
+  const bemanner = state.stad.strijders.find(
+    (s) =>
+      s.wachttoren?.hoogte === laagOnder.hoogte && s.wachttoren?.positieInLaag === beschermendeWachttoren.positieInLaag
+  );
+  const strijders = bemanner ? state.stad.strijders.filter((s) => s.id !== bemanner.id) : state.stad.strijders;
+
+  const lagen = state.lagen.map((laag) =>
+    laag.hoogte !== laagOnder.hoogte
+      ? laag
+      : {
+          ...laag,
+          tiles: laag.tiles.map((t, i) =>
+            i === beschermendeWachttoren.positieInLaag
+              ? { ...t, status: "ruine" as const, improvement: undefined, beurtenTotUitputting: undefined }
+              : t
+          ),
+        }
+  );
+
+  return { ...state, lagen, stad: { ...state.stad, strijders }, laatsteConfrontatieBezetteLaag };
 }
 
 // Kans per beurt dat er ergens een indringers-incident plaatsvindt
@@ -1522,7 +1994,9 @@ export function startBouw(
     if (!laag.ontgrendeld) return laag;
 
     const doelTile = laag.tiles[positieInLaag];
-    if (!doelTile || doelTile.status !== "leeg") return laag;
+    // Een "ruine"-vakje (Deel 5: een verloren Confrontatie tegen een Bezette
+    // Laag) is net zo herbouwbaar als een gewoon leeg vakje.
+    if (!doelTile || !isBebouwbaarLeeg(doelTile)) return laag;
     if (!improvementPastOpTile(improvement, doelTile)) return laag;
 
     const tiles = laag.tiles.map((tile, index) => {
@@ -1879,11 +2353,18 @@ export function bemanWachttoren(
 // versie liet de strijder hier nog een paar beurten "onderweg" zijn, maar dat
 // voegde alleen wachttijd toe zonder de keuze zelf interessanter te maken).
 // Geen effect op een strijder die niet bemand is.
+// Sinds "De Bezette Laag" (Deel 5) kan een strijder ook aan een Legerkamp
+// toegewezen zijn (`legerkamp` i.p.v. `wachttoren`, zie `bemanLegerkamp`
+// hierboven) — deze functie haalt hem sowieso terug van wélke toewijzing hij
+// ook heeft, net zo omkeerbaar en instant als de oorspronkelijke Wachttoren-
+// only-versie.
 export function haalStrijderTerug(state: GameState, strijderId: string): GameState {
   const strijder = state.stad.strijders.find((s) => s.id === strijderId);
-  if (!strijder || !strijder.wachttoren) return state;
+  if (!strijder || (!strijder.wachttoren && !strijder.legerkamp)) return state;
 
-  const strijders = state.stad.strijders.map((s) => (s.id === strijderId ? { ...s, wachttoren: undefined } : s));
+  const strijders = state.stad.strijders.map((s) =>
+    s.id === strijderId ? { ...s, wachttoren: undefined, legerkamp: undefined } : s
+  );
 
   return { ...state, stad: { ...state.stad, strijders } };
 }
@@ -1926,14 +2407,20 @@ export function volgendeBeurt(state: GameState): GameState {
   const naBouw = verwerkBouwwachtrij(naUitputting);
   const naProductie = verwerkProductie(naBouw);
   const naOntgrendeling = verwerkLaagOntgrendeling(naProductie);
-  const naTechDrempel = verwerkTechDrempel(naOntgrendeling);
+  // Belegering (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // verkenner", Deel 4): direct na de laag-ontgrendeling, op dezelfde
+  // cultuurproductie van deze beurt — zie `verwerkBelegering` hierboven.
+  const naBelegering = verwerkBelegering(naOntgrendeling);
+  const naTechDrempel = verwerkTechDrempel(naBelegering);
   const naVerval = verwerkVerval(naTechDrempel);
   if (naVerval.laatsteIneenstorting) return naVerval;
 
   const naCiviel = verwerkCivielInAanbouw(naVerval);
   const naOpslagplaats = verwerkOpslagplaats(naCiviel);
   const naRecrutering = verwerkRecrutering(naOpslagplaats);
-  const naIndringers = verwerkIndringers(naRecrutering);
+  const naVerkennerRecrutering = verwerkVerkennerRecrutering(naRecrutering);
+  const naMissionarisRecrutering = verwerkMissionarisRecrutering(naVerkennerRecrutering);
+  const naIndringers = verwerkIndringers(naMissionarisRecrutering);
   const naKuddes = verwerkKuddes(naIndringers);
   const naRoofdieren = verwerkRoofdieren(naKuddes);
   const nieuweBeurt = naRoofdieren.beurt + 1;
@@ -1959,6 +2446,7 @@ export function volgendeBeurt(state: GameState): GameState {
     beurt: nieuweBeurt,
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,
+    verkenningGedaanDitBeurt: false,
     settler,
   };
 }

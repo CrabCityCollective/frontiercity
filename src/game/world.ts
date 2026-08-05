@@ -1,21 +1,26 @@
 // Bouwt de initiële wereldstaat voor de tutorial ("De Eerste Vuren", lagen 1-13).
 // Zie frontier-city-design-doc.md hoofdstuk 2 (ruimtelijk model) en hoofdstuk 10 (tutorial-opzet).
 
-import { Layer, TerreinType, Tile } from "./types";
+import { BezetteLaagInhoud, Layer, TerreinType, Tile } from "./types";
 
 export const BAND_WIDTH_TILES = 9;
 export const STAD_POSITIE = 4; // middelste vakje van de band = stad
 export const TUTORIAL_LAAG_AANTAL = 13;
 
-// Laag van de militaire confrontatie ("De Bergkam", issue: "pop-up met uitleg
-// hoe je de militaire confrontatie moet aanpakken"). Los van
+// Laag van de Bezette Laag ("De Bergkam", hoofdstuk 6, issue: "De Bezette
+// Laag, missionaris en verkenner" — vervangt de eerdere, kleinere
+// "militaire confrontatie op laag 12"-placeholder volledig). Los van
 // `TUTORIAL_LAAG_AANTAL` gehouden (issue: "tutorial laatste stad aan
-// oceaan") — vóór laag 13 erbij kwam waren dit dezelfde laag, en gebruikte
-// de code op een paar plekken `TUTORIAL_LAAG_AANTAL` toen het eigenlijk deze
-// specifieke laag bedoelde. Die plekken (GameRoot.tsx) gebruiken nu deze
-// eigen constante, zodat de militaire les op laag 12 blijft staan ook al is
-// laag 12 niet langer de laatste laag van de tutorial.
-export const MILITAIR_CONFRONTATIE_LAAG = 12;
+// oceaan") — vóór laag 13 erbij kwam waren dit dezelfde laag. Het generieke
+// Bezette-Laag-mechanisme zelf (bevriezing, Verkenning, Belegering,
+// Confrontatie) leeft in economie.ts en kent alleen deze ene hoogte als
+// tutorial-specifieke scripting — een latere campagne zou hier een eigen
+// hoogte (of meerdere) voor kunnen definiëren.
+export const BEZETTE_LAAG_HOOGTE = 12;
+
+export function isBezetteLaagHoogte(hoogte: number): boolean {
+  return hoogte === BEZETTE_LAAG_HOOGTE;
+}
 
 // Vaste (niet-procedurele) terreintypes voor de tutorial-lagen — de tutorial is
 // vastgelegde inhoud, geen random worldgen zoals bij latere campagnes (hoofdstuk 8).
@@ -112,6 +117,49 @@ const TUTORIAL_AMBER: Record<number, number[]> = {
 
 function amberVoorTile(hoogte: number, positieInLaag: number): boolean {
   return TUTORIAL_AMBER[hoogte]?.includes(positieInLaag) ?? false;
+}
+
+// Vaste inhoud-verdeling van de Bezette Laag (hoofdstuk 6, issue: "De
+// Bezette Laag, missionaris en verkenner", Deel 1) — tutorial-scripting op
+// `BEZETTE_LAAG_HOOGTE` (laag 12), net zo vastgelegd/niet-procedureel als
+// `TUTORIAL_AMBER` hierboven. Verspreid over 8 van de 9 vakjes: twee
+// vijandelijke Wachttorens (Confrontatie-doelen), twee vijandelijke
+// Heiligdommen (Belegeringsdoelen) en vier cosmetische huisjes (geen doel,
+// geen functie). Positie 4 (het middelste vakje — elders het stad-vakje)
+// blijft bewust neutraal: een gewoon leeg vakje zodra onthuld, zodat niet
+// alle 9 vakjes vijandelijke/cosmetische inhoud hoeven te dragen.
+const TUTORIAL_BEZETTE_LAAG_INHOUD: Record<number, BezetteLaagInhoud> = {
+  0: "wachttoren",
+  1: "heiligdom",
+  2: "huisje",
+  3: "wachttoren",
+  5: "huisje",
+  6: "heiligdom",
+  7: "huisje",
+  8: "huisje",
+};
+
+function bezetteLaagInhoudVoorTile(hoogte: number, positieInLaag: number): BezetteLaagInhoud | undefined {
+  return hoogte === BEZETTE_LAAG_HOOGTE ? TUTORIAL_BEZETTE_LAAG_INHOUD[positieInLaag] : undefined;
+}
+
+// Initialiseert een Bezette Laag zodra ze "in beeld komt" (economie.ts:
+// `verwerkLaagOntgrendeling`, dezelfde soort trigger als de gegarandeerde
+// Amberader-vondst op laag 7): zet `bezet: true` en verhult elk vakje
+// individueel (`Tile.verhuld`), los van de gewone laag-brede fog-of-war —
+// de laag zelf blijft `ontgrendeld: false` tot alle vijandelijke
+// Heiligdommen vernietigd zijn (zie `verwerkBelegering` in economie.ts).
+export function initialiseerBezetteLaag(laag: Layer): Layer {
+  return {
+    ...laag,
+    bezet: true,
+    belegeringsVoortgang: 0,
+    tiles: laag.tiles.map((tile) => ({
+      ...tile,
+      verhuld: true,
+      bezetteLaagInhoud: bezetteLaagInhoudVoorTile(laag.hoogte, tile.positieInLaag),
+    })),
+  };
 }
 
 // Dreigingsniveau per laag (M7, hoofdstuk 6): de tegenstandersterkte bij een

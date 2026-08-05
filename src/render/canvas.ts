@@ -9,6 +9,7 @@
 // van platte kleurvlakken.
 
 import { isWachttorenBemand } from "@/game/economie";
+import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Layer, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad } from "@/game/wegen";
 import { BAND_WIDTH_TILES, isVooruitkijkLaag } from "@/game/world";
@@ -420,6 +421,131 @@ function tekenHeiligdom(ctx: CanvasRenderingContext2D, x: number, y: number, siz
   ctx.stroke();
 }
 
+// Offer Altaar (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+// verkenner", Deel 4) — een lage stenen altaar met een offervuur, bewust een
+// andere silhouet/kleur dan het Heiligdom (rechtopstaande steen, paarse
+// gloed) zodat de twee culturele improvements ook zonder tile-info-pop-up uit
+// elkaar te houden zijn. Vaste, simpele vorm (hoofdstuk 13: placeholders
+// mogen grof/simpel zijn).
+function tekenOfferAltaar(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.56);
+
+  ctx.fillStyle = "#6b6055";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.24, baseY);
+  ctx.lineTo(x + size * 0.3, baseY - size * 0.16);
+  ctx.lineTo(x + size * 0.7, baseY - size * 0.16);
+  ctx.lineTo(x + size * 0.76, baseY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#3a342c";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  tekenKampvuur(ctx, x + size * 0.5, baseY - size * 0.16, size * 0.09);
+}
+
+// Legerkamp (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+// verkenner", Deel 5) — een kleine legertent, bewust anders dan de
+// Wachttoren-toren en de stad-tenten (gedempt olijfgroen i.p.v. warm
+// oker/bruin) zodat het meteen als "militair, maar geen toren" leesbaar is.
+function tekenLegerkampIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.6);
+  tekenTent(ctx, x + size * 0.5, baseY, size * 0.4, "#5a6b46");
+
+  ctx.strokeStyle = "rgba(40, 34, 24, 0.6)";
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.5, baseY);
+  ctx.lineTo(x + size * 0.5, baseY - size * 0.4);
+  ctx.stroke();
+}
+
+// Cosmetisch huisje van een Bezette Laag (Deel 1): geen economische functie,
+// niet interactief — een klein, stil huisje, duidelijk kleiner en stiller
+// (geen kampvuur-gloed) dan de stad-tenten, zodat het meteen als "decor"
+// leesbaar is.
+function tekenBezetteLaagHuisje(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.4);
+  tekenTent(ctx, x + size * 0.5, baseY, size * 0.32, "#8a7a68");
+}
+
+// Vijandelijke Wachttoren-/Heiligdom-varianten van een Bezette Laag
+// (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel 1):
+// hergebruikt de bestaande Wachttoren-/Heiligdom-tekenaars met een duidelijk
+// andere kleurskin (een killere, dreigende rode/grijze palet i.p.v. het
+// warme hout/paars van de eigen versies) — geen nieuwe game-logica, puur
+// visueel onderscheid.
+function tekenVijandelijkeWachttorenIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.5);
+
+  ctx.strokeStyle = "#3a2c2c";
+  ctx.lineWidth = Math.max(1.5, size * 0.045);
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.36, baseY);
+  ctx.lineTo(x + size * 0.44, y + size * 0.24);
+  ctx.moveTo(x + size * 0.64, baseY);
+  ctx.lineTo(x + size * 0.56, y + size * 0.24);
+  ctx.moveTo(x + size * 0.4, y + size * 0.62);
+  ctx.lineTo(x + size * 0.6, y + size * 0.5);
+  ctx.stroke();
+
+  ctx.fillStyle = "#4a3838";
+  ctx.fillRect(x + size * 0.34, y + size * 0.16, size * 0.32, size * 0.1);
+  ctx.strokeStyle = "#241818";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + size * 0.34, y + size * 0.16, size * 0.32, size * 0.1);
+
+  ctx.fillStyle = "#a0242c";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.5, y + size * 0.02);
+  ctx.lineTo(x + size * 0.5, y + size * 0.16);
+  ctx.lineTo(x + size * 0.62, y + size * 0.09);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function tekenVijandelijkHeiligdomIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.42);
+
+  const gloed = ctx.createRadialGradient(
+    x + size * 0.5, y + size * 0.55, 0,
+    x + size * 0.5, y + size * 0.55, size * 0.45
+  );
+  gloed.addColorStop(0, "rgba(180, 40, 40, 0.35)");
+  gloed.addColorStop(1, "rgba(180, 40, 40, 0)");
+  ctx.fillStyle = gloed;
+  ctx.beginPath();
+  ctx.arc(x + size * 0.5, y + size * 0.55, size * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#5a4a4a";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.4, baseY);
+  ctx.lineTo(x + size * 0.36, y + size * 0.3);
+  ctx.lineTo(x + size * 0.5, y + size * 0.16);
+  ctx.lineTo(x + size * 0.64, y + size * 0.32);
+  ctx.lineTo(x + size * 0.6, baseY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#2c2020";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(200, 60, 60, 0.85)";
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.beginPath();
+  ctx.arc(x + size * 0.5, y + size * 0.42, size * 0.07, 0, Math.PI * 2);
+  ctx.moveTo(x + size * 0.5, y + size * 0.49);
+  ctx.lineTo(x + size * 0.5, y + size * 0.66);
+  ctx.stroke();
+}
+
 // `bemand` (nieuwe Wachttoren-functie, hoofdstuk 6, issue: "ik wil ook in het
 // wachttoren icoontje zien of er een soldaat in zit"): een gedempt grijze
 // vlag voor een lege, dus inactieve, toren; een warme vlag + een klein
@@ -472,6 +598,11 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   boerderij: tekenBoerderij,
   heiligdom: (ctx, x, y, size) => tekenHeiligdom(ctx, x, y, size),
   wachttoren: (ctx, x, y, size, seed, bemand) => tekenWachttoren(ctx, x, y, size, bemand),
+  "offer-altaar": (ctx, x, y, size) => tekenOfferAltaar(ctx, x, y, size),
+  legerkamp: (ctx, x, y, size) => tekenLegerkampIcon(ctx, x, y, size),
+  "vijandelijke-wachttoren": (ctx, x, y, size) => tekenVijandelijkeWachttorenIcon(ctx, x, y, size),
+  "vijandelijk-heiligdom": (ctx, x, y, size) => tekenVijandelijkHeiligdomIcon(ctx, x, y, size),
+  "bezette-laag-huisje": (ctx, x, y, size) => tekenBezetteLaagHuisje(ctx, x, y, size),
 };
 
 function tekenLandImprovement(
@@ -650,6 +781,37 @@ function tekenGhostTown(ctx: CanvasRenderingContext2D, x: number, y: number, siz
   }
 }
 
+// Ruïne (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner",
+// Deel 5: een eigen Wachttoren na een verloren Confrontatie) — zelfde
+// rubble-silhouet als `tekenGhostTown` hierboven, maar met een warme
+// rust-/asgloed in plaats van het koude grijs, zodat het visueel leesbaar is
+// als "beschadigd, herbouwbaar" in plaats van "voor altijd verlaten".
+function tekenRuine(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = y + size * 0.86;
+
+  ctx.fillStyle = "rgba(40, 20, 14, 0.5)";
+  ctx.fillRect(x, y, size, size);
+
+  ctx.strokeStyle = "#5a3c2c";
+  ctx.lineWidth = Math.max(1, size * 0.03);
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.34, baseY);
+  ctx.lineTo(x + size * 0.42, y + size * 0.48);
+  ctx.moveTo(x + size * 0.66, baseY);
+  ctx.lineTo(x + size * 0.56, y + size * 0.54);
+  ctx.stroke();
+
+  for (let i = 0; i < 4; i++) {
+    const ex = x + size * (0.28 + rng() * 0.44);
+    const ey = baseY - rng() * size * 0.08;
+    ctx.fillStyle = `rgba(224, 120, 60, ${0.2 + rng() * 0.15})`;
+    ctx.beginPath();
+    ctx.arc(ex, ey, size * 0.014, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 // Waarschuwingsdriehoek voor de "kritiek"-verval-status (M6, hoofdstuk 4/13).
 // Als eigen vector-icoon getekend (niet via een tekst-glyph als ⚠, die er per
 // platform/lettertype anders uitziet) zodat het consistent oogt.
@@ -722,6 +884,44 @@ function tekenFogTile(
     ctx.fillStyle = `rgba(230, 220, 200, ${0.08 + rng() * 0.1})`;
     ctx.beginPath();
     ctx.arc(sx, sy, size * 0.007, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Verhuld vakje van een Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag,
+// missionaris en verkenner", Deel 1) — een eigen, per-tegel verhullingslaag,
+// los van de gewone laag-brede fog-of-war hierboven (`tekenFogTile`). Zelfde
+// opbouw (donkere ondergrond + wervelende mist), maar met een dreigende
+// rossige gloed in plaats van het neutrale koud-grijze sterrenlicht, zodat
+// een speler het verschil ook zonder tekst herkent: dit is geen "nog niet
+// bereikt", maar "bezet, nog niet verkend".
+function tekenVerhuldeTile(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const verloop = ctx.createLinearGradient(x, y, x, y + size);
+  verloop.addColorStop(0, "#1f120e");
+  verloop.addColorStop(1, "#0d0705");
+  ctx.fillStyle = verloop;
+  ctx.fillRect(x, y, size, size);
+
+  const rng = maakSeededRandom(seed);
+  for (let i = 0; i < 3; i++) {
+    const mx = x + rng() * size;
+    const my = y + size * (0.3 + rng() * 0.5);
+    const mr = size * (0.28 + rng() * 0.25);
+    const mist = ctx.createRadialGradient(mx, my, 0, mx, my, mr);
+    mist.addColorStop(0, "rgba(160, 70, 60, 0.16)");
+    mist.addColorStop(1, "rgba(160, 70, 60, 0)");
+    ctx.fillStyle = mist;
+    ctx.beginPath();
+    ctx.ellipse(mx, my, mr, mr * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const sx = x + rng() * size;
+    const sy = y + rng() * size * 0.6;
+    ctx.fillStyle = `rgba(220, 140, 110, ${0.1 + rng() * 0.1})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, size * 0.008, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -978,6 +1178,44 @@ export function tekenWachttorenBereikbaarMarkering(
   ctx.restore();
 }
 
+// Markeert een actieve, nog onbemande Legerkamp-tile tijdens het bemannen
+// (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel 5)
+// — zelfde patroon als `tekenWachttorenBereikbaarMarkering` hierboven, maar
+// olijfgroen (net als `tekenLegerkampIcon`) zodat de twee kies-modi ook op de
+// kaart zelf te onderscheiden zijn.
+export function tekenLegerkampBereikbaarMarkering(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number
+): void {
+  ctx.save();
+  ctx.fillStyle = "rgba(120, 150, 70, 0.18)";
+  ctx.fillRect(x, y, size, size);
+  ctx.strokeStyle = "rgba(140, 170, 80, 0.9)";
+  ctx.lineWidth = Math.max(2, size * 0.045);
+  ctx.strokeRect(x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, size - ctx.lineWidth, size - ctx.lineWidth);
+  ctx.restore();
+}
+
+// Markeert een nog verhuld vakje van de actieve Bezette Laag tijdens
+// Verkenning (Deel 3) — zelfde patroon, maar de dreigende rossige kleur van
+// `tekenVerhuldeTile` zodat de markering aansluit bij wat er onder zit.
+export function tekenVerkenningBereikbaarMarkering(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number
+): void {
+  ctx.save();
+  ctx.fillStyle = "rgba(200, 90, 60, 0.18)";
+  ctx.fillRect(x, y, size, size);
+  ctx.strokeStyle = "rgba(210, 110, 70, 0.9)";
+  ctx.lineWidth = Math.max(2, size * 0.045);
+  ctx.strokeRect(x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, size - ctx.lineWidth, size - ctx.lineWidth);
+  ctx.restore();
+}
+
 function tekenActieveTile(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -999,6 +1237,11 @@ function tekenActieveTile(
 
   if (tile.status === "ghost_town") {
     tekenGhostTown(ctx, x, y, size, seed);
+    return;
+  }
+
+  if (tile.status === "ruine") {
+    tekenRuine(ctx, x, y, size, seed);
     return;
   }
 
@@ -1063,7 +1306,9 @@ export function tekenWereld(
   plaatsingsLaagHoogte?: number,
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
-  wachttorenBereikbarePosities?: Settler[]
+  wachttorenBereikbarePosities?: Settler[],
+  legerkampBereikbarePosities?: Settler[],
+  verkenningBereikbarePosities?: Settler[]
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalLagen = lagen.length;
@@ -1080,7 +1325,20 @@ export function tekenWereld(
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
       const x = col * tileSize;
 
-      if (!laag.ontgrendeld && !vooruitkijk) {
+      // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+      // verkenner", Deel 1): een eigen, per-tegel verhullingslaag, los van de
+      // gewone laag-brede fog-of-war hieronder — de laag zelf blijft
+      // `ontgrendeld: false` zolang ze bezet is, maar de losse vakjes worden
+      // hier al individueel getoond zodra ze onthuld zijn.
+      if (laag.bezet) {
+        const tile = laag.tiles[col];
+        if (tile.verhuld) {
+          tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, laag.hoogte));
+        } else {
+          const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
+          tekenActieveTile(ctx, x, y, tileSize, tile, laag.terreinType, stad, col, laag.hoogte, verbonden);
+        }
+      } else if (!laag.ontgrendeld && !vooruitkijk) {
         tekenFogTile(ctx, x, y, tileSize, tileSeed(col, laag.hoogte));
       } else if (!laag.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTile(ctx, x, y, tileSize, laag.terreinType);
@@ -1094,7 +1352,7 @@ export function tekenWereld(
 
       tekenTileGrid(ctx, x, y, tileSize);
 
-      if (laag.hoogte === plaatsingsLaagHoogte && laag.tiles[col].status === "leeg") {
+      if (laag.hoogte === plaatsingsLaagHoogte && isBebouwbaarLeeg(laag.tiles[col])) {
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
       }
 
@@ -1108,6 +1366,22 @@ export function tekenWereld(
         )
       ) {
         tekenWachttorenBereikbaarMarkering(ctx, x, y, tileSize);
+      }
+
+      if (
+        legerkampBereikbarePosities?.some(
+          (positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col
+        )
+      ) {
+        tekenLegerkampBereikbaarMarkering(ctx, x, y, tileSize);
+      }
+
+      if (
+        verkenningBereikbarePosities?.some(
+          (positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col
+        )
+      ) {
+        tekenVerkenningBereikbaarMarkering(ctx, x, y, tileSize);
       }
     }
   }

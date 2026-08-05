@@ -34,6 +34,13 @@ interface GameCanvasProps {
   // markeert de canvas deze vakjes en stuurt een klik erop naar `onTileClick`
   // als bemannen (zie GameRoot).
   wachttorenBereikbarePosities?: Settler[];
+  // Actieve, nog onbemande Legerkamp-tiles tijdens het bemannen (hoofdstuk 6,
+  // issue: "De Bezette Laag, missionaris en verkenner", Deel 5) — zelfde
+  // patroon als `wachttorenBereikbarePosities` hierboven.
+  legerkampBereikbarePosities?: Settler[];
+  // Nog verhulde vakjes van de actieve Bezette Laag tijdens Verkenning (Deel
+  // 3) — zelfde patroon, maar dan voor de Verkenning-kies-modus.
+  verkenningBereikbarePosities?: Settler[];
   onTileClick: (hoogte: number, positieInLaag: number) => void;
 }
 
@@ -72,6 +79,8 @@ export default function GameCanvas({
   settler,
   settlerBereikbarePosities,
   wachttorenBereikbarePosities,
+  legerkampBereikbarePosities,
+  verkenningBereikbarePosities,
   onTileClick,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -97,9 +106,20 @@ export default function GameCanvas({
       plaatsingsLaagHoogte,
       settler,
       settlerBereikbarePosities,
-      wachttorenBereikbarePosities
+      wachttorenBereikbarePosities,
+      legerkampBereikbarePosities,
+      verkenningBereikbarePosities
     );
-  }, [lagen, stad, plaatsingsLaagHoogte, settler, settlerBereikbarePosities, wachttorenBereikbarePosities]);
+  }, [
+    lagen,
+    stad,
+    plaatsingsLaagHoogte,
+    settler,
+    settlerBereikbarePosities,
+    wachttorenBereikbarePosities,
+    legerkampBereikbarePosities,
+    verkenningBereikbarePosities,
+  ]);
 
   function handleClick(event: MouseEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;
