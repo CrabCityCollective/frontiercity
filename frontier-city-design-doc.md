@@ -130,22 +130,22 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - Een **campagne** legt daar een thema-laag overheen: tribe-roster/gedrag, unieke units/gebouwen, en **campagne-specifieke multipliers** op bestaande mechanica (bijv. uitputtingssnelheid, pushback-frequentie) — geen aparte kernmechanica per campagne.
 - **Vertakkend verhaal**: een paar vaste "ankerpunten" (gekoppeld aan laag-hoogte-range, niet aan één exacte laag) met 2-3 betekenisvolle keuzes per anker. Latere ankers reageren op eerdere keuzes (keuzeboom), tot een gedeelde kernscène met tonale varianten bij het laatste anker (voorkomt dat elk pad apart volledig uitgeschreven moet worden).
 - **Historische inspiratie wordt direct gebruikt** (echte volken/leiders), naar eigen creatieve invulling — geen verplichting tot historische nauwkeurigheid of fictionalisering.
-- **Volgorde**: tutorial (neolithisch) → Amerikaanse frontier-campagne (eerste, verplicht) → overige campagnes ontgrendelen daarna.
+- **Volgorde**: tutorial (neolithisch, **"De Eerste Vuren"**) → Amerikaanse frontier-campagne (eerste, verplicht; in-game titel **"Going West"**) → overige campagnes ontgrendelen daarna. Deze in-game titels staan (samen met de nog uitgegrijsde toekomstige campagnes) in `CampagneSelectScherm.tsx`.
 - Meerdere campagnes/saves moeten **gelijktijdig lopen** (opslaan, wisselen tussen runs).
 
 **Toekomstige campagne-ideeën (met kernthema):**
 - **Mongoolse expansie** — mobiliteit/verovering makkelijk, behoud/civiele groei moeilijk (spiegelbeeld van Siberië)
-- **Alexander de Grote / Hellenistisch** — nadruk op stedenstichting, snel wisselend terrein
+- **Alexander de Grote / Hellenistisch** — nadruk op stedenstichting, snel wisselend terrein. In-game titel (uitgegrijsd aangekondigd in `CampagneSelectScherm.tsx`): **"Into the Footsteps of Alexander"** ("Grieks-Macedonische Veroveringen").
 - **Romeinse limes** — grens die je actief verdedigt en langzaam opschuift, militair als hoofdas
 - **Bantu-expansie** — lange termijn, economie/wetenschap als hoofdas, weinig conflict
 - **Vikingexpansie** — eilandspringen i.p.v. doorlopend continent (ruimtelijke variant)
 - **Spaanse conquista** — snelle maar instabiele verovering, cultuurschok/verval van bestaande rijken
 - **Nederlandse VOC-expansie** — handelsposten als eerste stap, sterke economische as, eilandstructuur
-- **Siberische/Tataarse expansie (Rusland)** — kou versnelt uitputting van voedselland, dunbevolkt = tragere pushback, bonthandel als economische motor
+- **Siberische/Tataarse expansie (Rusland)** — kou versnelt uitputting van voedselland, dunbevolkt = tragere pushback, bonthandel als economische motor. In-game titel (uitgegrijsd aangekondigd in `CampagneSelectScherm.tsx`): **"Through the Taiga"** ("Russian Expansion").
 
 ---
 
-## 9. Amerikaanse frontier-campagne — uitgewerkte ankers
+## 9. Amerikaanse frontier-campagne ("Going West") — uitgewerkte ankers
 
 **Toon**: donkerder en minder heroïsch dan klassieke western-verhalen — geïnspireerd op de sfeer van *Blood Meridian*. Geen morele framing door het spel zelf; geweld en keuzes worden beschreven, niet beoordeeld.
 
@@ -390,132 +390,13 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 - Volledige Amerikaanse campagne-content (ankers, vertakkingen)
 - Meerdere campagnes/saves tegelijk
 
-### Data-schema's (indicatief, als TypeScript-interfaces)
+### Data-schema's
 
-```typescript
-type ResourceType = "hout" | "steen" | "erts" | "goud" | "voedsel" | "cultuur" | "wetenschap";
+Dit document bevatte hier eerder een letterlijk, "indicatief" gelabeld TypeScript-codeblok met de belangrijkste interfaces (`Improvement`, `Tile`, `City`, `GameState`, `CampaignConfig`, e.d.). Dat blok is verwijderd: een los-gekopieerd voorbeeld raakt onvermijdelijk gedateerd zodra de echte code evolueert (het miste bijvoorbeeld al `Tile.roofdier`/`Tile.bouwVoortgang` en `Improvement.minLaag`), terwijl de losse velden intussen toch al beschreven staan in de hoofdstukken hierboven (2, 3, 4, 6, 9, 11, 16, 17).
 
-// Terrein-subtype van een los vakje binnen een laag (hoofdstuk 2/3/11) — los
-// van het terreintype van de hele laag (Layer.terreinType hieronder).
-type TerreinType = "vlak" | "bos" | "heuvel" | "berg";
-
-// Technologie-boom (hoofdstuk 3/9/11/13/14, issue: "tech tree toevoegen"): elke
-// sleutel is functioneel (het effect), los van naam/flavor-tekst — dezelfde
-// herbruikbare aanpak per campagne als `CampaignConfig.tegelSet` hieronder.
-// De boomvorm (welke tech onder welke ouder hangt, 3 drempels van elk 2
-// keuzes) staat vast in techTree.ts, niet in dit type.
-type TechId =
-  | "vuur-temmen" | "spoor-lezen"
-  | "aardewerk" | "zaadselectie" | "wiel" | "speerwerper"
-  | "weven" | "kalkoven" | "veeteelt" | "voorraadschuur" | "vlotten" | "handkar" | "boogschieten" | "verharde-speren";
-type TechDrempel = 1 | 2 | 3;
-
-interface Improvement {
-  id: string;
-  naam: string;
-  categorie: "economisch" | "wetenschappelijk" | "militair" | "civiel" | "cultureel";
-  soort: "city" | "land" | "unit";
-  kosten: Partial<Record<ResourceType, number>>;
-  bouwtijdBeurten: number;
-  effect: EffectDefinition; // resource-productie, unlock, bonus, etc.
-  zeldzaamheid?: "gewoon" | "rijk" | "legendarisch"; // alleen relevant voor land-improvements, post-MVP
-  uitputtingBeurten?: number; // alleen land-improvements; `undefined` voor Wachttoren/Heiligdom/Sterrencirkel (hoofdstuk 4/6: putten niet uit)
-  terreinEisen?: TerreinType[]; // alleen land-improvements; geen eis = overal plaatsbaar (hoofdstuk 3/11)
-  bouwbaarBuitenFrontier?: boolean; // uitzondering op "alleen op de frontier-laag" (hoofdstuk 6/11); momenteel alleen Wachttoren
-  vereisteTech?: TechId; // alleen beschikbaar nadat deze tech gekozen is (hoofdstuk 3/9); momenteel alleen de Voorraadkuil
-}
-
-interface Tile {
-  positieInLaag: number; // 0-8, 4 = centrum/stad
-  terrein: TerreinType; // vast vakje-terrein-subtype (hoofdstuk 2/11)
-  improvement?: Improvement;
-  status: "leeg" | "in_aanbouw" | "actief" | "ghost_town";
-  beurtenTotUitputting?: number;
-  heeftWeg?: boolean; // door de settler aangelegd (hoofdstuk 16)
-  kudde?: { beurtenResterend: number }; // wilde kudde, vanaf laag 4 (hoofdstuk 17)
-  versWater?: boolean; // ligt aan een rivier/meer (hoofdstuk 2) — voorwaarde om hier een stad te stichten
-  amber?: boolean; // ligt hier een amberader (hoofdstuk 3/14, issue: "toevoeging Goud") — vondst-eis van de Amberader/goudmijn, bovenop de gewone heuvel/berg-terreineis
-}
-
-// Positie van de settler-eenheid (hoofdstuk 16) — bestaat pas vanaf beurt 2.
-interface Settler {
-  hoogte: number;
-  positieInLaag: number;
-}
-
-interface Layer {
-  hoogte: number;
-  ontgrendeld: boolean;
-  tiles: Tile[]; // lengte 9
-  terreinType: string;
-  dreigingsniveau?: number;
-}
-
-interface City {
-  naam: string;
-  grootte: "klein" | "middel" | "groot";
-  relics: Relic[];
-  vervalStatus: "gezond" | "kritiek";
-  vervalBeurtenResterend?: number;
-  // Civiele stadsbouw-wachtrij (hoofdstuk 3/11/16): groei-tier (Woonwijk) of
-  // een nieuwe settler — hoogstens één van de twee tegelijk (concurrerende
-  // civiele keuze, hoofdstuk 11).
-  civielInAanbouw?: { improvement: Improvement; voortgang: Partial<Record<ResourceType, number>> };
-  // Opslagplaats-wachtrij (hoofdstuk 3/5/11/14): los van `civielInAanbouw`
-  // hierboven — Opslagplaats is economisch, geen civiel improvement, en
-  // concurreert dus niet met groei/nieuwe-settler. Herhaalbaar.
-  opslagplaatsInAanbouw?: { improvement: Improvement; voortgang: Partial<Record<ResourceType, number>> };
-}
-
-// GameState (hoofdstuk 16) krijgt naast bovenstaande er ook nog een optionele
-// `settler` bij (afwezig tot beurt 2), een `settlerActieGedaanDitBeurt`-vlag
-// (net als `bouwKeuzeGedaanDitBeurt`, maar dan voor de settler) en
-// `volgendeBouwBeurt` (de eerstvolgende beurt waarop weer een nieuw
-// bouwproject gestart mag worden — het bouw-ritme van hoofdstuk 16). Sinds
-// hoofdstuk 2/10 komt daar een optionele `stadGesticht`-vlag bij, gezet
-// zodra de speler een nieuwe stad heeft gesticht — dit vervangt "laag 12
-// bereikt" als tutorial-einddoel-trigger.
-//
-// Technologie-boom (hoofdstuk 3/9/11/14, issue: "tech tree toevoegen"):
-// GameState krijgt daarnaast `wetenschap` (voortgangs-valuta, zelfde patroon
-// als `cultuur`), `technologieen: TechId[]` (gekozen technologieën, in
-// volgorde — `technologieen.length` is tegelijk de laatst opgeloste drempel)
-// en een optionele `techKeuzeEvent: { drempel: TechDrempel; opties: [TechId, TechId] }`
-// (dezelfde blokkerende meldings-vorm als `IndringersEvent` hieronder).
-
-// Wachttoren-bemanning (hoofdstuk 6): `City` krijgt een `strijders`-lijst
-// i.p.v. één opgetelde legerwaarde-getal — elke opgeleide Soldaat is
-// individueel aanklikbaar in het militaire scherm en optioneel toegewezen
-// aan één Wachttoren-vakje. Toewijzen is omkeerbaar (hoofdstuk 6/11): een
-// bemande strijder kan teruggehaald worden en meteen elders opnieuw bemand —
-// verplaatsen tussen Wachttorens kost geen beurten (issue: "wachttoren
-// tweaks").
-interface Strijder {
-  id: string;
-  wachttoren?: { hoogte: number; positieInLaag: number };
-}
-
-// Indringers-tribuut (hoofdstuk 6): GameState krijgt daarnaast een optionele
-// `indringersEvent`, gezet zodra de per-beurt-kans toeslaat en een tribe een
-// (uit alle ontgrendelde lagen geloten) laag laat binnendringen.
-interface IndringersEvent {
-  laagHoogte: number;
-  stamNaam: string;
-  heeftWachttoren: boolean;
-  tribuut?: { resource: "hout" | "steen" | "erts" | "goud"; aantal: number }; // alleen als !heeftWachttoren
-  fase: "gemeld" | "geforceerd"; // "geforceerd" = weigeren zonder vorige stad, MVP-uitzondering (hoofdstuk 13)
-}
-
-interface CampaignConfig {
-  id: string;
-  naam: string;
-  tegelSet: string; // asset-map referentie
-  multipliers: Partial<{ uitputtingssnelheid: number; pushbackFrequentie: number; zeldzaamheidLegendarisch: number }>;
-  ankers?: StoryAnchor[]; // post-MVP
-  techNamen?: Partial<Record<TechId, string>>; // per-campagne naam-override voor de technologie-boom (hoofdstuk 3/9), zelfde aanpak als `tegelSet`
-  improvementNamen?: Partial<Record<string, string>>; // per-campagne naam-override voor land/city improvements (hoofdstuk 3/14, issue: "toevoeging Goud"), zelfde aanpak als `techNamen` — Amberader ("Amberader" tutorial-naam, interne sleutel `goudmijn`) is hier het eerste voorbeeld van
-}
-```
+**Voor de actuele, altijd-kloppende interfaces: zie de code zelf**, met name:
+- `src/game/types.ts` — `Improvement`, `Tile`, `Settler`, `Layer`, `City`, `GameState`, `Strijder`, `IndringersEvent`, `CampaignConfig`, `TechId`, en de post-MVP-velden die al voorbereid staan (`Improvement.zeldzaamheid`, `CampaignConfig.ankers`, `zeldzaamheidLegendarisch`) zonder dat de tutorial-code ze gebruikt (CLAUDE.md).
+- `src/game/techTree.ts` — de volledige technologie-boom en effecten per `TechId`.
 
 ### Asset-lijst voor de MVP (placeholder-niveau)
 
@@ -571,13 +452,13 @@ Binnen de gekozen range wordt random getrokken; een bergengte/obstakel-zone word
 
 | Type | Gewoon | Rijk | Legendarisch |
 |---|---|---|---|
-| Mijn (erts) | 8-12 | 5-8 | 20-25 (+ oogstvenster) |
+| Mijn (erts) | 6 | 5-8 | 20-25 (+ oogstvenster) |
 | Boerderij (voedsel) | 15-20 | 10-14 | 30-35 |
 | Houtkap (hout) | 12-16 (nooit volledig 0, wel afnemend) | 8-11 | 25-30 |
 | Steengroeve (steen) | 10-14 | 7-10 | 22-27 |
 | Amberader/goudmijn (goud, issue: "toevoeging Goud") | 10-14 | 6-10 | 22-28 (+ oogstvenster, zoals bij andere legendarische vondsten — hoofdstuk 7) |
 
-De rijk/legendarisch-kolommen hierboven blijven, net als bij de andere mijn/boerderij/houtkap/steengroeve-rijen, een MVP-placeholder voor de zeldzaamheid-uitwerking (hoofdstuk 7/13: nog niet geïmplementeerd) — de huidige code kent alleen de "gewoon"-waarde toe (`uitputtingBeurten: 12`, het midden van de 10-14-range).
+De rijk/legendarisch-kolommen hierboven blijven, net als bij de andere mijn/boerderij/houtkap/steengroeve-rijen, een MVP-placeholder voor de zeldzaamheid-uitwerking (hoofdstuk 7/13: nog niet geïmplementeerd) — de huidige code kent alleen de "gewoon"-waarde toe. Voor Houtkap (14), Steengroeve (10), Boerderij (18) en Amberader/goudmijn (12, het midden van de 10-14-range) valt die waarde binnen de tabel hierboven. **Correctie op eerdere beschrijving**: Mijn week hier eerder van af — de code gebruikt `uitputtingBeurten: 6` (`src/game/improvements.ts`), sneller dan de eerder gedocumenteerde 8-12-range en zelfs onder de Rijk-placeholder (5-8). De "Gewoon"-waarde hierboven is bijgewerkt naar 6; de Rijk/Legendarisch-kolommen voor Mijn zijn nog niet opnieuw doorgerekend tegen die snellere basiswaarde, wat pas relevant wordt zodra de zeldzaamheid-uitwerking zelf wordt gebouwd.
 
 *Cultuurkosten*: `kosten(laag) = 3 + 5 × (laag − 1)²` — kwadratisch, cumulatieve drempel (cultuur wordt nooit "uitgegeven", zie hoofdstuk 5). Vervangt de eerdere exponentiële formule (basis 20, ×1,4 per laag); zie hoofdstuk 11 ("Kwadratisch in plaats van exponentieel cultuurkosten") voor de onderbouwing. De basisterm is sindsdien verder verlaagd van 15 naar 3 (issue: "de eerste cultuurdrempel is te hoog"; hoofdstuk 11, "Basisterm van de cultuurkosten verlaagd") — de kwadratische factor (5) is ongewijzigd, dus de curve vanaf ruwweg laag 6-8 verandert nauwelijks, terwijl laag 2-5 fors goedkoper worden. Culturele pushback-lagen: ×2 van het normale (dan al kwadratisch opgelopen) bedrag.
 
@@ -636,20 +517,26 @@ Twee dingen volgen hieruit. Eén: de trage start heeft inderdaad **deels een and
 
 Het verschil met de vergelijkbare cultuurlaag loopt op van ~6 naar ~9 beurten — een oplopend, dus **merkbaar** tempoverschil, precies zoals het issue vraagt ("wetenschap moet spelbaar merkbaar trager gaan dan cultuur"), zonder dat de boom onbereikbaar wordt: drempel 3 valt ruim vóór het einde van de 12 tutorial-lagen (de cultuurkosten lopen daar al op tot 400-600, zie de cultuurkosten-tabel hierboven — de tutorial duurt dus sowieso veel langer dan 42 beurten). Het zwaardere tempo is bewust: wetenschap levert permanente, structurele bonussen op (een boerderij die voorgoed 20% meer opbrengt, een opslag-cap die voorgoed +10 is) in plaats van eenmalige toegang tot een laag — zie hoofdstuk 11 voor de volledige onderbouwing.
 
+> ⚠️ **Nog te implementeren — let op**: de tech **"vlotten"** (B1a) belooft dat de settler rivier-vakjes kan oversteken, maar heeft in de huidige MVP-code **geen enkel waarneembaar effect**: er bestaat nog geen enkele vorm van bewegingsbeperking bij water (`versWater` op een tile is uitsluitend een stichtings-geschiktheids-vlag, geen doorgangs-blokkade — zie `world.ts`/`wegen.ts`), dus er is niets om op te heffen. De functie `settlerKanRivierOversteken` (`src/game/techTree.ts`) bestaat al en staat klaar, maar wordt nergens aangeroepen. Dit moet alsnog gebouwd worden zodra een water-doorgangsregel wordt toegevoegd — tot die tijd is de keuze voor "vlotten" in de technologie-boom cosmetisch.
+>
+> Ter vergelijking: **"wiel"** (B1) is wél functioneel gewired (`settlerWegaanlegGratis`, gebruikt in `economie.ts`) — wegaanleg kost de settler daarmee geen aparte actie meer — maar dat is een bewust gekozen interpretatie ("dichtstbijzijnde zinvolle interpretatie" van "sneller wegen aanleggen", zie de code-comments in `techTree.ts`), geen letterlijke snelheids-verhoging. Dit is geen open werkpunt zoals "vlotten", maar wel het vermelden waard als de daadwerkelijke tech-tekst ooit herzien wordt.
+
 *Opslag-cap (issue: "stad stichten op de frontier" deel 3, doorgerekend tegen de code)*: start op 30, elke Opslagplaats-improvement +20, praktisch maximum ~3-4 opslagplaatsen per stad (~110 totaal). **Correctie op eerdere beschrijving**: dit is in de daadwerkelijke implementatie een cap **per grondstof** (hout/steen/erts/goud elk apart tot 30, niet hun gezamenlijke som) — anders dan "gedeelde opslag" in hoofdstuk 5 en eerdere versies van dit hoofdstuk suggereren. De opslagplaats-waarde (`OPSLAGPLAATS.kosten`, hoofdstuk 3) is **8 hout, 6 steen**, bouwtijd **3 beurten**; het effect (+20 opslag-cap) geldt voor alle vier grondstoffen tegelijk. Deze architectuur is bewust ongewijzigd gelaten bij het doorrekenen van de stichtingskosten hieronder (een refactor naar een echt gedeelde cap is een aparte, grotere wijziging) — in plaats daarvan zijn de stichtingskosten erop afgestemd.
 
 *Stichtingskosten (hoofdstuk 2/10/14, issue: "stad stichten op de frontier" deel 3)*: **40 hout, 15 steen, 10 erts, 30 voedsel**. Doorgerekend vanaf het voorstel "25 hout, 15 steen, 10 erts, 30 voedsel": met een cap per grondstof (zie hierboven) zaten alle drie de voorgestelde bouwmateriaal-bedragen ruim onder de start-cap van 30, waardoor een speler nooit een Opslagplaats nodig zou hebben — dat ondermijnt de bewuste tussenstap uit hoofdstuk 11. `hout` is daarom verhoogd naar 40 (boven de cap van 30), zodat minstens één Opslagplaats (cap 30 → 50) afgedwongen wordt; steen/erts blijven op de voorgestelde bedragen, ruim haalbaar zonder extra opslag. Voedsel blijft op de voorgestelde 30 — voedsel heeft sowieso geen cap (hoofdstuk 5) en wordt nooit "uitgegeven" door bestaande mechanieken (alleen drempels zoals de groei-drempel controleren de voorraad), dus een gezonde stad staat er tegen de tijd dat laag 13 ontgrendeld is toch al ver boven; de eis dwingt vooral af dat de voedselcrisis allang bezworen moet zijn, wat het bestaande verval-risico (hoofdstuk 4) toch al vereist. Indicatieve doorrekening: met één actieve Houtkap (3 hout/beurt) en één Opslagplaats is 40 hout binnen ~13-14 beurten surplus te sparen; 15 steen (één Steengroeve, 2/beurt) binnen ~8 beurten; 10 erts (één Mijn, 2/beurt) binnen ~5 beurten — ruim haalbaar binnen de vele tientallen beurten die toch al nodig zijn om laag 13 te ontgrendelen (de cultuurkosten lopen daar al op tot 400-600+, zie de cultuurkosten-tabel hierboven), dus een doel waar de speler een paar lagen naartoe werkt zonder dat het sleept.
 
 *Nieuwe settler (hoofdstuk 3/11/16)*: kosten **10 hout, 4 steen**, bouwtijd **4 beurten** — vergelijkbaar met Woonwijk (6 hout, 4 steen, 4 beurten), de improvement waarmee hij in dezelfde civiele wachtrij concurreert.
 
-*Groei-tier kosten (voedsel)*: klein→middel = 100 voedsel + 5 beurten rijptijd; middel→groot = 250 voedsel + 8 beurten rijptijd.
+*Groei-tier kosten (voedsel)*: **correctie op eerdere beschrijving** — de huidige code gebruikt klein→middel = **40 voedsel** (`VOEDSEL_DREMPEL_GROEI`, `src/game/world.ts`) + **4 beurten** bouwtijd (Woonwijk-improvement, `src/game/improvements.ts`), lager dan de eerder hier genoemde 100 voedsel/5 beurten. Dit is in de huidige MVP-scope (hoofdstuk 13: één groei-tier-stap) ook de enige geïmplementeerde stap; middel→groot bestaat nog niet in de code — er is geen aparte formule of kostenwaarde voor deze tier vastgelegd.
 
 *Voedselverbruik & verval-drempel*: een kleine stad verbruikt 2 voedsel/beurt, middel 4, groot 6 — tegenover de productie van actieve, wegverbonden boerderijen. De "kritiek"-waarschuwing verschijnt zodra de voorraad bij het huidige netto-tempo naar verwachting binnen 5 beurten op zou raken; bij daadwerkelijk 0 voedsel stort de stad in (hoofdstuk 4).
 
 *Wachttoren-bemanning (hoofdstuk 6/11, issue: "wachttorens, bemanning en bevoorrading")*: elke bemande Wachttoren kost **1 voedsel/beurt**, bovenop het stadsverbruik hierboven. Doorgerekend tegen de boerderij-opbrengst (4 voedsel/beurt, uitputting pas na 15-20 beurten): een kleine stad met 1 actieve boerderij houdt na het eigen verbruik (2) nog 2 voedsel/beurt over — genoeg voor 2 bemande wachttorens zonder in de min te komen; met 2 boerderijen (8) is dat 6 over, genoeg voor 6. Een middelgrote stad (verbruik 4) heeft met 2 boerderijen (8) een marge van 4 wachttorens, met 3 (12) een marge van 8. Omdat elke tutorial-laag minstens 2 (en meestal 3-6) vlakke vakjes heeft (vaste terrein-indeling per laag, zie hoofdstuk 11 "Terrein-eisen per land improvement"), is een boerderij zelden het knelpunt, en groeit het aantal boerderijen dat een speler gaandeweg de 12 tutorial-lagen bouwt doorgaans mee met het aantal wachttorens dat nodig is om ze te verdedigen. Bij een typische build (2-4 boerderijen tegen de tijd dat er meerdere wachttorens staan) blijft 1 voedsel/beurt per toren dus ruim binnen de marge — geen aanpassing elders in de voedseleconomie nodig (zie hoofdstuk 11 voor de volledige onderbouwing).
 
 *Winkans-formule militaire confrontaties*:
-> Winkans = eigen legerwaarde / (eigen legerwaarde + vijand legerwaarde), geclampt tussen 10% en 90%.
+> Winkans = eigen legerwaarde / (eigen legerwaarde + vijand legerwaarde), geclampt tussen **5% en 95%** (`WINKANS_MIN`/`WINKANS_MAX`, `src/game/economie.ts`).
+>
+> **Correctie op eerdere beschrijving**: dit document noemde eerder een clamp van 10%-90%; de daadwerkelijke implementatie clampt ruimer, op 5%-95%.
 
 *Indringers & tribuut (hoofdstuk 6)*: kans op een indringers-incident (één trekking voor de hele stad, niet per laag) = 20% per beurt (MVP-richtwaarde, tunebaar; verlaagd vanaf de eerdere 40% op alleen de frontier-laag), getrokken over alle ontgrendelde lagen samen — geen aanwezigheids-eis meer, en pas een factor vanaf laag 2 (verlaagd vanaf laag 3) — de eerste laag blijft zo een rustige introductie. Tribuut zonder beschermende (voltooide, bemande én wegverbonden) wachttoren op de getroffen laag = ongeveer de helft (afgerond, minimaal 1) van het grondstof-type waar de speler op dat moment het meest van heeft, nooit meer dan de aanwezige voorraad.
 
