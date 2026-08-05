@@ -290,13 +290,13 @@ test("een Opslagplaats verhoogt de opslag-cap met haar effect-waarde na voltooii
 
 test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbruikt daarna de settler", () => {
   let state = maakInitieleSpelStatus();
-  // Laag 10, positie 0 is in world.ts vastgelegd als een vers-water-vakje
-  // (TUTORIAL_VERS_WATER) — de settler moet er wel eerst kunnen staan, dus
-  // die laag moet ontgrendeld zijn.
+  // Laag 13, positie 5 is in world.ts vastgelegd als het (enige) vers-water-
+  // vakje van de tutorial (TUTORIAL_VERS_WATER) — de settler moet er wel
+  // eerst kunnen staan, dus die laag moet ontgrendeld zijn.
   state = {
     ...state,
-    settler: { hoogte: 10, positieInLaag: 0 },
-    lagen: state.lagen.map((laag) => (laag.hoogte === 10 ? { ...laag, ontgrendeld: true } : laag)),
+    settler: { hoogte: 13, positieInLaag: 5 },
+    lagen: state.lagen.map((laag) => (laag.hoogte === 13 ? { ...laag, ontgrendeld: true } : laag)),
   };
 
   assert.equal(kanStichten(state), true, "een leeg, vers-water-vakje met de settler erop is een geldig doel");
@@ -318,7 +318,7 @@ test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbr
   assert.equal(naStichten.voorraad.erts, 0);
   assert.equal(naStichten.voedsel, 0);
 
-  const gestichteTile = naStichten.lagen.find((l) => l.hoogte === 10)!.tiles[0];
+  const gestichteTile = naStichten.lagen.find((l) => l.hoogte === 13)!.tiles[5];
   assert.equal(gestichteTile.status, "actief");
   assert.equal(gestichteTile.improvement?.soort, "city");
 
@@ -336,14 +336,14 @@ test("kanStichten is false op een vakje zonder vers water, of als het vakje al b
 
   state = {
     ...state,
-    settler: { hoogte: 10, positieInLaag: 0 },
+    settler: { hoogte: 13, positieInLaag: 5 },
     lagen: state.lagen.map((laag) =>
-      laag.hoogte === 10
+      laag.hoogte === 13
         ? {
             ...laag,
             ontgrendeld: true,
             tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 0 ? { ...tile, status: "actief" as const, improvement: HOUTKAP } : tile
+              tile.positieInLaag === 5 ? { ...tile, status: "actief" as const, improvement: HOUTKAP } : tile
             ),
           }
         : laag

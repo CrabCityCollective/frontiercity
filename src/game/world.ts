@@ -1,11 +1,21 @@
-// Bouwt de initiële wereldstaat voor de tutorial ("De Eerste Vuren", lagen 1-12).
+// Bouwt de initiële wereldstaat voor de tutorial ("De Eerste Vuren", lagen 1-13).
 // Zie frontier-city-design-doc.md hoofdstuk 2 (ruimtelijk model) en hoofdstuk 10 (tutorial-opzet).
 
 import { Layer, TerreinType, Tile } from "./types";
 
 export const BAND_WIDTH_TILES = 9;
 export const STAD_POSITIE = 4; // middelste vakje van de band = stad
-export const TUTORIAL_LAAG_AANTAL = 12;
+export const TUTORIAL_LAAG_AANTAL = 13;
+
+// Laag van de militaire confrontatie ("De Bergkam", issue: "pop-up met uitleg
+// hoe je de militaire confrontatie moet aanpakken"). Los van
+// `TUTORIAL_LAAG_AANTAL` gehouden (issue: "tutorial laatste stad aan
+// oceaan") — vóór laag 13 erbij kwam waren dit dezelfde laag, en gebruikte
+// de code op een paar plekken `TUTORIAL_LAAG_AANTAL` toen het eigenlijk deze
+// specifieke laag bedoelde. Die plekken (GameRoot.tsx) gebruiken nu deze
+// eigen constante, zodat de militaire les op laag 12 blijft staan ook al is
+// laag 12 niet langer de laatste laag van de tutorial.
+export const MILITAIR_CONFRONTATIE_LAAG = 12;
 
 // Vaste (niet-procedurele) terreintypes voor de tutorial-lagen — de tutorial is
 // vastgelegde inhoud, geen random worldgen zoals bij latere campagnes (hoofdstuk 8).
@@ -22,6 +32,7 @@ const TUTORIAL_TERREINTYPES = [
   "kale hoogvlakte",
   "besneeuwde flank",
   "bergkam",
+  "oceaanoever",
 ];
 
 function terreinTypeVoorLaag(hoogte: number): string {
@@ -51,6 +62,7 @@ const TUTORIAL_TILE_TERREIN: Record<number, TerreinType[]> = {
   10: ["vlak", "heuvel", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
   11: ["berg", "heuvel", "berg", "heuvel", "vlak", "vlak", "bos", "vlak", "heuvel"],
   12: ["berg", "berg", "heuvel", "berg", "vlak", "vlak", "bos", "heuvel", "berg"],
+  13: ["vlak", "bos", "vlak", "heuvel", "vlak", "vlak", "bos", "heuvel", "vlak"],
 };
 
 function terreinVoorTile(hoogte: number, positieInLaag: number): TerreinType {
@@ -59,17 +71,17 @@ function terreinVoorTile(hoogte: number, positieInLaag: number): TerreinType {
 
 // Vakjes die aan vers water liggen — een rivier of een meer (hoofdstuk 2:
 // "een stad kan alleen gesticht worden op een vakje dat aan vers water
-// ligt"). Vaste tutorial-worldgen (net als TUTORIAL_TILE_TERREIN hierboven),
-// bewust zo gekozen dat elk van laag 10, 11 en 12 minstens één zo'n vakje
-// heeft — een speler kan dus nooit pech hebben en eindeloos moeten
-// doorlopen op zoek naar een geschikte plek (issue: "stad stichten op de
-// frontier" deel 1). Alle drie op een vlak vakje (nooit het centrum/positie
-// 4) zodat het ook een boerderij-kandidaat is — plannen waar je een stad
-// sticht versus waar je verbouwt, is een bewuste keuze, geen dwangkeuze.
+// ligt"). Vaste tutorial-worldgen (net als TUTORIAL_TILE_TERREIN hierboven).
+// Sinds issue "tutorial laatste stad aan oceaan" staat dit vakje uitsluitend
+// op de allerlaatste laag (TUTORIAL_LAAG_AANTAL, de oceaan aan de overkant)
+// — de enige plek in de hele tutorial met vers water. Dat maakt het stichten
+// van de laatste stad een bewuste, unieke bestemming aan het eind van de
+// tocht, in plaats van een keuze die de speler al vanaf laag 10 open staat.
+// Op een vlak vakje (nooit het centrum/positie 4) zodat het ook een
+// boerderij-kandidaat is — plannen waar je een stad sticht versus waar je
+// verbouwt, is een bewuste keuze, geen dwangkeuze.
 const TUTORIAL_VERS_WATER: Record<number, number[]> = {
-  10: [0],
-  11: [5],
-  12: [5],
+  13: [5],
 };
 
 function versWaterVoorTile(hoogte: number, positieInLaag: number): boolean {
@@ -158,7 +170,7 @@ function maakVergrendeldeLaag(hoogte: number): Layer {
   };
 }
 
-// De startwereld: laag 1 (startstad) ontgrendeld, lagen 2-12 nog achter fog of war.
+// De startwereld: laag 1 (startstad) ontgrendeld, lagen 2-13 nog achter fog of war.
 export function maakInitieleWereld(): Layer[] {
   return Array.from({ length: TUTORIAL_LAAG_AANTAL }, (_, i) =>
     i === 0 ? maakStartLaag() : maakVergrendeldeLaag(i + 1)
@@ -181,7 +193,7 @@ export function isVooruitkijkLaag(laag: Layer, lagen: Layer[]): boolean {
 
 // Hoeveel nog-onontdekte mist-lagen we, naast de ene vooruitkijk-laag, boven
 // de frontier tonen (issue: "haal een paar onontdekte tegels weg, die zijn
-// voor nu niet relevant"). Zonder deze grens rendert de canvas alle 12
+// voor nu niet relevant"). Zonder deze grens rendert de canvas alle
 // tutorial-lagen vanaf het begin, wat de stad onderaan ver buiten beeld
 // scrollt — met deze grens blijft de zichtbare kaart beperkt tot wat relevant
 // is: de ontgrendelde lagen, de vooruitkijk-laag, en een klein stukje mist

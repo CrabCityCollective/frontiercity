@@ -13,9 +13,10 @@ interface LaagIntroPaneelProps {
 // vastgelegde volgorde introduceert. De flavor-tekst zelf staat uitsluitend
 // in LaagPopup (issue: popup bij een nieuwe laag bevat laag/naam, wat er
 // nieuw is én de flavor-tekst; dit blokje onderaan herhaalt alleen de laag en
-// wat er nieuw is, zonder flavor-tekst). Zodra laag 12 ontgrendeld is, komt
-// de afsluitende scène erbij (hoofdstuk 10: "Na laag 12: afsluitende
-// scène"). Puur placeholder-styling — geen definitieve UI.
+// wat er nieuw is, zonder flavor-tekst). Zodra de laatste laag ontgrendeld is
+// (de oceaan aan de overkant), komt de afsluitende scène erbij (hoofdstuk 10:
+// "Na de laatste laag: afsluitende scène"). Puur placeholder-styling — geen
+// definitieve UI.
 export default function LaagIntroPaneel({ lagen }: LaagIntroPaneelProps) {
   const hoogte = hoogsteOntgrendeldeLaag(lagen);
   const content = laagContent(hoogte);

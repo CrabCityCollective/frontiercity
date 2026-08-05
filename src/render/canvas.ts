@@ -76,6 +76,7 @@ const TERREIN_BASIS: Record<string, string> = {
   "kale hoogvlakte": "#726a5c",
   "besneeuwde flank": "#8a8f8c",
   bergkam: "#9aa0a0",
+  oceaanoever: "#8c9468",
 };
 
 export function terreinBasisKleur(terreinType: string): string {

@@ -1,5 +1,5 @@
 // Tutorial-content (M8, hoofdstuk 10 & 13): de vastgelegde mechaniek-volgorde
-// en flavor-teksten voor lagen 1-12 van "De Eerste Vuren" (Het Hertenpad-volk).
+// en flavor-teksten voor lagen 1-13 van "De Eerste Vuren" (Het Hertenpad-volk).
 // De mechanieken zelf zijn al gebouwd in M1-M7 — dit bestand voegt alleen de
 // vaste, geschreven inhoud toe die per laag hoort (geen nieuwe systemen).
 //
@@ -83,14 +83,26 @@ export const TUTORIAL_LAAG_CONTENT: Record<number, LaagContent> = {
     mechaniek: "Militair/verdediging",
     flavorTekst: "Op de bergkam staat voor het eerst iemand die niet van het Hertenpad-volk is.",
   },
+  // Laatste laag van de tutorial (issue: "tutorial laatste stad aan
+  // oceaan") — de oceaan aan de overkant, precies de win-conditie uit
+  // hoofdstuk 1 van het design-document, hier alvast voelbaar gemaakt aan
+  // het eind van de tutorial-tocht. De enige laag met vers water (zie
+  // world.ts `TUTORIAL_VERS_WATER`), en dus de enige plek waar de laatste
+  // stad gesticht kan worden.
+  13: {
+    naam: "De Oceaanoever",
+    mechaniek: "Stad stichten aan het vers water",
+    flavorTekst:
+      "Het land houdt hier op. Aan de voet van de oever ligt weer vers water, voor het eerst sinds de rivier bij Holenrots.",
+  },
 };
 
-// Afsluitende scène na laag 12 (hoofdstuk 10: "Na laag 12: afsluitende
-// scène..."). Het openen van het campagnemenu valt buiten de MVP (alleen
-// tutorial-content is speelbaar, hoofdstuk 13) — deze tekst sluit de
+// Afsluitende scène na de laatste laag (hoofdstuk 10: "Na de laatste laag:
+// afsluitende scène..."). Het openen van het campagnemenu valt buiten de MVP
+// (alleen tutorial-content is speelbaar, hoofdstuk 13) — deze tekst sluit de
 // tutorial-run zelf af, zonder naar een systeem te verwijzen dat nog niet bestaat.
 export const AFSLUITENDE_SCENE =
-  "Twaalf lagen boven de rivier staat Holenrots nog overeind. De vuren branden. Verder is er, voor nu, niets te zeggen.";
+  "Bij de oceaan staat Holenrots nog overeind, vele lagen daaronder. De vuren branden. Verder is er, voor nu, niets te zeggen.";
 
 // Stichtings-waarschuwing (hoofdstuk 2/10/16, issue: "stad stichten op de
 // frontier" deel 4): getoond vóór de speler bevestigt — de settler verdwijnt
@@ -122,6 +134,18 @@ export function laagContent(hoogte: number): LaagContent | undefined {
 export const MILITAIR_UITLEG_TITEL = "Hoe pak je dit aan?";
 export const MILITAIR_UITLEG_TEKST =
   "Open het militaire paneel via het menu-icoon. Rekruteer een Soldaat zolang de legerwaarde onder de dreiging op de bergkam ligt — dat kost grondstoffen en een paar beurten. Ga de confrontatie pas aan zodra de winkans je bevalt. Verlies is geen einde: één vakje raakt beschadigd, maar het Hertenpad-volk mag het opnieuw proberen.";
+
+// Oceaan-uitleg-pop-up (issue: "tutorial laatste stad aan oceaan"), getoond
+// zodra de laatste laag (de oceaan aan de overkant) bereikt is, direct na de
+// gewone laag-pop-up hierboven — zelfde eenmalige-uitleg-patroon als
+// MILITAIR_UITLEG_* hierboven. Dit is de enige laag met vers water in de hele
+// tutorial, en dus de enige plek waar de laatste stad gesticht kan worden;
+// deze tekst maakt dat expliciet, samen met het feit dat stichten hier de run
+// beëindigt (zie ook STICHT_STAD_WAARSCHUWING hieronder voor de
+// bevestigingsstap zelf).
+export const OCEAAN_UITLEG_TITEL = "De oceaan aan de overkant";
+export const OCEAAN_UITLEG_TEKST =
+  "Hier houdt het land op. Voor het eerst sinds Holenrots ligt er weer vers water binnen bereik — de enige plek in de hele tocht. Breng de settler naar het vakje aan het water en kies daar 'Stad stichten' in het settler-paneel. Zodra die stad er staat, eindigt deze tocht.";
 
 // Settler-uitleg-pop-up (M10, hoofdstuk 16: settler-mechaniek + bouw-ritme),
 // getoond zodra de settler in beurt 2 verschijnt. Zelfde eenmalige-confirm-
