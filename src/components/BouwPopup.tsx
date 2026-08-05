@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { WACHTTOREN_VOEDSEL_VERBRUIK } from "@/game/economie";
+import { infrastructuurVoortgang, WACHTTOREN_VOEDSEL_VERBRUIK } from "@/game/economie";
 import {
   beschikbareOpties,
   CATEGORIE_LABELS,
@@ -84,6 +84,10 @@ interface BouwPopupProps {
   // 2) — bepaalt of tech-gated improvements (momenteel alleen de
   // Voorraadkuil, ontgrendeld door "aardewerk") als optie meegenomen worden.
   technologieen: TechId[];
+  // Gebouwde city improvements (hoofdstuk 4/6/11/14, issue: "city
+  // improvements" Deel 4) — nodig om de infrastructuur-eis van Legerkamp/
+  // Offer Altaar te tonen (`infrastructuurVoortgang`, economie.ts).
+  cityImprovements: Improvement[];
   zichtbaar: boolean;
   onBouwStarten: (improvement: Improvement) => void;
   onSluiten: () => void;
@@ -104,6 +108,7 @@ export default function BouwPopup({
   laag,
   alleLagen,
   technologieen,
+  cityImprovements,
   zichtbaar,
   onBouwStarten,
   onSluiten,
@@ -220,8 +225,22 @@ export default function BouwPopup({
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                 {opties.map((improvement) => {
                   const terreinEis = terreinEisenBeschrijving(improvement);
+                  // Infrastructuur-eis (hoofdstuk 4/6/11/14, issue: "city
+                  // improvements" Deel 4): Legerkamp/Offer Altaar blijven, in
+                  // tegenstelling tot een `minLaag`-gate, gewoon zichtbaar
+                  // (uitgegrijsd) met een voortgangstekst — de speler moet
+                  // kunnen zien hoe ver hij is, niet alleen dát het nog niet
+                  // kan. `startBouw` in economie.ts is de daadwerkelijke
+                  // blokkade; dit is puur de weergave.
+                  const voortgang = infrastructuurVoortgang(alleLagen, cityImprovements, improvement);
+                  const eis = improvement.infrastructuurEis;
                   return (
-                    <button key={improvement.id} className="fc-knop" onClick={() => onBouwStarten(improvement)}>
+                    <button
+                      key={improvement.id}
+                      className="fc-knop"
+                      disabled={voortgang !== undefined && !voortgang.vervuld}
+                      onClick={() => onBouwStarten(improvement)}
+                    >
                       {improvementNaam(improvement)} (<KostenIcons kosten={improvement.kosten} />,{" "}
                       {improvement.bouwtijdBeurten} beurten)
                       {terreinEis && (
@@ -237,6 +256,18 @@ export default function BouwPopup({
                       {improvement.id === "wachttoren" && (
                         <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
                           Verbruikt {WACHTTOREN_VOEDSEL_VERBRUIK} voedsel/beurt zodra bemand
+                        </span>
+                      )}
+                      {voortgang && eis && (
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "0.75rem",
+                            color: voortgang.vervuld ? "var(--kleur-tekst-gedempt)" : "var(--kleur-gevaar)",
+                          }}
+                        >
+                          {voortgang.aantalLandImprovement}/{voortgang.benodigdAantal} {eis.landImprovementNaam},{" "}
+                          {eis.cityImprovementNaam}: {voortgang.heeftCityImprovement ? "gebouwd" : "nog niet gebouwd"}
                         </span>
                       )}
                     </button>

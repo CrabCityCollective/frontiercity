@@ -67,6 +67,7 @@
 
 import {
   BEZETTE_LAAG_HUISJE,
+  GROTE_WOONWIJK,
   improvementPastOpTile,
   isBebouwbaarLeeg,
   LEGERKAMP,
@@ -108,10 +109,28 @@ import {
   maakInitieleWereld,
   STAD_POSITIE,
   VOEDSEL_DREMPEL_GROEI,
+  VOEDSEL_DREMPEL_GROEI_GROOT,
 } from "./world";
 import { bereikbarePosities, isTileVerbondenMetStad } from "./wegen";
 
 export const OPSLAG_CAP = 30;
+
+// City-improvement-capaciteit per stadsgrootte (hoofdstuk 3/4/11/14, issue:
+// "city improvements" Deel 1) — hoeveel van BIBLIOTHEEK/MARKT/BARAKKEN/
+// TEMPEL/GROTE_TEMPEL (improvements.ts: `CAPPED_CITY_IMPROVEMENTS`) een stad
+// tegelijk mag hebben. Vervangt het nooit-gebouwde relic-slot-concept uit een
+// eerdere versie van hoofdstuk 4 als de tastbare groei-beloning (hoofdstuk
+// 11 heeft de volledige onderbouwing). Opslagplaats en de groei-tier-
+// improvements (Woonwijk/Grote Woonwijk) tellen hier bewust niet in mee.
+export const CITY_IMPROVEMENT_CAP: { klein: number; middel: number; groot: number } = {
+  klein: 1,
+  middel: 3,
+  groot: 5,
+};
+
+export function cityImprovementCap(grootte: City["grootte"]): number {
+  return CITY_IMPROVEMENT_CAP[grootte];
+}
 
 // Bouw-ritme (M10, hoofdstuk 16): na een bouwkeuze (of het bewust overslaan
 // ervan) mag pas na zoveel beurten weer een nieuw bouwproject gestart worden
@@ -217,6 +236,7 @@ export function maakInitieleSpelStatus(): GameState {
       strijders: [],
       verkenners: [],
       missionarissen: [],
+      cityImprovements: [],
     },
     lagen: maakInitieleWereld(),
     voorraad: { ...STARTVOORRAAD },
@@ -352,6 +372,28 @@ function berekenCultuurProductieDitBeurt(state: GameState): number {
     }
   }
 
+  // Tempel/Grote Tempel (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
+  // 3): een city improvement staat niet op een specifieke laag, dus geen
+  // frontier-halvering — altijd de volle opbrengst, net als Opslagplaats
+  // geen wegverbinding nodig heeft.
+  productie += cityImprovementProductie(state.stad.cityImprovements, "cultuur");
+
+  return productie;
+}
+
+// Opgetelde productie van alle gebouwde city improvements (hoofdstuk 3/4/11/
+// 14, issue: "city improvements" Deel 3) voor één specifieke resource —
+// Bibliotheek (wetenschap), Markt (goud), Tempel/Grote Tempel (cultuur).
+// Gedeeld tussen `berekenCultuurProductieDitBeurt`/`verwerkProductie`
+// hieronder, net als `berekenVoedselProductie` voor land-tiles.
+function cityImprovementProductie(cityImprovements: Improvement[], resource: ResourceType): number {
+  let productie = 0;
+  for (const improvement of cityImprovements) {
+    const effect = improvement.effect;
+    if (effect.type === "productie" && effect.resource === resource && effect.waarde) {
+      productie += effect.waarde;
+    }
+  }
   return productie;
 }
 
@@ -402,6 +444,24 @@ function verwerkProductie(state: GameState): GameState {
       }
       // Voedsel-productie wordt hieronder in één keer verrekend met het
       // verbruik (niet per tile), zie `berekenVoedselProductie`.
+    }
+  }
+
+  // City improvements (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
+  // 3): Bibliotheek/Markt/Tempel/Grote Tempel produceren, net als
+  // Opslagplaats, zonder wegverbinding en zonder frontier-halvering — een
+  // city improvement staat niet op een land-vakje. De Bezette-Laag-
+  // cultuurbevriezing hierboven geldt onverkort ook voor Tempel/Grote Tempel.
+  for (const improvement of state.stad.cityImprovements) {
+    const effect = improvement.effect;
+    if (effect.type !== "productie" || !effect.resource || !effect.waarde) continue;
+
+    if (effect.resource === "cultuur") {
+      if (!bezetteLaag) cultuur += effect.waarde;
+    } else if (effect.resource === "wetenschap") {
+      wetenschap += effect.waarde;
+    } else if (isMateriaalType(effect.resource)) {
+      voorraad[effect.resource] = Math.min(state.opslagCap, voorraad[effect.resource] + effect.waarde);
     }
   }
 
@@ -1106,13 +1166,19 @@ function verwerkCivielInAanbouw(state: GameState): GameState {
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
-    const isSettler = civielInAanbouw.improvement.effect.type === "settler";
+    const effect = civielInAanbouw.improvement.effect;
+    const isSettler = effect.type === "settler";
+    // Groei-tier (hoofdstuk 3/4/13/14, issue: "city improvements" Deel 2):
+    // `naarGrootte` op het effect zelf bepaalt de nieuwe stadsgrootte —
+    // WOONWIJK → "middel", GROTE_WOONWIJK → "groot" — in plaats van een
+    // hardgecodeerde "middel" die de tweede groei-stap niet kon uitdrukken.
+    const grootte = effect.type === "groei" ? (effect.naarGrootte as City["grootte"]) : state.stad.grootte;
     return {
       ...state,
       voorraad,
       stad: {
         ...state.stad,
-        grootte: isSettler ? state.stad.grootte : "middel",
+        grootte,
         civielInAanbouw: undefined,
       },
       settler: isSettler ? { hoogte: 1, positieInLaag: STAD_POSITIE } : state.settler,
@@ -1144,10 +1210,12 @@ export function versnelCivielMetGoud(state: GameState): GameState {
   const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };
 
   if (resultaat.voltooid) {
+    const effect = civielInAanbouw.improvement.effect;
+    const grootte = effect.type === "groei" ? (effect.naarGrootte as City["grootte"]) : state.stad.grootte;
     return {
       ...state,
       voorraad,
-      stad: { ...state.stad, grootte: "middel", civielInAanbouw: undefined },
+      stad: { ...state.stad, grootte, civielInAanbouw: undefined },
     };
   }
 
@@ -1225,6 +1293,114 @@ export function versnelOpslagplaatsMetGoud(state: GameState): GameState {
       ...state.stad,
       opslagplaatsInAanbouw: { ...opslagplaatsInAanbouw, voortgang: resultaat.nieuweVoortgang },
     },
+  };
+}
+
+// Volgorde van stadsgroottes, puur om `Improvement.stadsgrootteEis`
+// (Barakken/Tempel: "middel", Grote Tempel: "groot") tegen de huidige
+// stadsgrootte af te zetten (hoofdstuk 3/14, issue: "city improvements" Deel
+// 3).
+const STAD_GROOTTE_VOLGORDE: Record<City["grootte"], number> = { klein: 0, middel: 1, groot: 2 };
+
+// Of `improvement` (één van BIBLIOTHEEK/MARKT/BARAKKEN/TEMPEL/GROTE_TEMPEL,
+// improvements.ts: `CAPPED_CITY_IMPROVEMENTS`) op dit moment gestart mag
+// worden (hoofdstuk 3/4/11/14, issue: "city improvements" Deel 1/3):
+// hoogstens één tegelijk in de gedeelde wachtrij, niet al gebouwd (geen
+// dubbele sloten van hetzelfde type — Tempel en Grote Tempel zijn wel losse
+// improvements en tellen dus apart), de stadsgrootte-eis vervuld, en de
+// city-improvement-cap nog niet vol.
+export function kanCityVerbeteringBouwen(state: GameState, improvement: Improvement): boolean {
+  if (state.stad.cityVerbeteringInAanbouw) return false;
+  if (state.stad.cityImprovements.some((ci) => ci.id === improvement.id)) return false;
+  if (state.stad.cityImprovements.length >= cityImprovementCap(state.stad.grootte)) return false;
+  if (
+    improvement.stadsgrootteEis &&
+    STAD_GROOTTE_VOLGORDE[state.stad.grootte] < STAD_GROOTTE_VOLGORDE[improvement.stadsgrootteEis]
+  ) {
+    return false;
+  }
+  return true;
+}
+
+// Start het bouwen van een van de vijf gecapte city improvements (hoofdstuk
+// 3/4/11/14, issue: "city improvements" Deel 1/3) — negeert de aanroep
+// stilzwijgend bij een ongeldige aanroep (zelfde veilige-aanroep-conventie
+// als `startBouw`).
+export function startCityVerbetering(state: GameState, improvement: Improvement): GameState {
+  if (!kanCityVerbeteringBouwen(state, improvement)) return state;
+
+  return {
+    ...state,
+    stad: {
+      ...state.stad,
+      cityVerbeteringInAanbouw: { improvement, voortgang: { ...improvement.kosten } },
+    },
+  };
+}
+
+// Betaalt de bouwkosten van een lopende stadsverbetering (hoofdstuk 3/4/11/
+// 14, issue: "city improvements" Deel 1/3) — zelfde wachtrij-patroon als
+// `verwerkOpslagplaats` hierboven, maar voltooiing voegt het improvement toe
+// aan `City.cityImprovements` (de cap-telling) in plaats van een los effect
+// direct toe te passen: de productie-/legerwaarde-verwerking
+// (`verwerkProductie`/`berekenLegerwaarde` e.a.) leest dat effect voortaan
+// elke beurt rechtstreeks uit die array.
+function verwerkCityVerbetering(state: GameState): GameState {
+  const inAanbouw = state.stad.cityVerbeteringInAanbouw;
+  if (!inAanbouw) return state;
+
+  const voorraad = { ...state.voorraad };
+  const resultaat = investeerInBouwkosten(inAanbouw.improvement, inAanbouw.voortgang, voorraad);
+  if (!resultaat) return state;
+
+  if (resultaat.voltooid) {
+    return {
+      ...state,
+      voorraad,
+      stad: {
+        ...state.stad,
+        cityImprovements: [...state.stad.cityImprovements, inAanbouw.improvement],
+        cityVerbeteringInAanbouw: undefined,
+      },
+    };
+  }
+
+  return {
+    ...state,
+    voorraad,
+    stad: { ...state.stad, cityVerbeteringInAanbouw: { ...inAanbouw, voortgang: resultaat.nieuweVoortgang } },
+  };
+}
+
+// Koopt de resterende bouwtijd van een lopende stadsverbetering af met goud
+// (hoofdstuk 5/14, issue: "toevoeging Goud" Deel 2) — altijd een city
+// improvement, dus geen `soort`-uitsluiting nodig zoals bij de civiele
+// wachtrij.
+export function versnelCityVerbeteringMetGoud(state: GameState): GameState {
+  const inAanbouw = state.stad.cityVerbeteringInAanbouw;
+  if (!inAanbouw) return state;
+
+  const resultaat = pasVersnellingToe(inAanbouw.improvement, inAanbouw.voortgang, state.voorraad.goud);
+  if (!resultaat) return state;
+
+  const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };
+
+  if (resultaat.voltooid) {
+    return {
+      ...state,
+      voorraad,
+      stad: {
+        ...state.stad,
+        cityImprovements: [...state.stad.cityImprovements, inAanbouw.improvement],
+        cityVerbeteringInAanbouw: undefined,
+      },
+    };
+  }
+
+  return {
+    ...state,
+    voorraad,
+    stad: { ...state.stad, cityVerbeteringInAanbouw: { ...inAanbouw, voortgang: resultaat.nieuweVoortgang } },
   };
 }
 
@@ -1333,12 +1509,23 @@ function verwerkMissionarisRecrutering(state: GameState): GameState {
 // ... is een bewuste gok, geen gratis extra beloning". Voedsel wordt niet
 // "uitgegeven": net als cultuur blijft het een oplopende teller die de
 // drempel markeert (hoofdstuk 5).
+// Groei-tier-improvement voor de huidige stadsgrootte (hoofdstuk 3/4/13/14,
+// issue: "city improvements" Deel 2 — de tweede groei-stap, middel→groot,
+// ontbrak nog volledig): WOONWIJK voor klein→middel, GROTE_WOONWIJK voor
+// middel→groot. `undefined` op "groot" (geen derde tier in de MVP-scope).
+function groeiTierImprovement(grootte: City["grootte"]): Improvement | undefined {
+  if (grootte === "klein") return WOONWIJK;
+  if (grootte === "middel") return GROTE_WOONWIJK;
+  return undefined;
+}
+
+function groeiTierVoedselDrempel(grootte: City["grootte"]): number {
+  return grootte === "klein" ? VOEDSEL_DREMPEL_GROEI : VOEDSEL_DREMPEL_GROEI_GROOT;
+}
+
 export function startGroei(state: GameState): GameState {
-  if (
-    state.stad.grootte !== "klein" ||
-    state.stad.civielInAanbouw ||
-    state.voedsel < VOEDSEL_DREMPEL_GROEI
-  ) {
+  const improvement = groeiTierImprovement(state.stad.grootte);
+  if (!improvement || state.stad.civielInAanbouw || state.voedsel < groeiTierVoedselDrempel(state.stad.grootte)) {
     return state;
   }
 
@@ -1346,7 +1533,7 @@ export function startGroei(state: GameState): GameState {
     ...state,
     stad: {
       ...state.stad,
-      civielInAanbouw: { improvement: WOONWIJK, voortgang: { ...WOONWIJK.kosten } },
+      civielInAanbouw: { improvement, voortgang: { ...improvement.kosten } },
     },
   };
 }
@@ -1496,17 +1683,33 @@ function telBemandeWachttorens(state: GameState): number {
   return aantal;
 }
 
+// Vaste, stad-brede legerwaarde-bonus van de Barakken (hoofdstuk 3/4/6/11/
+//14, issue: "city improvements" Deel 3) — anders dan de Wachttoren-bonus
+// hieronder geen bemanning nodig, en telt daarom hier los mee bij zowel de
+// gewone Confrontatie (`berekenLegerwaarde`) als de Confrontatie tegen een
+// Bezette Laag (`confrontatieBezetteLaag`).
+function stadLegerwaardeBonus(state: GameState): number {
+  let bonus = 0;
+  for (const improvement of state.stad.cityImprovements) {
+    if (improvement.effect.type === "stad-legerwaarde" && improvement.effect.waarde) {
+      bonus += improvement.effect.waarde;
+    }
+  }
+  return bonus;
+}
+
 // Totale legerwaarde (hoofdstuk 6: "units + muur/wachttoren-bonus"): elke
 // opgeleide strijder telt mee (ongeacht of hij een Wachttoren bemant), plus
 // de passieve verdedigingsbonus van elke actieve, bemande Wachttoren-tile
 // (nieuwe Wachttoren-functie hierboven: onbemand levert geen bonus),
 // ongeacht op welke laag die staat (er is in de MVP maar één actieve stad,
-// hoofdstuk 13).
+// hoofdstuk 13), plus de vaste Barakken-bonus hierboven.
 export function berekenLegerwaarde(state: GameState): number {
   // "B2b. Verharde speren" (hoofdstuk 3/9, techTree.ts): een lichte
   // legerwaarde-bonus per strijder, bovenop de vaste SOLDAAT-waarde.
   let waarde =
-    state.stad.strijders.length * ((SOLDAAT.effect.waarde ?? 0) + legerwaardeBonusPerStrijder(state.technologieen));
+    state.stad.strijders.length * ((SOLDAAT.effect.waarde ?? 0) + legerwaardeBonusPerStrijder(state.technologieen)) +
+    stadLegerwaardeBonus(state);
 
   for (const laag of state.lagen) {
     for (const tile of laag.tiles) {
@@ -1648,7 +1851,9 @@ export function confrontatieBezetteLaag(state: GameState, positieInLaag: number)
 
   const tegenstanderSterkte = bezetteLaag.dreigingsniveau ?? 0;
   const eigenLegerwaarde =
-    (beschermendeWachttoren.improvement?.effect.waarde ?? 0) + berekenLegerkampLegerwaarde(state);
+    (beschermendeWachttoren.improvement?.effect.waarde ?? 0) +
+    berekenLegerkampLegerwaarde(state) +
+    stadLegerwaardeBonus(state);
   const winkans = berekenWinkans(eigenLegerwaarde, tegenstanderSterkte);
   const gewonnen = Math.random() < winkans;
 
@@ -1970,6 +2175,56 @@ export function geefTribuut(state: GameState): GameState {
   return { ...state, voorraad, indringersEvent: undefined };
 }
 
+// Aantal actieve (niet vernietigde/ruïne) land-tiles met dit improvement-id,
+// over alle lagen heen — de basis van `infrastructuurVoortgang` hieronder.
+// Bemand/onbemand maakt voor deze telling niet uit (hoofdstuk 4/6/11/14,
+// issue: "city improvements" Deel 4: "bemand of onbemand maakt voor deze
+// telling niet uit").
+function telActieveLandImprovement(alleLagen: Layer[], id: string): number {
+  let aantal = 0;
+  for (const laag of alleLagen) {
+    for (const tile of laag.tiles) {
+      if (tile.status === "actief" && tile.improvement?.id === id) aantal += 1;
+    }
+  }
+  return aantal;
+}
+
+export interface InfrastructuurVoortgang {
+  aantalLandImprovement: number;
+  benodigdAantal: number;
+  heeftCityImprovement: boolean;
+  vervuld: boolean;
+}
+
+// Voortgang t.o.v. `improvement.infrastructuurEis` (hoofdstuk 4/6/11/14,
+// issue: "city improvements" Deel 4) — `undefined` als dit improvement geen
+// infrastructuur-eis heeft. Puur op basis van `alleLagen`/`cityImprovements`
+// (geen volledige `GameState` nodig) zodat zowel `voldoetAanInfrastructuurEis`
+// hieronder als BouwPopup.tsx (voor de voortgangstekst) dezelfde berekening
+// kunnen hergebruiken.
+export function infrastructuurVoortgang(
+  alleLagen: Layer[],
+  cityImprovements: Improvement[],
+  improvement: Improvement
+): InfrastructuurVoortgang | undefined {
+  const eis = improvement.infrastructuurEis;
+  if (!eis) return undefined;
+
+  const aantalLandImprovement = telActieveLandImprovement(alleLagen, eis.landImprovementId);
+  const heeftCityImprovement = cityImprovements.some((ci) => ci.id === eis.cityImprovementId);
+  return {
+    aantalLandImprovement,
+    benodigdAantal: eis.minAantal,
+    heeftCityImprovement,
+    vervuld: aantalLandImprovement >= eis.minAantal && heeftCityImprovement,
+  };
+}
+
+function voldoetAanInfrastructuurEis(state: GameState, improvement: Improvement): boolean {
+  return infrastructuurVoortgang(state.lagen, state.stad.cityImprovements, improvement)?.vervuld ?? true;
+}
+
 // Start de bouw van een land improvement op de tile die de speler zelf heeft
 // aangewezen (klik-op-tile plaatsing, zie GameRoot: `plaatsingsImprovement`).
 // Geeft de ongewijzigde status terug als die laag niet ontgrendeld is, de
@@ -1989,6 +2244,12 @@ export function startBouw(
   improvement: Improvement,
   positieInLaag: number
 ): GameState {
+  // Infrastructuur-eis (hoofdstuk 4/6/11/14, issue: "city improvements" Deel
+  // 4): Legerkamp/Offer Altaar blijven uitgegrijsd zolang de eis niet vervuld
+  // is, ook al toont BouwPopup.tsx ze (met voortgangstekst) gewoon als optie
+  // — deze server-side check is de daadwerkelijke blokkade.
+  if (!voldoetAanInfrastructuurEis(state, improvement)) return state;
+
   const lagen = state.lagen.map((laag) => {
     if (laag.hoogte !== laagHoogte) return laag;
     if (!laag.ontgrendeld) return laag;
@@ -2391,8 +2652,10 @@ export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
 // (issue: "eerst de grondstoffen binnenkomen, en daarna wordt gecheckt of je
 // afgaat" — een tile/weg die deze beurt klaarkomt telt zo al mee vóór de
 // instort-check), dan de civiele stadsbouwwachtrij (M6/hoofdstuk 16: groei óf
-// een nieuwe settler), de Opslagplaats-wachtrij (hoofdstuk 14) en de
-// Soldaat-rekruteringswachtrij (M7), dan de indringers-kans (hoofdstuk 6) en
+// een nieuwe settler), de Opslagplaats-wachtrij (hoofdstuk 14), de
+// stadsverbeteringen-wachtrij (Bibliotheek/Markt/Barakken/Tempel/Grote
+// Tempel, hoofdstuk 3/4/11/14) en de Soldaat-rekruteringswachtrij (M7), dan
+// de indringers-kans (hoofdstuk 6) en
 // de kuddes-kans (hoofdstuk 16/17), dan de beurtteller ophogen. Zet ook de
 // bouwkeuze-vlag (hoofdstuk 11) weer terug, zodat de bouw-pop-up bij het
 // begin van de nieuwe beurt weer verschijnt.
@@ -2417,7 +2680,10 @@ export function volgendeBeurt(state: GameState): GameState {
 
   const naCiviel = verwerkCivielInAanbouw(naVerval);
   const naOpslagplaats = verwerkOpslagplaats(naCiviel);
-  const naRecrutering = verwerkRecrutering(naOpslagplaats);
+  // Stadsverbeteringen (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
+  // 1/3): eigen wachtrij, los van civiel/opslagplaats hierboven.
+  const naCityVerbetering = verwerkCityVerbetering(naOpslagplaats);
+  const naRecrutering = verwerkRecrutering(naCityVerbetering);
   const naVerkennerRecrutering = verwerkVerkennerRecrutering(naRecrutering);
   const naMissionarisRecrutering = verwerkMissionarisRecrutering(naVerkennerRecrutering);
   const naIndringers = verwerkIndringers(naMissionarisRecrutering);

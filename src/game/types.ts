@@ -67,6 +67,22 @@ export interface EffectDefinition {
   [key: string]: unknown;
 }
 
+// Infrastructuur-eis (hoofdstuk 4/6/11/14, issue: "city improvements" Deel
+// 4): een bouw-drempel op basis van reeds gebouwde infrastructuur in plaats
+// van tech/laaghoogte — momenteel alleen gebruikt door Legerkamp (5 actieve
+// Wachttorens + een Barakken) en Offer Altaar (5 actieve Heiligdommen + een
+// Grote Tempel). `landImprovementNaam`/`cityImprovementNaam` zijn puur voor
+// de voortgangstekst in de bouw-pop-up (bv. "3/5 Wachttorens, Barakken: nog
+// niet gebouwd") — bewust gedenormaliseerd in plaats van een losse
+// naam-lookup, er zijn maar twee gebruikers van dit veld.
+export interface InfrastructuurEis {
+  landImprovementId: string;
+  landImprovementNaam: string;
+  minAantal: number;
+  cityImprovementId: string;
+  cityImprovementNaam: string;
+}
+
 export interface Improvement {
   id: string;
   naam: string;
@@ -114,6 +130,15 @@ export interface Improvement {
   // worden alleen door Verkenning/wereldgeneratie geplaatst, nooit door de
   // speler gebouwd.
   vijandelijk?: boolean;
+  // Minimale stadsgrootte om dit (city-)improvement te mogen bouwen
+  // (hoofdstuk 3/14, issue: "city improvements" Deel 3): momenteel Barakken/
+  // Tempel (`"middel"`) en Grote Tempel (`"groot"`). `undefined` = geen eis,
+  // zoals bijna elk ander improvement (o.a. Bibliotheek/Markt).
+  stadsgrootteEis?: City["grootte"];
+  // Bouw-drempel op basis van reeds gebouwde infrastructuur (hoofdstuk 4/6/
+  // 11/14, issue: "city improvements" Deel 4) — zie `InfrastructuurEis`
+  // hierboven. Momenteel alleen Legerkamp en Offer Altaar.
+  infrastructuurEis?: InfrastructuurEis;
 }
 
 export interface Tile {
@@ -313,6 +338,25 @@ export interface City {
   // leiden naar de belegeringsmeter van een Bezette Laag.
   missionarissen: { id: string }[];
   missionarisInAanbouw?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+  };
+  // Gebouwde, gelijktijdig-gecapte city improvements (hoofdstuk 3/4/11/14,
+  // issue: "city improvements" Deel 1/3) — Bibliotheek, Markt, Barakken,
+  // Tempel en Grote Tempel. Vervangt het nooit-gebouwde relic-slot-concept
+  // uit een eerdere versie van hoofdstuk 4 als groei-beloning: hoe groter de
+  // stad, hoe meer van deze improvements tegelijk actief mogen zijn (zie
+  // `CITY_IMPROVEMENT_CAP` in economie.ts). Bewust een array van volledige
+  // `Improvement`-objecten (net als `relics` hierboven), niet alleen id's —
+  // de productie-/legerwaarde-verwerking in economie.ts leest hun `effect`
+  // rechtstreeks. Opslagplaats (eigen wachtrij hieronder) en de groei-tier-
+  // improvements (Woonwijk/Grote Woonwijk, via `civielInAanbouw`) tellen
+  // bewust niet mee — zie hoofdstuk 11 voor de reden.
+  cityImprovements: Improvement[];
+  // Gedeelde wachtrij voor Bibliotheek/Markt/Barakken/Tempel/Grote Tempel —
+  // net als `civielInAanbouw` hoogstens één tegelijk, los van
+  // `opslagplaatsInAanbouw` en de rekruterings-wachtrijen hierboven.
+  cityVerbeteringInAanbouw?: {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };

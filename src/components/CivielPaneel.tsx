@@ -1,10 +1,21 @@
 "use client";
 
-import { NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
-import { GameState } from "@/game/types";
-import { VOEDSEL_DREMPEL_GROEI } from "@/game/world";
+import { GROTE_WOONWIJK, NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
+import { City, GameState } from "@/game/types";
+import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "@/game/world";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
+
+// Groei-tier-improvement/-drempel voor de huidige stadsgrootte (hoofdstuk 3/
+// 4/13/14, issue: "city improvements" Deel 2 — de tweede groei-stap,
+// middel→groot, ontbrak nog volledig). Zelfde keuze als `groeiTierImprovement`/
+// `groeiTierVoedselDrempel` in economie.ts, hier puur voor de weergave.
+function groeiTierVoorGrootte(grootte: City["grootte"]) {
+  if (grootte === "klein") return { improvement: WOONWIJK, drempel: VOEDSEL_DREMPEL_GROEI, naarGrootte: "middel" };
+  if (grootte === "middel")
+    return { improvement: GROTE_WOONWIJK, drempel: VOEDSEL_DREMPEL_GROEI_GROOT, naarGrootte: "groot" };
+  return undefined;
+}
 
 interface CivielPaneelProps {
   state: GameState;
@@ -25,7 +36,8 @@ interface CivielPaneelProps {
 export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler, onVersnelCiviel }: CivielPaneelProps) {
   const { stad, voedsel, settler } = state;
 
-  const kanGroeien = stad.grootte === "klein";
+  const groeiTier = groeiTierVoorGrootte(stad.grootte);
+  const kanGroeien = groeiTier !== undefined;
   // Hoofdstuk 11: "de settler verschijnt alleen als optie in de civiele pool
   // als het huidige aantal settlers lager is dan het aantal steden" — in de
   // MVP (hoofdstuk 13: precies 1 stad) is dat alleen zolang er nog geen
@@ -63,7 +75,9 @@ export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler
         <p style={{ margin: 0 }}>
           {stad.civielInAanbouw.improvement.id === "nieuwe-settler"
             ? "Nieuwe settler wordt uitgerust…"
-            : "Woonwijk in aanbouw (groei naar middel)…"}
+            : `${stad.civielInAanbouw.improvement.naam} in aanbouw (groei naar ${
+                (stad.civielInAanbouw.improvement.effect.naarGrootte as string) ?? "?"
+              })…`}
         </p>
       )}
 
@@ -79,15 +93,16 @@ export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler
         />
       )}
 
-      {!stad.civielInAanbouw && kanGroeien && voedsel >= VOEDSEL_DREMPEL_GROEI && (
+      {!stad.civielInAanbouw && groeiTier && voedsel >= groeiTier.drempel && (
         <button className="fc-knop" onClick={onStartGroei} style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}>
-          Start groei naar middel (<KostenIcons kosten={WOONWIJK.kosten} />, {WOONWIJK.bouwtijdBeurten} beurten)
+          Start groei naar {groeiTier.naarGrootte} (<KostenIcons kosten={groeiTier.improvement.kosten} />,{" "}
+          {groeiTier.improvement.bouwtijdBeurten} beurten)
         </button>
       )}
 
-      {!stad.civielInAanbouw && kanGroeien && voedsel < VOEDSEL_DREMPEL_GROEI && (
+      {!stad.civielInAanbouw && groeiTier && voedsel < groeiTier.drempel && (
         <p style={{ margin: 0 }}>
-          Voedsel: {voedsel} / {VOEDSEL_DREMPEL_GROEI} (naar groei middel)
+          Voedsel: {voedsel} / {groeiTier.drempel} (naar groei {groeiTier.naarGrootte})
         </p>
       )}
 

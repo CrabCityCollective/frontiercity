@@ -82,6 +82,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     startGroei,
     startNieuweSettler,
     startOpslagplaats,
+    startCityVerbetering,
+    versnelCityVerbeteringMetGoud,
     stichtStad,
     startRecrutering,
     verplaatsSettlerNaar,
@@ -813,6 +815,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             onStartGroei={startGroei}
             onStartNieuweSettler={startNieuweSettler}
             onStartOpslagplaats={startOpslagplaats}
+            onStartCityVerbetering={startCityVerbetering}
+            onVersnelCityVerbetering={versnelCityVerbeteringMetGoud}
             onStartRecrutering={startRecrutering}
             onKiesStrijder={(strijderId) => {
               setWachttorenKiesModusStrijderId(strijderId);
@@ -935,6 +939,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           laag={actieveLaag}
           alleLagen={state.lagen}
           technologieen={state.technologieen}
+          cityImprovements={state.stad.cityImprovements}
           zichtbaar={
             !toonLaagPopup &&
             !toonUitlegPopup &&

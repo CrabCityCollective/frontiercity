@@ -5,15 +5,20 @@ import {
   bemanWachttoren,
   BELEGERINGSDREMPEL,
   berekenLegerkampLegerwaarde,
+  berekenLegerwaarde,
   bevestigGedwongenTribuut,
   bouwStagneertVolgendeBeurt,
+  cityImprovementCap,
+  CITY_IMPROVEMENT_CAP,
   confrontatieBezetteLaag,
   geefTribuut,
   haalStrijderTerug,
   hakHout,
   heeftGenoegVoorStichten,
   heeftOfferAltaar,
+  infrastructuurVoortgang,
   jaag,
+  kanCityVerbeteringBouwen,
   kanConfrontatieBezetteLaag,
   kanStichten,
   kanVerkennen,
@@ -28,6 +33,8 @@ import {
   rushKostenGoud,
   sluitAmberOntdektMelding,
   startBouw,
+  startCityVerbetering,
+  startGroei,
   startMissionarisRecrutering,
   startNieuweSettler,
   startOpslagplaats,
@@ -38,6 +45,7 @@ import {
   verken,
   verplaatsSettlerNaar,
   versnelBouwMetGoud,
+  versnelCityVerbeteringMetGoud,
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
   VERKENNING_KOSTEN_WETENSCHAP,
@@ -47,16 +55,22 @@ import {
 } from "./economie";
 import {
   AMBERADER,
+  BARAKKEN,
+  BIBLIOTHEEK,
   CULTUREEL_LAND_IMPROVEMENTS,
   ECONOMISCH_LAND_IMPROVEMENTS,
+  GROTE_TEMPEL,
+  GROTE_WOONWIJK,
+  MARKT,
   MILITAIR_LAND_IMPROVEMENTS,
   SOLDAAT,
   STERRENCIRKEL,
+  TEMPEL,
   VIJANDELIJK_HEILIGDOM,
 } from "./improvements";
 import { wetenschapKostenVoorDrempel } from "./techTree";
-import { GameState } from "./types";
-import { AMBER_ONTDEKKING_LAAG, BEZETTE_LAAG_HOOGTE, cultuurKostenVoorLaag } from "./world";
+import { GameState, Improvement } from "./types";
+import { AMBER_ONTDEKKING_LAAG, BEZETTE_LAAG_HOOGTE, cultuurKostenVoorLaag, VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
 
 // Vervangt `Math.random` tijdelijk door een vaste waarde, zodat de
 // kans-gedreven roofdier-/kuddelogica deterministisch te testen is — altijd
@@ -78,6 +92,7 @@ const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")
 const WACHTTOREN = MILITAIR_LAND_IMPROVEMENTS.find((i) => i.id === "wachttoren")!;
 const LEGERKAMP = MILITAIR_LAND_IMPROVEMENTS.find((i) => i.id === "legerkamp")!;
 const HEILIGDOM = CULTUREEL_LAND_IMPROVEMENTS.find((i) => i.id === "heiligdom")!;
+const OFFER_ALTAAR = CULTUREEL_LAND_IMPROVEMENTS.find((i) => i.id === "offer-altaar")!;
 
 // Bouwt een startstatus met een Houtkap (positie 2), Mijn (positie 6) en
 // Boerderij (positie 0) al actief en wegverbonden met de stad (positie 4),
@@ -1218,4 +1233,189 @@ test("vijandelijkeWachttorenPosities geeft alleen onthulde, nog niet opgeruimde 
   state = metBeschermendeWachttorenOpLaag11(state);
   state = metVasteRandom(0, () => confrontatieBezetteLaag(state, 0));
   assert.deepEqual(vijandelijkeWachttorenPosities(state), [], "na winst telt de tile niet meer mee als doel");
+});
+
+// ---------------------------------------------------------------------------
+// City-improvement-capaciteit & infrastructuur-gating (issue: "city
+// improvements") — Deel 1 t/m 4.
+// ---------------------------------------------------------------------------
+
+// Plaatst `aantal` actieve land-tiles met `improvement` over de eerste
+// beschikbare (niet-stad, nog lege) vakjes van de opeenvolgende lagen —
+// genoeg voor de infrastructuur-eis-tellingen (Deel 4), die alleen
+// `status === "actief"` controleren, geen wegverbinding.
+function metActieveLandImprovements(state: GameState, improvement: Improvement, aantal: number): GameState {
+  let resterend = aantal;
+  const lagen = state.lagen.map((laag) => ({
+    ...laag,
+    tiles: laag.tiles.map((tile) => {
+      if (resterend <= 0 || tile.positieInLaag === 4 || tile.status !== "leeg") return tile;
+      resterend -= 1;
+      return { ...tile, status: "actief" as const, improvement };
+    }),
+  }));
+  return { ...state, lagen };
+}
+
+test("kanCityVerbeteringBouwen respecteert de city-improvement-cap per stadsgrootte (Deel 1)", () => {
+  let state = maakInitieleSpelStatus();
+  assert.equal(state.stad.grootte, "klein");
+  assert.equal(cityImprovementCap("klein"), 1);
+  assert.equal(cityImprovementCap("middel"), 3);
+  assert.equal(cityImprovementCap("groot"), 5);
+
+  assert.equal(kanCityVerbeteringBouwen(state, BIBLIOTHEEK), true);
+
+  state = startCityVerbetering(state, BIBLIOTHEEK);
+  assert.equal(state.stad.cityVerbeteringInAanbouw?.improvement.id, "bibliotheek");
+  // Hoogstens één stadsverbetering tegelijk in aanbouw.
+  assert.equal(kanCityVerbeteringBouwen(state, MARKT), false);
+  assert.equal(startCityVerbetering(state, MARKT), state);
+
+  for (let i = 0; i < BIBLIOTHEEK.bouwtijdBeurten + 1; i += 1) {
+    state = volgendeBeurt({ ...state, voorraad: { hout: 99, steen: 99, erts: 99, goud: 99 } });
+  }
+  assert.deepEqual(
+    state.stad.cityImprovements.map((ci) => ci.id),
+    ["bibliotheek"]
+  );
+
+  // Een kleine stad heeft precies 1 slot — nu vol, dus Markt kan niet starten
+  // (Opslagplaats telt bewust niet mee voor deze cap).
+  assert.equal(kanCityVerbeteringBouwen(state, MARKT), false);
+});
+
+test("stadsgrootte-eis blokkeert Barakken/Tempel voor een kleine stad en Grote Tempel voor een niet-grote stad (Deel 3)", () => {
+  const klein = maakInitieleSpelStatus();
+  assert.equal(kanCityVerbeteringBouwen(klein, BARAKKEN), false);
+  assert.equal(kanCityVerbeteringBouwen(klein, TEMPEL), false);
+  assert.equal(kanCityVerbeteringBouwen(klein, GROTE_TEMPEL), false);
+  assert.equal(kanCityVerbeteringBouwen(klein, BIBLIOTHEEK), true, "Bibliotheek heeft geen stadsgrootte-eis");
+  assert.equal(kanCityVerbeteringBouwen(klein, MARKT), true, "Markt heeft geen stadsgrootte-eis");
+
+  const middel: GameState = { ...klein, stad: { ...klein.stad, grootte: "middel" } };
+  assert.equal(kanCityVerbeteringBouwen(middel, BARAKKEN), true);
+  assert.equal(kanCityVerbeteringBouwen(middel, TEMPEL), true);
+  assert.equal(kanCityVerbeteringBouwen(middel, GROTE_TEMPEL), false, "Grote Tempel vereist een grote stad");
+
+  const groot: GameState = { ...klein, stad: { ...klein.stad, grootte: "groot" } };
+  assert.equal(kanCityVerbeteringBouwen(groot, GROTE_TEMPEL), true);
+});
+
+test("Tempel en Grote Tempel tellen als twee losse sloten en hun cultuurproductie is cumulatief (Deel 3)", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, stad: { ...state.stad, grootte: "groot", cityImprovements: [TEMPEL, GROTE_TEMPEL] } };
+  assert.equal(kanCityVerbeteringBouwen(state, TEMPEL), false, "Tempel is al gebouwd");
+  assert.equal(kanCityVerbeteringBouwen(state, GROTE_TEMPEL), false, "Grote Tempel is al gebouwd");
+
+  const voor = state.cultuur;
+  state = volgendeBeurt(state);
+  assert.equal(
+    state.cultuur,
+    voor + (TEMPEL.effect.waarde ?? 0) + (GROTE_TEMPEL.effect.waarde ?? 0),
+    "Tempel (+5) en Grote Tempel (+10) leveren samen +15 cultuur/beurt op, zonder frontier-halvering"
+  );
+});
+
+test("Bibliotheek en Markt produceren automatisch zodra ze gebouwd zijn, zonder wegverbinding nodig (Deel 3)", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, stad: { ...state.stad, cityImprovements: [BIBLIOTHEEK] } };
+  state = volgendeBeurt(state);
+  assert.equal(state.wetenschap, BIBLIOTHEEK.effect.waarde);
+
+  let middelStaat = maakInitieleSpelStatus();
+  middelStaat = {
+    ...middelStaat,
+    stad: { ...middelStaat.stad, grootte: "middel", cityImprovements: [MARKT] },
+  };
+  const goudVoor = middelStaat.voorraad.goud;
+  middelStaat = volgendeBeurt(middelStaat);
+  assert.equal(middelStaat.voorraad.goud, goudVoor + (MARKT.effect.waarde ?? 0));
+});
+
+test("Barakken levert een vaste, stad-brede legerwaarde-bonus die meetelt bij zowel de gewone Confrontatie als de Confrontatie tegen een Bezette Laag (Deel 3)", () => {
+  let state = maakInitieleSpelStatus();
+  const zonderBarakken = berekenLegerwaarde(state);
+
+  state = { ...state, stad: { ...state.stad, cityImprovements: [BARAKKEN] } };
+  assert.equal(berekenLegerwaarde(state), zonderBarakken + (BARAKKEN.effect.waarde ?? 0));
+
+  // Ook meetellen in de Bezette-Laag-Confrontatie: een geforceerde winst
+  // (winkans 100%) is alleen te garanderen als de Barakken-bonus daadwerkelijk
+  // meetelt in de eigen legerwaarde tegenover een fors dreigingsniveau.
+  let bezetteLaagStaat = metBezetteLaagEnVerkenner();
+  bezetteLaagStaat = verken(bezetteLaagStaat, 0);
+  bezetteLaagStaat = metBeschermendeWachttorenOpLaag11(bezetteLaagStaat);
+  bezetteLaagStaat = { ...bezetteLaagStaat, stad: { ...bezetteLaagStaat.stad, cityImprovements: [BARAKKEN] } };
+  const resultaat = metVasteRandom(0, () => confrontatieBezetteLaag(bezetteLaagStaat, 0));
+  assert.equal(
+    resultaat.laatsteConfrontatieBezetteLaag?.eigenLegerwaarde,
+    (WACHTTOREN.effect.waarde ?? 0) + (BARAKKEN.effect.waarde ?? 0)
+  );
+});
+
+test("startGroei kiest Grote Woonwijk (middel→groot) met de hogere voedseldrempel zodra de stad al middel is (Deel 2)", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, stad: { ...state.stad, grootte: "middel" }, voedsel: VOEDSEL_DREMPEL_GROEI_GROOT - 1 };
+  assert.equal(startGroei(state), state, "onder de drempel: geen effect");
+
+  state = { ...state, voedsel: VOEDSEL_DREMPEL_GROEI_GROOT };
+  state = startGroei(state);
+  assert.equal(state.stad.civielInAanbouw?.improvement.id, "grote-woonwijk");
+
+  for (let i = 0; i < GROTE_WOONWIJK.bouwtijdBeurten + 1; i += 1) {
+    state = volgendeBeurt({ ...state, voorraad: { hout: 99, steen: 99, erts: 99, goud: 99 } });
+  }
+  assert.equal(state.stad.grootte, "groot");
+  assert.equal(state.stad.civielInAanbouw, undefined);
+  // Deel 1: de cap gaat automatisch mee omhoog met de nieuwe stadsgrootte.
+  assert.equal(cityImprovementCap(state.stad.grootte), CITY_IMPROVEMENT_CAP.groot);
+});
+
+test("Legerkamp en Offer Altaar blijven geblokkeerd door startBouw tot hun infrastructuur-eis vervuld is (Deel 4)", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, lagen: state.lagen.map((laag) => ({ ...laag, ontgrendeld: true })) };
+
+  const legerkampVoortgang = infrastructuurVoortgang(state.lagen, state.stad.cityImprovements, LEGERKAMP);
+  assert.deepEqual(legerkampVoortgang, {
+    aantalLandImprovement: 0,
+    benodigdAantal: 5,
+    heeftCityImprovement: false,
+    vervuld: false,
+  });
+
+  // Positie 6 blijft leeg: `metActieveLandImprovements` vult hierna eerst de
+  // posities 0,1,2,3,5 van laag 1 (positie 4 is de stad), zodat het Legerkamp
+  // zelf ergens anders neergezet kan worden dan de 5 Wachttorens die de eis
+  // vervullen.
+  const naPoging = startBouw(state, 1, LEGERKAMP, 6);
+  assert.equal(naPoging, state, "geen effect: nog geen 5 Wachttorens en geen Barakken");
+
+  // 5 actieve Wachttorens, maar nog geen Barakken.
+  let metWachttorens = metActieveLandImprovements(state, WACHTTOREN, 5);
+  assert.equal(
+    infrastructuurVoortgang(metWachttorens.lagen, metWachttorens.stad.cityImprovements, LEGERKAMP)?.vervuld,
+    false
+  );
+  assert.equal(startBouw(metWachttorens, 1, LEGERKAMP, 6), metWachttorens);
+
+  // Met Barakken erbij is de eis vervuld en mag het Legerkamp gebouwd worden.
+  const metBarakken: GameState = {
+    ...metWachttorens,
+    stad: { ...metWachttorens.stad, cityImprovements: [BARAKKEN] },
+  };
+  assert.equal(infrastructuurVoortgang(metBarakken.lagen, metBarakken.stad.cityImprovements, LEGERKAMP)?.vervuld, true);
+  const naGeldigeBouw = startBouw(metBarakken, 1, LEGERKAMP, 6);
+  assert.equal(naGeldigeBouw.lagen[0].tiles[6].improvement?.id, "legerkamp");
+  assert.equal(naGeldigeBouw.lagen[0].tiles[6].status, "in_aanbouw");
+
+  // Offer Altaar volgt exact hetzelfde patroon met Heiligdommen/Grote Tempel.
+  const metHeiligdommen = metActieveLandImprovements(state, HEILIGDOM, 5);
+  assert.equal(startBouw(metHeiligdommen, 1, OFFER_ALTAAR, 6), metHeiligdommen, "nog geen Grote Tempel");
+  const metGroteTempel: GameState = {
+    ...metHeiligdommen,
+    stad: { ...metHeiligdommen.stad, cityImprovements: [GROTE_TEMPEL] },
+  };
+  const naOfferAltaar = startBouw(metGroteTempel, 1, OFFER_ALTAAR, 6);
+  assert.equal(naOfferAltaar.lagen[0].tiles[6].improvement?.id, "offer-altaar");
 });

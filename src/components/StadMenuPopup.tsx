@@ -4,7 +4,8 @@ import BezetteLaagPaneel from "./BezetteLaagPaneel";
 import CivielPaneel from "./CivielPaneel";
 import MilitairPaneel from "./MilitairPaneel";
 import OpslagplaatsPaneel from "./OpslagplaatsPaneel";
-import { GameState } from "@/game/types";
+import StadsverbeteringenPaneel from "./StadsverbeteringenPaneel";
+import { GameState, Improvement } from "@/game/types";
 
 interface StadMenuPopupProps {
   state: GameState;
@@ -13,6 +14,8 @@ interface StadMenuPopupProps {
   onStartGroei: () => void;
   onStartNieuweSettler: () => void;
   onStartOpslagplaats: () => void;
+  onStartCityVerbetering: (improvement: Improvement) => void;
+  onVersnelCityVerbetering: () => void;
   onStartRecrutering: () => void;
   onKiesStrijder: (strijderId: string) => void;
   onKiesStrijderVoorLegerkamp: (strijderId: string) => void;
@@ -42,6 +45,8 @@ export default function StadMenuPopup({
   onStartGroei,
   onStartNieuweSettler,
   onStartOpslagplaats,
+  onStartCityVerbetering,
+  onVersnelCityVerbetering,
   onStartRecrutering,
   onKiesStrijder,
   onKiesStrijderVoorLegerkamp,
@@ -99,6 +104,11 @@ export default function StadMenuPopup({
           state={state}
           onStartOpslagplaats={onStartOpslagplaats}
           onVersnelOpslagplaats={onVersnelOpslagplaats}
+        />
+        <StadsverbeteringenPaneel
+          state={state}
+          onStartCityVerbetering={onStartCityVerbetering}
+          onVersnelCityVerbetering={onVersnelCityVerbetering}
         />
         <MilitairPaneel
           state={state}

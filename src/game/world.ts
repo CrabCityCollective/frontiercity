@@ -294,6 +294,15 @@ export function cultuurKostenVoorLaag(hoogte: number): number {
 // aparte formule per grootte-tier nodig.
 export const VOEDSEL_DREMPEL_GROEI = 40;
 
+// Voedseldrempel voor de tweede groei-tier, middel→groot (hoofdstuk 3/4/13/
+// 14, issue: "city improvements" Deel 2 — ontbrak nog volledig). Zelfde
+// bewuste-keuze-patroon als `VOEDSEL_DREMPEL_GROEI` hierboven (het bereiken
+// van de drempel ontgrendelt alleen de keuze, groei start pas bewust via
+// `startGroei` in economie.ts). MVP-placeholder, doorgerekend in hoofdstuk 14
+// tegen de late-tutorial-voedseleconomie (rond laag 10+, waar de speler
+// doorgaans al meerdere boerderijen heeft).
+export const VOEDSEL_DREMPEL_GROEI_GROOT = 100;
+
 // Of een vakje geschikt is om een nieuwe stad te stichten (hoofdstuk 2,
 // issue: "stad stichten op de frontier"): aan vers water, en nog onbebouwd —
 // een vakje met een improvement of een ghost town erop is geen geldig doel

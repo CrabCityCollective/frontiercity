@@ -27,6 +27,7 @@ import {
   startGroei as startGroeiActie,
   startMissionarisRecrutering as startMissionarisRecruteringActie,
   startNieuweSettler as startNieuweSettlerActie,
+  startCityVerbetering as startCityVerbeteringActie,
   startOpslagplaats as startOpslagplaatsActie,
   startRecrutering as startRecruteringActie,
   startVerkennerRecrutering as startVerkennerRecruteringActie,
@@ -34,6 +35,7 @@ import {
   verken as verkenActie,
   verplaatsSettlerNaar as verplaatsSettlerNaarActie,
   versnelBouwMetGoud as versnelBouwMetGoudActie,
+  versnelCityVerbeteringMetGoud as versnelCityVerbeteringMetGoudActie,
   versnelCivielMetGoud as versnelCivielMetGoudActie,
   versnelOpslagplaatsMetGoud as versnelOpslagplaatsMetGoudActie,
   volgendeBeurt as volgendeBeurtActie,
@@ -91,6 +93,16 @@ export function useGameEngine() {
 
   const startOpslagplaats = useCallback(() => {
     setState((huidig) => startOpslagplaatsActie(huidig));
+  }, []);
+
+  // Stadsverbeteringen (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
+  // 1/3) — zelfde dunne wrapper-conventie als hierboven.
+  const startCityVerbetering = useCallback((improvement: Improvement) => {
+    setState((huidig) => startCityVerbeteringActie(huidig, improvement));
+  }, []);
+
+  const versnelCityVerbeteringMetGoud = useCallback(() => {
+    setState((huidig) => versnelCityVerbeteringMetGoudActie(huidig));
   }, []);
 
   const stichtStad = useCallback(() => {
@@ -224,6 +236,8 @@ export function useGameEngine() {
     startGroei,
     startNieuweSettler,
     startOpslagplaats,
+    startCityVerbetering,
+    versnelCityVerbeteringMetGoud,
     stichtStad,
     startRecrutering,
     bevestigIneenstorting,
