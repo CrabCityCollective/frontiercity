@@ -86,6 +86,21 @@ function metVasteRandom<T>(waarde: number, fn: () => T): T {
   }
 }
 
+// Zelfde opzet als `metVasteRandom` hierboven, maar met een eigen waarde per
+// opeenvolgende `Math.random()`-aanroep — nodig om de kans-trekking (is er
+// een incident?) los te zetten van de daaropvolgende laag-trekking (welke
+// laag?). Extra aanroepen voorbij `waarden` hergebruiken de laatste waarde.
+function metRandomReeks<T>(waarden: number[], fn: () => T): T {
+  const origineel = Math.random;
+  let i = 0;
+  Math.random = () => waarden[Math.min(i++, waarden.length - 1)];
+  try {
+    return fn();
+  } finally {
+    Math.random = origineel;
+  }
+}
+
 const HOUTKAP = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "houtkap")!;
 const MIJN = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "mijn")!;
 const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
@@ -797,6 +812,68 @@ test("een werkende Wachttoren beschermt ook de laag eronder, niet alleen zijn ei
     state.indringersEvent?.heeftWachttoren,
     true,
     "de bemande, wegverbonden Wachttoren op laag 2 moet ook laag 1 (de laag eronder) beschermen"
+  );
+});
+
+test("een laag met een actieve Amberader weegt zwaarder mee in de indringers-laag-trekking (issue: Amberader bonus/malus-koppeling)", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte === 2
+        ? {
+            ...laag,
+            ontgrendeld: true,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
+            ),
+          }
+        : laag
+    ),
+  };
+
+  // Twee ontgrendelde lagen doen mee: laag 1 (gewoon, gewicht 1) en laag 2
+  // (actieve Amberader, gewicht 2) — totaalgewicht 3, drempel voor laag 1 ligt
+  // dus op 1/3. Bij een zuiver uniforme trekking zou 0.4 nog altijd op laag 1
+  // uitkomen (floor(0.4 * 2) = 0); met de Amberader-weging (0.4 > 1/3) komt
+  // dezelfde randomwaarde juist op laag 2 uit — het bewijs dat de weging
+  // daadwerkelijk effect heeft. De derde waarde (stamnaam-trekking) is
+  // irrelevant voor deze assertie.
+  state = metRandomReeks([0, 0.4, 0], () => volgendeBeurt(state));
+
+  assert.equal(
+    state.indringersEvent?.laagHoogte,
+    2,
+    "de laag met de actieve Amberader moet bij dubbel gewicht op deze randomwaarde geloot worden, niet de gewone laag"
+  );
+});
+
+test("een uitgeputte Amberader (ghost town) telt niet meer mee voor het extra indringers-gewicht", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte === 2
+        ? {
+            ...laag,
+            ontgrendeld: true,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 4 ? { ...tile, status: "ghost_town" as const, improvement: AMBERADER } : tile
+            ),
+          }
+        : laag
+    ),
+  };
+
+  // Zelfde randomwaarde als hierboven (0.4), maar nu is de Amberader
+  // uitgeput: beide lagen wegen even zwaar (gewicht 1), dus dit gedraagt zich
+  // weer als de gewone uniforme trekking en komt op laag 1 uit.
+  state = metRandomReeks([0, 0.4, 0], () => volgendeBeurt(state));
+
+  assert.equal(
+    state.indringersEvent?.laagHoogte,
+    1,
+    "een uitgeputte Amberader mag geen verhoogd gewicht meer geven — een lege put trekt niemand meer"
   );
 });
 
