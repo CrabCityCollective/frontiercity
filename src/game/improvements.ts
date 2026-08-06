@@ -210,6 +210,17 @@ export const VOORRAADKUIL = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "v
 // `bouwbaarBuitenFrontier`-uitzondering zoals de Wachttoren, dit hoeft niet
 // op de Bezette Laag zelf te staan. Kosten (hoofdstuk 14, MVP-richtwaarde,
 // tunebaar): alle vier grondstoffen, in lijn met hoe de speler dit aanleverde.
+//
+// `infrastructuurEis` (hoofdstuk 4/6/11/14, issue: "city improvements" Deel
+// 4): pas bouwbaar zodra de speler minstens 5 actieve Heiligdommen heeft én
+// een Grote Tempel heeft gebouwd — een forse, meerdere-lagen-brede
+// opbouw-eis die de Bezette-Laag-climax pas opent nadat de speler zijn
+// culturele infrastructuur echt heeft uitgebouwd (zie hoofdstuk 11 voor de
+// volledige onderbouwing). `startBouw`/`voldoetAanInfrastructuurEis` in
+// economie.ts handhaven dit; `beschikbareOpties` hieronder blijft het Offer
+// Altaar bewust gewoon tonen (uitgegrijsd, met voortgangstekst in
+// BouwPopup.tsx) zodat de speler ziet hoe ver hij is, in plaats van het
+// helemaal te verbergen zoals bij een `minLaag`-eis.
 export const OFFER_ALTAAR: Improvement = {
   id: "offer-altaar",
   naam: "Offer Altaar",
@@ -220,6 +231,13 @@ export const OFFER_ALTAAR: Improvement = {
   // Geen "productie"-effect (levert zelf geen cultuur op) — het effect-type
   // is puur een marker die `heeftOfferAltaar` in economie.ts herkent.
   effect: { type: "ontgrendelt-missionaris" },
+  infrastructuurEis: {
+    landImprovementId: "heiligdom",
+    landImprovementNaam: "Heiligdommen",
+    minAantal: 5,
+    cityImprovementId: "grote-tempel",
+    cityImprovementNaam: "Grote Tempel",
+  },
 };
 
 export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
@@ -304,6 +322,13 @@ export const WETENSCHAPPELIJK_LAND_IMPROVEMENTS: Improvement[] = [STERRENCIRKEL]
 // Laag (zie `berekenLegerkampLegerwaarde` in economie.ts), het Legerkamp
 // zelf levert geen eigen bonus. Kosten (hoofdstuk 14, MVP-richtwaarde,
 // tunebaar): vooral hout, in lijn met een kamp i.p.v. een stenen toren.
+//
+// `infrastructuurEis` (hoofdstuk 4/6/11/14, issue: "city improvements" Deel
+// 4): pas bouwbaar zodra de speler minstens 5 actieve Wachttorens heeft én
+// een Barakken heeft gebouwd — zelfde soort forse infrastructuur-eis als het
+// Offer Altaar hieronder, nu voor de militaire kant van de Bezette-Laag-
+// climax. Zie de `infrastructuurEis`-comment bij `OFFER_ALTAAR` hieronder
+// voor de volledige onderbouwing.
 export const LEGERKAMP: Improvement = {
   id: "legerkamp",
   naam: "Legerkamp",
@@ -313,6 +338,13 @@ export const LEGERKAMP: Improvement = {
   bouwtijdBeurten: 3,
   effect: { type: "legerkamp" },
   bouwbaarBuitenFrontier: true,
+  infrastructuurEis: {
+    landImprovementId: "wachttoren",
+    landImprovementNaam: "Wachttorens",
+    minAantal: 5,
+    cityImprovementId: "barakken",
+    cityImprovementNaam: "Barakken",
+  },
 };
 
 export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
@@ -451,6 +483,28 @@ export const WOONWIJK: Improvement = {
   effect: { type: "groei", naarGrootte: "middel" },
 };
 
+// Tweede groei-tier-stap, middel→groot (hoofdstuk 3/4/13/14, issue: "city
+// improvements" Deel 2 — ontbrak nog volledig, de MVP-scope kende tot nu toe
+// maar één groei-stap). Zelfde `civielInAanbouw`-wachtrij en
+// `effect.type: "groei"`-patroon als WOONWIJK hierboven, alleen met een
+// hogere kosten-/bouwtijd-schaal (kosten grofweg verdubbeld t.o.v. Woonwijk)
+// en een eigen, hogere voedseldrempel (`VOEDSEL_DREMPEL_GROEI_GROOT`,
+// world.ts) om te mogen starten — zie `startGroei` in economie.ts, die op
+// basis van de huidige stadsgrootte kiest tussen deze twee improvements.
+// Voltooiing zet de stad naar "groot": de city-improvement-cap gaat naar 5
+// (hoofdstuk 4/11/14, `CITY_IMPROVEMENT_CAP` in economie.ts) en het
+// stadsverbruik naar 6 voedsel/beurt (`VOEDSEL_VERBRUIK` in economie.ts, al
+// aanwezig sinds de oorspronkelijke groei-tabel).
+export const GROTE_WOONWIJK: Improvement = {
+  id: "grote-woonwijk",
+  naam: "Grote Woonwijk",
+  categorie: "civiel",
+  soort: "city",
+  kosten: { hout: 12, steen: 8 },
+  bouwtijdBeurten: 6,
+  effect: { type: "groei", naarGrootte: "groot" },
+};
+
 // Nieuwe settler (hoofdstuk 3/11/13/16, issue: "stad stichten op de
 // frontier" deel 4): de speler begint met één settler; zodra een stad
 // gesticht is (`stichtStad` in economie.ts) kan de nieuwe stad er weer één
@@ -485,6 +539,94 @@ export const OPSLAGPLAATS: Improvement = {
   bouwtijdBeurten: 3,
   effect: { type: "opslag", waarde: 20 },
 };
+
+// Gecapte city improvements (hoofdstuk 3/4/11/14, issue: "city improvements"
+// Deel 1/3): elke stad kan er hoogstens `CITY_IMPROVEMENT_CAP[grootte]`
+// tegelijk van hebben (economie.ts) — dit is de tastbare groei-beloning die
+// het nooit-gebouwde relic-slot-concept uit een eerdere versie van hoofdstuk
+// 4 vervangt. Opslagplaats hierboven en de groei-tier-improvements
+// (WOONWIJK/GROTE_WOONWIJK) tellen bewust niet mee (zie hoofdstuk 11): die
+// hebben allebei al hun eigen wachtrij/functie, dit zijn de vijf improvements
+// die om een slot concurreren. Elk heeft een eigen `productie`-effect dat
+// `verwerkProductie`/`berekenCultuurProductieDitBeurt` in economie.ts
+// meetellen zodra hij in `City.cityImprovements` staat — zonder
+// wegverbinding-eis (net als Opslagplaats): een city improvement staat niet
+// op een land-vakje.
+export const BIBLIOTHEEK: Improvement = {
+  id: "bibliotheek",
+  naam: "Bibliotheek",
+  categorie: "wetenschappelijk",
+  soort: "city",
+  kosten: { hout: 6, steen: 4, erts: 2 },
+  bouwtijdBeurten: 3,
+  effect: { type: "productie", resource: "wetenschap", waarde: 10 },
+};
+
+export const MARKT: Improvement = {
+  id: "markt",
+  naam: "Markt",
+  categorie: "economisch",
+  soort: "city",
+  kosten: { hout: 5, steen: 6 },
+  bouwtijdBeurten: 3,
+  effect: { type: "productie", resource: "goud", waarde: 2 },
+};
+
+// Barakken (hoofdstuk 3/4/6/11/14, issue: "city improvements" Deel 3/4):
+// levert, anders dan het Wachttoren-patroon (verdedigingsbonus, alleen mee
+// als bemand), een vaste, stad-brede legerwaarde-bonus die geen bemanning
+// nodig heeft — vandaar het eigen effect-type "stad-legerwaarde" i.p.v.
+// "verdediging". Telt mee bij zowel de gewone Confrontatie
+// (`berekenLegerwaarde`) als de Confrontatie tegen een Bezette Laag
+// (`confrontatieBezetteLaag`), zie economie.ts. Ontgrendelt daarnaast, samen
+// met 5 actieve Wachttorens, het Legerkamp (`LEGERKAMP.infrastructuurEis`
+// hierboven). `stadsgrootteEis: "middel"` is een aanname uit het issue zelf
+// ("pas aan als dat niet de bedoeling is").
+export const BARAKKEN: Improvement = {
+  id: "barakken",
+  naam: "Barakken",
+  categorie: "militair",
+  soort: "city",
+  kosten: { hout: 4, steen: 8, erts: 4 },
+  bouwtijdBeurten: 3,
+  effect: { type: "stad-legerwaarde", waarde: 10 },
+  stadsgrootteEis: "middel",
+};
+
+export const TEMPEL: Improvement = {
+  id: "tempel",
+  naam: "Tempel",
+  categorie: "cultureel",
+  soort: "city",
+  kosten: { hout: 6, steen: 6 },
+  bouwtijdBeurten: 3,
+  effect: { type: "productie", resource: "cultuur", waarde: 5 },
+  stadsgrootteEis: "middel",
+};
+
+// Grote Tempel: een aparte, tweede cultureel-improvement-slot naast een al
+// gebouwde Tempel (geen vervanging) — beide hebben een ander `id`, dus
+// `startCityVerbetering`/de cap-telling in economie.ts behandelen ze als
+// twee volledig losse improvements die allebei meetellen voor de cap
+// (hoofdstuk 3, Deel 3 van het issue: "samen dus +15 cultuur/beurt"). Ook de
+// tweede helft van de Offer-Altaar-infrastructuur-eis hierboven
+// (`OFFER_ALTAAR.infrastructuurEis`).
+export const GROTE_TEMPEL: Improvement = {
+  id: "grote-tempel",
+  naam: "Grote Tempel",
+  categorie: "cultureel",
+  soort: "city",
+  kosten: { hout: 4, steen: 14, erts: 4, goud: 4 },
+  bouwtijdBeurten: 4,
+  effect: { type: "productie", resource: "cultuur", waarde: 10 },
+  stadsgrootteEis: "groot",
+};
+
+// Alle vijf gecapte city improvements — de opties voor de nieuwe
+// stadsverbeteringen-UI (StadsverbeteringenPaneel.tsx), gefilterd daar
+// verder op stadsgrootte-eis/al-gebouwd/cap (economie.ts:
+// `kanCityVerbeteringBouwen`).
+export const CAPPED_CITY_IMPROVEMENTS: Improvement[] = [BIBLIOTHEEK, MARKT, BARAKKEN, TEMPEL, GROTE_TEMPEL];
 
 const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   economisch: ECONOMISCH_LAND_IMPROVEMENTS,
