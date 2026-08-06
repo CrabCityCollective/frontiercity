@@ -1914,6 +1914,19 @@ const INDRINGERS_KANS = 0.2;
 // eerste laag blijft zo een rustige introductie zonder dat risico. Was laag 3.
 const INDRINGERS_MIN_LAAG = 2;
 
+// Eerste rogue-like bonus/malus-koppeling (hoofdstuk 6/11/14, issue:
+// "Amberader: bonus/malus-koppeling" — waardevolle vondsten trekken ook
+// ongewenste aandacht): een laag met een actieve Amberader weegt zwaarder mee
+// in de laag-trekking hieronder dan een gewone laag — voorstel 2x zo
+// waarschijnlijk om geloot te worden. MVP-richtwaarde, tunebaar. Vergroot
+// alleen de kans dat de laag geloot wordt, niet de uitkomst daarna: een
+// beschermende Wachttoren op die laag houdt het incident nog steeds tegen
+// (`heeftBeschermendeWachttoren` hieronder blijft ongewijzigd die uitkomst
+// bepalen). Bewust klein gehouden en volledig gebouwd op de bestaande
+// Amberader- en indringers-trekking-systemen, zonder nieuw framework — zie
+// hoofdstuk 11 voor de volledige onderbouwing.
+const AMBERADER_INDRINGERS_GEWICHT = 2;
+
 // Een Wachttoren beschermt de laag waarop hij staat alleen als hij voltooid,
 // bemand én via een aaneengesloten wegketen met de stad verbonden is (issue:
 // "een wachtpost moet bevoorraad worden; zonder verbinding met de stad kan
@@ -1990,6 +2003,22 @@ function isAlleenWachttorenLaag(laag: Layer): boolean {
   return heeftWachttoren;
 }
 
+// Een laag heeft een *actieve* Amberader (gebouwd, nog niet uitgeput) zolang
+// er een tile met de `goudmijn`-improvement (interne sleutel, zie
+// `improvements.ts`) in status `actief` op staat. Eenmaal uitgeput wordt zo'n
+// tile `ghost_town` (zie `verwerkUitputting` hierboven) en telt hij hier niet
+// meer mee — een lege put trekt geen indringers meer aan (hoofdstuk 6/11/14).
+function heeftActieveAmberader(laag: Layer): boolean {
+  return laag.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "goudmijn");
+}
+
+// Gewicht van `laag` in de indringers-laag-trekking hieronder: een laag met
+// een actieve Amberader (zie hierboven) weegt `AMBERADER_INDRINGERS_GEWICHT`
+// keer zo zwaar als een gewone laag.
+function indringersGewicht(laag: Layer): number {
+  return heeftActieveAmberader(laag) ? AMBERADER_INDRINGERS_GEWICHT : 1;
+}
+
 // Indringers & tribuut (hoofdstuk 6): elke beurt is er, zodra laag
 // `INDRINGERS_MIN_LAAG` ontgrendeld is, één trekking of er sowieso een
 // incident plaatsvindt — niet meer per laag. Is er een incident, dan wordt de
@@ -2013,7 +2042,20 @@ function verwerkIndringers(state: GameState): GameState {
   );
   if (ontgrendeldeLagen.length === 0) return state;
 
-  const laag = ontgrendeldeLagen[Math.floor(Math.random() * ontgrendeldeLagen.length)];
+  // Gewogen trekking (issue: "Amberader: bonus/malus-koppeling") in plaats
+  // van een zuiver uniforme trekking — lagen met een actieve Amberader tellen
+  // hier zwaarder mee, zie `indringersGewicht` hierboven.
+  const gewichten = ontgrendeldeLagen.map(indringersGewicht);
+  const totaalGewicht = gewichten.reduce((som, gewicht) => som + gewicht, 0);
+  let punt = Math.random() * totaalGewicht;
+  let laag = ontgrendeldeLagen[ontgrendeldeLagen.length - 1];
+  for (let i = 0; i < ontgrendeldeLagen.length; i++) {
+    punt -= gewichten[i];
+    if (punt < 0) {
+      laag = ontgrendeldeLagen[i];
+      break;
+    }
+  }
   const stamNaam = INDRINGERS_STAMMEN[Math.floor(Math.random() * INDRINGERS_STAMMEN.length)];
 
   if (heeftBeschermendeWachttoren(state, laag)) {
