@@ -263,6 +263,19 @@ export const INDRINGERS_STAMMEN = ["de stam van de Halve Maan", "de stam van de 
 
 export const INDRINGERS_TITEL = "Indringers bij de grens";
 
+// Derde-uitkomst-pop-ups voor beschermde lagen (hoofdstuk 6/14, issue:
+// "wachttorens kunnen vernietigd worden door indringers"): drie korte
+// meldingen, zelfde stijlgids als de rest van dit bestand. De Amberader-tekst
+// geldt voor élke indringers-melding op een laag met een actieve Amberader
+// (ook de gewone tribuut-afhandeling), niet alleen de malus/bonus-uitkomsten
+// hieronder — zie `IndringersEvent.amberOnderVuur` (types.ts).
+export const AMBERADER_ONDER_VUUR_TEKST =
+  "Dit keer zijn ze niet zomaar op doortocht. Ze ruiken de amber, en komen ervoor.";
+export const WACHTTOREN_OVERROMPELD_TEKST =
+  "Dit keer houdt de wachttoren geen stand. Balken breken, de wacht valt — er blijft een ruïne over.";
+export const BUIT_BINNENGEHAALD_TEKST =
+  "De aanval wordt afgeslagen, en de bemanning neemt iets mee terug: goud dat de indringers achterlieten.";
+
 // Kudde-melding (hoofdstuk 17): getoond zodra `verwerkKuddes` (economie.ts)
 // een nieuwe wilde kudde neerzet — zelfde stijlgids als de rest van dit
 // bestand, en dezelfde blokkerende meldings-vorm als de indringers-pop-up

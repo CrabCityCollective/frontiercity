@@ -435,12 +435,32 @@ export interface IndringersTribuut {
 // afgedwongen): toont het bedrag dat afgeschreven gaat worden, en trekt dat
 // pas daadwerkelijk van de voorraad af zodra de speler deze melding sluit
 // (zie `geefTribuut` in economie.ts).
+//
+// `uitkomst` (issue: "wachttorens kunnen vernietigd worden door indringers"):
+// alleen gezet als `heeftWachttoren` — de derde-uitkomst-loot (hoofdstuk 6)
+// voor een beschermde laag (frontier of niet). `"standhouden"` is het
+// bestaande gedrag (fase "gemeld", "houdt stand"-tekst); `"malus"` en
+// `"bonus"` krijgen elk hun eigen fase/pop-up hieronder. De bijbehorende
+// state-mutatie (ruïne + strijderverlies, resp. goud) is al toegepast door
+// `verwerkIndringers` op het moment dat het event gezet wordt — de latere
+// fase-overgangen (`bevestigAmberOnderVuur`/`sluitIndringersMelding` in
+// economie.ts) zijn puur UI-voortgang, geen nieuwe state-effecten.
+// `buitGoud` is alleen aanwezig bij `uitkomst: "bonus"`.
+//
+// `amberOnderVuur`/`fase: "amber-onder-vuur"`: onafhankelijk van
+// `heeftWachttoren`/`uitkomst` — geldt voor élke indringers-melding op een
+// laag met een actieve Amberader (ook de gewone tribuut-afhandeling), en
+// wordt altijd als eerste getoond vóór de eigenlijke uitkomst-fase
+// (`bevestigAmberOnderVuur` schuift daarna door naar die fase).
 export interface IndringersEvent {
   laagHoogte: number;
   stamNaam: string;
   heeftWachttoren: boolean;
   tribuut?: IndringersTribuut;
-  fase: "gemeld" | "geforceerd" | "betaald";
+  amberOnderVuur?: boolean;
+  uitkomst?: "standhouden" | "malus" | "bonus";
+  buitGoud?: number;
+  fase: "amber-onder-vuur" | "gemeld" | "malus" | "bonus" | "geforceerd" | "betaald";
 }
 
 // Kudde-melding (hoofdstuk 17: "verschijnt een kudde, dan meldt een pop-up

@@ -91,6 +91,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     jaag,
     hakHout,
     sluitIndringersMelding,
+    bevestigAmberOnderVuur,
     sluitKuddeMelding,
     sluitRoofdierMelding,
     sluitAmberOntdektMelding,
@@ -854,6 +855,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonIndringersPopup && state.indringersEvent && (
           <IndringersPopup
             event={state.indringersEvent}
+            onBevestigAmberOnderVuur={bevestigAmberOnderVuur}
             onGeefTribuut={kiesGeefTribuut}
             onWeigerTribuut={weigerTribuut}
             onBevestigGedwongenTribuut={bevestigGedwongenTribuut}

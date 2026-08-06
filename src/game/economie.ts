@@ -1927,15 +1927,34 @@ const INDRINGERS_MIN_LAAG = 2;
 // hoofdstuk 11 voor de volledige onderbouwing.
 const AMBERADER_INDRINGERS_GEWICHT = 2;
 
+// Tweede rogue-like bonus/malus-koppeling (hoofdstuk 6/11/14, issue:
+// "wachttorens kunnen vernietigd worden door indringers"): een beschermde
+// laag (frontier of niet) houdt niet langer altijd zomaar stand — een derde
+// loot bepaalt de uitkomst van het incident. Volgorde bewust vaakst → meest
+// zeldzaam: stand houden (ongewijzigd gedrag) ♦ malus (Wachttoren wordt een
+// ruïne, bemanning blijvend verloren) ♦ bonus (buit, extra goud). MVP-
+// richtwaarden, tunebaar (hoofdstuk 14) — `INDRINGERS_STANDHOUDEN_KANS +
+// INDRINGERS_MALUS_KANS` moet onder 1 blijven; de rest van de kansruimte is
+// de bonus-uitkomst.
+const INDRINGERS_STANDHOUDEN_KANS = 0.85;
+const INDRINGERS_MALUS_KANS = 0.1;
+
+// Buit-bedrag bij de bonus-uitkomst hierboven (hoofdstuk 6/14) — MVP-
+// richtwaarde, tunebaar.
+const INDRINGERS_BUIT_GOUD = 6;
+
 // Een Wachttoren beschermt de laag waarop hij staat alleen als hij voltooid,
 // bemand én via een aaneengesloten wegketen met de stad verbonden is (issue:
 // "een wachtpost moet bevoorraad worden; zonder verbinding met de stad kan
 // hij zijn functie niet vervullen") — dit lost de eerdere ambiguïteit tussen
 // hoofdstuk 6 ("actief én bemand") en hoofdstuk 16 (land improvements worden
 // pas actief via een wegverbinding) op. Een gebouwde maar onbemande of
-// onverbonden Wachttoren biedt geen bescherming.
-function heeftWerkendeWachttorenOpLaag(state: GameState, laag: Layer): boolean {
-  return laag.tiles.some(
+// onverbonden Wachttoren biedt geen bescherming. Geeft de tile zelf terug
+// (niet alleen een boolean) zodat de malus-uitkomst hieronder (issue:
+// "wachttorens kunnen vernietigd worden door indringers") weet welke
+// specifieke tile tot ruïne moet vervallen.
+function vindWerkendeWachttorenTile(state: GameState, laag: Layer): Tile | undefined {
+  return laag.tiles.find(
     (tile) =>
       tile.status === "actief" &&
       tile.improvement?.id === "wachttoren" &&
@@ -1944,16 +1963,29 @@ function heeftWerkendeWachttorenOpLaag(state: GameState, laag: Layer): boolean {
   );
 }
 
-// Een laag is beschermd door een werkende Wachttoren op de laag zelf, óf door
-// een werkende Wachttoren op de laag erboven (issue: "wachttoren beschermt 2
-// lagen" — zonder deze uitbreiding moest de speler op praktisch elke
-// ontgrendelde laag apart een toren bouwen om overal gedekt te zijn). Een
-// toren beschermt dus zijn eigen laag én de laag daaronder, nooit de laag
-// erboven — dat blijft aan een eigen toren op die hogere laag.
-function heeftBeschermendeWachttoren(state: GameState, laag: Layer): boolean {
-  if (heeftWerkendeWachttorenOpLaag(state, laag)) return true;
+function heeftWerkendeWachttorenOpLaag(state: GameState, laag: Layer): boolean {
+  return vindWerkendeWachttorenTile(state, laag) !== undefined;
+}
+
+// De specifieke laag+tile van de Wachttoren die `laag` beschermt: op de laag
+// zelf, of anders (issue: "wachttoren beschermt 2 lagen") op de laag erboven
+// — nooit de laag eronder. Een toren beschermt dus zijn eigen laag én de laag
+// daaronder, nooit de laag erboven — dat blijft aan een eigen toren op die
+// hogere laag. Gebruikt door zowel `heeftBeschermendeWachttoren` hieronder
+// als de nieuwe malus-uitkomst (issue: "wachttorens kunnen vernietigd worden
+// door indringers"), die precies déze Wachttoren tot ruïne laat vervallen.
+function vindBeschermendeWachttoren(state: GameState, laag: Layer): { laag: Layer; tile: Tile } | undefined {
+  const opLaagZelf = vindWerkendeWachttorenTile(state, laag);
+  if (opLaagZelf) return { laag, tile: opLaagZelf };
+
   const laagErboven = state.lagen.find((l) => l.hoogte === laag.hoogte + 1);
-  return laagErboven !== undefined && heeftWerkendeWachttorenOpLaag(state, laagErboven);
+  if (!laagErboven) return undefined;
+  const opLaagErboven = vindWerkendeWachttorenTile(state, laagErboven);
+  return opLaagErboven ? { laag: laagErboven, tile: opLaagErboven } : undefined;
+}
+
+function heeftBeschermendeWachttoren(state: GameState, laag: Layer): boolean {
+  return vindBeschermendeWachttoren(state, laag) !== undefined;
 }
 
 // Het grondstof-type waar de speler op dit moment het meest van heeft, met
@@ -2019,6 +2051,48 @@ function indringersGewicht(laag: Layer): number {
   return heeftActieveAmberader(laag) ? AMBERADER_INDRINGERS_GEWICHT : 1;
 }
 
+// Loot de derde-uitkomst voor een beschermde laag (hoofdstuk 6/14, issue:
+// "wachttorens kunnen vernietigd worden door indringers"): meestal houdt de
+// Wachttoren gewoon stand, soms wordt hij overrompeld (malus), zelden buit de
+// bemanning iets van de indringers (bonus).
+function bepaalIndringersUitkomst(): "standhouden" | "malus" | "bonus" {
+  const worp = Math.random();
+  if (worp < INDRINGERS_STANDHOUDEN_KANS) return "standhouden";
+  if (worp < INDRINGERS_STANDHOUDEN_KANS + INDRINGERS_MALUS_KANS) return "malus";
+  return "bonus";
+}
+
+// Verwerkt de malus-uitkomst hierboven: dezelfde afhandeling als een verloren
+// Confrontatie tegen een Bezette Laag (`confrontatieBezetteLaag` hierboven) —
+// de beschermende Wachttoren-tile wordt een ruïne (op dezelfde plek
+// herbouwbaar tegen de normale kosten/bouwtijd) en de strijder die hem
+// bemande is blijvend verloren, geen reassignment.
+function verwerkWachttorenOverrompeling(
+  state: GameState,
+  beschermendeWachttoren: { laag: Layer; tile: Tile }
+): GameState {
+  const { laag, tile } = beschermendeWachttoren;
+  const bemanner = state.stad.strijders.find(
+    (s) => s.wachttoren?.hoogte === laag.hoogte && s.wachttoren?.positieInLaag === tile.positieInLaag
+  );
+  const strijders = bemanner ? state.stad.strijders.filter((s) => s.id !== bemanner.id) : state.stad.strijders;
+
+  const lagen = state.lagen.map((l) =>
+    l.hoogte !== laag.hoogte
+      ? l
+      : {
+          ...l,
+          tiles: l.tiles.map((t, i) =>
+            i === tile.positieInLaag
+              ? { ...t, status: "ruine" as const, improvement: undefined, beurtenTotUitputting: undefined }
+              : t
+          ),
+        }
+  );
+
+  return { ...state, lagen, stad: { ...state.stad, strijders } };
+}
+
 // Indringers & tribuut (hoofdstuk 6): elke beurt is er, zodra laag
 // `INDRINGERS_MIN_LAAG` ontgrendeld is, één trekking of er sowieso een
 // incident plaatsvindt — niet meer per laag. Is er een incident, dan wordt de
@@ -2027,11 +2101,16 @@ function indringersGewicht(laag: Layer): number {
 // beschermd zijn", later verfijnd met `isAlleenWachttorenLaag` hierboven),
 // zodat elke gebouwde, bemande en verbonden Wachttoren zijn hele run lang
 // waarde houdt in plaats van waardeloos te worden zodra de frontier opschuift.
-// Een beschermende Wachttoren op de geloten laag verdedigt de hele laag — er
-// gebeurt dan niets, alleen een meldings-pop-up. Zonder zo'n wachttoren eist
-// de tribe tribuut (zie `kiesTribuut`); de speler lost dit verder zelf op via
-// `geefTribuut`/`weigerTribuut` hieronder. Rolt geen nieuwe gebeurtenis zolang
-// een vorige melding nog open staat.
+// Een beschermende Wachttoren op de geloten laag verdedigt de laag meestal
+// gewoon (issue: "wachttorens kunnen vernietigd worden door indringers" —
+// `bepaalIndringersUitkomst` hierboven loot hier nu de derde uitkomst, ook op
+// de frontier-laag zelf: meestal stand houden, soms een malus, zelden een
+// bonus). Zonder zo'n wachttoren eist de tribe tribuut (zie `kiesTribuut`); de
+// speler lost dit verder zelf op via `geefTribuut`/`weigerTribuut` hieronder.
+// Een laag met een actieve Amberader krijgt bovendien altijd eerst een eigen
+// aankondiging (`amberOnderVuur`/fase "amber-onder-vuur"), los van de
+// uitkomst — ook bij de gewone tribuut-afhandeling. Rolt geen nieuwe
+// gebeurtenis zolang een vorige melding nog open staat.
 function verwerkIndringers(state: GameState): GameState {
   if (state.indringersEvent) return state;
   if (hoogsteOntgrendeldeLaag(state.lagen) < INDRINGERS_MIN_LAAG) return state;
@@ -2057,11 +2136,39 @@ function verwerkIndringers(state: GameState): GameState {
     }
   }
   const stamNaam = INDRINGERS_STAMMEN[Math.floor(Math.random() * INDRINGERS_STAMMEN.length)];
+  const amberOnderVuur = heeftActieveAmberader(laag) || undefined;
 
-  if (heeftBeschermendeWachttoren(state, laag)) {
+  const beschermendeWachttoren = vindBeschermendeWachttoren(state, laag);
+  if (beschermendeWachttoren) {
+    const uitkomst = bepaalIndringersUitkomst();
+    let volgendeState = state;
+    let buitGoud: number | undefined;
+
+    if (uitkomst === "malus") {
+      volgendeState = verwerkWachttorenOverrompeling(volgendeState, beschermendeWachttoren);
+    } else if (uitkomst === "bonus") {
+      buitGoud = INDRINGERS_BUIT_GOUD;
+      volgendeState = {
+        ...volgendeState,
+        voorraad: {
+          ...volgendeState.voorraad,
+          goud: Math.min(volgendeState.opslagCap, volgendeState.voorraad.goud + INDRINGERS_BUIT_GOUD),
+        },
+      };
+    }
+
+    const uitkomstFase = uitkomst === "standhouden" ? "gemeld" : uitkomst;
     return {
-      ...state,
-      indringersEvent: { laagHoogte: laag.hoogte, stamNaam, heeftWachttoren: true, fase: "gemeld" },
+      ...volgendeState,
+      indringersEvent: {
+        laagHoogte: laag.hoogte,
+        stamNaam,
+        heeftWachttoren: true,
+        amberOnderVuur,
+        uitkomst,
+        buitGoud,
+        fase: amberOnderVuur ? "amber-onder-vuur" : uitkomstFase,
+      },
     };
   }
 
@@ -2070,7 +2177,14 @@ function verwerkIndringers(state: GameState): GameState {
 
   return {
     ...state,
-    indringersEvent: { laagHoogte: laag.hoogte, stamNaam, heeftWachttoren: false, tribuut, fase: "gemeld" },
+    indringersEvent: {
+      laagHoogte: laag.hoogte,
+      stamNaam,
+      heeftWachttoren: false,
+      tribuut,
+      amberOnderVuur,
+      fase: amberOnderVuur ? "amber-onder-vuur" : "gemeld",
+    },
   };
 }
 
@@ -2165,10 +2279,31 @@ export function sluitRoofdierMelding(state: GameState): GameState {
   return { ...state, roofdierEvent: undefined };
 }
 
-// Sluit een gemelde-maar-onschadelijke indringers-melding (wachttoren hield
-// stand) zonder verdere gevolgen.
+// Sluit een gemelde indringers-melding zonder verdere gevolgen: de
+// "standhouden"-uitkomst (`fase: "gemeld"` met `heeftWachttoren: true`), en de
+// nieuwe "malus"/"bonus"-uitkomsten (issue: "wachttorens kunnen vernietigd
+// worden door indringers") — hun state-mutatie (ruïne + strijderverlies, resp.
+// goud) is al toegepast door `verwerkIndringers` op het moment dat het event
+// gezet werd, dit is puur de UI-bevestiging.
 export function sluitIndringersMelding(state: GameState): GameState {
   return { ...state, indringersEvent: undefined };
+}
+
+// Bevestigt de "Amberader onder vuur"-aankondiging (hoofdstuk 6, issue:
+// "wachttorens kunnen vernietigd worden door indringers", Deel 2) en schuift
+// door naar de eigenlijke uitkomst-fase van hetzelfde incident — de
+// aankondiging en de uitkomst worden bewust na elkaar getoond, niet
+// gecombineerd tot één bericht.
+export function bevestigAmberOnderVuur(state: GameState): GameState {
+  const event = state.indringersEvent;
+  if (!event || event.fase !== "amber-onder-vuur") return state;
+
+  const volgendeFase = event.heeftWachttoren
+    ? event.uitkomst === "standhouden"
+      ? "gemeld"
+      : event.uitkomst!
+    : "gemeld";
+  return { ...state, indringersEvent: { ...event, fase: volgendeFase } };
 }
 
 // Kiest bewust om het geëiste tribuut te geven (hoofdstuk 6, issue:
