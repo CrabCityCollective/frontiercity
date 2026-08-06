@@ -30,7 +30,6 @@ import {
   tekenSettlerBereikbaarMarkering,
   tekenTileGrid,
   tekenVerkenningBereikbaarMarkering,
-  tekenWachttorenBereikbaarMarkering,
   terreinBasisKleur,
 } from "./canvas";
 
@@ -887,7 +886,6 @@ export function tekenWereldPixelArt(
   plaatsingsLaagHoogte?: number,
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
-  wachttorenBereikbarePosities?: Settler[],
   legerkampBereikbarePosities?: Settler[],
   verkenningBereikbarePosities?: Settler[]
 ): void {
@@ -941,14 +939,6 @@ export function tekenWereldPixelArt(
 
       if (settlerBereikbarePosities?.some((positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col)) {
         tekenSettlerBereikbaarMarkering(ctx, x, y, tileSize);
-      }
-
-      if (
-        wachttorenBereikbarePosities?.some(
-          (positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col
-        )
-      ) {
-        tekenWachttorenBereikbaarMarkering(ctx, x, y, tileSize);
       }
 
       if (

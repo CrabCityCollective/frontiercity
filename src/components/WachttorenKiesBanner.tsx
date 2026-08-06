@@ -4,15 +4,16 @@ interface WachttorenKiesBannerProps {
   onAnnuleren: () => void;
 }
 
-// Niet-blokkerende banner (nieuwe Wachttoren-functie, hoofdstuk 6): getoond
-// zodra de speler in het militaire paneel op een nog niet toegewezen strijder
-// klikt, terwijl hij een vakje op de kaart moet aanklikken. Anders dan de
-// overige pop-ups blokkeert dit niet het hele scherm — de speler moet de
-// kaart juist kunnen zien om een wachttoren aan te klikken (zie GameRoot:
-// `handleTileClick`). De uitleg zelf staat sinds "pop-ups wijzigen" al vooraf
-// in STRIJDERS_OPLEIDEN_TEKST (tutorialContent.ts) — deze banner biedt alleen
-// nog de Annuleren-knop, nodig omdat de speler anders vast kan komen te
-// zitten in de kies-modus als er geen onbemande wachttoren beschikbaar is.
+// Niet-blokkerende banner (hoofdstuk 6): getoond zodra de speler in het
+// militaire paneel op een nog niet toegewezen strijder klikt om hem aan een
+// Legerkamp toe te wijzen, of Verkenning start, terwijl hij een vakje op de
+// kaart moet aanklikken. Anders dan de overige pop-ups blokkeert dit niet het
+// hele scherm — de speler moet de kaart juist kunnen zien om een geldig
+// doelvakje aan te klikken (zie GameRoot: `handleTileClick`). Wachttoren-
+// bemannen gebruikt deze banner sinds issue "wachttorens bemannen" niet meer
+// — dat loopt via een klik op de wachttoren-tile zelf. Deze banner biedt
+// alleen de Annuleren-knop, nodig omdat de speler anders vast kan komen te
+// zitten in de kies-modus als er geen geldig doelvakje beschikbaar is.
 export default function WachttorenKiesBanner({ onAnnuleren }: WachttorenKiesBannerProps) {
   return (
     <div

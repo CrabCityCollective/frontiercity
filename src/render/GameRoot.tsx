@@ -35,7 +35,7 @@ import VolgendeBeurtWaarschuwingPopup from "@/components/VolgendeBeurtWaarschuwi
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { verhuldeBezetteLaagPosities } from "@/game/laagOntgrendeling";
-import { berekenLegerwaarde, onbemandeLegerkampPosities, onbemandeWachttorenPosities } from "@/game/militair";
+import { berekenLegerwaarde, onbemandeLegerkampPosities } from "@/game/militair";
 import { heeftGebouwdeMijn, heeftWerkendeBoerderij } from "@/game/productie";
 import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
@@ -195,13 +195,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   useEffect(() => {
     if (state.stad.vervalStatus === "gezond") setVoedselWaarschuwingBevestigd(false);
   }, [state.stad.vervalStatus]);
-  // Strijder-bemannen-flow (nieuwe Wachttoren-functie, hoofdstuk 6): klik op
-  // een strijder-icoontje in MilitairPaneel zet `wachttorenKiesModusStrijderId`
-  // meteen (issue: "wachttoren tweaks" — een tussenliggende bevestigings-
-  // pop-up voegde hier geen nieuwe informatie toe), waarna een klik op een
-  // actieve Wachttoren-tile op de kaart (zie `handleTileClick` hieronder) die
-  // strijder daadwerkelijk bemant.
-  const [wachttorenKiesModusStrijderId, setWachttorenKiesModusStrijderId] = useState<string | null>(null);
+  // Wachttoren-bemannen-flow (issue: "wachttorens bemannen" — herzien zodat
+  // de speler eerst de wachttoren-tile zelf aanklikt en pas dán, in de
+  // tile-info-pop-up, uit de nog vrije strijders kiest, in plaats van eerst
+  // een strijder te kiezen in het stadsmenu): onthoudt alleen nog of de
+  // keuzelijst met vrije strijders open staat voor de aangeklikte wachttoren
+  // (zie `handleTileClick`/TileInfoPopup hieronder).
+  const [toonWachttorenBemanningsKeuze, setToonWachttorenBemanningsKeuze] = useState(false);
   // Legerkamp-toewijzingsflow (hoofdstuk 6, issue: "De Bezette Laag,
   // missionaris en verkenner", Deel 5) — zelfde soort kies-modus als
   // hierboven, maar voor een Legerkamp-tile i.p.v. een Wachttoren-tile.
@@ -256,7 +256,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     setPlaatsingsImprovement(null);
     setGeselecteerdeTile(null);
     setToonVolgendeBeurtWaarschuwing(false);
-    setWachttorenKiesModusStrijderId(null);
+    setToonWachttorenBemanningsKeuze(false);
     setLegerkampKiesModusStrijderId(null);
     setVerkenningsModusActief(false);
     setToonStichtStadPopup(false);
@@ -275,6 +275,25 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     geselecteerdeTile && geselecteerdeTile.hoogte !== 0 && geselecteerdeLaag
       ? geselecteerdeLaag.tiles[geselecteerdeTile.positieInLaag]
       : undefined;
+
+  // Wachttoren-bemannen (issue: "wachttorens bemannen" — herzien): alleen
+  // relevant als de aangeklikte tile een actieve Wachttoren is — de
+  // tile-info-pop-up krijgt er dan een bemannen-/naar-huis-sturen-actie bij
+  // (zie TileInfoPopup: `wachttorenVraag` hieronder).
+  const geselecteerdeTileIsWachttoren =
+    geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "wachttoren";
+  const wachttorenBemanner =
+    geselecteerdeTileIsWachttoren && geselecteerdeTile
+      ? state.stad.strijders.find(
+          (s) =>
+            s.wachttoren?.hoogte === geselecteerdeTile.hoogte &&
+            s.wachttoren?.positieInLaag === geselecteerdeTile.positieInLaag
+        )
+      : undefined;
+  // "Vrij" = nog geen Wachttoren- én geen Legerkamp-toewijzing (zelfde eis
+  // als `bemanLegerkamp` in militair.ts al stelt aan een strijder) — precies
+  // de strijders die in de keuzelijst hieronder aanklikbaar mogen zijn.
+  const vrijeStrijders = state.stad.strijders.filter((s) => !s.wachttoren && !s.legerkamp);
 
   // Alleen de relevante lagen op de canvas (issue: "onderkant altijd in
   // view" + "onontdekte tegels weg") — zie world.ts: `zichtbareLagen`.
@@ -354,46 +373,26 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     Boolean(state.settler) &&
     !state.settlerActieGedaanDitBeurt &&
     !plaatsingsImprovement &&
-    !wachttorenKiesModusStrijderId &&
     !legerkampKiesModusStrijderId &&
     !verkenningsModusActief;
   const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.lagen, state.settler!) : [];
 
-  // Actieve, nog onbemande Wachttoren-tiles tijdens het bemannen (nieuwe
-  // Wachttoren-functie, hoofdstuk 6, issue: "de wachttorens die beschikbaar
-  // zijn dan allemaal worden gehighlight ... je kunt dus alleen de
-  // wachttorens kiezen die nog geen strijder hebben") — zelfde
-  // alleen-tijdens-de-modus-berekenen-patroon als `settlerBereikbarePosities`
-  // hierboven, en meteen ook de enige geldige klikdoelen in `handleTileClick`.
-  const wachttorenBereikbarePosities = wachttorenKiesModusStrijderId
-    ? onbemandeWachttorenPosities(state)
-    : [];
   // Actieve, nog onbemande Legerkamp-tiles tijdens het bemannen (hoofdstuk 6,
   // issue: "De Bezette Laag, missionaris en verkenner", Deel 5) — zelfde
-  // patroon als `wachttorenBereikbarePosities` hierboven.
+  // alleen-tijdens-de-modus-berekenen-patroon als `settlerBereikbarePosities`
+  // hierboven, en meteen ook de enige geldige klikdoelen in `handleTileClick`.
   const legerkampBereikbarePosities = legerkampKiesModusStrijderId ? onbemandeLegerkampPosities(state) : [];
   // Nog verhulde vakjes van de actieve Bezette Laag tijdens Verkenning (Deel
   // 3) — zelfde patroon.
   const verkenningBereikbarePosities = verkenningsModusActief ? verhuldeBezetteLaagPosities(state) : [];
 
   function handleTileClick(hoogte: number, positieInLaag: number) {
-    // Wachttoren-/Legerkamp-kies-modus en Verkenning (nieuwe Wachttoren-
-    // functie hoofdstuk 6; Bezette Laag hoofdstuk 6, issue: "De Bezette Laag,
-    // missionaris en verkenner") hebben voorrang op settler-verplaatsing/
-    // tile-selectie: een klik op een gehighlight, dus geldig, vakje voert de
-    // bijbehorende actie uit en sluit de modus af; een klik ernaast laat de
-    // modus openstaan zodat de speler opnieuw kan mikken.
-    if (wachttorenKiesModusStrijderId) {
-      const isGeldigWachttorenDoel = wachttorenBereikbarePosities.some(
-        (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
-      );
-      if (isGeldigWachttorenDoel) {
-        bemanWachttoren(wachttorenKiesModusStrijderId, hoogte, positieInLaag);
-        setWachttorenKiesModusStrijderId(null);
-      }
-      return;
-    }
-
+    // Legerkamp-kies-modus en Verkenning (Bezette Laag hoofdstuk 6, issue:
+    // "De Bezette Laag, missionaris en verkenner") hebben voorrang op
+    // settler-verplaatsing/tile-selectie: een klik op een gehighlight, dus
+    // geldig, vakje voert de bijbehorende actie uit en sluit de modus af; een
+    // klik ernaast laat de modus openstaan zodat de speler opnieuw kan
+    // mikken.
     if (legerkampKiesModusStrijderId) {
       const isGeldigLegerkampDoel = legerkampBereikbarePosities.some(
         (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
@@ -433,6 +432,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
       return;
     }
 
+    setToonWachttorenBemanningsKeuze(false);
     setGeselecteerdeTile({ hoogte, positieInLaag });
   }
 
@@ -790,7 +790,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           plaatsingsLaagHoogte={plaatsingsImprovement ? actieveLaag.hoogte : undefined}
           settler={state.settler}
           settlerBereikbarePosities={settlerBereikbarePosities}
-          wachttorenBereikbarePosities={wachttorenBereikbarePosities}
           legerkampBereikbarePosities={legerkampBereikbarePosities}
           verkenningBereikbarePosities={verkenningBereikbarePosities}
           onTileClick={handleTileClick}
@@ -814,10 +813,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             onStartCityVerbetering={startCityVerbetering}
             onVersnelCityVerbetering={versnelCityVerbeteringMetGoud}
             onStartRecrutering={startRecrutering}
-            onKiesStrijder={(strijderId) => {
-              setWachttorenKiesModusStrijderId(strijderId);
-              setToonStadMenuPopup(false);
-            }}
             onKiesStrijderVoorLegerkamp={(strijderId) => {
               setLegerkampKiesModusStrijderId(strijderId);
               setToonStadMenuPopup(false);
@@ -895,9 +890,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonStadUpgradeUitlegPopup && (
           <StadUpgradeUitlegPopup onDoorgaan={() => setStadUpgradeUitlegBevestigd(true)} />
         )}
-        {wachttorenKiesModusStrijderId && (
-          <WachttorenKiesBanner onAnnuleren={() => setWachttorenKiesModusStrijderId(null)} />
-        )}
         {legerkampKiesModusStrijderId && (
           <WachttorenKiesBanner onAnnuleren={() => setLegerkampKiesModusStrijderId(null)} />
         )}
@@ -957,7 +949,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonVijandelijkHeiligdomOnthuldPopup &&
             !toonVijandelijkHeiligdomVernietigdPopup &&
             !toonTutorialVoltooidPopup &&
-            !wachttorenKiesModusStrijderId &&
             !legerkampKiesModusStrijderId &&
             !verkenningsModusActief &&
             !toonStichtStadPopup &&
@@ -992,9 +983,34 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
                 }
               : undefined
           }
+          wachttorenVraag={
+            geselecteerdeTileIsWachttoren && geselecteerdeTile
+              ? {
+                  bemand: Boolean(wachttorenBemanner),
+                  vrijeStrijders,
+                  keuzeActief: toonWachttorenBemanningsKeuze,
+                  onStartKeuze: () => setToonWachttorenBemanningsKeuze(true),
+                  onKiesStrijder: (strijderId) => {
+                    bemanWachttoren(strijderId, geselecteerdeTile.hoogte, geselecteerdeTile.positieInLaag);
+                    setToonWachttorenBemanningsKeuze(false);
+                    setGeselecteerdeTile(null);
+                  },
+                  onStuurNaarHuis: () => {
+                    if (wachttorenBemanner) haalStrijderTerug(wachttorenBemanner.id);
+                    setGeselecteerdeTile(null);
+                  },
+                }
+              : undefined
+          }
           onBevestigBouw={bevestigBouw}
-          onAnnuleerBouw={() => setGeselecteerdeTile(null)}
-          onSluiten={() => setGeselecteerdeTile(null)}
+          onAnnuleerBouw={() => {
+            setGeselecteerdeTile(null);
+            setToonWachttorenBemanningsKeuze(false);
+          }}
+          onSluiten={() => {
+            setGeselecteerdeTile(null);
+            setToonWachttorenBemanningsKeuze(false);
+          }}
         />
         {toonHistorie && (
           <HistoriePaneel

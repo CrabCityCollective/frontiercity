@@ -23,11 +23,8 @@ const WINKANS_MIN = 0.05;
 const WINKANS_MAX = 0.95;
 
 // Alle actieve, nog onbemande Wachttoren-tiles over alle lagen heen (nieuwe
-// Wachttoren-functie, hoofdstuk 6, issue: "de wachttorens die beschikbaar
-// zijn moeten allemaal gehighlight worden") — dit zijn precies de geldige
-// klikdoelen tijdens het bemannen (`wachttorenKiesModusStrijderId` in
-// GameRoot), en dus ook de enige tiles die `bemanWachttoren` hieronder
-// daadwerkelijk accepteert.
+// Wachttoren-functie, hoofdstuk 6) — precies de tiles die `bemanWachttoren`
+// hieronder daadwerkelijk accepteert.
 export function onbemandeWachttorenPosities(state: GameState): Settler[] {
   const posities: Settler[] = [];
   for (const laag of state.lagen) {

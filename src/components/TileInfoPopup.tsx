@@ -2,7 +2,7 @@
 
 import RushMetGoudKnop from "./RushMetGoudKnop";
 import { TileInfo } from "@/game/tileInfo";
-import { Improvement, ResourceType } from "@/game/types";
+import { Improvement, ResourceType, Strijder } from "@/game/types";
 
 interface TileInfoPopupProps {
   tileInfo: TileInfo | null;
@@ -24,6 +24,20 @@ interface TileInfoPopupProps {
     goudInVoorraad: number;
     onVersnellen: () => void;
   };
+  // Gezet als de aangeklikte tile een actieve Wachttoren is (issue:
+  // "wachttorens bemannen" — herzien zodat bemannen begint bij de tile zelf
+  // i.p.v. bij een strijder in het stadsmenu). Onbemand: eerst een
+  // "Wachttoren bemannen"-knop, die na een klik de keuzelijst met nog vrije
+  // strijders toont (of een melding als die leeg is). Bemand: een "stuur
+  // naar huis"-knop voor de zittende strijder.
+  wachttorenVraag?: {
+    bemand: boolean;
+    vrijeStrijders: Strijder[];
+    keuzeActief: boolean;
+    onStartKeuze: () => void;
+    onKiesStrijder: (strijderId: string) => void;
+    onStuurNaarHuis: () => void;
+  };
   onBevestigBouw: () => void;
   onAnnuleerBouw: () => void;
   onSluiten: () => void;
@@ -39,6 +53,7 @@ export default function TileInfoPopup({
   bouwVraag,
   terreinWaarschuwing,
   rushVraag,
+  wachttorenVraag,
   onBevestigBouw,
   onAnnuleerBouw,
   onSluiten,
@@ -116,6 +131,51 @@ export default function TileInfoPopup({
             goudInVoorraad={rushVraag.goudInVoorraad}
             onVersnellen={rushVraag.onVersnellen}
           />
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && wachttorenVraag && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {wachttorenVraag.bemand ? (
+              <button
+                className="fc-knop"
+                onClick={wachttorenVraag.onStuurNaarHuis}
+                style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+              >
+                Stuur strijder naar huis
+              </button>
+            ) : wachttorenVraag.keuzeActief ? (
+              wachttorenVraag.vrijeStrijders.length > 0 ? (
+                <>
+                  <p style={{ margin: 0, fontWeight: "bold" }}>Kies een strijder om deze wachttoren te bemannen:</p>
+                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                    {wachttorenVraag.vrijeStrijders.map((strijder, i) => (
+                      <button
+                        key={strijder.id}
+                        className="fc-knop"
+                        onClick={() => wachttorenVraag.onKiesStrijder(strijder.id)}
+                        style={{ padding: "0.35rem 0.6rem" }}
+                      >
+                        Strijder {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p style={{ margin: 0, color: "var(--kleur-oker)" }}>
+                  Geen strijders beschikbaar — alle strijders zijn al ergens toegewezen. Recruteer eerst een nieuwe
+                  strijder via het stadsmenu.
+                </p>
+              )
+            ) : (
+              <button
+                className="fc-knop"
+                onClick={wachttorenVraag.onStartKeuze}
+                style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+              >
+                Wachttoren bemannen
+              </button>
+            )}
+          </div>
         )}
 
         {!bouwVraag && !terreinWaarschuwing && (
