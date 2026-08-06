@@ -188,6 +188,7 @@ function maakStartLaag(): Layer {
     positieInLaag: STAD_POSITIE,
     terrein: terreinVoorTile(1, STAD_POSITIE),
     status: "actief",
+    heeftWeg: true,
     improvement: {
       id: "holenrots",
       naam: "Holenrots",
