@@ -17,7 +17,7 @@
 import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Layer, Settler, Tile } from "@/game/types";
-import { isTileVerbondenMetStad } from "@/game/wegen";
+import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import {
   BAND_WIDTH_TILES,
   isVooruitkijkLaag,
@@ -344,6 +344,98 @@ function tekenVijandelijkHeiligdomPixel(ctx: CanvasRenderingContext2D): void {
   vlijn(ctx, 8, 8, 9, "rgba(200, 60, 60, 0.9)");
 }
 
+// Sterrencirkel — pixel-art variant van `tekenSterrencirkel` in canvas.ts:
+// een boog van rechtopstaande stenen met een nachtelijke gloed en sterretjes
+// erboven (issue: "wegen en gebouwen verbeteren" — was een kale
+// placeholder-vierkant).
+function tekenSterrencirkelPixel(ctx: CanvasRenderingContext2D, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 11);
+
+  const stenen: { x: number; h: number }[] = [
+    { x: 2, h: 3 },
+    { x: 5, h: 4 },
+    { x: 8, h: 3 },
+    { x: 11, h: 4 },
+    { x: 14, h: 3 },
+  ];
+  for (const { x: sx, h } of stenen) {
+    vlijn(ctx, sx, baseY - h, baseY, "#5c5850");
+    p(ctx, sx, baseY - h, "rgba(230, 222, 205, 0.4)");
+  }
+
+  p(ctx, 4, 5, "rgba(130, 150, 200, 0.35)");
+  p(ctx, 11, 4, "rgba(130, 150, 200, 0.3)");
+  p(ctx, 8, 6, "rgba(130, 150, 200, 0.3)");
+
+  const sterren: [number, number][] = [[3, 2], [9, 1], [13, 3], [6, 4]];
+  for (const [sx, sy] of sterren) {
+    p(ctx, sx, sy, "rgba(232, 220, 200, 0.9)");
+    if (rng() > 0.4) {
+      p(ctx, sx - 1, sy, "rgba(232, 220, 200, 0.4)");
+      p(ctx, sx + 1, sy, "rgba(232, 220, 200, 0.4)");
+    }
+  }
+}
+
+// Amberader (interne id `goudmijn`) — pixel-art variant van `tekenAmberader`
+// in canvas.ts: een kleiner rotsblok dan de Steengroeve met een gloeiende
+// amberader erdoorheen.
+function tekenAmberaderPixel(ctx: CanvasRenderingContext2D, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 9);
+
+  const rijen = 5;
+  for (let i = 0; i < rijen; i++) {
+    const y = baseY - i;
+    const half = Math.max(1, Math.round(1.5 + i * 0.7));
+    blokrij(ctx, 8, y, half, "#584d3f");
+  }
+  ctx.strokeStyle = "#3a3227";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(4, baseY - rijen, 8, rijen + 1);
+
+  ctx.strokeStyle = "rgba(216, 140, 40, 0.6)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(5, baseY - 1);
+  ctx.lineTo(11, baseY - 4);
+  ctx.stroke();
+
+  for (let i = 0; i < 3; i++) {
+    const bx = 6 + i * 2 + (rng() > 0.5 ? 1 : 0);
+    const by = baseY - 2 - i;
+    p(ctx, bx, by, i % 2 === 0 ? "#f6c869" : "#e8a23c");
+  }
+}
+
+// Voorraadkuil — pixel-art variant van `tekenVoorraadkuil` in canvas.ts: een
+// ingegraven kuil met een cluster opgeslagen manden die net boven de rand
+// uitsteken.
+function tekenVoorraadkuilPixel(ctx: CanvasRenderingContext2D, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 12);
+
+  hlijn(ctx, 1, 15, baseY, "#4a3d2c");
+  hlijn(ctx, 2, 14, baseY - 1, "#4a3d2c");
+  hlijn(ctx, 3, 13, baseY - 1, "#241a10");
+  hlijn(ctx, 4, 12, baseY, "#160f09");
+
+  const mandKleuren = ["#b98a4c", "#8a6a3a", "#c9a05a"];
+  for (let i = 0; i < 3; i++) {
+    const bx = 5 + i * 3;
+    const h = 3 + (i % 2) + Math.floor(rng() * 2);
+    const kleur = mandKleuren[i];
+    vlijn(ctx, bx - 1, baseY - h, baseY - 1, kleur);
+    vlijn(ctx, bx, baseY - 1 - h, baseY - 1, kleur);
+    vlijn(ctx, bx + 1, baseY - h, baseY - 1, kleur);
+    p(ctx, bx, baseY - 1 - h, "rgba(60, 42, 22, 0.7)");
+  }
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, seed: number, bemand: boolean) => void
@@ -359,6 +451,9 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   "vijandelijke-wachttoren": (ctx) => tekenVijandelijkeWachttorenPixel(ctx),
   "vijandelijk-heiligdom": (ctx) => tekenVijandelijkHeiligdomPixel(ctx),
   "bezette-laag-huisje": (ctx) => tekenBezetteLaagHuisjePixel(ctx),
+  sterrencirkel: (ctx, seed) => tekenSterrencirkelPixel(ctx, seed),
+  goudmijn: (ctx, seed) => tekenAmberaderPixel(ctx, seed),
+  voorraadkuil: (ctx, seed) => tekenVoorraadkuilPixel(ctx, seed),
 };
 
 function tekenLandImprovementPixel(ctx: CanvasRenderingContext2D, id: string, seed: number, bemand: boolean): void {
@@ -626,19 +721,60 @@ function tekenVersWaterMarkeringPixel(ctx: CanvasRenderingContext2D, seed: numbe
 // aardebaan met een donkere rand boven en onder in plaats van verspreide
 // halftransparante stippen, zodat de weg op elke ondergrondkleur duidelijk
 // afsteekt.
-function tekenWegPixel(ctx: CanvasRenderingContext2D, seed: number): void {
+//
+// Issue: "kruispunten en driesprongen zien als er een weg verticaal omhoog
+// loopt vanaf een horizontale weg" — de horizontale baan (rijen `boven`..
+// `onder`) wordt nu alleen zo breed getekend als er ook echt een buur-weg
+// links/rechts is, en een aparte verticale baan (kolommen `linkerBaan`..
+// `rechterBaan`) verschijnt zodra er een buur-weg omhoog/omlaag is. Samen
+// vormen die twee banen, net als bij `tekenWeg` in canvas.ts, vanzelf een
+// doodlopend stuk, T-splitsing of kruispunt afhankelijk van welke
+// `verbindingen` er zijn.
+function tekenWegPixel(ctx: CanvasRenderingContext2D, seed: number, verbindingen: WegVerbindingen): void {
   const rng = maakSeededRandom(seed);
   const boven = 11;
   const onder = 14;
+  const linkerBaan = 6;
+  const rechterBaan = 9;
+  const randKleur = "#3a2a18";
+  const vlakKleur = "#c8a878";
 
-  hlijn(ctx, 0, PIX - 1, boven, "#3a2a18");
-  for (let gy = boven + 1; gy < onder; gy++) {
-    hlijn(ctx, 0, PIX - 1, gy, "#c8a878");
+  const heeftHorizontaal = verbindingen.links || verbindingen.rechts;
+  const heeftVerticaal = verbindingen.omhoog || verbindingen.omlaag;
+
+  if (heeftHorizontaal) {
+    const startX = verbindingen.links ? 0 : linkerBaan;
+    const eindX = verbindingen.rechts ? PIX - 1 : rechterBaan;
+    hlijn(ctx, startX, eindX, boven, randKleur);
+    for (let gy = boven + 1; gy < onder; gy++) {
+      hlijn(ctx, startX, eindX, gy, vlakKleur);
+    }
+    hlijn(ctx, startX, eindX, onder, randKleur);
   }
-  hlijn(ctx, 0, PIX - 1, onder, "#3a2a18");
+
+  if (heeftVerticaal) {
+    const startY = verbindingen.omhoog ? 0 : boven;
+    const eindY = verbindingen.omlaag ? PIX - 1 : onder;
+    vlijn(ctx, linkerBaan, startY, eindY, randKleur);
+    for (let gx = linkerBaan + 1; gx < rechterBaan; gx++) {
+      vlijn(ctx, gx, startY, eindY, vlakKleur);
+    }
+    vlijn(ctx, rechterBaan, startY, eindY, randKleur);
+  }
+
+  if (!heeftHorizontaal && !heeftVerticaal) {
+    // Nog geen buur met een eigen weg: een klein los stukje pad i.p.v. een
+    // volle baan die nergens op aansluit.
+    hlijn(ctx, linkerBaan, rechterBaan, boven, randKleur);
+    for (let gy = boven + 1; gy < onder; gy++) {
+      hlijn(ctx, linkerBaan, rechterBaan, gy, vlakKleur);
+    }
+    hlijn(ctx, linkerBaan, rechterBaan, onder, randKleur);
+  }
 
   for (let gx = 0; gx < PIX; gx++) {
-    if (rng() > 0.5) {
+    const opHorizontaleBaan = heeftHorizontaal && gx >= (verbindingen.links ? 0 : linkerBaan) && gx <= (verbindingen.rechts ? PIX - 1 : rechterBaan);
+    if (opHorizontaleBaan && rng() > 0.5) {
       const gy = boven + 1 + Math.floor(rng() * (onder - boven - 1));
       p(ctx, gx, gy, rng() > 0.5 ? "rgba(140, 112, 74, 0.8)" : "rgba(230, 208, 172, 0.7)");
     }
@@ -673,13 +809,14 @@ function tekenActieveTilePixel(
   stad: City,
   col: number,
   hoogte: number,
-  verbondenMetStad: boolean
+  verbondenMetStad: boolean,
+  lagen: Layer[]
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrondPixel(ctx, terreinType, seed);
 
   if (tile.heeftWeg) {
-    tekenWegPixel(ctx, seed);
+    tekenWegPixel(ctx, seed, wegVerbindingen(lagen, hoogte, col));
   }
 
   if (tile.status === "ghost_town") {
@@ -781,7 +918,7 @@ export function tekenWereldPixelArt(
           tekenVerhuldeTilePixel(tileCtx, tileSeed(col, laag.hoogte));
         } else {
           const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
-          tekenActieveTilePixel(tileCtx, tile, laag.terreinType, stad, col, laag.hoogte, verbonden);
+          tekenActieveTilePixel(tileCtx, tile, laag.terreinType, stad, col, laag.hoogte, verbonden, lagen);
         }
       } else if (!laag.ontgrendeld && !vooruitkijk) {
         tekenFogTilePixel(tileCtx, tileSeed(col, laag.hoogte));
@@ -789,7 +926,7 @@ export function tekenWereldPixelArt(
         tekenVooruitkijkTilePixel(tileCtx, laag.terreinType);
       } else {
         const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
-        tekenActieveTilePixel(tileCtx, laag.tiles[col], laag.terreinType, stad, col, laag.hoogte, verbonden);
+        tekenActieveTilePixel(tileCtx, laag.tiles[col], laag.terreinType, stad, col, laag.hoogte, verbonden, lagen);
         if (laag.tiles[col].versWater) {
           tekenVersWaterMarkeringPixel(tileCtx, tileSeed(col, laag.hoogte, 2));
         }
