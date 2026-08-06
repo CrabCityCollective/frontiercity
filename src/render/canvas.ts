@@ -11,7 +11,7 @@
 import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Layer, Settler, TerreinType, Tile } from "@/game/types";
-import { isTileVerbondenMetStad } from "@/game/wegen";
+import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import { BAND_WIDTH_TILES, isVooruitkijkLaag } from "@/game/world";
 
 export { BAND_WIDTH_TILES };
@@ -141,28 +141,96 @@ function tekenContactschaduw(
 // Door de settler aangelegde weg: een verweerd karrenspoor, getekend vóór het
 // eventuele improvement-icoon op hetzelfde vakje (zie tekenActieveTile) zodat
 // een weg en een improvement samen op één vakje kunnen staan.
-function tekenWeg(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+//
+// Issue: "kruispunten en driesprongen zien als er een weg verticaal omhoog
+// loopt vanaf een horizontale weg" — in plaats van altijd hetzelfde vaste
+// links-rechts spoor te tekenen, lopen er nu losse sporen vanuit een
+// gezamenlijk knooppunt (`hub`, vlak boven de vroegere vaste hoogte) naar elke
+// buur die zelf ook een weg heeft (`verbindingen`, zie game/wegen.ts). Eén
+// spoor (alleen links of alleen rechts) oogt daardoor bijna hetzelfde als de
+// oude vaste curve; twee of meer sporen die niet tegenover elkaar liggen vormen
+// zichtbaar een T-splitsing of kruispunt.
+function tekenWeg(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  seed: number,
+  verbindingen: WegVerbindingen
+): void {
   const rng = maakSeededRandom(seed);
+  const hubX = x + size * 0.5;
+  const hubY = y + size * 0.8;
+  const golf = () => (rng() - 0.5) * size * 0.08;
+
+  const sporen: { naar: [number, number]; controle: [number, number] }[] = [];
+  if (verbindingen.links) {
+    sporen.push({
+      naar: [x + size * 0.04, y + size * 0.82 + golf()],
+      controle: [x + size * 0.25, hubY + golf()],
+    });
+  }
+  if (verbindingen.rechts) {
+    sporen.push({
+      naar: [x + size * 0.96, y + size * 0.82 + golf()],
+      controle: [x + size * 0.75, hubY + golf()],
+    });
+  }
+  if (verbindingen.omhoog) {
+    sporen.push({
+      naar: [x + size * 0.5 + golf(), y],
+      controle: [hubX + golf(), y + size * 0.4],
+    });
+  }
+  if (verbindingen.omlaag) {
+    sporen.push({
+      naar: [x + size * 0.5 + golf(), y + size],
+      controle: [hubX + golf(), y + size * 0.92],
+    });
+  }
+
   ctx.save();
+  ctx.lineCap = "round";
+
+  if (sporen.length === 0) {
+    // Nog geen buur met een eigen weg (bv. een net aangelegd stukje verderop
+    // in het netwerk): een klein rustend spoorplekje i.p.v. een spoor het
+    // niets in te laten lopen.
+    ctx.fillStyle = "rgba(196, 168, 120, 0.5)";
+    ctx.beginPath();
+    ctx.arc(hubX, hubY, size * 0.07, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
   ctx.strokeStyle = "rgba(196, 168, 120, 0.55)";
   ctx.lineWidth = Math.max(2, size * 0.14);
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.06, y + size * (0.82 + (rng() - 0.5) * 0.08));
-  ctx.quadraticCurveTo(
-    x + size * 0.5,
-    y + size * (0.62 + (rng() - 0.5) * 0.1),
-    x + size * 0.94,
-    y + size * (0.82 + (rng() - 0.5) * 0.08)
-  );
-  ctx.stroke();
+  for (const spoor of sporen) {
+    ctx.beginPath();
+    ctx.moveTo(hubX, hubY);
+    ctx.quadraticCurveTo(spoor.controle[0], spoor.controle[1], spoor.naar[0], spoor.naar[1]);
+    ctx.stroke();
+  }
 
   ctx.strokeStyle = "rgba(90, 68, 40, 0.5)";
   ctx.lineWidth = Math.max(1, size * 0.02);
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.12, y + size * 0.85);
-  ctx.lineTo(x + size * 0.88, y + size * 0.79);
-  ctx.stroke();
+  for (const spoor of sporen) {
+    ctx.beginPath();
+    ctx.moveTo(hubX, hubY);
+    ctx.quadraticCurveTo(spoor.controle[0], spoor.controle[1], spoor.naar[0], spoor.naar[1]);
+    ctx.stroke();
+  }
+
+  // Bij een kruispunt/driesprong (3 of 4 sporen) een vertrapt plekje in het
+  // midden, zodat de aansluiting niet als los van elkaar staande lijnen oogt.
+  if (sporen.length >= 3) {
+    ctx.fillStyle = "rgba(120, 98, 62, 0.4)";
+    ctx.beginPath();
+    ctx.arc(hubX, hubY, size * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.restore();
 }
 
@@ -588,6 +656,179 @@ function tekenWachttoren(ctx: CanvasRenderingContext2D, x: number, y: number, si
   }
 }
 
+// Sterrencirkel (hoofdstuk 3/9, issue: "wegen en gebouwen verbeteren" — was
+// een kale placeholder-vierkant): een kring van rechtopstaande stenen, in
+// perspectief afgeplat, met een zachte nachtelijke gloed en een paar
+// sterretjes erboven — verwijst zowel naar de naam als naar de
+// wetenschap-productie (sterren en seizoenen bestuderen).
+function tekenSterrencirkel(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.5;
+  tekenContactschaduw(ctx, cx, baseY, size * 0.72);
+
+  const gloed = ctx.createRadialGradient(cx, y + size * 0.32, 0, cx, y + size * 0.32, size * 0.4);
+  gloed.addColorStop(0, "rgba(130, 150, 200, 0.28)");
+  gloed.addColorStop(1, "rgba(130, 150, 200, 0)");
+  ctx.fillStyle = gloed;
+  ctx.beginPath();
+  ctx.arc(cx, y + size * 0.32, size * 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  const aantalStenen = 7;
+  for (let i = 0; i < aantalStenen; i++) {
+    const hoek = (i / aantalStenen) * Math.PI * 2;
+    const sx = cx + Math.cos(hoek) * size * 0.36;
+    const sy = baseY - size * 0.04 + Math.sin(hoek) * size * 0.09;
+    const steenHoogte = size * (0.14 + rng() * 0.06);
+    const breedte = size * 0.055;
+    ctx.fillStyle = "#5c5850";
+    ctx.fillRect(sx - breedte / 2, sy - steenHoogte, breedte, steenHoogte);
+    ctx.fillStyle = "rgba(230, 222, 205, 0.18)";
+    ctx.fillRect(sx - breedte / 2, sy - steenHoogte, breedte * 0.35, steenHoogte);
+  }
+
+  const sterPosities: [number, number][] = [
+    [0.28, 0.1],
+    [0.62, 0.06],
+    [0.48, 0.2],
+    [0.74, 0.22],
+    [0.2, 0.24],
+  ];
+  for (const [sxr, syr] of sterPosities) {
+    tekenSterretje(ctx, x + size * sxr, y + size * syr, size * (0.02 + rng() * 0.012));
+  }
+}
+
+function tekenSterretje(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
+  ctx.strokeStyle = "rgba(232, 220, 200, 0.85)";
+  ctx.lineWidth = Math.max(0.8, r * 0.5);
+  ctx.beginPath();
+  ctx.moveTo(x - r, y);
+  ctx.lineTo(x + r, y);
+  ctx.moveTo(x, y - r);
+  ctx.lineTo(x, y + r);
+  ctx.stroke();
+}
+
+// Amberader (hoofdstuk 3/14, interne id `goudmijn`, weergavenaam "Amberader")
+// — issue: "wegen en gebouwen verbeteren" (was een kale placeholder-
+// vierkant). Bewust een kleiner rotsblok dan de Steengroeve met een gloeiende
+// amberader erdoorheen, zodat dit improvement ook zonder tile-info-popup te
+// onderscheiden is van de gewone Mijn en Steengroeve.
+function tekenAmberader(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.5;
+  tekenContactschaduw(ctx, cx, baseY, size * 0.62);
+
+  const punten: [number, number][] = [
+    [0.16, 0],
+    [0.3, -0.34],
+    [0.56, -0.44],
+    [0.82, -0.22],
+    [0.9, 0],
+    [0.1, 0],
+  ];
+  ctx.fillStyle = "#584d3f";
+  ctx.beginPath();
+  punten.forEach(([px, py], i) => {
+    const gx = x + size * px;
+    const gy = baseY + size * py;
+    if (i === 0) ctx.moveTo(gx, gy);
+    else ctx.lineTo(gx, gy);
+  });
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#3a3227";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(216, 140, 40, 0.55)";
+  ctx.lineWidth = Math.max(2, size * 0.05);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.22, baseY - size * 0.02);
+  ctx.quadraticCurveTo(x + size * 0.5, baseY - size * 0.3, x + size * 0.78, baseY - size * 0.38);
+  ctx.stroke();
+
+  const brokken: [number, number][] = [
+    [0.3, -0.06],
+    [0.48, -0.18],
+    [0.64, -0.28],
+    [0.72, -0.34],
+  ];
+  for (const [bx, by] of brokken) {
+    const gx = x + size * bx;
+    const gy = baseY + size * by;
+    const r = size * (0.05 + rng() * 0.02);
+    const gloed = ctx.createRadialGradient(gx, gy, 0, gx, gy, r);
+    gloed.addColorStop(0, "#f6c869");
+    gloed.addColorStop(0.6, "#e8a23c");
+    gloed.addColorStop(1, "rgba(180, 110, 30, 0.2)");
+    ctx.fillStyle = gloed;
+    ctx.beginPath();
+    ctx.arc(gx, gy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Voorraadkuil (hoofdstuk 3/14, issue: "wegen en gebouwen verbeteren" — was
+// een kale placeholder-vierkant): een ingegraven kuil met een cluster
+// opgeslagen manden/kruiken die net boven de rand uitsteken.
+function tekenVoorraadkuil(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.5;
+  tekenContactschaduw(ctx, cx, baseY, size * 0.74);
+
+  ctx.fillStyle = "#4a3d2c";
+  ctx.beginPath();
+  ctx.ellipse(cx, baseY - size * 0.02, size * 0.38, size * 0.16, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const put = ctx.createRadialGradient(
+    cx, baseY - size * 0.02, size * 0.02,
+    cx, baseY - size * 0.02, size * 0.32
+  );
+  put.addColorStop(0, "#120d08");
+  put.addColorStop(1, "#2c2015");
+  ctx.fillStyle = put;
+  ctx.beginPath();
+  ctx.ellipse(cx, baseY - size * 0.02, size * 0.3, size * 0.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const mandKleuren = ["#b98a4c", "#8a6a3a", "#c9a05a"];
+  const mandPosities: [number, number][] = [
+    [-0.16, 0],
+    [0.02, -0.04],
+    [0.2, 0.01],
+  ];
+  mandPosities.forEach(([mx, my], i) => {
+    const gx = cx + size * mx + (rng() - 0.5) * size * 0.02;
+    const topY = baseY - size * (0.22 + Math.abs(my) * 0.5);
+    const breedte = size * 0.16;
+    ctx.fillStyle = mandKleuren[i % mandKleuren.length];
+    ctx.beginPath();
+    ctx.moveTo(gx - breedte / 2, baseY - size * 0.04);
+    ctx.lineTo(gx - breedte * 0.4, topY);
+    ctx.lineTo(gx + breedte * 0.4, topY);
+    ctx.lineTo(gx + breedte / 2, baseY - size * 0.04);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(60, 42, 22, 0.6)";
+    ctx.lineWidth = 1;
+    for (let band = 1; band <= 2; band++) {
+      const by = topY + (baseY - size * 0.04 - topY) * (band / 3);
+      ctx.beginPath();
+      ctx.moveTo(gx - breedte * 0.42, by);
+      ctx.lineTo(gx + breedte * 0.42, by);
+      ctx.stroke();
+    }
+  });
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number, bemand: boolean) => void
@@ -603,6 +844,9 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   "vijandelijke-wachttoren": (ctx, x, y, size) => tekenVijandelijkeWachttorenIcon(ctx, x, y, size),
   "vijandelijk-heiligdom": (ctx, x, y, size) => tekenVijandelijkHeiligdomIcon(ctx, x, y, size),
   "bezette-laag-huisje": (ctx, x, y, size) => tekenBezetteLaagHuisje(ctx, x, y, size),
+  sterrencirkel: (ctx, x, y, size, seed) => tekenSterrencirkel(ctx, x, y, size, seed),
+  goudmijn: (ctx, x, y, size, seed) => tekenAmberader(ctx, x, y, size, seed),
+  voorraadkuil: (ctx, x, y, size, seed) => tekenVoorraadkuil(ctx, x, y, size, seed),
 };
 
 function tekenLandImprovement(
@@ -1226,13 +1470,14 @@ function tekenActieveTile(
   stad: City,
   col: number,
   hoogte: number,
-  verbondenMetStad: boolean
+  verbondenMetStad: boolean,
+  lagen: Layer[]
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrond(ctx, x, y, size, terreinType, seed);
 
   if (tile.heeftWeg) {
-    tekenWeg(ctx, x, y, size, seed);
+    tekenWeg(ctx, x, y, size, seed, wegVerbindingen(lagen, hoogte, col));
   }
 
   if (tile.status === "ghost_town") {
@@ -1336,7 +1581,7 @@ export function tekenWereld(
           tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, laag.hoogte));
         } else {
           const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
-          tekenActieveTile(ctx, x, y, tileSize, tile, laag.terreinType, stad, col, laag.hoogte, verbonden);
+          tekenActieveTile(ctx, x, y, tileSize, tile, laag.terreinType, stad, col, laag.hoogte, verbonden, lagen);
         }
       } else if (!laag.ontgrendeld && !vooruitkijk) {
         tekenFogTile(ctx, x, y, tileSize, tileSeed(col, laag.hoogte));
@@ -1344,7 +1589,7 @@ export function tekenWereld(
         tekenVooruitkijkTile(ctx, x, y, tileSize, laag.terreinType);
       } else {
         const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
-        tekenActieveTile(ctx, x, y, tileSize, laag.tiles[col], laag.terreinType, stad, col, laag.hoogte, verbonden);
+        tekenActieveTile(ctx, x, y, tileSize, laag.tiles[col], laag.terreinType, stad, col, laag.hoogte, verbonden, lagen);
         if (laag.tiles[col].versWater) {
           tekenVersWaterMarkering(ctx, x, y, tileSize, tileSeed(col, laag.hoogte, 2));
         }

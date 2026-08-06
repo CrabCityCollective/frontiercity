@@ -104,3 +104,33 @@ export function isTileVerbondenMetStad(lagen: Layer[], hoogte: number, positieIn
   const netwerk = wegNetwerk(lagen);
   return netwerk.has(tileSleutel(hoogte, positieInLaag));
 }
+
+// Welke van de vier buren van een wegvakje zelf ook een weg hebben (issue:
+// "kruispunten en driesprongen zien als er een weg verticaal omhoog loopt
+// vanaf een horizontale weg") — puur voor de tekenpijplijn (canvas.ts/
+// canvasPixelArt.ts), zodat een wegtegel als kruising/T-splitsing i.p.v. altijd
+// als los recht baantje getekend kan worden. `omhoog`/`omlaag` volgen dezelfde
+// hoogte-conventie als hierboven: `omhoog` is `hoogte + 1`, de laag die op het
+// canvas boven deze tegel getekend wordt (zie render/canvas.ts: `rijIndex`).
+// De stadstegel telt hierin gewoon mee als "heeft een weg" (`heeftWeg: true`,
+// zie world.ts), dus een weg die de stad raakt sluit ook zichtbaar op haar aan.
+export interface WegVerbindingen {
+  links: boolean;
+  rechts: boolean;
+  omhoog: boolean;
+  omlaag: boolean;
+}
+
+function heeftWegOp(lagen: Layer[], hoogte: number, positieInLaag: number): boolean {
+  const laag = lagen.find((l) => l.hoogte === hoogte);
+  return Boolean(laag?.tiles[positieInLaag]?.heeftWeg);
+}
+
+export function wegVerbindingen(lagen: Layer[], hoogte: number, positieInLaag: number): WegVerbindingen {
+  return {
+    links: positieInLaag > 0 && heeftWegOp(lagen, hoogte, positieInLaag - 1),
+    rechts: positieInLaag < BAND_WIDTH_TILES - 1 && heeftWegOp(lagen, hoogte, positieInLaag + 1),
+    omhoog: heeftWegOp(lagen, hoogte + 1, positieInLaag),
+    omlaag: heeftWegOp(lagen, hoogte - 1, positieInLaag),
+  };
+}
