@@ -33,19 +33,14 @@ import VijandelijkHeiligdomPopup from "@/components/VijandelijkHeiligdomPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import VolgendeBeurtWaarschuwingPopup from "@/components/VolgendeBeurtWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
-import {
-  berekenHistorieStatistieken,
-  berekenLegerwaarde,
-  heeftGebouwdeMijn,
-  heeftWerkendeBoerderij,
-  onbemandeLegerkampPosities,
-  onbemandeWachttorenPosities,
-  verhuldeBezetteLaagPosities,
-} from "@/game/economie";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
+import { verhuldeBezetteLaagPosities } from "@/game/laagOntgrendeling";
+import { berekenLegerwaarde, onbemandeLegerkampPosities, onbemandeWachttorenPosities } from "@/game/militair";
+import { heeftGebouwdeMijn, heeftWerkendeBoerderij } from "@/game/productie";
 import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
+import { berekenHistorieStatistieken } from "@/game/uitputtingEnVerval";
 import { useGameEngine } from "@/game/useGameEngine";
 import { bereikbarePosities } from "@/game/wegen";
 import { TUTORIAL_LAAG_AANTAL, VOEDSEL_DREMPEL_GROEI, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";

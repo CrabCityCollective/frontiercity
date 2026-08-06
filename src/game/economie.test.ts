@@ -1,39 +1,24 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  bemanLegerkamp,
-  bemanWachttoren,
-  BELEGERINGSDREMPEL,
-  berekenLegerkampLegerwaarde,
-  berekenLegerwaarde,
-  bevestigAmberOnderVuur,
-  bevestigGedwongenTribuut,
-  bouwStagneertVolgendeBeurt,
-  cityImprovementCap,
-  CITY_IMPROVEMENT_CAP,
-  confrontatieBezetteLaag,
-  geefTribuut,
-  haalStrijderTerug,
   hakHout,
   heeftGenoegVoorStichten,
-  heeftOfferAltaar,
-  infrastructuurVoortgang,
   jaag,
-  kanCityVerbeteringBouwen,
-  kanConfrontatieBezetteLaag,
   kanStichten,
-  kanVerkennen,
-  kiesGeefTribuut,
-  kiesTech,
-  maakInitieleSpelStatus,
-  onbemandeLegerkampPosities,
-  onbemandeWachttorenPosities,
-  OPSLAG_CAP,
+  STICHTING_KOSTEN,
+  stichtStad,
+  verplaatsSettlerNaar,
+} from "./acties";
+import {
+  bouwStagneertVolgendeBeurt,
   resterendeBouwBeurten,
   RUSH_GOUD_PER_BEURT,
   rushKostenGoud,
-  sluitAmberOntdektMelding,
-  startBouw,
+  versnelBouwMetGoud,
+} from "./bouwwachtrij";
+import { cityImprovementCap, CITY_IMPROVEMENT_CAP, maakInitieleSpelStatus, OPSLAG_CAP, volgendeBeurt } from "./economie";
+import {
+  kanCityVerbeteringBouwen,
   startCityVerbetering,
   startGroei,
   startMissionarisRecrutering,
@@ -41,19 +26,39 @@ import {
   startOpslagplaats,
   startRecrutering,
   startVerkennerRecrutering,
-  STICHTING_KOSTEN,
-  stichtStad,
-  verken,
-  verplaatsSettlerNaar,
-  versnelBouwMetGoud,
   versnelCityVerbeteringMetGoud,
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
-  VERKENNING_KOSTEN_WETENSCHAP,
-  vijandelijkeWachttorenPosities,
-  volgendeBeurt,
+} from "./groeiEnRekrutering";
+import { infrastructuurVoortgang, startBouw } from "./infrastructuurEnBouw";
+import {
+  bevestigAmberOnderVuur,
+  bevestigGedwongenTribuut,
+  geefTribuut,
+  kiesGeefTribuut,
   weigerTribuut,
-} from "./economie";
+} from "./indringersEnDieren";
+import {
+  BELEGERINGSDREMPEL,
+  heeftOfferAltaar,
+  kanVerkennen,
+  sluitAmberOntdektMelding,
+  verken,
+  VERKENNING_KOSTEN_WETENSCHAP,
+} from "./laagOntgrendeling";
+import {
+  bemanLegerkamp,
+  bemanWachttoren,
+  berekenLegerkampLegerwaarde,
+  berekenLegerwaarde,
+  confrontatieBezetteLaag,
+  haalStrijderTerug,
+  kanConfrontatieBezetteLaag,
+  onbemandeLegerkampPosities,
+  onbemandeWachttorenPosities,
+  vijandelijkeWachttorenPosities,
+} from "./militair";
+import { kiesTech } from "./tech";
 import {
   AMBERADER,
   BARAKKEN,

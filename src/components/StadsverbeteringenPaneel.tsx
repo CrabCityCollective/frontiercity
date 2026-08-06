@@ -1,7 +1,6 @@
 "use client";
 
-import { cityImprovementCap } from "@/game/economie";
-import { CAPPED_CITY_IMPROVEMENTS } from "@/game/improvements";
+import { CAPPED_CITY_IMPROVEMENTS, cityImprovementCap } from "@/game/improvements";
 import { GameState, Improvement } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";

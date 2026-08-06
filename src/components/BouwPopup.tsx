@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { infrastructuurVoortgang, WACHTTOREN_VOEDSEL_VERBRUIK } from "@/game/economie";
+import { infrastructuurVoortgang } from "@/game/infrastructuurEnBouw";
+import { WACHTTOREN_VOEDSEL_VERBRUIK } from "@/game/productie";
 import {
   beschikbareOpties,
   CATEGORIE_LABELS,
