@@ -14,7 +14,7 @@
 // tegel/icoon-illustraties), en blijft zo pixel-voor-pixel identiek ongeacht
 // welke stijl actief is.
 
-import { isWachttorenBemand } from "@/game/economie";
+import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Layer, Settler, Tile } from "@/game/types";
 import { isTileVerbondenMetStad } from "@/game/wegen";

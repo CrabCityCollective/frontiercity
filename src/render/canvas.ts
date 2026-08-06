@@ -8,7 +8,7 @@
 // canvas-renderpijplijn, maar met gelaagde, geschilderde texturen in plaats
 // van platte kleurvlakken.
 
-import { isWachttorenBemand } from "@/game/economie";
+import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Layer, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad } from "@/game/wegen";

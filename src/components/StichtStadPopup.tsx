@@ -1,6 +1,6 @@
 "use client";
 
-import { STICHTING_KOSTEN } from "@/game/economie";
+import { STICHTING_KOSTEN } from "@/game/acties";
 import { STICHT_STAD_TITEL, STICHT_STAD_WAARSCHUWING } from "@/game/tutorialContent";
 import { KostenIcons } from "./ResourceIcoon";
 

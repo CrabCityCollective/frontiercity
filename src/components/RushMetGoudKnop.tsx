@@ -1,6 +1,6 @@
 "use client";
 
-import { RUSH_GOUD_PER_BEURT, rushKostenGoud } from "@/game/economie";
+import { RUSH_GOUD_PER_BEURT, rushKostenGoud } from "@/game/bouwwachtrij";
 import { Improvement, ResourceType } from "@/game/types";
 
 interface RushMetGoudKnopProps {

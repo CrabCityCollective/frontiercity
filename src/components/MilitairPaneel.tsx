@@ -1,6 +1,6 @@
 "use client";
 
-import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "@/game/economie";
+import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "@/game/bouwwachtrij";
 import { SOLDAAT } from "@/game/improvements";
 import { GameState, ResourceType } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";

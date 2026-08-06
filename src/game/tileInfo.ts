@@ -3,13 +3,10 @@
 // verandert geen spelstatus, dus hoort hier naast de andere pure
 // game-logica-modules in plaats van in een component.
 
-import {
-  bouwStagneertVolgendeBeurt,
-  isWachttorenBemand,
-  resterendeBouwBeurten,
-  WACHTTOREN_VOEDSEL_VERBRUIK,
-} from "./economie";
+import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "./bouwwachtrij";
 import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS } from "./improvements";
+import { isWachttorenBemand } from "./indringersEnDieren";
+import { WACHTTOREN_VOEDSEL_VERBRUIK } from "./productie";
 import { City, Improvement, Layer, MateriaalType, ResourceType, Tile } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
 import { hoogsteOntgrendeldeLaag, isVooruitkijkLaag } from "./world";

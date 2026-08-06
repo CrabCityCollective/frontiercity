@@ -2,48 +2,53 @@
 
 import { useCallback, useState } from "react";
 import {
-  bemanLegerkamp as bemanLegerkampActie,
-  bemanWachttoren as bemanWachttorenActie,
-  bevestigAmberOnderVuur as bevestigAmberOnderVuurActie,
-  bevestigGedwongenTribuut as bevestigGedwongenTribuutActie,
-  bevestigIneenstorting as bevestigIneenstortingActie,
-  confrontatieBezetteLaag as confrontatieBezetteLaagActie,
-  geefTribuut as geefTribuutActie,
-  haalStrijderTerug as haalStrijderTerugActie,
   hakHout as hakHoutActie,
   jaag as jaagActie,
-  kiesGeefTribuut as kiesGeefTribuutActie,
-  kiesTech as kiesTechActie,
   legWegAan as legWegAanActie,
-  maakInitieleSpelStatus,
-  sluitAmberOntdektMelding as sluitAmberOntdektMeldingActie,
-  sluitBezetteLaagOntdektMelding as sluitBezetteLaagOntdektMeldingActie,
-  sluitBouwKeuze as sluitBouwKeuzeActie,
-  sluitIndringersMelding as sluitIndringersMeldingActie,
-  sluitKuddeMelding as sluitKuddeMeldingActie,
-  sluitRoofdierMelding as sluitRoofdierMeldingActie,
-  sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
-  sluitVijandelijkHeiligdomVernietigdMelding as sluitVijandelijkHeiligdomVernietigdMeldingActie,
-  startBouw as startBouwActie,
+  stichtStad as stichtStadActie,
+  verplaatsSettlerNaar as verplaatsSettlerNaarActie,
+} from "./acties";
+import { versnelBouwMetGoud as versnelBouwMetGoudActie } from "./bouwwachtrij";
+import { maakInitieleSpelStatus, volgendeBeurt as volgendeBeurtActie, zetUitlegPopups as zetUitlegPopupsActie } from "./economie";
+import {
+  startCityVerbetering as startCityVerbeteringActie,
   startGroei as startGroeiActie,
   startMissionarisRecrutering as startMissionarisRecruteringActie,
   startNieuweSettler as startNieuweSettlerActie,
-  startCityVerbetering as startCityVerbeteringActie,
   startOpslagplaats as startOpslagplaatsActie,
   startRecrutering as startRecruteringActie,
   startVerkennerRecrutering as startVerkennerRecruteringActie,
-  stichtStad as stichtStadActie,
-  verken as verkenActie,
-  verplaatsSettlerNaar as verplaatsSettlerNaarActie,
-  versnelBouwMetGoud as versnelBouwMetGoudActie,
   versnelCityVerbeteringMetGoud as versnelCityVerbeteringMetGoudActie,
   versnelCivielMetGoud as versnelCivielMetGoudActie,
   versnelOpslagplaatsMetGoud as versnelOpslagplaatsMetGoudActie,
-  volgendeBeurt as volgendeBeurtActie,
+} from "./groeiEnRekrutering";
+import {
+  bevestigAmberOnderVuur as bevestigAmberOnderVuurActie,
+  bevestigGedwongenTribuut as bevestigGedwongenTribuutActie,
+  geefTribuut as geefTribuutActie,
+  kiesGeefTribuut as kiesGeefTribuutActie,
+  sluitIndringersMelding as sluitIndringersMeldingActie,
+  sluitKuddeMelding as sluitKuddeMeldingActie,
+  sluitRoofdierMelding as sluitRoofdierMeldingActie,
   weigerTribuut as weigerTribuutActie,
-  zetUitlegPopups as zetUitlegPopupsActie,
-} from "./economie";
+} from "./indringersEnDieren";
+import {
+  sluitAmberOntdektMelding as sluitAmberOntdektMeldingActie,
+  sluitBezetteLaagOntdektMelding as sluitBezetteLaagOntdektMeldingActie,
+  sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
+  sluitVijandelijkHeiligdomVernietigdMelding as sluitVijandelijkHeiligdomVernietigdMeldingActie,
+  verken as verkenActie,
+} from "./laagOntgrendeling";
+import { sluitBouwKeuze as sluitBouwKeuzeActie, startBouw as startBouwActie } from "./infrastructuurEnBouw";
+import {
+  bemanLegerkamp as bemanLegerkampActie,
+  bemanWachttoren as bemanWachttorenActie,
+  confrontatieBezetteLaag as confrontatieBezetteLaagActie,
+  haalStrijderTerug as haalStrijderTerugActie,
+} from "./militair";
 import { laadSpel, saveSpel } from "./save";
+import { kiesTech as kiesTechActie } from "./tech";
+import { bevestigIneenstorting as bevestigIneenstortingActie } from "./uitputtingEnVerval";
 import { Improvement, TechId } from "./types";
 
 // React-hook rond de spelstatus (M3). Geen aparte state-library nodig voor

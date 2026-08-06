@@ -1,6 +1,6 @@
 "use client";
 
-import { kanStichten } from "@/game/economie";
+import { kanStichten } from "@/game/acties";
 import { GameState } from "@/game/types";
 
 interface SettlerPaneelProps {

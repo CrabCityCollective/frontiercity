@@ -1,14 +1,8 @@
 "use client";
 
-import {
-  BELEGERINGSDREMPEL,
-  bouwStagneertVolgendeBeurt,
-  heeftOfferAltaar,
-  kanConfrontatieBezetteLaag,
-  kanVerkennen,
-  resterendeBouwBeurten,
-  VERKENNING_KOSTEN_WETENSCHAP,
-} from "@/game/economie";
+import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "@/game/bouwwachtrij";
+import { BELEGERINGSDREMPEL, heeftOfferAltaar, kanVerkennen, VERKENNING_KOSTEN_WETENSCHAP } from "@/game/laagOntgrendeling";
+import { kanConfrontatieBezetteLaag } from "@/game/militair";
 import { MISSIONARIS, VERKENNER } from "@/game/improvements";
 import { GameState } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";

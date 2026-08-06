@@ -11,7 +11,7 @@
 // land-improvements (weg/brug) vallen buiten de MVP-scope — zie hoofdstuk 3
 // en hoofdstuk 13 van het design-document.
 
-import { CampaignConfig, Categorie, Improvement, Layer, MateriaalType, ResourceType, TechId, Tile, TerreinType } from "./types";
+import { CampaignConfig, Categorie, City, Improvement, Layer, MateriaalType, ResourceType, TechId, Tile, TerreinType } from "./types";
 import { hoogsteOntgrendeldeLaag } from "./world";
 
 // Nederlandse labels per categorie, gedeeld tussen de bouw-pop-up (M2) en de
@@ -624,9 +624,28 @@ export const GROTE_TEMPEL: Improvement = {
 
 // Alle vijf gecapte city improvements — de opties voor de nieuwe
 // stadsverbeteringen-UI (StadsverbeteringenPaneel.tsx), gefilterd daar
-// verder op stadsgrootte-eis/al-gebouwd/cap (economie.ts:
+// verder op stadsgrootte-eis/al-gebouwd/cap (groeiEnRekrutering.ts:
 // `kanCityVerbeteringBouwen`).
 export const CAPPED_CITY_IMPROVEMENTS: Improvement[] = [BIBLIOTHEEK, MARKT, BARAKKEN, TEMPEL, GROTE_TEMPEL];
+
+// City-improvement-capaciteit per stadsgrootte (hoofdstuk 3/4/11/14, issue:
+// "city improvements" Deel 1) — hoeveel van de vijf improvements hierboven
+// een stad tegelijk mag hebben. Vervangt het nooit-gebouwde relic-slot-concept
+// uit een eerdere versie van hoofdstuk 4 als de tastbare groei-beloning
+// (hoofdstuk 11 heeft de volledige onderbouwing). Opslagplaats en de
+// groei-tier-improvements (Woonwijk/Grote Woonwijk) tellen hier bewust niet
+// in mee. Staat hier (i.p.v. in economie.ts, dat dit alleen doorgeeft) zodat
+// groeiEnRekrutering.ts dit kan importeren zonder een circulaire
+// afhankelijkheid met de economie.ts-orchestrator te vormen.
+export const CITY_IMPROVEMENT_CAP: { klein: number; middel: number; groot: number } = {
+  klein: 1,
+  middel: 3,
+  groot: 5,
+};
+
+export function cityImprovementCap(grootte: City["grootte"]): number {
+  return CITY_IMPROVEMENT_CAP[grootte];
+}
 
 const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   economisch: ECONOMISCH_LAND_IMPROVEMENTS,
