@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import {
   bemanLegerkamp as bemanLegerkampActie,
   bemanWachttoren as bemanWachttorenActie,
+  bevestigAmberOnderVuur as bevestigAmberOnderVuurActie,
   bevestigGedwongenTribuut as bevestigGedwongenTribuutActie,
   bevestigIneenstorting as bevestigIneenstortingActie,
   confrontatieBezetteLaag as confrontatieBezetteLaagActie,
@@ -141,6 +142,10 @@ export function useGameEngine() {
     setState((huidig) => sluitIndringersMeldingActie(huidig));
   }, []);
 
+  const bevestigAmberOnderVuur = useCallback(() => {
+    setState((huidig) => bevestigAmberOnderVuurActie(huidig));
+  }, []);
+
   const sluitKuddeMelding = useCallback(() => {
     setState((huidig) => sluitKuddeMeldingActie(huidig));
   }, []);
@@ -246,6 +251,7 @@ export function useGameEngine() {
     jaag,
     hakHout,
     sluitIndringersMelding,
+    bevestigAmberOnderVuur,
     sluitKuddeMelding,
     sluitRoofdierMelding,
     sluitAmberOntdektMelding,

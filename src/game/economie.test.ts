@@ -6,6 +6,7 @@ import {
   BELEGERINGSDREMPEL,
   berekenLegerkampLegerwaarde,
   berekenLegerwaarde,
+  bevestigAmberOnderVuur,
   bevestigGedwongenTribuut,
   bouwStagneertVolgendeBeurt,
   cityImprovementCap,
@@ -874,6 +875,105 @@ test("een uitgeputte Amberader (ghost town) telt niet meer mee voor het extra in
     state.indringersEvent?.laagHoogte,
     1,
     "een uitgeputte Amberader mag geen verhoogd gewicht meer geven — een lege put trekt niemand meer"
+  );
+});
+
+// Gedeelde opzet voor de derde-uitkomst-tests hieronder (issue: "wachttorens
+// kunnen vernietigd worden door indringers"): laag 2 krijgt een voltooide,
+// bemande, wegverbonden Wachttoren die (via "wachttoren beschermt 2 lagen")
+// laag 1 beschermt — zelfde opzet als de bestaande beschermings-test
+// hierboven, zodat het incident gegarandeerd op de beschermde laag 1 valt.
+function metBeschermdeLaag(): GameState {
+  let state = maakInitieleSpelStatus();
+  return {
+    ...state,
+    stad: { ...state.stad, strijders: [{ id: "strijder-1", wachttoren: { hoogte: 2, positieInLaag: 4 } }] },
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte === 2
+        ? {
+            ...laag,
+            ontgrendeld: true,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 4
+                ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
+                : tile
+            ),
+          }
+        : laag
+    ),
+  };
+}
+
+test("malus-uitkomst: een beschermde laag kan de Wachttoren toch verliezen — zelfde afhandeling als een verloren Confrontatie tegen een Bezette Laag (issue: wachttorens kunnen vernietigd worden door indringers)", () => {
+  let state = metBeschermdeLaag();
+
+  // kans-check (0) → incident; laag-trekking (0) → laag 1 (de beschermde
+  // laag); stamnaam (0); uitkomst-worp (0.9, tussen 0.85 en 0.95) → malus.
+  state = metRandomReeks([0, 0, 0, 0.9], () => volgendeBeurt(state));
+
+  assert.equal(state.indringersEvent?.laagHoogte, 1);
+  assert.equal(state.indringersEvent?.heeftWachttoren, true);
+  assert.equal(state.indringersEvent?.uitkomst, "malus");
+  assert.equal(state.indringersEvent?.fase, "malus");
+
+  const wachttorenTile = state.lagen.find((l) => l.hoogte === 2)?.tiles[4];
+  assert.equal(wachttorenTile?.status, "ruine", "de beschermende Wachttoren-tile vervalt tot ruïne");
+  assert.equal(wachttorenTile?.improvement, undefined);
+  assert.equal(state.stad.strijders.length, 0, "de bemannende strijder is blijvend verloren, geen reassignment");
+});
+
+test("bonus-uitkomst: de bemanning buit goud van de indringers (issue: wachttorens kunnen vernietigd worden door indringers)", () => {
+  let state = metBeschermdeLaag();
+  state = { ...state, voorraad: { ...state.voorraad, goud: 0 } };
+
+  // Zelfde reeks als de malus-test, maar de uitkomst-worp (0.99) valt voorbij
+  // 0.95 → bonus.
+  state = metRandomReeks([0, 0, 0, 0.99], () => volgendeBeurt(state));
+
+  assert.equal(state.indringersEvent?.uitkomst, "bonus");
+  assert.equal(state.indringersEvent?.fase, "bonus");
+  assert.equal(state.indringersEvent?.buitGoud, 6);
+  assert.equal(state.voorraad.goud, 6, "het buitgemaakte goud is meteen aan de voorraad toegevoegd");
+
+  const wachttorenTile = state.lagen.find((l) => l.hoogte === 2)?.tiles[4];
+  assert.equal(wachttorenTile?.status, "actief", "de Wachttoren blijft bij een bonus-uitkomst gewoon intact");
+  assert.equal(state.stad.strijders.length, 1, "de bemannende strijder blijft bij een bonus-uitkomst behouden");
+});
+
+test("een laag met een actieve Amberader krijgt eerst de 'Amberader onder vuur'-aankondiging, óók als de laag beschermd is — pas na bevestigAmberOnderVuur schuift de melding door naar de eigenlijke uitkomst", () => {
+  let state = metBeschermdeLaag();
+  state = {
+    ...state,
+    lagen: state.lagen.map((laag) =>
+      laag.hoogte === 1
+        ? {
+            ...laag,
+            tiles: laag.tiles.map((tile) =>
+              tile.positieInLaag === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
+            ),
+          }
+        : laag
+    ),
+  };
+
+  // kans-check (0) → incident; laag-trekking (0) → laag 1 (enige laag die
+  // meedoet: laag 2 blijft "alleen een wachttoren" en telt niet mee);
+  // stamnaam (0); uitkomst-worp (0.5) → standhouden.
+  state = metRandomReeks([0, 0, 0, 0.5], () => volgendeBeurt(state));
+
+  assert.equal(state.indringersEvent?.amberOnderVuur, true);
+  assert.equal(state.indringersEvent?.fase, "amber-onder-vuur");
+  assert.equal(
+    state.indringersEvent?.uitkomst,
+    "standhouden",
+    "de uitkomst is al bepaald en opgeslagen, ook al is de aankondiging nog niet weggeklikt"
+  );
+
+  state = bevestigAmberOnderVuur(state);
+  assert.equal(
+    state.indringersEvent?.fase,
+    "gemeld",
+    "na de aankondiging schuift de melding door naar de standhouden-uitkomst"
   );
 });
 
