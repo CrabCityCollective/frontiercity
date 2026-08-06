@@ -27,16 +27,14 @@ interface GameCanvasProps {
   // die vakjes en stuurt een klik erop naar `onTileClick` als verplaatsing
   // i.p.v. tile-selectie (zie GameRoot).
   settlerBereikbarePosities?: Settler[];
-  // Actieve, nog onbemande Wachttoren-tiles tijdens het bemannen (nieuwe
-  // Wachttoren-functie, hoofdstuk 6, issue: "de wachttorens die beschikbaar
-  // zijn allemaal highlighten") — zelfde patroon als `settlerBereikbarePosities`
-  // hierboven, maar voor de strijder-bemannen-flow: zolang dit gezet is
-  // markeert de canvas deze vakjes en stuurt een klik erop naar `onTileClick`
-  // als bemannen (zie GameRoot).
-  wachttorenBereikbarePosities?: Settler[];
   // Actieve, nog onbemande Legerkamp-tiles tijdens het bemannen (hoofdstuk 6,
   // issue: "De Bezette Laag, missionaris en verkenner", Deel 5) — zelfde
-  // patroon als `wachttorenBereikbarePosities` hierboven.
+  // patroon als `settlerBereikbarePosities` hierboven, maar voor de
+  // legerkamp-toewijs-flow: zolang dit gezet is markeert de canvas deze
+  // vakjes en stuurt een klik erop naar `onTileClick` als toewijzen (zie
+  // GameRoot). Wachttoren-bemannen loopt sinds issue "wachttorens bemannen"
+  // niet meer via zo'n kies-modus, maar via een klik op de wachttoren-tile
+  // zelf — geen highlight-vakjes hier meer voor nodig.
   legerkampBereikbarePosities?: Settler[];
   // Nog verhulde vakjes van de actieve Bezette Laag tijdens Verkenning (Deel
   // 3) — zelfde patroon, maar dan voor de Verkenning-kies-modus.
@@ -78,7 +76,6 @@ export default function GameCanvas({
   plaatsingsLaagHoogte,
   settler,
   settlerBereikbarePosities,
-  wachttorenBereikbarePosities,
   legerkampBereikbarePosities,
   verkenningBereikbarePosities,
   onTileClick,
@@ -106,7 +103,6 @@ export default function GameCanvas({
       plaatsingsLaagHoogte,
       settler,
       settlerBereikbarePosities,
-      wachttorenBereikbarePosities,
       legerkampBereikbarePosities,
       verkenningBereikbarePosities
     );
@@ -116,7 +112,6 @@ export default function GameCanvas({
     plaatsingsLaagHoogte,
     settler,
     settlerBereikbarePosities,
-    wachttorenBereikbarePosities,
     legerkampBereikbarePosities,
     verkenningBereikbarePosities,
   ]);

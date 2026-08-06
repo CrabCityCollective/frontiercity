@@ -229,7 +229,7 @@ export const VIJAND_AAN_DE_HORIZON_TEKST =
 // noemde.
 export const STRIJDERS_OPLEIDEN_TITEL = "Strijders opleiden";
 export const STRIJDERS_OPLEIDEN_TEKST =
-  "Bouw nu een wachttoren. Leidt tegelijkertijd een strijder op. Klik op de stad en begin de opleiding van een strijder. Als de strijder klaar is, verschijnt hij in het stadscherm, en vanaf daar kun je hem toewijzen aan een wachttoren die nog niet bemand is.";
+  "Bouw nu een wachttoren. Leidt tegelijkertijd een strijder op. Klik op de stad en begin de opleiding van een strijder. Zodra hij klaar is, klik je op de wachttoren zelf op de kaart en kies je Wachttoren bemannen om hem toe te wijzen.";
 
 // Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen" —
 // "op het moment dat je voor het eerst genoeg resources hebt om de stad

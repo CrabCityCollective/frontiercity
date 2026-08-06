@@ -1157,31 +1157,10 @@ export function tekenSettlerBereikbaarMarkering(
   ctx.restore();
 }
 
-// Markeert een actieve, nog onbemande Wachttoren-tile tijdens het bemannen
-// (nieuwe Wachttoren-functie, hoofdstuk 6, issue: "als je een strijder kiest
-// om een wachttoren te bemannen, dat de wachttorens die beschikbaar zijn dan
-// allemaal worden gehighlight") — een warme amberkleur, bewust anders dan de
-// gouden bouwplaatsings- en de blauwe settler-markering hierboven zodat de
-// drie klik-modi nooit door elkaar lopen.
-export function tekenWachttorenBereikbaarMarkering(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number
-): void {
-  ctx.save();
-  ctx.fillStyle = "rgba(230, 150, 60, 0.18)";
-  ctx.fillRect(x, y, size, size);
-  ctx.strokeStyle = "rgba(230, 160, 70, 0.9)";
-  ctx.lineWidth = Math.max(2, size * 0.045);
-  ctx.strokeRect(x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, size - ctx.lineWidth, size - ctx.lineWidth);
-  ctx.restore();
-}
-
 // Markeert een actieve, nog onbemande Legerkamp-tile tijdens het bemannen
 // (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel 5)
-// — zelfde patroon als `tekenWachttorenBereikbaarMarkering` hierboven, maar
-// olijfgroen (net als `tekenLegerkampIcon`) zodat de twee kies-modi ook op de
+// — zelfde patroon als `tekenSettlerBereikbaarMarkering` hierboven, maar
+// olijfgroen (net als `tekenLegerkampIcon`) zodat de twee klik-modi ook op de
 // kaart zelf te onderscheiden zijn.
 export function tekenLegerkampBereikbaarMarkering(
   ctx: CanvasRenderingContext2D,
@@ -1306,7 +1285,6 @@ export function tekenWereld(
   plaatsingsLaagHoogte?: number,
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
-  wachttorenBereikbarePosities?: Settler[],
   legerkampBereikbarePosities?: Settler[],
   verkenningBereikbarePosities?: Settler[]
 ): void {
@@ -1358,14 +1336,6 @@ export function tekenWereld(
 
       if (settlerBereikbarePosities?.some((positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col)) {
         tekenSettlerBereikbaarMarkering(ctx, x, y, tileSize);
-      }
-
-      if (
-        wachttorenBereikbarePosities?.some(
-          (positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col
-        )
-      ) {
-        tekenWachttorenBereikbaarMarkering(ctx, x, y, tileSize);
       }
 
       if (
