@@ -295,11 +295,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             s.wachttoren?.positieInLaag === geselecteerdeTile.positieInLaag
         )
       : undefined;
-  // "Vrij" = nog geen Wachttoren- én geen Legerkamp-toewijzing (zelfde eis
-  // als `bemanLegerkamp` in militair.ts al stelt aan een strijder) — precies
-  // de strijders die in de keuzelijst hieronder aanklikbaar mogen zijn.
-  const vrijeStrijders = state.stad.strijders.filter((s) => !s.wachttoren && !s.legerkamp);
-
   // Alleen de relevante lagen op de canvas (issue: "onderkant altijd in
   // view" + "onontdekte tegels weg") — zie world.ts: `zichtbareLagen`.
   const zichtbareLagenState = zichtbareLagen(state.lagen);
@@ -998,7 +993,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             geselecteerdeTileIsWachttoren && geselecteerdeTile
               ? {
                   bemand: Boolean(wachttorenBemanner),
-                  vrijeStrijders,
+                  alleStrijders: state.stad.strijders,
                   keuzeActief: toonWachttorenBemanningsKeuze,
                   onStartKeuze: () => setToonWachttorenBemanningsKeuze(true),
                   onKiesStrijder: (strijderId) => {

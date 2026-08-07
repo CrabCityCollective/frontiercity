@@ -47,6 +47,11 @@ export default function MilitairPaneel({
   // `bemanLegerkamp`/de wachttoren-keuzelijst (GameRoot) al stellen aan een
   // toewijsbare strijder.
   const vrijeStrijders = stad.strijders.filter((s) => !s.wachttoren && !s.legerkamp);
+  // Apart geteld zodat je bij de stad meteen ziet hoeveel strijders al een
+  // wachttoren bemannen (issue: "strijders in wachttorens" — "je moet ook
+  // kunnen zien hoeveel strijders je in totaal hebt, en hoeveel daarvan dus
+  // al in een wachttoren zitten"), naast het bestaande "vrij"-aantal.
+  const wachttorenStrijders = stad.strijders.filter((s) => s.wachttoren);
   // Nog benodigde grondstoffen voor de lopende Soldaat-opleiding, en of die
   // volgende beurt stilligt door een tekort (issue: "wil ik graag zien welke
   // materialen nog nodig zijn ... en een attentie als de materialen niet
@@ -82,8 +87,9 @@ export default function MilitairPaneel({
       {stad.strijders.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
           <span style={{ color: "var(--kleur-tekst-gedempt)" }}>
-            Strijders: {stad.strijders.length} totaal, {vrijeStrijders.length} vrij (nog niet toegewezen aan een
-            wachttoren of legerkamp) — klik op een wachttoren op de kaart om er een te bemannen.
+            Strijders: {stad.strijders.length} totaal, {wachttorenStrijders.length} in een wachttoren,{" "}
+            {vrijeStrijders.length} vrij (nog niet toegewezen aan een wachttoren of legerkamp) — klik op een
+            wachttoren op de kaart om er een te bemannen.
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
             {stad.strijders.map((strijder) => {
