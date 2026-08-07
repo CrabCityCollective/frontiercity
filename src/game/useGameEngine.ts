@@ -35,6 +35,7 @@ import {
 import {
   sluitAmberOntdektMelding as sluitAmberOntdektMeldingActie,
   sluitBezetteLaagOntdektMelding as sluitBezetteLaagOntdektMeldingActie,
+  sluitTweedeAmberOntdektMelding as sluitTweedeAmberOntdektMeldingActie,
   sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
   sluitVijandelijkHeiligdomVernietigdMelding as sluitVijandelijkHeiligdomVernietigdMeldingActie,
   verken as verkenActie,
@@ -163,6 +164,10 @@ export function useGameEngine() {
     setState((huidig) => sluitAmberOntdektMeldingActie(huidig));
   }, []);
 
+  const sluitTweedeAmberOntdektMelding = useCallback(() => {
+    setState((huidig) => sluitTweedeAmberOntdektMeldingActie(huidig));
+  }, []);
+
   const versnelBouwMetGoud = useCallback((hoogte: number, positieInLaag: number) => {
     setState((huidig) => versnelBouwMetGoudActie(huidig, hoogte, positieInLaag));
   }, []);
@@ -260,6 +265,7 @@ export function useGameEngine() {
     sluitKuddeMelding,
     sluitRoofdierMelding,
     sluitAmberOntdektMelding,
+    sluitTweedeAmberOntdektMelding,
     versnelBouwMetGoud,
     versnelCivielMetGoud,
     versnelOpslagplaatsMetGoud,

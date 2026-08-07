@@ -304,3 +304,13 @@ export const ROOFDIER_AANVAL_TEKST =
 export const AMBER_ONTDEKKING_TITEL = "Amber gevonden";
 export const AMBER_ONTDEKKING_TEKST =
   "Onze verkenners vonden een fantastisch glimmend materiaal: Amber. We gaan een mijn bouwen om al het Amber tot het laatste brokje uit de grond te krijgen.";
+
+// Tweede Amberader-ontdekkingsmelding (hoofdstuk 3/11/14, issue: "Amberader
+// sowieso op laag 12"): getoond zodra `verwerkLaagOntgrendeling` (economie.ts)
+// laag `AMBER_ONTDEKKING_LAAG_2` (world.ts) voor het eerst ontgrendelt —
+// zelfde meldings-vorm als `AMBER_ONTDEKKING_TITEL`/`AMBER_ONTDEKKING_TEKST`
+// hierboven, met een lichte variant in toon: een tweede vondst, geen eerste
+// verwondering meer.
+export const AMBER_ONTDEKKING_TWEEDE_TITEL = "Nog een amberader";
+export const AMBER_ONTDEKKING_TWEEDE_TEKST =
+  "Een tweede ader vol amber, verscholen in de rotsen. Mooi meegenomen, mocht de eerste ooit opdrogen — het goud dat eruit komt, blijft hier hard nodig.";

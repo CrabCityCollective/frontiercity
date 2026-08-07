@@ -18,6 +18,7 @@ import {
 import { GameState, Settler } from "./types";
 import {
   AMBER_ONTDEKKING_LAAG,
+  AMBER_ONTDEKKING_LAAG_2,
   cultuurKostenVoorLaag,
   hoogsteOntgrendeldeLaag,
   initialiseerBezetteLaag,
@@ -40,6 +41,7 @@ export function verwerkLaagOntgrendeling(state: GameState): GameState {
   let lagen = state.lagen;
   let volgendeHoogte = hoogsteOntgrendeldeLaag(lagen) + 1;
   let amberOntdektEvent = state.amberOntdektEvent;
+  let tweedeAmberOntdektEvent = state.tweedeAmberOntdektEvent;
   let bezetteLaagOntdektEvent = state.bezetteLaagOntdektEvent;
 
   while (
@@ -76,12 +78,19 @@ export function verwerkLaagOntgrendeling(state: GameState): GameState {
     if (volgendeHoogte === AMBER_ONTDEKKING_LAAG) {
       amberOntdektEvent = true;
     }
+    // Tweede Amberader-ontdekking (hoofdstuk 3/11/14, issue: "Amberader
+    // sowieso op laag 12"): zelfde eenmalige trigger als hierboven, maar op
+    // `AMBER_ONTDEKKING_LAAG_2` — de softlock-preventie vlak vóór de Bezette
+    // Laag.
+    if (volgendeHoogte === AMBER_ONTDEKKING_LAAG_2) {
+      tweedeAmberOntdektEvent = true;
+    }
     volgendeHoogte += 1;
   }
 
   return lagen === state.lagen && bezetteLaagOntdektEvent === state.bezetteLaagOntdektEvent
     ? state
-    : { ...state, lagen, amberOntdektEvent, bezetteLaagOntdektEvent };
+    : { ...state, lagen, amberOntdektEvent, tweedeAmberOntdektEvent, bezetteLaagOntdektEvent };
 }
 
 // Sluit de "Bezette Laag ontdekt"-melding (Deel 2) — puur een
@@ -94,6 +103,13 @@ export function sluitBezetteLaagOntdektMelding(state: GameState): GameState {
 // UI-bevestiging, zelfde patroon als `sluitKuddeMelding` hierboven.
 export function sluitAmberOntdektMelding(state: GameState): GameState {
   return { ...state, amberOntdektEvent: undefined };
+}
+
+// Sluit de tweede Amberader-ontdekkingsmelding (hoofdstuk 3/11/14, issue:
+// "Amberader sowieso op laag 12") — puur een UI-bevestiging, zelfde patroon
+// als `sluitAmberOntdektMelding` hierboven.
+export function sluitTweedeAmberOntdektMelding(state: GameState): GameState {
+  return { ...state, tweedeAmberOntdektEvent: undefined };
 }
 
 // Of er een voltooid Offer Altaar staat (Deel 4) — net als
