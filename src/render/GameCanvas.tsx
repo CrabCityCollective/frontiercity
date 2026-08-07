@@ -3,7 +3,7 @@
 import { MouseEvent, useEffect, useRef } from "react";
 import { GrafischeStijl } from "@/game/save";
 import { City, Layer, Settler } from "@/game/types";
-import { BAND_WIDTH_TILES } from "@/game/world";
+import { BAND_WIDTH_TILES, EINDE_OCEAAN_HOOGTE, eindeOceaanZichtbaar } from "@/game/world";
 import { tekenWereld } from "./canvas";
 import { tekenWereldPixelArt } from "./canvasPixelArt";
 
@@ -53,10 +53,15 @@ interface GameCanvasProps {
 // rekening met een eventueel afwijkende CSS-grootte van het canvas-element.
 // Hoogte 0 is de oceaan-rij onder laag 1 (hoofdstuk 2) — geen echte `Layer`,
 // maar wel een geldig, klikbaar doel (zie GameRoot: oceaan-tile-info).
+// `heeftEindeOceaan` (issue: "laatste oceaan ook visueel") schuift alle rijen
+// één tegel naar beneden voor de afsluitende oceaan-rij bóven de laatste laag
+// — die rij mapt naar sentinel-hoogte `EINDE_OCEAAN_HOOGTE`, net zo min een
+// echte `Layer` als hoogte 0.
 function bepaalAangeklikteTile(
   canvas: HTMLCanvasElement,
   event: MouseEvent<HTMLCanvasElement>,
-  aantalLagen: number
+  aantalLagen: number,
+  heeftEindeOceaan: boolean
 ): { hoogte: number; positieInLaag: number } | null {
   const rect = canvas.getBoundingClientRect();
   const schaalX = canvas.width / rect.width;
@@ -66,13 +71,24 @@ function bepaalAangeklikteTile(
   const x = (event.clientX - rect.left) * schaalX;
   const y = (event.clientY - rect.top) * schaalY;
   const positieInLaag = Math.floor(x / tileSize);
-  const rijIndex = Math.floor(y / tileSize);
-  const hoogte = aantalLagen - rijIndex;
+  const ruweRij = Math.floor(y / tileSize);
 
-  if (positieInLaag < 0 || positieInLaag >= BAND_WIDTH_TILES || hoogte < 0 || hoogte > aantalLagen) {
+  if (positieInLaag < 0 || positieInLaag >= BAND_WIDTH_TILES) {
     return null;
   }
 
+  if (heeftEindeOceaan) {
+    if (ruweRij === 0) {
+      return { hoogte: EINDE_OCEAAN_HOOGTE, positieInLaag };
+    }
+    const rijIndex = ruweRij - 1;
+    const hoogte = aantalLagen - rijIndex;
+    if (hoogte < 0 || hoogte > aantalLagen) return null;
+    return { hoogte, positieInLaag };
+  }
+
+  const hoogte = aantalLagen - ruweRij;
+  if (hoogte < 0 || hoogte > aantalLagen) return null;
   return { hoogte, positieInLaag };
 }
 
@@ -88,6 +104,7 @@ export default function GameCanvas({
   onTileClick,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const heeftEindeOceaan = eindeOceaanZichtbaar(lagen);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -128,7 +145,7 @@ export default function GameCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const tile = bepaalAangeklikteTile(canvas, event, lagen.length);
+    const tile = bepaalAangeklikteTile(canvas, event, lagen.length, heeftEindeOceaan);
     if (tile) onTileClick(tile.hoogte, tile.positieInLaag);
   }
 
@@ -136,10 +153,12 @@ export default function GameCanvas({
     <canvas
       ref={canvasRef}
       width={TILE_SIZE * BAND_WIDTH_TILES}
-      // +1 rij voor de klikbare oceaan onder laag 1 (hoofdstuk 2). Hoogte
-      // volgt het aantal daadwerkelijk meegegeven (zichtbare) lagen, niet het
-      // vaste tutorial-totaal (issue: "onontdekte tegels weg" hierboven).
-      height={TILE_SIZE * (lagen.length + 1)}
+      // +1 rij voor de klikbare oceaan onder laag 1 (hoofdstuk 2), +1 extra
+      // rij zodra de afsluitende oceaan bóven de laatste laag ook getoond
+      // wordt (issue: "laatste oceaan ook visueel"). Hoogte volgt het aantal
+      // daadwerkelijk meegegeven (zichtbare) lagen, niet het vaste
+      // tutorial-totaal (issue: "onontdekte tegels weg" hierboven).
+      height={TILE_SIZE * (lagen.length + 1 + (heeftEindeOceaan ? 1 : 0))}
       onClick={handleClick}
       // width/height hierboven blijven de canvas-resolutie (en dus de
       // klik-geometrie in `bepaalAangeklikteTile`, die zelf al corrigeert

@@ -265,3 +265,16 @@ export function beschrijfOceaanTile(): TileInfo {
     tekst: "Het water strekt zich uit voorbij het zicht. Hier is niets te bouwen — het kamp begon aan deze rand.",
   };
 }
+
+// Info voor de klikbare oceaan-rij bóven de laatste laag (issue: "laatste
+// oceaan ook visueel") — de oceaan aan de overkant (hoofdstuk 2/10), het
+// einddoel van de hele tocht. Zelfde puur-sfeer-patroon als `beschrijfOceaanTile`
+// hierboven, alleen getoond zodra die laatste laag ontgrendeld is (zie
+// world.ts: `eindeOceaanZichtbaar`).
+export function beschrijfEindeOceaanTile(): TileInfo {
+  return {
+    titel: "De oceaan aan de overkant",
+    ondertitel: "Waar de tocht eindigt",
+    tekst: "Het water strekt zich uit voorbij het zicht — hetzelfde water, aan het andere eind van de tocht. Hier is niets te bouwen.",
+  };
+}

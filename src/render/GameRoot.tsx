@@ -37,12 +37,18 @@ import { AMBER_ONTDEKKING_TWEEDE_TEKST, AMBER_ONTDEKKING_TWEEDE_TITEL } from "@/
 import { berekenLegerwaarde, onbemandeLegerkampPosities } from "@/game/militair";
 import { heeftGebouwdeMijn, heeftWerkendeBoerderij } from "@/game/productie";
 import { grafischeStijl, heeftOpgeslagenSpel, markeerTutorialVoltooid, zetGrafischeStijl } from "@/game/save";
-import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
+import { beschrijfEindeOceaanTile, beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { berekenHistorieStatistieken } from "@/game/uitputtingEnVerval";
 import { useGameEngine } from "@/game/useGameEngine";
 import { bereikbarePosities } from "@/game/wegen";
-import { TUTORIAL_LAAG_AANTAL, VOEDSEL_DREMPEL_GROEI, hoogsteOntgrendeldeLaag, zichtbareLagen } from "@/game/world";
+import {
+  EINDE_OCEAAN_HOOGTE,
+  TUTORIAL_LAAG_AANTAL,
+  VOEDSEL_DREMPEL_GROEI,
+  hoogsteOntgrendeldeLaag,
+  zichtbareLagen,
+} from "@/game/world";
 import GameCanvas from "./GameCanvas";
 
 interface GameRootProps {
@@ -275,9 +281,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // De ruwe tile achter de aangeklikte tile-info (hoofdstuk 5/14, issue:
   // "toevoeging Goud" Deel 2) — `tileInfo` hierboven is alleen tekst, dit
   // geeft de "versnel met goud"-knop toegang tot de echte bouwvoortgang.
-  // Hoogte 0 is de oceaan-rij (geen echte `Layer`, zie `tileInfo` hieronder).
+  // Hoogte 0 en EINDE_OCEAAN_HOOGTE zijn de twee oceaan-rijen (geen echte
+  // `Layer`, zie `tileInfo` hieronder).
   const geselecteerdeTileVoorRush =
-    geselecteerdeTile && geselecteerdeTile.hoogte !== 0 && geselecteerdeLaag
+    geselecteerdeTile &&
+    geselecteerdeTile.hoogte !== 0 &&
+    geselecteerdeTile.hoogte !== EINDE_OCEAAN_HOOGTE &&
+    geselecteerdeLaag
       ? geselecteerdeLaag.tiles[geselecteerdeTile.positieInLaag]
       : undefined;
 
@@ -311,14 +321,18 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     if (el) el.scrollTop = el.scrollHeight;
   }, [zichtbareLagenState.length]);
 
-  // Hoogte 0 is de klikbare oceaan-rij onder laag 1 (geen echte `Layer`, zie
-  // GameCanvas: `bepaalAangeklikteTile`) — puur sfeer-tekst, nooit bebouwbaar.
+  // Hoogte 0 is de klikbare oceaan-rij onder laag 1, EINDE_OCEAAN_HOOGTE de
+  // afsluitende oceaan-rij bóven de laatste laag (issue: "laatste oceaan ook
+  // visueel") — beide geen echte `Layer` (zie GameCanvas: `bepaalAangeklikteTile`)
+  // — puur sfeer-tekst, nooit bebouwbaar.
   const tileInfo =
     geselecteerdeTile?.hoogte === 0
       ? beschrijfOceaanTile()
-      : geselecteerdeTile && geselecteerdeLaag
-        ? beschrijfTile(geselecteerdeLaag, state.lagen, state.stad, geselecteerdeTile.positieInLaag, state.voorraad)
-        : null;
+      : geselecteerdeTile?.hoogte === EINDE_OCEAAN_HOOGTE
+        ? beschrijfEindeOceaanTile()
+        : geselecteerdeTile && geselecteerdeLaag
+          ? beschrijfTile(geselecteerdeLaag, state.lagen, state.stad, geselecteerdeTile.positieInLaag, state.voorraad)
+          : null;
 
   // De tile die de speler heeft aangeklikt terwijl er een improvement klaar
   // staat om geplaatst te worden. Normaal alleen geldig op de actieve

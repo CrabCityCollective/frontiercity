@@ -20,6 +20,7 @@ import { City, Layer, Settler, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import {
   BAND_WIDTH_TILES,
+  eindeOceaanZichtbaar,
   isVooruitkijkLaag,
 } from "@/game/world";
 import {
@@ -891,6 +892,9 @@ export function tekenWereldPixelArt(
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalLagen = lagen.length;
+  // Afsluitende oceaan-rij bóven de laatste laag (issue: "laatste oceaan ook
+  // visueel") — zie canvas.ts voor de volledige toelichting.
+  const topOffset = eindeOceaanZichtbaar(lagen) ? tileSize : 0;
 
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#100d0a";
@@ -900,7 +904,7 @@ export function tekenWereldPixelArt(
 
   for (const laag of lagen) {
     const rijIndex = totaalLagen - laag.hoogte;
-    const y = rijIndex * tileSize;
+    const y = rijIndex * tileSize + topOffset;
     const vooruitkijk = !laag.ontgrendeld && isVooruitkijkLaag(laag, lagen);
 
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
@@ -964,14 +968,24 @@ export function tekenWereldPixelArt(
     if (rijIndex >= 0 && rijIndex < totaalLagen) {
       tileCtx.clearRect(0, 0, PIX, PIX);
       tekenSettlerPixel(tileCtx);
-      blit(ctx, tileCanvas, settler.positieInLaag * tileSize, rijIndex * tileSize, tileSize);
+      blit(ctx, tileCanvas, settler.positieInLaag * tileSize, rijIndex * tileSize + topOffset, tileSize);
     }
   }
 
-  const oceaanY = totaalLagen * tileSize;
+  const oceaanY = totaalLagen * tileSize + topOffset;
   for (let col = 0; col < BAND_WIDTH_TILES; col++) {
     const x = col * tileSize;
     tekenOceaanTilePixel(ctx, x, oceaanY, tileSize, tileSeed(col, 0));
     tekenTileGrid(ctx, x, oceaanY, tileSize);
+  }
+
+  // Afsluitende oceaan-rij bóven de laatste laag (issue: "laatste oceaan ook
+  // visueel") — zie canvas.ts voor de volledige toelichting.
+  if (topOffset > 0) {
+    for (let col = 0; col < BAND_WIDTH_TILES; col++) {
+      const x = col * tileSize;
+      tekenOceaanTilePixel(ctx, x, 0, tileSize, tileSeed(col, totaalLagen + 1));
+      tekenTileGrid(ctx, x, 0, tileSize);
+    }
   }
 }
