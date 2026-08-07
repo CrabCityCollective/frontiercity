@@ -22,66 +22,67 @@ export interface LaagContent {
 export const TUTORIAL_LAAG_CONTENT: Record<number, LaagContent> = {
   1: {
     naam: "De Oevervlakte",
-    mechaniek: "Land improvement bouwen",
-    flavorTekst:
-      "Water aan de ene kant, gras aan de andere. Hier zet het Hertenpad-volk de eerste palen in de grond. Ze noemen de plek Holenrots.",
+    mechaniek: "Bouwen en overleven",
+    flavorTekst: "Water aan de ene kant, gras aan de andere. Er is maar 1 richting: voorwaarts.",
   },
   2: {
     naam: "Het Rietmoeras",
-    mechaniek: "Categorie-keuze (2-3 opties)",
-    flavorTekst: "Het riet buigt naar drie kanten tegelijk. Kies er één.",
+    mechaniek: "Verdedigen tegen indringers",
+    flavorTekst:
+      "De wereld bleek wreder dan gedacht. Maar het Goddelijke Licht dan wel de Menselijke Speer zal blijven staan.",
   },
   3: {
     naam: "De Bosrand",
-    mechaniek: "Drie bouwmaterialen — hout en steen",
-    flavorTekst: "Aan de bosrand liggen hout en steen binnen bereik van elkaar.",
+    mechaniek: "Wetenschap en de techtree",
+    flavorTekst: "We zijn al van ver gekomen. Hoewel, als we op de heuvel staan, kunnen we het kamp nog zien.",
   },
   4: {
     naam: "Het Loofbos",
-    mechaniek: "Drie bouwmaterialen — erts erbij",
-    flavorTekst: "Dieper het loofbos in ligt erts, onder wortels die niemand eerder omhoogtrok.",
+    mechaniek: "Kuddes en jacht",
+    flavorTekst:
+      "De stam heeft niet genoeg aan alleen boerderijen, we moeten jagen op de sappige wilde dieren om ons menu uit te breiden.",
   },
   5: {
     naam: "De Heuvelvoet",
-    mechaniek: "Uitputting",
-    flavorTekst: "De eerste groeve wordt stil. Dan leeg. Dan een naam die niemand meer gebruikt.",
+    mechaniek: "Roofdieren",
+    flavorTekst: "Jagen heeft het nadeel dat er ook dieren verschijnen die de jagers van onze stam ook heel sappig vinden.",
   },
   6: {
     naam: "De Heuvels",
-    mechaniek: "Cultuur → laag ontgrendelen",
-    flavorTekst: "Op de heuvels staat een steen rechtop. Niemand weet meer wie.",
+    mechaniek: "De stad groter laten groeien",
+    flavorTekst: "De heuvels bieden eindelijk ruimte. Groter worden kan — meer monden om te voeden ook.",
   },
   7: {
     naam: "De Rotsrichel",
-    mechaniek: "Cultuur → laag ontgrendelen",
-    flavorTekst: "Vanaf de rotsrichel is de volgende laag te zien, voor het eerst zonder mist.",
+    mechaniek: "Amber en Mijnbouw",
+    flavorTekst: "Het mooiste materiaal ooit gezien, het trekt ook de verkeerde mensen aan.",
   },
   8: {
     naam: "De Hooggebergte-voet",
-    mechaniek: "Wetenschap → technologie kiezen",
-    flavorTekst:
-      "Aan de voet van het hooggebergte staat een stenen cirkel. Wie er lang genoeg naar de hemel kijkt, moet kiezen welk pad hij verder volgt.",
+    mechaniek: "Kennis en technologie",
+    flavorTekst: "Aan de voet van het hooggebergte ligt de lucht al dunner. Wie hier kijkt, ziet verder dan ooit.",
   },
   9: {
     naam: "Het Naaldwoud",
-    mechaniek: "Zeldzaamheid (verborgen tot bouwen)",
-    flavorTekst: "In het naaldwoud fluistert men over hout dat zeldzamer is dan de rest. Nog niemand heeft het gevonden.",
+    mechaniek: "Dieper de wildernis in",
+    flavorTekst: "In het naaldwoud fluistert men over bomen ouder dan het Hertenpad-volk zelf.",
   },
   10: {
-    naam: "De Kale Hoogvlakte",
-    mechaniek: "Groei-gok",
+    naam: "De Boomgrens",
+    mechaniek: "Nog eens groeien: van middel naar groot",
     flavorTekst:
-      "Op de kale hoogvlakte overweegt het kamp te groeien. Groter betekent meer monden, en minder plek om ze allemaal te voeden.",
+      "Boven de boomgrens is er minder beschutting, maar wel meer land. Groter worden is hier een keuze, geen vanzelfsprekendheid.",
   },
   11: {
     naam: "De Besneeuwde Flank",
-    mechaniek: "Waarschuwingssignaal bij verval",
-    flavorTekst: "Op de besneeuwde flank ligt het land dunner dan het kamp nodig heeft. Een teken, geen vonnis.",
+    mechaniek: "Een tweede amberader",
+    flavorTekst: "Onder de sneeuw glinstert iets dat we al kennen. Een tweede ader, dieper dan de eerste.",
   },
   12: {
     naam: "De Bergkam",
-    mechaniek: "Bezette Laag & Confrontatie",
-    flavorTekst: "Op de bergkam staat voor het eerst iemand die niet van het Hertenpad-volk is.",
+    mechaniek: "Een vijandige stam overnemen (cultureel/militair)",
+    flavorTekst:
+      "Vanaf de bergkam zagen we ons einddoel: de oceaan. We laten niemand heel die tussen ons en ons doel komt te staan.",
   },
   // Laatste laag van de tutorial (issue: "tutorial laatste stad aan
   // oceaan") — de oceaan aan de overkant, precies de win-conditie uit
