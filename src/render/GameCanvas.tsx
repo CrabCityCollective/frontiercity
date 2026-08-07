@@ -1,7 +1,7 @@
 "use client";
 
 import { MouseEvent, useEffect, useRef } from "react";
-import { grafischeStijl } from "@/game/save";
+import { GrafischeStijl } from "@/game/save";
 import { City, Layer, Settler } from "@/game/types";
 import { BAND_WIDTH_TILES } from "@/game/world";
 import { tekenWereld } from "./canvas";
@@ -39,6 +39,12 @@ interface GameCanvasProps {
   // Nog verhulde vakjes van de actieve Bezette Laag tijdens Verkenning (Deel
   // 3) — zelfde patroon, maar dan voor de Verkenning-kies-modus.
   verkenningBereikbarePosities?: Settler[];
+  // Grafische stijl (issue: "Settings uitbreiden" — on the fly wisselen
+  // tussen pixel art en vector art): als prop i.p.v. hier zelf `save.ts`
+  // uit te lezen, zodat een toggle tijdens het spelen (GameRoot) meteen een
+  // herteken triggert via de dependency-array van het effect hieronder, in
+  // plaats van pas bij de volgende (her)start van dit scherm.
+  stijl: GrafischeStijl;
   onTileClick: (hoogte: number, positieInLaag: number) => void;
 }
 
@@ -78,6 +84,7 @@ export default function GameCanvas({
   settlerBereikbarePosities,
   legerkampBereikbarePosities,
   verkenningBereikbarePosities,
+  stijl,
   onTileClick,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -93,7 +100,7 @@ export default function GameCanvas({
     // style ... nog heen en weer kunnen schakelen"): beide tekenaars delen
     // dezelfde signatuur/tile-geometrie (zie canvasPixelArt.ts), dus hier
     // alleen kiezen welke van de twee getekend wordt.
-    const teken = grafischeStijl() === "pixel-art" ? tekenWereldPixelArt : tekenWereld;
+    const teken = stijl === "pixel-art" ? tekenWereldPixelArt : tekenWereld;
     teken(
       ctx,
       canvas.width,
@@ -114,6 +121,7 @@ export default function GameCanvas({
     settlerBereikbarePosities,
     legerkampBereikbarePosities,
     verkenningBereikbarePosities,
+    stijl,
   ]);
 
   function handleClick(event: MouseEvent<HTMLCanvasElement>) {

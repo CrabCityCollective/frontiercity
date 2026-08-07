@@ -15,7 +15,7 @@
 // speler begint de tutorial opnieuw (hoofdstuk 4/11, permadeath-risico op
 // run-niveau i.p.v. alleen stadsniveau).
 
-import { City, GameState } from "./types";
+import { City, GameState, MateriaalType } from "./types";
 import { hoogsteOntgrendeldeLaag } from "./world";
 import { isTileVerbondenMetStad } from "./wegen";
 import { berekenVoedselNetto } from "./productie";
@@ -149,14 +149,24 @@ export function bevestigIneenstorting(state: GameState): GameState {
 
 // Statistieken voor het historiescherm van de lopende run (issue:
 // "spel-icoontje ... historie van deze run ... aantal improvements gebouwd,
-// hoeveel vervallen, hoeveel steden, en je grootste stad"). Hergebruikt
-// `telLandTiles` (M6) — "gebouwd" telt hier voltooide land-tiles
-// (actief + ghost_town), dezelfde definitie als de verval-drempel gebruikt.
+// hoeveel vervallen, hoeveel steden, en je grootste stad"; uitgebreid met
+// issue "Settings uitbreiden": aanvallen, afgeslagen aanvallen, gesloopte
+// wachttorens en gegeven tribuut). Hergebruikt `telLandTiles` (M6) —
+// "gebouwd" telt hier voltooide land-tiles (actief + ghost_town), dezelfde
+// definitie als de verval-drempel gebruikt. De indringers-cijfers komen
+// rechtstreeks uit `state.indringersStatistieken` (zie types.ts) — die
+// worden al bijgehouden door `verwerkIndringers`/`geefTribuut`
+// (indringersEnDieren.ts), hier alleen doorgegeven.
 export function berekenHistorieStatistieken(state: GameState): {
   improvementenGebouwd: number;
   vervallen: number;
   steden: number;
   grootsteStad: City["grootte"];
+  aanvallenTotaal: number;
+  aanvallenAfgeslagen: number;
+  wachttorensGesloopt: number;
+  tribuutGegevenAantal: number;
+  tribuutGegeven: Record<MateriaalType, number>;
 } {
   const { totaal, ghostTowns } = telLandTiles(state);
   return {
@@ -164,5 +174,10 @@ export function berekenHistorieStatistieken(state: GameState): {
     vervallen: ghostTowns,
     steden: 1, // MVP: precies 1 stad per run (hoofdstuk 13)
     grootsteStad: state.stad.grootte,
+    aanvallenTotaal: state.indringersStatistieken.aanvallenTotaal,
+    aanvallenAfgeslagen: state.indringersStatistieken.aanvallenAfgeslagen,
+    wachttorensGesloopt: state.indringersStatistieken.wachttorensGesloopt,
+    tribuutGegevenAantal: state.indringersStatistieken.tribuutGegevenAantal,
+    tribuutGegeven: state.indringersStatistieken.tribuutGegeven,
   };
 }
