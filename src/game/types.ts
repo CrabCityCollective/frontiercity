@@ -595,6 +595,14 @@ export interface GameState {
   // meldings-vlag (geen keuze), zelfde patroon als `kuddeEvent` hierboven; de
   // speler klikt 'm gewoon weg via `sluitAmberOntdektMelding`.
   amberOntdektEvent?: boolean;
+  // Tweede Amberader-ontdekking (hoofdstuk 3/11/14, issue: "Amberader
+  // sowieso op laag 12"): zelfde meldings-vlag-patroon als
+  // `amberOntdektEvent` hierboven, maar gezet zodra laag
+  // `AMBER_ONTDEKKING_LAAG_2` (world.ts) voor het eerst ontgrendeld wordt —
+  // de gegarandeerde tweede Amberader-locatie, softlock-preventie vlak vóór
+  // de Bezette Laag. Los gehouden van `amberOntdektEvent` zodat beide
+  // meldingen onafhankelijk van elkaar getriggerd en weggeklikt worden.
+  tweedeAmberOntdektEvent?: boolean;
   // Gezet zodra een roofdier de settler daadwerkelijk doodt (hoofdstuk 17,
   // issue: "roofdieren toevoegen"). Voorkomt dat de "settler verschijnt bij
   // beurt 2"-vangnet in `volgendeBeurt` (economie.ts) hem daarna gratis laat

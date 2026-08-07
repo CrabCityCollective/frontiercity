@@ -50,6 +50,7 @@ import {
   heeftOfferAltaar,
   kanVerkennen,
   sluitAmberOntdektMelding,
+  sluitTweedeAmberOntdektMelding,
   verken,
   VERKENNING_KOSTEN_WETENSCHAP,
 } from "./laagOntgrendeling";
@@ -83,7 +84,13 @@ import {
 } from "./improvements";
 import { wetenschapKostenVoorDrempel } from "./techTree";
 import { GameState, Improvement } from "./types";
-import { AMBER_ONTDEKKING_LAAG, BEZETTE_LAAG_HOOGTE, cultuurKostenVoorLaag, VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
+import {
+  AMBER_ONTDEKKING_LAAG,
+  AMBER_ONTDEKKING_LAAG_2,
+  BEZETTE_LAAG_HOOGTE,
+  cultuurKostenVoorLaag,
+  VOEDSEL_DREMPEL_GROEI_GROOT,
+} from "./world";
 
 // Vervangt `Math.random` tijdelijk door een vaste waarde, zodat de
 // kans-gedreven roofdier-/kuddelogica deterministisch te testen is — altijd
@@ -767,6 +774,34 @@ test("amberOntdektEvent wordt precies één keer gezet, zodra AMBER_ONTDEKKING_L
 
   const nogEenBeurt = volgendeBeurt(gesloten);
   assert.equal(nogEenBeurt.amberOntdektEvent, undefined, "geen herhaalde melding zodra de laag al ontgrendeld is");
+});
+
+// Softlock-preventie (issue: "Amberader sowieso op laag 12"): een tweede
+// gegarandeerde Amberader-locatie op laag 11, positie 2 — een bergvakje —
+// zodat een speler die de eerste Amberader liet uitputten zonder Markt nog
+// op tijd goud kan opbouwen vóór de Bezette Laag (laag 12) Offer
+// Altaar/Legerkamp vereist.
+test("tweedeAmberOntdektEvent wordt precies één keer gezet, zodra AMBER_ONTDEKKING_LAAG_2 voor het eerst ontgrendelt", () => {
+  let state = maakInitieleSpelStatus();
+  const laag11 = state.lagen.find((l) => l.hoogte === AMBER_ONTDEKKING_LAAG_2)!;
+  assert.equal(laag11.tiles[2].amber, true, "de gegarandeerde tweede amberader-vondst");
+  assert.equal(laag11.tiles[2].terrein, "berg", "op een berg- of heuvelvakje, zoals de eerste Amberader");
+
+  state = { ...state, cultuur: cultuurKostenVoorLaag(AMBER_ONTDEKKING_LAAG_2) };
+
+  const naOntgrendeling = volgendeBeurt(state);
+  assert.equal(naOntgrendeling.lagen.find((l) => l.hoogte === AMBER_ONTDEKKING_LAAG_2)!.ontgrendeld, true);
+  assert.equal(naOntgrendeling.tweedeAmberOntdektEvent, true);
+
+  const gesloten = sluitTweedeAmberOntdektMelding(naOntgrendeling);
+  assert.equal(gesloten.tweedeAmberOntdektEvent, undefined);
+
+  const nogEenBeurt = volgendeBeurt(gesloten);
+  assert.equal(
+    nogEenBeurt.tweedeAmberOntdektEvent,
+    undefined,
+    "geen herhaalde melding zodra de laag al ontgrendeld is"
+  );
 });
 
 test("versnelBouwMetGoud koopt de volledige resterende bouwtijd van een land-tile af als er genoeg goud is", () => {

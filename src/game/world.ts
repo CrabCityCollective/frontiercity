@@ -99,6 +99,17 @@ function versWaterVoorTile(hoogte: number, positieInLaag: number): boolean {
 // 3/14) triggert.
 export const AMBER_ONTDEKKING_LAAG = 7;
 
+// Laag waarop de tweede, gegarandeerde Amberader-locatie beschikbaar komt
+// (issue: "Amberader sowieso op laag 12" — softlock-preventie): een speler
+// die de eerste Amberader (laag 7) liet uitputten zonder ooit een Markt te
+// bouwen, zou anders zonder lopend goud-inkomen tegen de Bezette Laag (laag
+// 12, hoofdstuk 6) kunnen aanlopen terwijl zowel Offer Altaar als Legerkamp
+// goud vereisen (hoofdstuk 11/14). Bewust vlak vóór laag 12 gekozen — laat
+// (de speler heeft de kans gehad zelf een Markt te bouwen) maar nog op tijd
+// om alsnog goud op te bouwen. Zelfde trigger-patroon als
+// `AMBER_ONTDEKKING_LAAG` hierboven.
+export const AMBER_ONTDEKKING_LAAG_2 = 11;
+
 // Vakjes met een amberader — de vondst-eis van de Amberader/goudmijn-
 // improvement (hoofdstuk 3/14), bovenop de gewone heuvel/berg-terreineis van
 // een mijn (zie `improvementPastOpTile` in improvements.ts). Bewust schaarser
@@ -108,7 +119,8 @@ export const AMBER_ONTDEKKING_LAAG = 7;
 // niet-procedureel (net als `TUTORIAL_VERS_WATER` hierboven) en bewust zo
 // gekozen dat laag `AMBER_ONTDEKKING_LAAG` de eerste is met zo'n vakje — de
 // speler heeft dus nooit pech en hoeft nooit voorbij die laag te zoeken naar
-// de eerste kans op een Amberader.
+// de eerste kans op een Amberader. Laag `AMBER_ONTDEKKING_LAAG_2` (positie 2,
+// een bergvakje) is op dezelfde manier gegarandeerd de tweede vondst.
 const TUTORIAL_AMBER: Record<number, number[]> = {
   7: [0],
   8: [5],

@@ -33,6 +33,7 @@ import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { verhuldeBezetteLaagPosities } from "@/game/laagOntgrendeling";
+import { AMBER_ONTDEKKING_TWEEDE_TEKST, AMBER_ONTDEKKING_TWEEDE_TITEL } from "@/game/tutorialContent";
 import { berekenLegerwaarde, onbemandeLegerkampPosities } from "@/game/militair";
 import { heeftGebouwdeMijn, heeftWerkendeBoerderij } from "@/game/productie";
 import { grafischeStijl, heeftOpgeslagenSpel, markeerTutorialVoltooid, zetGrafischeStijl } from "@/game/save";
@@ -87,6 +88,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     sluitKuddeMelding,
     sluitRoofdierMelding,
     sluitAmberOntdektMelding,
+    sluitTweedeAmberOntdektMelding,
     versnelBouwMetGoud,
     versnelCivielMetGoud,
     versnelOpslagplaatsMetGoud,
@@ -644,6 +646,27 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonKuddePopup &&
     !toonRoofdierPopup &&
     Boolean(state.amberOntdektEvent);
+  // Tweede Amberader-ontdekkingspop-up (hoofdstuk 3/11/14, issue: "Amberader
+  // sowieso op laag 12") — zelfde blokkerende vorm en prioriteit als de
+  // eerste Amberader-pop-up hierboven, één stap lager zodat de eerste vondst
+  // altijd voorrang krijgt als beide toevallig in dezelfde beurt triggeren.
+  const toonTweedeAmberOntdektPopup =
+    !toonLaagPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteLaagOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    Boolean(state.tweedeAmberOntdektEvent);
   // Technologie-keuze-pop-up (hoofdstuk 3/9/11, issue: "tech tree toevoegen"
   // Deel 2) — verschijnt zodra `verwerkTechDrempel` (economie.ts) een drempel
   // bereikt heeft. Net als de indringers-/kudde-/roofdier-pop-ups hierboven
@@ -665,6 +688,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonKuddePopup &&
     !toonRoofdierPopup &&
     !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
     Boolean(state.techKeuzeEvent);
   // Vijandelijk-Heiligdom-onthuld-/vernietigd-pop-ups (hoofdstuk 6, issue:
   // "De Bezette Laag, missionaris en verkenner", Deel 4) — zelfde
@@ -688,6 +712,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonKuddePopup &&
     !toonRoofdierPopup &&
     !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     Boolean(state.vijandelijkHeiligdomOnthuldEvent);
   const toonVijandelijkHeiligdomVernietigdPopup =
@@ -706,6 +731,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonKuddePopup &&
     !toonRoofdierPopup &&
     !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     Boolean(state.vijandelijkHeiligdomVernietigdEvent);
@@ -729,6 +755,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonKuddePopup &&
     !toonRoofdierPopup &&
     !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVernietigdPopup &&
@@ -844,6 +871,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           <RoofdierPopup event={state.roofdierEvent} onSluiten={sluitRoofdierMelding} />
         )}
         {toonAmberOntdektPopup && <AmberOntdektPopup onSluiten={sluitAmberOntdektMelding} />}
+        {toonTweedeAmberOntdektPopup && (
+          <AmberOntdektPopup
+            titel={AMBER_ONTDEKKING_TWEEDE_TITEL}
+            tekst={AMBER_ONTDEKKING_TWEEDE_TEKST}
+            onSluiten={sluitTweedeAmberOntdektMelding}
+          />
+        )}
         {toonTechKeuzePopup && state.techKeuzeEvent && (
           <TechKeuzePopup
             drempel={state.techKeuzeEvent.drempel}
@@ -921,6 +955,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonKuddePopup &&
             !toonRoofdierPopup &&
             !toonAmberOntdektPopup &&
+            !toonTweedeAmberOntdektPopup &&
             !toonTechKeuzePopup &&
             !toonVijandelijkHeiligdomOnthuldPopup &&
             !toonVijandelijkHeiligdomVernietigdPopup &&
