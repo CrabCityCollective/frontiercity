@@ -1,7 +1,8 @@
 "use client";
 
+import ResourceIcoon from "@/components/ResourceIcoon";
 import { laagContent } from "@/game/tutorialContent";
-import { City, Layer } from "@/game/types";
+import { City, Layer, MateriaalType } from "@/game/types";
 import { hoogsteOntgrendeldeLaag } from "@/game/world";
 
 const STAD_GROOTTE_LABELS: Record<City["grootte"], string> = {
@@ -17,15 +18,24 @@ interface HistoriePaneelProps {
     vervallen: number;
     steden: number;
     grootsteStad: City["grootte"];
+    aanvallenTotaal: number;
+    aanvallenAfgeslagen: number;
+    wachttorensGesloopt: number;
+    tribuutGegevenAantal: number;
+    tribuutGegeven: Record<MateriaalType, number>;
   };
   onSluiten: () => void;
 }
 
-// Historiescherm (issue: "spel-icoontje ... historie van deze run inzien"):
-// toont, in volgorde, de mechaniek/flavor-tekst van elke laag die de speler
-// al ontgrendeld heeft (dezelfde vastgelegde tutorial-content als
-// LaagIntroPaneel, hier alleen achteraf terugkijkend i.p.v. alleen de
-// huidige laag), plus een paar samengevatte run-statistieken.
+// Historiescherm (issue: "spel-icoontje ... historie van deze run inzien";
+// uitgebreid met issue "Settings uitbreiden": aanvallen, afgeslagen aanvallen,
+// gesloopte wachttorens en gegeven tribuut): toont, in volgorde, de
+// mechaniek/flavor-tekst van elke laag die de speler al ontgrendeld heeft
+// (dezelfde vastgelegde tutorial-content als LaagIntroPaneel, hier alleen
+// achteraf terugkijkend i.p.v. alleen de huidige laag), plus een paar
+// samengevatte run-statistieken. Bereikbaar via het hoofdmenu (HoofdMenu) in
+// plaats van een los spel-icoontje (issue: "de historie ... toevoegen aan het
+// menu, ipv dat het een zelfstandige button is").
 export default function HistoriePaneel({ lagen, statistieken, onSluiten }: HistoriePaneelProps) {
   const hoogste = hoogsteOntgrendeldeLaag(lagen);
   const regels = Array.from({ length: hoogste }, (_, i) => i + 1)
@@ -33,6 +43,11 @@ export default function HistoriePaneel({ lagen, statistieken, onSluiten }: Histo
     .filter((regel): regel is { hoogte: number; content: NonNullable<ReturnType<typeof laagContent>> } =>
       Boolean(regel.content)
     );
+  // Alleen grondstoffen tonen die daadwerkelijk als tribuut gegeven zijn —
+  // een rijtje met louter nullen voegt niets toe.
+  const tribuutTypes = (Object.keys(statistieken.tribuutGegeven) as MateriaalType[]).filter(
+    (type) => statistieken.tribuutGegeven[type] > 0
+  );
 
   return (
     <div
@@ -75,6 +90,24 @@ export default function HistoriePaneel({ lagen, statistieken, onSluiten }: Histo
           <span>Vervallen: {statistieken.vervallen}</span>
           <span>Steden: {statistieken.steden}</span>
           <span>Grootste stad: {STAD_GROOTTE_LABELS[statistieken.grootsteStad]}</span>
+          <span>Aangevallen: {statistieken.aanvallenTotaal}</span>
+          <span>Aanval afgeslagen: {statistieken.aanvallenAfgeslagen}</span>
+          <span>Wachttorens gesloopt: {statistieken.wachttorensGesloopt}</span>
+          <span>
+            Tribuut gegeven: {statistieken.tribuutGegevenAantal}
+            {tribuutTypes.length > 0 && (
+              <>
+                {" ("}
+                {tribuutTypes.map((type, i) => (
+                  <span key={type}>
+                    {i > 0 && ", "}
+                    <ResourceIcoon type={type} waarde={statistieken.tribuutGegeven[type]} />
+                  </span>
+                ))}
+                {")"}
+              </>
+            )}
+          </span>
         </div>
 
         <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.6rem" }}>

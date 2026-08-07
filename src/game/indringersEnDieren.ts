@@ -300,6 +300,21 @@ export function verwerkIndringers(state: GameState): GameState {
       };
     }
 
+    // Historiescherm-statistieken (issue: "hoe vaak je aangevallen bent, en
+    // hoe vaak de aanval succesvol is afgeslagen ... hoeveel wachttorens door
+    // indringers zijn gesloopt") — elk incident met een beschermende
+    // Wachttoren is een "aanval"; alleen de malus-uitkomst telt als gesloopt.
+    const statistieken = state.indringersStatistieken;
+    volgendeState = {
+      ...volgendeState,
+      indringersStatistieken: {
+        ...statistieken,
+        aanvallenTotaal: statistieken.aanvallenTotaal + 1,
+        aanvallenAfgeslagen: statistieken.aanvallenAfgeslagen + (uitkomst === "malus" ? 0 : 1),
+        wachttorensGesloopt: statistieken.wachttorensGesloopt + (uitkomst === "malus" ? 1 : 0),
+      },
+    };
+
     const uitkomstFase = uitkomst === "standhouden" ? "gemeld" : uitkomst;
     return {
       ...volgendeState,
@@ -492,5 +507,20 @@ export function geefTribuut(state: GameState): GameState {
 
   const voorraad = { ...state.voorraad };
   voorraad[event.tribuut.resource] = Math.max(0, voorraad[event.tribuut.resource] - event.tribuut.aantal);
-  return { ...state, voorraad, indringersEvent: undefined };
+
+  // Historiescherm-statistieken (issue: "hoevaak tribuut gegeven is (met
+  // exacte aantallen voorraad tribuut)") — telt hier, niet al bij
+  // `kiesGeefTribuut`/`bevestigGedwongenTribuut`, dezelfde reden als de
+  // voorraad-afschrijving hierboven: pas als de speler de melding echt sluit.
+  const statistieken = state.indringersStatistieken;
+  const indringersStatistieken = {
+    ...statistieken,
+    tribuutGegevenAantal: statistieken.tribuutGegevenAantal + 1,
+    tribuutGegeven: {
+      ...statistieken.tribuutGegeven,
+      [event.tribuut.resource]: statistieken.tribuutGegeven[event.tribuut.resource] + event.tribuut.aantal,
+    },
+  };
+
+  return { ...state, voorraad, indringersEvent: undefined, indringersStatistieken };
 }

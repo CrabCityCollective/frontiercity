@@ -57,5 +57,13 @@ export function maakInitieleSpelStatus(): GameState {
     // bepaalt de startwaarde; de per-run toggle in het hoofdmenu wijzigt
     // daarna alleen deze ene run.
     uitlegPopupsAan: standaardUitlegAan(),
+    // Zie types.ts: `IndringersStatistieken` — begint leeg bij elke nieuwe run.
+    indringersStatistieken: {
+      aanvallenTotaal: 0,
+      aanvallenAfgeslagen: 0,
+      wachttorensGesloopt: 0,
+      tribuutGegevenAantal: 0,
+      tribuutGegeven: { hout: 0, steen: 0, erts: 0, goud: 0 },
+    },
   };
 }

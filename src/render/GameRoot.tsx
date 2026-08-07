@@ -19,7 +19,6 @@ import ResourceHud from "@/components/ResourceHud";
 import RoofdierPopup from "@/components/RoofdierPopup";
 import SettlerPaneel from "@/components/SettlerPaneel";
 import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
-import SpelActiesMenu from "@/components/SpelActiesMenu";
 import StadMenuPopup from "@/components/StadMenuPopup";
 import StadUpgradeUitlegPopup from "@/components/StadUpgradeUitlegPopup";
 import StichtStadPopup from "@/components/StichtStadPopup";
@@ -37,7 +36,7 @@ import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/impro
 import { verhuldeBezetteLaagPosities } from "@/game/laagOntgrendeling";
 import { berekenLegerwaarde, onbemandeLegerkampPosities } from "@/game/militair";
 import { heeftGebouwdeMijn, heeftWerkendeBoerderij } from "@/game/productie";
-import { heeftOpgeslagenSpel, markeerTutorialVoltooid } from "@/game/save";
+import { grafischeStijl, heeftOpgeslagenSpel, markeerTutorialVoltooid, zetGrafischeStijl } from "@/game/save";
 import { beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { berekenHistorieStatistieken } from "@/game/uitputtingEnVerval";
@@ -114,7 +113,22 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   } = useGameEngine();
 
   // Historiescherm is een losse volledig-schermige pop-up, geen aan/uit-paneel.
+  // Bereikbaar via het hoofdmenu (issue: "Settings uitbreiden" — "de
+  // historie van de run toevoegen aan het menu, ipv dat het een
+  // zelfstandige button is"), niet meer via een los spel-icoontje.
   const [toonHistorie, setToonHistorie] = useState(false);
+
+  // Grafische stijl (issue: "Settings uitbreiden" — "on the fly kunnen
+  // wisselen tussen pixel art en vector art"): als losse state hier i.p.v.
+  // GameCanvas 'm zelf uit save.ts te laten lezen, zodat een toggle via het
+  // hoofdmenu meteen een herteken triggert (zie GameCanvas: `stijl`-prop) in
+  // plaats van pas bij de volgende (her)start van dit scherm.
+  const [stijl, setStijl] = useState(grafischeStijl);
+  function toggleStijl() {
+    const nieuweStijl = stijl === "vector" ? "pixel-art" : "vector";
+    setStijl(nieuweStijl);
+    zetGrafischeStijl(nieuweStijl);
+  }
 
   // Stadsmenu-pop-up (issue: "city improvement menu toevoegen"): bundelt alle
   // stad-acties (civiel/groei, opslagplaats, militair) die voorheen als losse
@@ -781,8 +795,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         onVerlaten={onVerlaten}
         uitlegAan={uitlegAan}
         onToggleUitleg={() => zetUitlegPopups(!uitlegAan)}
+        stijl={stijl}
+        onToggleStijl={toggleStijl}
+        onToonHistorie={() => setToonHistorie((open) => !open)}
       />
-      <SpelActiesMenu onToonHistorie={() => setToonHistorie((open) => !open)} />
       <div className="game-scroll-area" ref={scrollRef}>
         <GameCanvas
           lagen={zichtbareLagenState}
@@ -792,6 +808,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           settlerBereikbarePosities={settlerBereikbarePosities}
           legerkampBereikbarePosities={legerkampBereikbarePosities}
           verkenningBereikbarePosities={verkenningBereikbarePosities}
+          stijl={stijl}
           onTileClick={handleTileClick}
         />
         <LaagIntroPaneel lagen={state.lagen} />

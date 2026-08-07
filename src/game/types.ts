@@ -463,6 +463,25 @@ export interface IndringersEvent {
   fase: "amber-onder-vuur" | "gemeld" | "malus" | "bonus" | "geforceerd" | "betaald";
 }
 
+// Cumulatieve indringers-statistieken voor het historiescherm van deze run
+// (issue: "hoe vaak je aangevallen bent, en hoe vaak de aanval succesvol is
+// afgeslagen, hoeveel tribuut gegeven is (met exacte aantallen), en hoeveel
+// wachttorens door indringers zijn gesloopt"). Een "aanval" is elk
+// indringers-incident op een laag met een beschermende Wachttoren (zie
+// `verwerkIndringers` in indringersEnDieren.ts) — zonder Wachttoren eisen de
+// indringers in plaats daarvan tribuut, dat hier los geteld wordt.
+// `aanvallenAfgeslagen` telt de uitkomsten "standhouden" en "bonus" (de
+// Wachttoren hield stand); `wachttorensGesloopt` telt de "malus"-uitkomst
+// (de Wachttoren wordt een ruïne) — samen dus altijd gelijk aan
+// `aanvallenTotaal`.
+export interface IndringersStatistieken {
+  aanvallenTotaal: number;
+  aanvallenAfgeslagen: number;
+  wachttorensGesloopt: number;
+  tribuutGegevenAantal: number;
+  tribuutGegeven: Record<MateriaalType, number>;
+}
+
 // Kudde-melding (hoofdstuk 17: "verschijnt een kudde, dan meldt een pop-up
 // dit meteen — dezelfde stijl als de indringers-pop-up"), gezet door
 // `verwerkKuddes` in economie.ts zodra er een nieuwe wilde kudde verschijnt.
@@ -609,4 +628,10 @@ export interface GameState {
   // laag-flavor, indringers-meldingen en de tutorial-voltooid-samenvatting
   // ongemoeid — dat is kerninhoud, geen uitleg.
   uitlegPopupsAan: boolean;
+  // Cumulatieve indringers-statistieken van deze run (issue: "Settings
+  // uitbreiden" — uitgebreid historiescherm), zie `IndringersStatistieken`
+  // hierboven. Bijgehouden door `verwerkIndringers`/`geefTribuut`
+  // (indringersEnDieren.ts), getoond door `berekenHistorieStatistieken`
+  // (uitputtingEnVerval.ts) via HistoriePaneel.
+  indringersStatistieken: IndringersStatistieken;
 }

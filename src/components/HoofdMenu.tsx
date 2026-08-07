@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { GrafischeStijl } from "@/game/save";
+import SpelInstellingenPopup from "./SpelInstellingenPopup";
 
 interface HoofdMenuProps {
   onOpslaan: () => void;
@@ -9,17 +11,40 @@ interface HoofdMenuProps {
   onVerlaten: () => void;
   // Per-run uitleg-pop-ups-toggle (issue: "een nieuwe optie erbij in het
   // menu waar nu ook 'opslaan' en 'spel verlaten' staat, waarmee je voor
-  // deze run specifiek de uitleg popups aan kunt zetten, en uit").
+  // deze run specifiek de uitleg popups aan kunt zetten, en uit") — sinds
+  // issue "Settings uitbreiden" bereikbaar via de "Instellingen"-knop
+  // hieronder in plaats van een losse knop hier in het menu zelf.
   uitlegAan: boolean;
   onToggleUitleg: () => void;
+  // On-the-fly grafische-stijl-toggle (issue: "Settings uitbreiden" — "een
+  // button ... waarmee je on the fly kunt wisselen tussen pixel art en
+  // vector art"), zelfde plek in de instellingen-pop-up als de uitleg-toggle
+  // hierboven.
+  stijl: GrafischeStijl;
+  onToggleStijl: () => void;
+  // Historie-knop (issue: "Settings uitbreiden" — "de historie van de run
+  // toevoegen aan het menu, ipv dat het een zelfstandige button is"):
+  // vervangt het losse spel-icoontje dat hiervoor bestond (SpelActiesMenu).
+  onToonHistorie: () => void;
 }
 
 // Zwevend menu-icoontje rechtsboven (issue: "niet automatisch opslaan, maar
 // een menu-icoontje ... opslaan en oudere games ... inladen ... spel
 // verlaten"). Puur een klein pop-overpaneel — geen navigatie-state, dat blijft
 // bij AppRoot/GameRoot.
-export default function HoofdMenu({ onOpslaan, onLaden, kanLaden, onVerlaten, uitlegAan, onToggleUitleg }: HoofdMenuProps) {
+export default function HoofdMenu({
+  onOpslaan,
+  onLaden,
+  kanLaden,
+  onVerlaten,
+  uitlegAan,
+  onToggleUitleg,
+  stijl,
+  onToggleStijl,
+  onToonHistorie,
+}: HoofdMenuProps) {
   const [open, setOpen] = useState(false);
+  const [toonInstellingen, setToonInstellingen] = useState(false);
 
   return (
     <div style={{ position: "fixed", top: "0.75rem", right: "0.75rem", zIndex: 50 }}>
@@ -69,10 +94,23 @@ export default function HoofdMenu({ onOpslaan, onLaden, kanLaden, onVerlaten, ui
           </button>
           <button
             className="fc-knop"
-            onClick={onToggleUitleg}
+            onClick={() => {
+              onToonHistorie();
+              setOpen(false);
+            }}
             style={{ padding: "0.35rem 0.75rem" }}
           >
-            Uitleg pop-ups: {uitlegAan ? "aan" : "uit"}
+            Historie
+          </button>
+          <button
+            className="fc-knop"
+            onClick={() => {
+              setToonInstellingen(true);
+              setOpen(false);
+            }}
+            style={{ padding: "0.35rem 0.75rem" }}
+          >
+            Instellingen
           </button>
           <button
             className="fc-knop"
@@ -85,6 +123,16 @@ export default function HoofdMenu({ onOpslaan, onLaden, kanLaden, onVerlaten, ui
             Spel verlaten
           </button>
         </div>
+      )}
+
+      {toonInstellingen && (
+        <SpelInstellingenPopup
+          uitlegAan={uitlegAan}
+          onToggleUitleg={onToggleUitleg}
+          stijl={stijl}
+          onToggleStijl={onToggleStijl}
+          onSluiten={() => setToonInstellingen(false)}
+        />
       )}
     </div>
   );
