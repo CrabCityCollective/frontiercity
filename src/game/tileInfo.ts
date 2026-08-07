@@ -185,9 +185,13 @@ export function beschrijfTile(
         ? ` Nog ${tile.beurtenTotUitputting} beurten actief voordat het uitgeput raakt.`
         : "";
     // Wegverbinding (M10, hoofdstuk 16): alleen relevant voor land
-    // improvements — de stad zelf heeft geen wegverbinding nodig.
+    // improvements — de stad zelf heeft geen wegverbinding nodig. Vijandelijke
+    // tile-varianten (dreiging/belegeringsdoel, hoofdstuk 6) produceren of
+    // verdedigen niets en zijn nooit wegverbonden — de wegverbindings-tekst
+    // (die over "niets afleggen" gaat) is daar dus altijd misleidend en
+    // irrelevant.
     const wegStatus =
-      tile.improvement.soort === "land"
+      tile.improvement.soort === "land" && !tile.improvement.vijandelijk
         ? isTileVerbondenMetStad(lagen, laag.hoogte, positieInLaag)
           ? " Verbonden met de stad via een weg."
           : " Nog niet verbonden met de stad — legt pas iets af zodra de settler op dit vakje zelf een weg heeft aangelegd, verbonden met het wegennetwerk naar de stad."
