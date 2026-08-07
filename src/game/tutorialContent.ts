@@ -134,7 +134,7 @@ export function laagContent(hoogte: number): LaagContent | undefined {
 // MILITAIR_UITLEG_*-pop-up volledig.
 export const BEZETTE_LAAG_TITEL = "De Bergkam is bezet";
 export const BEZETTE_LAAG_TEKST =
-  "Op de bergkam staan wachttorens en heiligdommen die niet van het Hertenpad-volk zijn — en her en der een verlaten huisje. Hier kun je niet zomaar bouwen of verkennen, en cultuur werkt hier anders: ze stapelt niet meer op zolang deze laag bezet blijft. Leid een Verkenner op om de bergkam vakje voor vakje te onthullen, en een Missionaris om de heiligdommen te belegeren. Vijandelijke wachttorens vereisen een Confrontatie — en daarvoor heb je eerst een eigen, bemande wachttoren op de laag eronder nodig.";
+  "Op de bergkam staan een wachttoren en een heiligdom die niet van het Hertenpad-volk zijn — en her en der een verlaten huisje. Hier kun je niet zomaar bouwen of verkennen, en cultuur werkt hier anders: ze stapelt niet meer op zolang deze laag bezet blijft. Leid een Verkenner op om de bergkam vakje voor vakje te onthullen, en een Missionaris om het heiligdom te belegeren. De vijandelijke wachttoren vereist een Confrontatie — en daarvoor heb je eerst een eigen, bemande wachttoren op de laag eronder nodig. Pas als zowel het heiligdom als de wachttoren vernietigd zijn, gaat de bergkam open voor je settler en voor nieuwe bebouwing.";
 
 // Vijandelijk-Heiligdom-onthuld-/vernietigd-pop-up (Deel 4) — zelfde
 // blokkerende overlay als hierboven, maar twee losse momenten van dezelfde

@@ -84,6 +84,7 @@ import {
 } from "./improvements";
 import { wetenschapKostenVoorDrempel } from "./techTree";
 import { GameState, Improvement } from "./types";
+import { bereikbarePosities } from "./wegen";
 import {
   AMBER_ONTDEKKING_LAAG,
   AMBER_ONTDEKKING_LAAG_2,
@@ -991,7 +992,7 @@ function metBeschermdeLaag(): GameState {
   };
 }
 
-test("malus-uitkomst: een beschermde laag kan de Wachttoren toch verliezen — zelfde afhandeling als een verloren Confrontatie tegen een Bezette Laag (issue: wachttorens kunnen vernietigd worden door indringers)", () => {
+test("malus-uitkomst: een beschermde laag kan de Wachttoren toch verliezen (issue: wachttorens kunnen vernietigd worden door indringers) — dit passieve incident blijft de Wachttoren zelf raken, anders dan de lichtere straf van een verloren Confrontatie tegen een Bezette Laag (issue: laatste confrontatie tweaken)", () => {
   let state = metBeschermdeLaag();
 
   // kans-check (0) → incident; laag-trekking (0) → laag 1 (de beschermde
@@ -1007,6 +1008,11 @@ test("malus-uitkomst: een beschermde laag kan de Wachttoren toch verliezen — z
   assert.equal(wachttorenTile?.status, "ruine", "de beschermende Wachttoren-tile vervalt tot ruïne");
   assert.equal(wachttorenTile?.improvement, undefined);
   assert.equal(state.stad.strijders.length, 0, "de bemannende strijder is blijvend verloren, geen reassignment");
+
+  const naHerbouw = startBouw(state, 2, WACHTTOREN, 4);
+  const herbouwdeTile = naHerbouw.lagen.find((l) => l.hoogte === 2)!.tiles[4];
+  assert.equal(herbouwdeTile.status, "in_aanbouw", "een ruïne-tile is, net als een leeg vakje, weer normaal herbouwbaar");
+  assert.equal(herbouwdeTile.improvement?.id, "wachttoren");
 });
 
 test("bonus-uitkomst: de bemanning buit goud van de indringers (issue: wachttorens kunnen vernietigd worden door indringers)", () => {
@@ -1296,11 +1302,11 @@ test("bij het bereiken van de belegeringsdrempel wordt het onthulde vijandelijke
   assert.equal(heiligdomTile.status, "leeg", "opgeruimd — geen dreiging/doel meer");
   assert.equal(heiligdomTile.improvement, undefined);
   assert.equal(state.vijandelijkHeiligdomVernietigdEvent, true);
-  assert.equal(laag12.belegeringsVoortgang, 0, "de meter begint weer bij 0 voor het tweede Heiligdom (positie 6)");
-  assert.equal(laag12.bezet, true, "nog niet opgelost: het tweede Heiligdom (positie 6) staat nog, al dan niet onthuld");
+  assert.equal(laag12.belegeringsVoortgang, 0, "de meter begint weer bij 0, ook al is dit het enige Heiligdom");
+  assert.equal(laag12.bezet, true, "nog niet opgelost: de vijandelijke Wachttoren (positie 0) staat nog, al dan niet onthuld");
 });
 
-test("Deel 6: zodra alle vijandelijke Heiligdommen vernietigd zijn, wordt de hele Bezette Laag in één keer onthuld en eindigt de Bezette-status", () => {
+test("Deel 6: zodra zowel het vijandelijke Heiligdom als de vijandelijke Wachttoren vernietigd zijn, wordt de hele Bezette Laag in één keer onthuld en eindigt de Bezette-status", () => {
   let state = metBezetteLaagEnVerkenner();
   state = {
     ...state,
@@ -1310,11 +1316,19 @@ test("Deel 6: zodra alle vijandelijke Heiligdommen vernietigd zijn, wordt de hel
       return {
         ...laag,
         belegeringsVoortgang: BELEGERINGSDREMPEL - 1,
-        tiles: laag.tiles.map((tile) =>
-          tile.positieInLaag === 1 || tile.positieInLaag === 6
-            ? { ...tile, verhuld: false, status: "actief" as const, improvement: VIJANDELIJK_HEILIGDOM }
-            : tile
-        ),
+        tiles: laag.tiles.map((tile) => {
+          if (tile.positieInLaag === 1) {
+            return { ...tile, verhuld: false, status: "actief" as const, improvement: VIJANDELIJK_HEILIGDOM };
+          }
+          // De vijandelijke Wachttoren (positie 0) is al via een gewonnen
+          // Confrontatie opgeruimd (zie `confrontatieBezetteLaag`) — zonder
+          // dat is de laag met de nieuwe, uitgebreide opgelost-eis nog niet
+          // klaar (zie de test hieronder).
+          if (tile.positieInLaag === 0) {
+            return { ...tile, verhuld: false, status: "leeg" as const, improvement: undefined };
+          }
+          return tile;
+        }),
       };
     }),
   };
@@ -1333,11 +1347,52 @@ test("Deel 6: zodra alle vijandelijke Heiligdommen vernietigd zijn, wordt de hel
   assert.equal(laag12.bezet, false);
   assert.equal(laag12.ontgrendeld, true);
   assert.equal(laag12.tiles.every((t) => !t.verhuld), true, "ook nog niet individueel verkende vakjes zijn nu onthuld");
-  // Positie 0 werd nooit expliciet verkend, maar draagt "wachttoren" volgens
-  // de vaste tutorial-indeling (world.ts) en moet dus na de massale
-  // onthulling alsnog als vijandelijke Wachttoren zichtbaar zijn.
-  assert.equal(laag12.tiles[0].improvement?.id, "vijandelijke-wachttoren");
+  assert.equal(laag12.tiles[0].improvement, undefined, "de vijandelijke Wachttoren op positie 0 blijft opgeruimd");
   assert.equal(laag12.tiles[2].improvement?.id, "bezette-laag-huisje");
+});
+
+test("Deel 6, uitgebreid (issue: laatste confrontatie tweaken): een nog niet vernietigde vijandelijke Wachttoren houdt de Bezette Laag vergrendeld, ook als alle Heiligdommen al weg zijn", () => {
+  let state = metBezetteLaagEnVerkenner();
+  state = {
+    ...state,
+    stad: { ...state.stad, missionarissen: [{ id: "missionaris-0" }] },
+    lagen: state.lagen.map((laag) => {
+      if (laag.hoogte !== BEZETTE_LAAG_HOOGTE) return laag;
+      return {
+        ...laag,
+        belegeringsVoortgang: BELEGERINGSDREMPEL - 1,
+        tiles: laag.tiles.map((tile) =>
+          tile.positieInLaag === 1
+            ? { ...tile, verhuld: false, status: "actief" as const, improvement: VIJANDELIJK_HEILIGDOM }
+            : tile
+        ),
+      };
+    }),
+  };
+  state = metActiefHeiligdomOpLaag1(state);
+
+  state = metVasteRandom(0.99, () => {
+    let s = state;
+    for (let i = 0; i < BELEGERINGSDREMPEL + 1; i++) s = volgendeBeurt(s);
+    return s;
+  });
+
+  const laag12 = state.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!;
+  assert.equal(laag12.tiles[1].improvement, undefined, "het Heiligdom is wel vernietigd");
+  assert.equal(laag12.bezet, true, "de laag blijft bezet: de vijandelijke Wachttoren (positie 0) staat nog");
+  assert.equal(laag12.ontgrendeld, false);
+
+  assert.deepEqual(
+    bereikbarePosities(state.lagen, { hoogte: 11, positieInLaag: 4 }).find((p) => p.hoogte === 12),
+    undefined,
+    "de settler kan nog niet naar laag 12 bewegen"
+  );
+  assert.equal(
+    startBouw(state, BEZETTE_LAAG_HOOGTE, WACHTTOREN, 2).lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!.tiles[2]
+      .status,
+    "leeg",
+    "bouwen op de Bezette Laag zelf blijft geblokkeerd (het nog onthulde huisje-vakje blijft ongewijzigd)"
+  );
 });
 
 // Bouwt een vaste, wegverbonden corridor (positie 4, elke laag 1..totHoogte)
@@ -1402,7 +1457,7 @@ test("confrontatieBezetteLaag: winst ruimt de vijandelijke Wachttoren-tile op (g
   assert.equal(naWinst.stad.strijders.length, 1);
 });
 
-test("confrontatieBezetteLaag: verlies maakt de eigen Wachttoren een ruïne en kost de bemannende strijder permanent, maar spaart Legerkamp-strijders", () => {
+test("confrontatieBezetteLaag: verlies kost de bemannende strijder permanent, maar de eigen Wachttoren blijft intact — lichtere straf (issue: laatste confrontatie tweaken), en Legerkamp-strijders blijven sowieso gespaard", () => {
   let state = metBezetteLaagEnVerkenner();
   state = verken(state, 0);
   state = metBeschermendeWachttorenOpLaag11(state);
@@ -1432,29 +1487,20 @@ test("confrontatieBezetteLaag: verlies maakt de eigen Wachttoren een ruïne en k
   const naVerlies = metVasteRandom(0.999999, () => confrontatieBezetteLaag(state, 0));
   assert.equal(naVerlies.laatsteConfrontatieBezetteLaag?.gewonnen, false);
 
+  // De eigen beschermende Wachttoren zelf blijft gewoon staan (geen ruïne
+  // meer) — alleen de bemanning is kwijt, dus de toren staat er nu onbemand
+  // bij (`isWachttorenBemand` zou hier false geven).
   const wachttorenTile = naVerlies.lagen.find((l) => l.hoogte === 11)!.tiles[4];
-  assert.equal(wachttorenTile.status, "ruine");
-  assert.equal(wachttorenTile.improvement, undefined);
+  assert.equal(wachttorenTile.status, "actief");
+  assert.equal(wachttorenTile.improvement?.id, "wachttoren");
 
   assert.equal(naVerlies.stad.strijders.length, 1, "de Wachttoren-bemanning is blijvend verloren");
   assert.equal(naVerlies.stad.strijders[0].id, "strijder-legerkamp", "de Legerkamp-strijder blijft behouden");
 
   // De vijandelijke Wachttoren-tile zelf blijft gewoon staan (geen doel meer
-  // beschadigd of opgeruimd) — alleen de eigen verdediging is geraakt.
+  // beschadigd of opgeruimd) — alleen de eigen bemanning is geraakt.
   const vijandTile = naVerlies.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!.tiles[0];
   assert.equal(vijandTile.improvement?.id, "vijandelijke-wachttoren");
-});
-
-test("een ruïne-tile is, net als een leeg vakje, weer normaal herbouwbaar tegen de normale kosten/bouwtijd", () => {
-  let state = metBezetteLaagEnVerkenner();
-  state = verken(state, 0);
-  state = metBeschermendeWachttorenOpLaag11(state);
-  state = metVasteRandom(0.999999, () => confrontatieBezetteLaag(state, 0));
-
-  const naHerbouw = startBouw(state, 11, WACHTTOREN, 4);
-  const tile = naHerbouw.lagen.find((l) => l.hoogte === 11)!.tiles[4];
-  assert.equal(tile.status, "in_aanbouw");
-  assert.equal(tile.improvement?.id, "wachttoren");
 });
 
 test("bemanLegerkamp en onbemandeLegerkampPosities: dezelfde soort omkeerbare toewijzing als bij een Wachttoren", () => {

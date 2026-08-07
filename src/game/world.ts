@@ -132,21 +132,27 @@ function amberVoorTile(hoogte: number, positieInLaag: number): boolean {
 }
 
 // Vaste inhoud-verdeling van de Bezette Laag (hoofdstuk 6, issue: "De
-// Bezette Laag, missionaris en verkenner", Deel 1) — tutorial-scripting op
-// `BEZETTE_LAAG_HOOGTE` (laag 12), net zo vastgelegd/niet-procedureel als
-// `TUTORIAL_AMBER` hierboven. Verspreid over 8 van de 9 vakjes: twee
-// vijandelijke Wachttorens (Confrontatie-doelen), twee vijandelijke
-// Heiligdommen (Belegeringsdoelen) en vier cosmetische huisjes (geen doel,
-// geen functie). Positie 4 (het middelste vakje — elders het stad-vakje)
-// blijft bewust neutraal: een gewoon leeg vakje zodra onthuld, zodat niet
-// alle 9 vakjes vijandelijke/cosmetische inhoud hoeven te dragen.
+// Bezette Laag, missionaris en verkenner", Deel 1 — aantal wachttorens/
+// heiligdommen bijgesteld naar issue "laatste confrontatie tweaken")
+// — tutorial-scripting op `BEZETTE_LAAG_HOOGTE` (laag 12), net zo
+// vastgelegd/niet-procedureel als `TUTORIAL_AMBER` hierboven. Verspreid over
+// 8 van de 9 vakjes: precies één vijandelijke Wachttoren (het enige
+// Confrontatie-doel) en één vijandelijk Heiligdom (het enige
+// Belegeringsdoel) — bewust op precies 1 van elk gehouden, want de laag
+// ontgrendelt pas zodra allebei vernietigd zijn (zie `verwerkBelegering` in
+// laagOntgrendeling.ts): meerdere exemplaren zouden dat alleen maar een
+// herhaling van dezelfde actie maken, geen extra diepte. De overige zes
+// vakjes zijn cosmetische huisjes (geen doel, geen functie). Positie 4 (het
+// middelste vakje — elders het stad-vakje) blijft bewust neutraal: een
+// gewoon leeg vakje zodra onthuld, zodat niet alle 9 vakjes vijandelijke/
+// cosmetische inhoud hoeven te dragen.
 const TUTORIAL_BEZETTE_LAAG_INHOUD: Record<number, BezetteLaagInhoud> = {
   0: "wachttoren",
   1: "heiligdom",
   2: "huisje",
-  3: "wachttoren",
+  3: "huisje",
   5: "huisje",
-  6: "heiligdom",
+  6: "huisje",
   7: "huisje",
   8: "huisje",
 };

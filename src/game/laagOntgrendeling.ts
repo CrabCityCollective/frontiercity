@@ -125,56 +125,77 @@ export function heeftOfferAltaar(state: GameState): boolean {
 // Belegering tegen de vijandelijke Heiligdommen van een Bezette Laag
 // (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel 4).
 // Zolang de speler geen Missionaris heeft, blijft de bevroren cultuurteller
-// (`verwerkProductie` in productie.ts) gewoon bevroren en gebeurt hier niets —
-// zodra er wél minstens één Missionaris is, wordt de cultuurproductie van
-// deze beurt (dezelfde berekening als `verwerkProductie` normaal zou
-// toepassen) omgeleid naar de belegeringsmeter. Bereikt de meter de drempel,
-// dan wordt het eerst-onthulde nog-actieve vijandelijke Heiligdom vernietigd
-// (positie als tie-break, bij gebrek aan een onthullings-tijdstempel) en
-// begint de meter weer bij 0 voor het volgende, indien er nog een resterend
-// is — vandaar de `while`-lus, net als `verwerkLaagOntgrendeling` hierboven.
+// (`verwerkProductie` in productie.ts) gewoon bevroren en gebeurt er niets
+// met de belegeringsmeter — zodra er wél minstens één Missionaris is, wordt
+// de cultuurproductie van deze beurt (dezelfde berekening als
+// `verwerkProductie` normaal zou toepassen) omgeleid naar de
+// belegeringsmeter. Bereikt de meter de drempel, dan wordt het
+// eerst-onthulde nog-actieve vijandelijke Heiligdom vernietigd (positie als
+// tie-break, bij gebrek aan een onthullings-tijdstempel) en begint de meter
+// weer bij 0 voor het volgende, indien er nog een resterend is — vandaar de
+// `while`-lus, net als `verwerkLaagOntgrendeling` hierboven.
+//
+// Los van de Missionaris-gate hierboven wordt bij elke beurt ook gecontroleerd
+// of de laag inmiddels volledig is opgelost (issue: "laatste confrontatie
+// tweaken" — voorheen alleen een Heiligdom-eis, zie "Einde van de Bezette
+// Laag" hieronder): dat mag ook via een Confrontatie-actie in militair.ts
+// gebeuren, die zelf geen Missionaris of cultuurproductie vereist, dus die
+// check mag niet achter de Missionaris-gate hierboven verstopt zitten.
 export function verwerkBelegering(state: GameState): GameState {
   const bezetteLaag = state.lagen.find((l) => l.bezet);
   if (!bezetteLaag) return state;
-  if (state.stad.missionarissen.length === 0) return state;
 
-  const toevoeging = berekenCultuurProductieDitBeurt(state);
-  if (toevoeging <= 0) return state;
-
-  let voortgang = (bezetteLaag.belegeringsVoortgang ?? 0) + toevoeging;
+  let voortgang = bezetteLaag.belegeringsVoortgang ?? 0;
   let tiles = bezetteLaag.tiles;
   let vijandelijkHeiligdomVernietigdEvent = state.vijandelijkHeiligdomVernietigdEvent;
 
-  while (voortgang >= BELEGERINGSDREMPEL) {
-    const doelIndex = tiles.findIndex(
-      (tile) => tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom"
-    );
-    if (doelIndex === -1) break; // geen resterend doel: meter blijft op de drempel staan
+  if (state.stad.missionarissen.length > 0) {
+    const toevoeging = berekenCultuurProductieDitBeurt(state);
+    if (toevoeging > 0) {
+      voortgang += toevoeging;
 
-    tiles = tiles.map((tile, index) =>
-      index === doelIndex ? { ...tile, status: "leeg" as const, improvement: undefined } : tile
-    );
-    voortgang -= BELEGERINGSDREMPEL;
-    vijandelijkHeiligdomVernietigdEvent = true;
+      while (voortgang >= BELEGERINGSDREMPEL) {
+        const doelIndex = tiles.findIndex(
+          (tile) => tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom"
+        );
+        if (doelIndex === -1) break; // geen resterend doel: meter blijft op de drempel staan
+
+        tiles = tiles.map((tile, index) =>
+          index === doelIndex ? { ...tile, status: "leeg" as const, improvement: undefined } : tile
+        );
+        voortgang -= BELEGERINGSDREMPEL;
+        vijandelijkHeiligdomVernietigdEvent = true;
+      }
+    }
   }
 
-  // Einde van de Bezette Laag (Deel 6): zodra geen vijandelijk Heiligdom meer
-  // over is — noch onthuld-en-actief, noch nog verhuld — wordt de hele laag
-  // in één keer volledig onthuld (ook nog niet individueel verkende
-  // vakjes), eindigt de Bezette-status en telt de laag vanaf dan als normaal
-  // ontgrendeld. Nog niet geconfronteerde vijandelijke Wachttoren-tiles en de
-  // cosmetische huisjes blijven daarna gewoon staan (permanent, want alleen
-  // een gewonnen Confrontatie maakt een Wachttoren-tile weer leeg — zie
-  // `confrontatieBezetteLaag`).
+  // Einde van de Bezette Laag (Deel 6, uitgebreid — issue: "laatste
+  // confrontatie tweaken"): pas zodra zowel geen vijandelijk Heiligdom als
+  // geen vijandelijke Wachttoren meer over is — noch onthuld-en-actief, noch
+  // nog verhuld — wordt de hele laag in één keer volledig onthuld (ook nog
+  // niet individueel verkende vakjes), eindigt de Bezette-status en telt de
+  // laag vanaf dan als normaal ontgrendeld (en dus pas vanaf dan betreedbaar
+  // voor de settler en bebouwbaar, zie `magSettlerNaar`/`hoogsteOntgrendeldeLaag`
+  // in wegen.ts/world.ts en de `laag.ontgrendeld`-eis in
+  // infrastructuurEnBouw.ts — geen apart nieuw slot nodig, de bestaande
+  // ontgrendel-gate dekt beide al). Voorheen kon een niet-geconfronteerde
+  // vijandelijke Wachttoren-tile permanent blijven staan zonder de laag te
+  // blokkeren; nu moet de speler 'm via een Legerkamp-Confrontatie
+  // daadwerkelijk opruimen voordat de laag opengaat.
   const heeftNogHeiligdom = tiles.some(
     (tile) =>
       (tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom") ||
       (tile.verhuld && tile.bezetteLaagInhoud === "heiligdom")
   );
+  const heeftNogWachttoren = tiles.some(
+    (tile) =>
+      (tile.status === "actief" && tile.improvement?.id === "vijandelijke-wachttoren") ||
+      (tile.verhuld && tile.bezetteLaagInhoud === "wachttoren")
+  );
   // `bezetteLaag` (hierboven) bestaat alleen zolang `laag.bezet` nog waar is
   // — deze functie draait dus nooit meer opnieuw op een al opgeloste laag,
   // dus geen aparte "was dit al opgelost?"-check nodig.
-  const opgelost = !heeftNogHeiligdom;
+  const opgelost = !heeftNogHeiligdom && !heeftNogWachttoren;
 
   if (opgelost) {
     tiles = tiles.map((tile) =>
@@ -195,6 +216,13 @@ export function verwerkBelegering(state: GameState): GameState {
                 : tile.status,
           }
     );
+  }
+
+  // Niets veranderd (geen siege-voortgang deze beurt, en nog niet opgelost)
+  // — geef dezelfde state terug, zelfde no-op-conventie als
+  // `verwerkLaagOntgrendeling` hierboven.
+  if (tiles === bezetteLaag.tiles && voortgang === (bezetteLaag.belegeringsVoortgang ?? 0) && !opgelost) {
+    return state;
   }
 
   const lagen = state.lagen.map((laag) =>
