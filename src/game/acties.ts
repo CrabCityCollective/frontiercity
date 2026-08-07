@@ -165,44 +165,20 @@ export function hakHout(state: GameState): GameState {
 
 // Stichtingskosten (hoofdstuk 2/14, issue: "stad stichten op de frontier"
 // deel 3, narekenen van het voorstel "25 hout, 15 steen, 10 erts, 30
-// voedsel"). Doorrekening tegen de werkelijke code (niet alleen het
-// design-document): `OPSLAG_CAP` blijkt in `verwerkProductie` (productie.ts)
-// per grondstof te gelden (`voorraad[resource] = min(opslagCap, ...)` voor
-// élk van hout/steen/erts/goud apart), niet als gezamenlijke som van de vier
-// zoals hoofdstuk 5 beschrijft. Met een gedeelde som zou 25+15+10 = 50 al
-// ruim boven de cap van 30 uitkomen en dus altijd een Opslagplaats afdwingen
-// — maar met een cap per grondstof (de daadwerkelijke situatie) zitten
-// 25/15/10 elk ruim ónder de 30, en zou de speler nooit hoeven uit te
-// breiden. `hout` is daarom verhoogd naar 40 (boven de startcap van 30) —
-// dat dwingt minstens één Opslagplaats af (cap 30 → 50), precies de bewuste
-// tussenstap uit deel 2. Steen/erts blijven ruim onder de cap (ook na een
-// paar bouwprojecten realistisch op te sparen) en voedsel is sowieso
-// ongelimiteerd (hoofdstuk 5) — de architectuur zelf blijft hier bewust
-// ongewijzigd (dat is een aparte refactor, buiten deze issue), alleen de
-// bedragen zijn erop afgestemd.
+// voedsel"). Zie git-historie voor de oorspronkelijke, uitgebreidere
+// onderbouwing van 40/15/10/30 (met name de opslag-cap-doorrekening die
+// `hout` destijds boven de startcap van 30 duwde om een Opslagplaats af te
+// dwingen).
 //
-// Voedsel blijft op de voorgestelde 30: aangezien voedsel nooit "uitgegeven"
-// wordt (hoofdstuk 5 — alleen drempels zoals `VOEDSEL_DREMPEL_GROEI`
-// controleren de voorraad, ze verlagen 'm niet) is een gezonde stad tegen de
-// tijd dat laag 13 ontgrendeld is sowieso al ver voorbij 30 voedsel, op
-// straffe van een eerdere ineenstorting (hoofdstuk 4) — de eis dwingt dus
-// vooral af dat de voedselcrisis allang opgelost moet zijn, wat de bestaande
-// verval-mechaniek toch al vereist. Hem hoger zetten dan 30 zou daar weinig
-// aan veranderen; lager zou de eis betekenisloos maken.
-//
-// Turn-doorrekening (indicatief, zelfde stijl als hoofdstuk 14): met één
-// Houtkap (3 hout/beurt) en één Opslagplaats gebouwd, is 40 hout binnen
-// ~13-14 beurten surplus te verzamelen; 15 steen (één Steengroeve, 2/beurt)
-// binnen ~8 beurten, 10 erts (één Mijn, 2/beurt) binnen ~5 beurten — ruim
-// haalbaar binnen de vele tientallen beurten die toch al nodig zijn om laag
-// 10-12 te bereiken (hoofdstuk 14: cultuurkosten lopen daar al op tot
-// 400-600), dus een doel waar de speler een paar lagen naartoe werkt zonder
-// dat het sleept.
+// issue #187 ("stad stichten veel goedkoper"): alle vier bedragen zijn
+// hierna 4x zo goedkoop gemaakt (gedeeld door 4, afgerond) — bewust op
+// verzoek, ook al vervalt daarmee de hierboven bedoelde forcering van een
+// vroege Opslagplaats (10 hout blijft nu ruim onder de startcap).
 export const STICHTING_KOSTEN: { hout: number; steen: number; erts: number; voedsel: number } = {
-  hout: 40,
-  steen: 15,
-  erts: 10,
-  voedsel: 30,
+  hout: 10,
+  steen: 4,
+  erts: 3,
+  voedsel: 8,
 };
 
 // Naam van de nieuw te stichten stad (hoofdstuk 10: prehistorisch klinkende
