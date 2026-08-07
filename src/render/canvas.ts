@@ -12,7 +12,7 @@ import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Layer, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
-import { BAND_WIDTH_TILES, isVooruitkijkLaag } from "@/game/world";
+import { BAND_WIDTH_TILES, eindeOceaanZichtbaar, isVooruitkijkLaag } from "@/game/world";
 
 export { BAND_WIDTH_TILES };
 
@@ -1535,6 +1535,10 @@ export function tekenWereld(
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalLagen = lagen.length;
+  // Afsluitende oceaan-rij bóven de laatste laag (issue: "laatste oceaan ook
+  // visueel") — schuift alle rijen hieronder één tegel naar beneden zodra hij
+  // getoond wordt, net zoals de startoceaan al een vaste extra rij onderaan is.
+  const topOffset = eindeOceaanZichtbaar(lagen) ? tileSize : 0;
 
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#100d0a";
@@ -1542,7 +1546,7 @@ export function tekenWereld(
 
   for (const laag of lagen) {
     const rijIndex = totaalLagen - laag.hoogte;
-    const y = rijIndex * tileSize;
+    const y = rijIndex * tileSize + topOffset;
     const vooruitkijk = !laag.ontgrendeld && isVooruitkijkLaag(laag, lagen);
 
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
@@ -1607,17 +1611,31 @@ export function tekenWereld(
   if (settler) {
     const rijIndex = totaalLagen - settler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalLagen) {
-      tekenSettler(ctx, settler.positieInLaag * tileSize, rijIndex * tileSize, tileSize);
+      tekenSettler(ctx, settler.positieInLaag * tileSize, rijIndex * tileSize + topOffset, tileSize);
     }
   }
 
   // Rij oceaan-tegels vlak onder laag 1 (hoofdstuk 2: startstad begint aan een
   // oceaan) — één extra rij, klikbaar via dezelfde tile-geometrie als de
   // overige lagen (zie GameCanvas: `bepaalAangeklikteTile`, hoogte 0).
-  const oceaanY = totaalLagen * tileSize;
+  const oceaanY = totaalLagen * tileSize + topOffset;
   for (let col = 0; col < BAND_WIDTH_TILES; col++) {
     const x = col * tileSize;
     tekenOceaanTile(ctx, x, oceaanY, tileSize, tileSeed(col, 0));
     tekenTileGrid(ctx, x, oceaanY, tileSize);
+  }
+
+  // Afsluitende oceaan-rij bóven de laatste laag (issue: "laatste oceaan ook
+  // visueel") — symmetrisch met de startoceaan hierboven, maar dan de oceaan
+  // aan de overkant (hoofdstuk 2/10), pas getekend zodra de laatste laag
+  // ontgrendeld is (zie `eindeOceaanZichtbaar` in world.ts). Klikbaar via
+  // dezelfde tile-geometrie (GameCanvas: `bepaalAangeklikteTile`, sentinel-
+  // hoogte `EINDE_OCEAAN_HOOGTE`).
+  if (topOffset > 0) {
+    for (let col = 0; col < BAND_WIDTH_TILES; col++) {
+      const x = col * tileSize;
+      tekenOceaanTile(ctx, x, 0, tileSize, tileSeed(col, totaalLagen + 1));
+      tekenTileGrid(ctx, x, 0, tileSize);
+    }
   }
 }

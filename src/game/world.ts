@@ -238,6 +238,23 @@ export function maakInitieleWereld(): Layer[] {
   );
 }
 
+// Sentinel-hoogte voor de klikbare oceaan-rij ná laag TUTORIAL_LAAG_AANTAL
+// (issue: "laatste oceaan ook visueel") — net als hoogte 0 voor de startoceaan
+// (zie GameCanvas: `bepaalAangeklikteTile`) geen echte `Layer`, puur een
+// aparte, altijd-eind-van-de-band positie voor de tile-info-pop-up.
+export const EINDE_OCEAAN_HOOGTE = TUTORIAL_LAAG_AANTAL + 1;
+
+// Of de afsluitende oceaan-rij bóven laag TUTORIAL_LAAG_AANTAL getekend moet
+// worden (hoofdstuk 2/10: "de oceaan aan de overkant" als einddoel van de
+// tocht) — pas zodra die laatste laag daadwerkelijk ontgrendeld/speelbaar is,
+// net zoals de startoceaan onderaan er al vanaf het begin staat omdat laag 1
+// vanaf het begin ontgrendeld is. Vóór die tijd blijft de kaart gewoon in
+// mist eindigen (zie `zichtbareLagen` hieronder) — de tocht is dan nog niet
+// voltooid.
+export function eindeOceaanZichtbaar(lagen: Layer[]): boolean {
+  return lagen.some((laag) => laag.hoogte === TUTORIAL_LAAG_AANTAL && laag.ontgrendeld);
+}
+
 // Hoogste ontgrendelde laag = de huidige frontier-grens (hoofdstuk 2).
 export function hoogsteOntgrendeldeLaag(lagen: Layer[]): number {
   return lagen.reduce(
