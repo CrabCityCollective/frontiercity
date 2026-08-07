@@ -115,10 +115,10 @@ main {
   gap: 0.25rem 0.75rem;
 }
 
-/* Apart blok boven de grondstoffenbalk (issue: "volgende beurt button naar
-   boven"; oorspronkelijk hieronder, zie issue: "button voor volgende beurt,
-   en het beurt-nummer samen in een apart blok, direct onder de map") met een
-   brede, gecentreerde knop zodat hij op mobiel makkelijk te raken is. */
+/* Apart blok boven de grondstoffenbalk met de beurtteller (issue: "beurt
+   button helemaal weg" — de knop die hier stond is vervangen door
+   automatische beurtwissel, zie `beurtMagAutomatischDoorgaan` in
+   economie.ts). */
 .beurt-blok {
   display: flex;
   flex-direction: column;
@@ -129,10 +129,6 @@ main {
   border-top: 2px solid var(--kleur-rand);
   border-bottom: 3px solid var(--kleur-oker);
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.45);
-  /* Anders dan .resource-hud hierboven: dit blok hoort ÓNDER de pop-up-
-     overlays te blijven (issue: "pop-up overlay moet wel over de beurt
-     button block, alleen niet over de resource balk") — zonder deze regel
-     stak de "Volgende beurt"-knop altijd boven elke pop-up uit. */
   position: relative;
   z-index: 1;
 }
@@ -140,14 +136,6 @@ main {
 .beurt-blok__label {
   color: var(--kleur-tekst);
   font-size: 0.9rem;
-}
-
-.beurt-blok__knop {
-  width: 100%;
-  max-width: 480px;
-  padding: 0.75rem 1rem;
-  font-size: 1.05rem;
-  text-align: center;
 }
 
 @media (max-width: 520px) {

@@ -8,12 +8,16 @@ import ResourceIcoon from "./ResourceIcoon";
 
 interface ResourceHudProps {
   state: GameState;
-  onVolgendeBeurt: () => void;
 }
 
 // HUD voor de gedeelde opslag, de losse voedselvoorraad en de beurtteller
 // (M3: resource-economie). Puur placeholder-styling — geen definitieve UI.
-export default function ResourceHud({ state, onVolgendeBeurt }: ResourceHudProps) {
+//
+// Geen "Volgende beurt"-knop meer (issue: "beurt button helemaal weg") — de
+// beurt gaat automatisch door zodra de settler zijn actie heeft gebruikt (of,
+// vóór beurt 2, zodra de bouwkeuze van beurt 1 gemaakt is), zie
+// `beurtMagAutomatischDoorgaan` in economie.ts.
+export default function ResourceHud({ state }: ResourceHudProps) {
   const volgendeLaagHoogte = hoogsteOntgrendeldeLaag(state.lagen) + 1;
   const cultuurLabel =
     volgendeLaagHoogte <= state.lagen.length
@@ -32,9 +36,6 @@ export default function ResourceHud({ state, onVolgendeBeurt }: ResourceHudProps
     <>
       <div className="beurt-blok">
         <span className="beurt-blok__label">Beurt: {state.beurt}</span>
-        <button className="fc-knop beurt-blok__knop" onClick={onVolgendeBeurt}>
-          Volgende beurt
-        </button>
       </div>
       <div className="resource-hud">
         <div className="resource-hud__items">
