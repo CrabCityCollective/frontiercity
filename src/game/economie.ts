@@ -147,3 +147,21 @@ export function volgendeBeurt(state: GameState): GameState {
     settler,
   };
 }
+
+// Automatische beurtwissel (issue: "beurt button helemaal weg"): er is geen
+// handmatige "Volgende beurt"-knop meer (en dus ook geen waarschuwing meer
+// die daarvóór stond, hoofdstuk 11/18) — zodra er voor deze beurt niets meer
+// te doen valt, gaat de beurt vanzelf door. "Niets meer te doen" is dezelfde
+// combinatie die eerder de waarschuwing bepaalde: de settler heeft geen
+// ongebruikte actie (bewegen/weg aanleggen/jagen/hout hakken) meer, én er
+// staat geen bouwkeuze meer open (of dit is toch al geen bouwmoment). Vóór
+// beurt 2 bestaat er nog geen settler (hoofdstuk 16), dus telt alleen de
+// bouwkeuze van beurt 1 mee — zonder deze functie zou de allereerste beurt
+// dan nooit vanzelf doorgaan. Gebruikt door useGameEngine.ts na elke
+// settler-actie en na elke bouwkeuze.
+export function beurtMagAutomatischDoorgaan(state: GameState): boolean {
+  const settlerHeeftNogActie = Boolean(state.settler) && !state.settlerActieGedaanDitBeurt;
+  const kanBouwen = state.beurt >= (state.volgendeBouwBeurt ?? 1);
+  const magNogBouwen = kanBouwen && !state.bouwKeuzeGedaanDitBeurt;
+  return !settlerHeeftNogActie && !magNogBouwen;
+}

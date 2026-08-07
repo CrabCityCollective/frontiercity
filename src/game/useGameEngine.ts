@@ -9,7 +9,12 @@ import {
   verplaatsSettlerNaar as verplaatsSettlerNaarActie,
 } from "./acties";
 import { versnelBouwMetGoud as versnelBouwMetGoudActie } from "./bouwwachtrij";
-import { maakInitieleSpelStatus, volgendeBeurt as volgendeBeurtActie, zetUitlegPopups as zetUitlegPopupsActie } from "./economie";
+import {
+  beurtMagAutomatischDoorgaan,
+  maakInitieleSpelStatus,
+  volgendeBeurt as volgendeBeurtActie,
+  zetUitlegPopups as zetUitlegPopupsActie,
+} from "./economie";
 import {
   startCityVerbetering as startCityVerbeteringActie,
   startGroei as startGroeiActie,
@@ -49,7 +54,15 @@ import {
 import { laadSpel, saveSpel } from "./save";
 import { kiesTech as kiesTechActie } from "./tech";
 import { bevestigIneenstorting as bevestigIneenstortingActie } from "./uitputtingEnVerval";
-import { Improvement, TechId } from "./types";
+import { GameState, Improvement, TechId } from "./types";
+
+// Ketent een `volgendeBeurt` vast aan het resultaat van een settler-actie of
+// bouwkeuze zodra er niets meer te doen valt deze beurt (issue: "beurt
+// button helemaal weg" — zie `beurtMagAutomatischDoorgaan` in economie.ts
+// voor de precieze voorwaarde).
+function metAutomatischeVolgendeBeurt(state: GameState): GameState {
+  return beurtMagAutomatischDoorgaan(state) ? volgendeBeurtActie(state) : state;
+}
 
 // React-hook rond de spelstatus (M3). Geen aparte state-library nodig voor
 // de MVP-omvang — één useState met pure update-functies uit economie.ts.
@@ -80,13 +93,13 @@ export function useGameEngine() {
 
   const startBouw = useCallback(
     (laagHoogte: number, improvement: Improvement, positieInLaag: number) => {
-      setState((huidig) => startBouwActie(huidig, laagHoogte, improvement, positieInLaag));
+      setState((huidig) => metAutomatischeVolgendeBeurt(startBouwActie(huidig, laagHoogte, improvement, positieInLaag)));
     },
     []
   );
 
   const sluitBouwKeuze = useCallback(() => {
-    setState((huidig) => sluitBouwKeuzeActie(huidig));
+    setState((huidig) => metAutomatischeVolgendeBeurt(sluitBouwKeuzeActie(huidig)));
   }, []);
 
   const startGroei = useCallback(() => {
@@ -128,19 +141,19 @@ export function useGameEngine() {
   }, []);
 
   const verplaatsSettlerNaar = useCallback((hoogte: number, positieInLaag: number) => {
-    setState((huidig) => verplaatsSettlerNaarActie(huidig, hoogte, positieInLaag));
+    setState((huidig) => metAutomatischeVolgendeBeurt(verplaatsSettlerNaarActie(huidig, hoogte, positieInLaag)));
   }, []);
 
   const legWegAan = useCallback(() => {
-    setState((huidig) => legWegAanActie(huidig));
+    setState((huidig) => metAutomatischeVolgendeBeurt(legWegAanActie(huidig)));
   }, []);
 
   const jaag = useCallback(() => {
-    setState((huidig) => jaagActie(huidig));
+    setState((huidig) => metAutomatischeVolgendeBeurt(jaagActie(huidig)));
   }, []);
 
   const hakHout = useCallback(() => {
-    setState((huidig) => hakHoutActie(huidig));
+    setState((huidig) => metAutomatischeVolgendeBeurt(hakHoutActie(huidig)));
   }, []);
 
   const sluitIndringersMelding = useCallback(() => {

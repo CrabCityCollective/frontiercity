@@ -30,7 +30,6 @@ import UitlegPopup from "@/components/UitlegPopup";
 import VijandAanDeHorizonPopup from "@/components/VijandAanDeHorizonPopup";
 import VijandelijkHeiligdomPopup from "@/components/VijandelijkHeiligdomPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
-import VolgendeBeurtWaarschuwingPopup from "@/components/VolgendeBeurtWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { verhuldeBezetteLaagPosities } from "@/game/laagOntgrendeling";
@@ -70,7 +69,6 @@ interface GameRootProps {
 export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootProps) {
   const {
     state,
-    volgendeBeurt,
     startBouw,
     sluitBouwKeuze,
     startGroei,
@@ -224,14 +222,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // BezetteLaagPaneel, waarna een klik op een verhuld vakje van de Bezette
   // Laag (zie `handleTileClick` hieronder) dat vakje daadwerkelijk verkent.
   const [verkenningsModusActief, setVerkenningsModusActief] = useState(false);
-  // "Volgende beurt"-waarschuwing (issue: "als je op volgende beurt drukt,
-  // dan moet er eerst gecheckt worden of je settler nog mag lopen of iets
-  // mag doen die beurt ... en of je nog een improvement mocht neerzetten"):
-  // een klik op de knop roept niet meteen `volgendeBeurt` aan zolang de
-  // settler nog een actie heeft of er nog een bouwkeuze openstaat — die
-  // gevallen tonen eerst deze pop-up. "Terug" sluit 'm weer (de speler kan
-  // dan alsnog handelen); "Toch doorgaan" roept alsnog `volgendeBeurt` aan.
-  const [toonVolgendeBeurtWaarschuwing, setToonVolgendeBeurtWaarschuwing] = useState(false);
   // Stichtings-bevestiging (hoofdstuk 2/10/16, issue: "stad stichten op de
   // frontier" deel 4): geopend via de "Stad stichten"-knop in SettlerPaneel,
   // bevestigd/geannuleerd via StichtStadPopup.
@@ -269,7 +259,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   useEffect(() => {
     setPlaatsingsImprovement(null);
     setGeselecteerdeTile(null);
-    setToonVolgendeBeurtWaarschuwing(false);
     setToonWachttorenBemanningsKeuze(false);
     setLegerkampKiesModusStrijderId(null);
     setVerkenningsModusActief(false);
@@ -750,28 +739,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // voor een save van vóór dit veld bestond.
   const kanBouwen = state.beurt >= (state.volgendeBouwBeurt ?? 1);
 
-  // "Volgende beurt"-waarschuwing (issue: "eerst gecheckt worden of je
-  // settler nog mag lopen of iets mag doen die beurt" / "ook als een
-  // improvement mocht neerzetten die beurt"): dezelfde vlaggen die de
-  // settler-knoppen en de bouw-pop-up zelf al sturen, hergebruikt om te
-  // bepalen of de waarschuwing nodig is vóór `volgendeBeurt` echt aangeroepen
-  // wordt.
-  const settlerHeeftNogActie = Boolean(state.settler) && !state.settlerActieGedaanDitBeurt;
-  const magNogBouwen = kanBouwen && !state.bouwKeuzeGedaanDitBeurt;
-
-  function klikVolgendeBeurt() {
-    if (settlerHeeftNogActie || magNogBouwen) {
-      setToonVolgendeBeurtWaarschuwing(true);
-      return;
-    }
-    volgendeBeurt();
-  }
-
-  function tochDoorgaanNaVolgendeBeurtWaarschuwing() {
-    setToonVolgendeBeurtWaarschuwing(false);
-    volgendeBeurt();
-  }
-
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -920,14 +887,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             onAnnuleren={() => setToonStichtStadPopup(false)}
           />
         )}
-        {toonVolgendeBeurtWaarschuwing && (
-          <VolgendeBeurtWaarschuwingPopup
-            settlerHeeftNogActie={settlerHeeftNogActie}
-            magNogBouwen={magNogBouwen}
-            onTochDoorgaan={tochDoorgaanNaVolgendeBeurtWaarschuwing}
-            onTerug={() => setToonVolgendeBeurtWaarschuwing(false)}
-          />
-        )}
         {toonTutorialVoltooidPopup && (
           <TutorialVoltooidPopup
             onDoorgaan={() => {
@@ -1037,7 +996,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           />
         )}
       </div>
-      <ResourceHud state={state} onVolgendeBeurt={klikVolgendeBeurt} />
+      <ResourceHud state={state} />
     </div>
   );
 }
