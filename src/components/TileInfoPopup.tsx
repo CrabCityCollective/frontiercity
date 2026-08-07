@@ -27,12 +27,13 @@ interface TileInfoPopupProps {
   // Gezet als de aangeklikte tile een actieve Wachttoren is (issue:
   // "wachttorens bemannen" — herzien zodat bemannen begint bij de tile zelf
   // i.p.v. bij een strijder in het stadsmenu). Onbemand: eerst een
-  // "Wachttoren bemannen"-knop, die na een klik de keuzelijst met nog vrije
-  // strijders toont (of een melding als die leeg is). Bemand: een "stuur
-  // naar huis"-knop voor de zittende strijder.
+  // "Wachttoren bemannen"-knop, die na een klik de keuzelijst toont met ALLE
+  // strijders (issue: "strijders in wachttorens" — niet alleen de vrije, zo
+  // zie je in één oogopslag wie je al hebt en wie nog te kiezen is). Bemand:
+  // een "stuur naar huis"-knop voor de zittende strijder.
   wachttorenVraag?: {
     bemand: boolean;
-    vrijeStrijders: Strijder[];
+    alleStrijders: Strijder[];
     keuzeActief: boolean;
     onStartKeuze: () => void;
     onKiesStrijder: (strijderId: string) => void;
@@ -144,26 +145,57 @@ export default function TileInfoPopup({
                 Stuur strijder naar huis
               </button>
             ) : wachttorenVraag.keuzeActief ? (
-              wachttorenVraag.vrijeStrijders.length > 0 ? (
+              wachttorenVraag.alleStrijders.length > 0 ? (
                 <>
                   <p style={{ margin: 0, fontWeight: "bold" }}>Kies een strijder om deze wachttoren te bemannen:</p>
                   <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                    {wachttorenVraag.vrijeStrijders.map((strijder, i) => (
-                      <button
-                        key={strijder.id}
-                        className="fc-knop"
-                        onClick={() => wachttorenVraag.onKiesStrijder(strijder.id)}
-                        style={{ padding: "0.35rem 0.6rem" }}
-                      >
-                        Strijder {i + 1}
-                      </button>
-                    ))}
+                    {wachttorenVraag.alleStrijders.map((strijder) => {
+                      // Strijders die al ergens anders zijn toegewezen (issue:
+                      // "strijders in wachttorens" — toon alle strijders, maar
+                      // maak degenen die al bezig zijn niet kiesbaar, herkenbaar
+                      // aan het icoon) blijven zichtbaar maar zijn niet
+                      // klikbaar — zo zie je meteen wie je nog kunt kiezen.
+                      const bezet = Boolean(strijder.wachttoren || strijder.legerkamp);
+                      if (bezet) {
+                        return (
+                          <span
+                            key={strijder.id}
+                            title={
+                              strijder.wachttoren
+                                ? `Bemant al een andere wachttoren op laag ${strijder.wachttoren.hoogte}`
+                                : `Al toegewezen aan een legerkamp op laag ${strijder.legerkamp!.hoogte}`
+                            }
+                            aria-label="Strijder niet beschikbaar"
+                            style={{
+                              padding: "0.35rem 0.6rem",
+                              fontSize: "1rem",
+                              lineHeight: 1,
+                              opacity: 0.35,
+                              cursor: "not-allowed",
+                            }}
+                          >
+                            🛡
+                          </span>
+                        );
+                      }
+                      return (
+                        <button
+                          key={strijder.id}
+                          className="fc-knop"
+                          onClick={() => wachttorenVraag.onKiesStrijder(strijder.id)}
+                          title="Kies deze strijder om de wachttoren te bemannen"
+                          aria-label="Strijder beschikbaar"
+                          style={{ padding: "0.35rem 0.6rem", fontSize: "1rem", lineHeight: 1 }}
+                        >
+                          🛡
+                        </button>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
                 <p style={{ margin: 0, color: "var(--kleur-oker)" }}>
-                  Geen strijders beschikbaar — alle strijders zijn al ergens toegewezen. Recruteer eerst een nieuwe
-                  strijder via het stadsmenu.
+                  Geen strijders beschikbaar — recruteer eerst een nieuwe strijder via het stadsmenu.
                 </p>
               )
             ) : (
