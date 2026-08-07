@@ -800,7 +800,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           stijl={stijl}
           onTileClick={handleTileClick}
         />
-        <LaagIntroPaneel lagen={state.lagen} />
         <SettlerPaneel
           state={state}
           onLegWegAan={legWegAan}
@@ -808,6 +807,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           onHakHout={hakHout}
           onOpenStichtStad={() => setToonStichtStadPopup(true)}
         />
+        <LaagIntroPaneel lagen={state.lagen} />
         {toonStadMenuPopup && (
           <StadMenuPopup
             state={state}
