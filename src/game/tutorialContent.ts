@@ -142,7 +142,7 @@ export const BEZETTE_LAAG_TEKST =
 // hieronder).
 export const VIJANDELIJK_HEILIGDOM_ONTHULD_TITEL = "Een vijandelijk heiligdom";
 export const VIJANDELIJK_HEILIGDOM_ONTHULD_TEKST =
-  "Verkenning heeft een heiligdom blootgelegd dat niet het onze is. Zolang je minstens één Missionaris hebt opgeleid, stroomt nieuwe cultuur van je eigen heiligdommen naar een belegeringsmeter voor dit doel — zonder Missionaris gebeurt er niets.";
+  "Verkenning heeft een heiligdom blootgelegd dat niet het onze is. Zolang je minstens één Missionaris hebt opgeleid, stroomt nieuwe cultuur van je eigen heiligdommen naar een belegeringsmeter voor dit doel — zonder Missionaris gebeurt er niets. Elke extra Missionaris laat de meter sneller vollopen.";
 export const VIJANDELIJK_HEILIGDOM_VERNIETIGD_TITEL = "Het heiligdom valt stil";
 export const VIJANDELIJK_HEILIGDOM_VERNIETIGD_TEKST =
   "De belegeringsmeter is vol. Het vreemde heiligdom valt stil — geen dreiging meer, geen doel meer.";
