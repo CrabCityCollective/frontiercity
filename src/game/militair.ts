@@ -4,9 +4,11 @@
 // Wachttoren-tiles en de Legerkamp-toewijzing tegen een Bezette Laag. Een
 // confrontatie vergelijkt die legerwaarde met de dreiging op de doellaag via
 // een winkans-formule (geen gegarandeerde uitkomst, `WINKANS_MIN`/
-// `WINKANS_MAX` hieronder) — winst levert buit/opruiming op, verlies
-// vernietigt de beschermende Wachttoren (ruïne, herbouwbaar) en de strijder
-// die hem bemande is blijvend verloren.
+// `WINKANS_MAX` hieronder) — winst levert buit/opruiming op, verlies kost de
+// strijder die de beschermende Wachttoren bemande blijvend (issue: "laatste
+// confrontatie tweaken" — een eerdere versie liet ook de Wachttoren zelf een
+// ruïne worden; dat werd als te zware straf ervaren voor een actie die de
+// speler zelf bewust initieert, zie `confrontatieBezetteLaag` hieronder).
 
 import { SOLDAAT } from "./improvements";
 import { legerwaardeBonusPerStrijder } from "./techTree";
@@ -211,11 +213,17 @@ export function kanConfrontatieBezetteLaag(state: GameState, positieInLaag: numb
 // tutorial is tegengekomen.
 //
 // Winst: de vijandelijke Wachttoren-tile wordt "opgeruimd" (leeg, geen
-// dreiging/doel meer). Verlies: de eigen beschermende Wachttoren wordt een
-// ruïne (op dezelfde plek herbouwbaar tegen de normale kosten/bouwtijd) en
-// de strijder die hem bemande is blijvend verloren — geen reassignment,
-// anders dan de normale, omkeerbare bemannings-regel (hoofdstuk 6).
-// Legerkamp-toegewezen strijders blijven bij verlies gewoon behouden.
+// dreiging/doel meer). Verlies: de eigen beschermende Wachttoren zelf blijft
+// intact — alleen de strijder die hem bemande is blijvend verloren (moet als
+// nieuwe Soldaat volledig opnieuw opgeleid worden, geen reassignment, anders
+// dan de normale, omkeerbare bemannings-regel in hoofdstuk 6). De Wachttoren
+// staat er daarna wél onbemand bij (zijn verdedigingsbonus telt dus niet mee
+// tot een nieuwe strijder hem overneemt), maar hoeft niet herbouwd te worden
+// (issue: "laatste confrontatie tweaken" — een lichtere straf dan de
+// eerdere ruïne-versie, die een overhaaste poging onevenredig zwaar
+// afstrafte: de speler verloor dan zowel de strijder als de hele
+// verdedigingsinfrastructuur op de laag eronder). Legerkamp-toegewezen
+// strijders blijven bij verlies sowieso gewoon behouden.
 export function confrontatieBezetteLaag(state: GameState, positieInLaag: number): GameState {
   if (!kanConfrontatieBezetteLaag(state, positieInLaag)) return state;
 
@@ -264,20 +272,7 @@ export function confrontatieBezetteLaag(state: GameState, positieInLaag: number)
   );
   const strijders = bemanner ? state.stad.strijders.filter((s) => s.id !== bemanner.id) : state.stad.strijders;
 
-  const lagen = state.lagen.map((laag) =>
-    laag.hoogte !== laagOnder.hoogte
-      ? laag
-      : {
-          ...laag,
-          tiles: laag.tiles.map((t, i) =>
-            i === beschermendeWachttoren.positieInLaag
-              ? { ...t, status: "ruine" as const, improvement: undefined, beurtenTotUitputting: undefined }
-              : t
-          ),
-        }
-  );
-
-  return { ...state, lagen, stad: { ...state.stad, strijders }, laatsteConfrontatieBezetteLaag };
+  return { ...state, stad: { ...state.stad, strijders }, laatsteConfrontatieBezetteLaag };
 }
 
 // Bemant een Wachttoren met een specifieke strijder (nieuwe Wachttoren-functie,

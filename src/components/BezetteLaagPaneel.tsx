@@ -163,7 +163,7 @@ export default function BezetteLaagPaneel({
         >
           {state.laatsteConfrontatieBezetteLaag.gewonnen ? "Overwinning" : "Verlies"} (winkans was{" "}
           {Math.round(state.laatsteConfrontatieBezetteLaag.winkans * 100)}%)
-          {!state.laatsteConfrontatieBezetteLaag.gewonnen && " — de eigen wachttoren is een ruïne geworden"}
+          {!state.laatsteConfrontatieBezetteLaag.gewonnen && " — de bemannende strijder is verloren gegaan"}
         </p>
       )}
     </div>
