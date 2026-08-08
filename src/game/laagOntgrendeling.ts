@@ -128,7 +128,10 @@ export function heeftOfferAltaar(state: GameState): boolean {
 // (`verwerkProductie` in productie.ts) gewoon bevroren en gebeurt hier niets —
 // zodra er wél minstens één Missionaris is, wordt de cultuurproductie van
 // deze beurt (dezelfde berekening als `verwerkProductie` normaal zou
-// toepassen) omgeleid naar de belegeringsmeter. Bereikt de meter de drempel,
+// toepassen) omgeleid naar de belegeringsmeter, vermenigvuldigd met het
+// aantal Missionarissen (issue: "Laatste confrontatie tweaken" — elke
+// extra Missionaris levert zo tastbaar meer belegeringsdruk op, in plaats
+// van dat een tweede of derde niets toevoegt). Bereikt de meter de drempel,
 // dan wordt het eerst-onthulde nog-actieve vijandelijke Heiligdom vernietigd
 // (positie als tie-break, bij gebrek aan een onthullings-tijdstempel) en
 // begint de meter weer bij 0 voor het volgende, indien er nog een resterend
@@ -136,9 +139,10 @@ export function heeftOfferAltaar(state: GameState): boolean {
 export function verwerkBelegering(state: GameState): GameState {
   const bezetteLaag = state.lagen.find((l) => l.bezet);
   if (!bezetteLaag) return state;
-  if (state.stad.missionarissen.length === 0) return state;
+  const aantalMissionarissen = state.stad.missionarissen.length;
+  if (aantalMissionarissen === 0) return state;
 
-  const toevoeging = berekenCultuurProductieDitBeurt(state);
+  const toevoeging = berekenCultuurProductieDitBeurt(state) * aantalMissionarissen;
   if (toevoeging <= 0) return state;
 
   let voortgang = (bezetteLaag.belegeringsVoortgang ?? 0) + toevoeging;

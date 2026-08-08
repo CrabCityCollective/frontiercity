@@ -128,7 +128,9 @@ export default function BezetteLaagPaneel({
         {heeftVijandelijkHeiligdom && (
           <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
             Belegeringsmeter: {bezetteLaag.belegeringsVoortgang ?? 0} / {BELEGERINGSDREMPEL}
-            {stad.missionarissen.length === 0 && " — bevroren zonder Missionaris"}
+            {stad.missionarissen.length === 0
+              ? " — bevroren zonder Missionaris"
+              : stad.missionarissen.length > 1 && ` (×${stad.missionarissen.length} snelheid)`}
           </span>
         )}
       </div>
