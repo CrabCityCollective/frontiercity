@@ -14,14 +14,14 @@
 // - productie.ts — resource-productie (M3, hoofdstuk 5)
 // - uitputtingEnVerval.ts — land-uitputting & ghost towns (M4), voedselverval
 //   en stad-ineenstorting (M6, hoofdstuk 4)
-// - laagOntgrendeling.ts — cultuur-gedreven laag-ontgrendeling (M5,
-//   hoofdstuk 2/5) en de Bezette Laag/Verkenning/belegering (hoofdstuk 6)
+// - streekOntgrendeling.ts — cultuur-gedreven streek-ontgrendeling (M5,
+//   hoofdstuk 2/5) en de Bezette Streek/Verkenning/belegering (hoofdstuk 6)
 // - tech.ts — de technologie-boom (hoofdstuk 3/9/11)
 // - bouwwachtrij.ts — bouwkosten-investering & goud-rush (M3/M10)
 // - groeiEnRekrutering.ts — groei-tiers, settler/opslagplaats/
 //   stadsverbetering/rekruterings-wachtrijen (M6/M7, hoofdstuk 11)
 // - militair.ts — legerwaarde, Wachttoren-/Legerkamp-bemanning, confrontatie
-//   tegen een Bezette Laag (M7, hoofdstuk 6)
+//   tegen een Bezette Streek (M7, hoofdstuk 6)
 // - indringersEnDieren.ts — indringers & tribuut, kuddes, roofdieren
 //   (hoofdstuk 6/14/16/17)
 // - infrastructuurEnBouw.ts — infrastructuur-eisen en land-tile-plaatsing
@@ -39,7 +39,7 @@ import { STAD_POSITIE } from "./world";
 import { verwerkUitputting, verwerkVerval } from "./uitputtingEnVerval";
 import { verwerkBouwwachtrij } from "./bouwwachtrij";
 import { verwerkProductie } from "./productie";
-import { verwerkBelegering, verwerkLaagOntgrendeling } from "./laagOntgrendeling";
+import { verwerkBelegering, verwerkStreekOntgrendeling } from "./streekOntgrendeling";
 import { verwerkTechDrempel } from "./tech";
 import {
   verwerkCityVerbetering,
@@ -75,7 +75,7 @@ export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
 // klaar is, wordt hier al "actief" en begint pas volgende beurt met
 // aftellen (vandaar vóór de productiestap hieronder) — dan productie van
 // alle (incl. deze beurt net voltooide) actieve improvements (incl.
-// voedselverbruik en cultuur), dan laag-ontgrendeling op basis van die
+// voedselverbruik en cultuur), dan streek-ontgrendeling op basis van die
 // cultuur (M5), dan de technologie-boom op basis van diezelfde-beurt
 // wetenschap (hoofdstuk 3/9, `verwerkTechDrempel` — opent hoogstens één
 // keuze-pop-up per aanroep, ontgrendelt niet automatisch zoals cultuur), dan
@@ -100,9 +100,9 @@ export function volgendeBeurt(state: GameState): GameState {
   const naUitputting = verwerkUitputting(state);
   const naBouw = verwerkBouwwachtrij(naUitputting);
   const naProductie = verwerkProductie(naBouw);
-  const naOntgrendeling = verwerkLaagOntgrendeling(naProductie);
-  // Belegering (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
-  // verkenner", Deel 4): direct na de laag-ontgrendeling, op dezelfde
+  const naOntgrendeling = verwerkStreekOntgrendeling(naProductie);
+  // Belegering (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
+  // verkenner", Deel 4): direct na de streek-ontgrendeling, op dezelfde
   // cultuurproductie van deze beurt — zie `verwerkBelegering` hierboven.
   const naBelegering = verwerkBelegering(naOntgrendeling);
   const naTechDrempel = verwerkTechDrempel(naBelegering);
@@ -135,7 +135,7 @@ export function volgendeBeurt(state: GameState): GameState {
   const settler =
     naRoofdieren.settler ??
     (!naRoofdieren.stadGesticht && !naRoofdieren.settlerVerlorenAanRoofdier && nieuweBeurt >= 2
-      ? { hoogte: 1, positieInLaag: STAD_POSITIE }
+      ? { hoogte: 1, positieInStreek: STAD_POSITIE }
       : undefined);
 
   return {

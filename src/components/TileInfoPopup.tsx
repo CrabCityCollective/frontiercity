@@ -162,8 +162,8 @@ export default function TileInfoPopup({
                             key={strijder.id}
                             title={
                               strijder.wachttoren
-                                ? `Bemant al een andere wachttoren op laag ${strijder.wachttoren.hoogte}`
-                                : `Al toegewezen aan een legerkamp op laag ${strijder.legerkamp!.hoogte}`
+                                ? `Bemant al een andere wachttoren op streek ${strijder.wachttoren.hoogte}`
+                                : `Al toegewezen aan een legerkamp op streek ${strijder.legerkamp!.hoogte}`
                             }
                             aria-label="Strijder niet beschikbaar"
                             style={{

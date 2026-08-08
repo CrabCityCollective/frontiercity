@@ -39,17 +39,17 @@ import {
 } from "./indringersEnDieren";
 import {
   sluitAmberOntdektMelding as sluitAmberOntdektMeldingActie,
-  sluitBezetteLaagOntdektMelding as sluitBezetteLaagOntdektMeldingActie,
+  sluitBezetteStreekOntdektMelding as sluitBezetteStreekOntdektMeldingActie,
   sluitTweedeAmberOntdektMelding as sluitTweedeAmberOntdektMeldingActie,
   sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
   sluitVijandelijkHeiligdomVernietigdMelding as sluitVijandelijkHeiligdomVernietigdMeldingActie,
   verken as verkenActie,
-} from "./laagOntgrendeling";
+} from "./streekOntgrendeling";
 import { sluitBouwKeuze as sluitBouwKeuzeActie, startBouw as startBouwActie } from "./infrastructuurEnBouw";
 import {
   bemanLegerkamp as bemanLegerkampActie,
   bemanWachttoren as bemanWachttorenActie,
-  confrontatieBezetteLaag as confrontatieBezetteLaagActie,
+  confrontatieBezetteStreek as confrontatieBezetteStreekActie,
   haalStrijderTerug as haalStrijderTerugActie,
 } from "./militair";
 import { laadSpel, saveSpel } from "./save";
@@ -93,8 +93,8 @@ export function useGameEngine() {
   }, []);
 
   const startBouw = useCallback(
-    (laagHoogte: number, improvement: Improvement, positieInLaag: number) => {
-      setState((huidig) => metAutomatischeVolgendeBeurt(startBouwActie(huidig, laagHoogte, improvement, positieInLaag)));
+    (streekHoogte: number, improvement: Improvement, positieInStreek: number) => {
+      setState((huidig) => metAutomatischeVolgendeBeurt(startBouwActie(huidig, streekHoogte, improvement, positieInStreek)));
     },
     []
   );
@@ -133,16 +133,16 @@ export function useGameEngine() {
     setState((huidig) => startRecruteringActie(huidig));
   }, []);
 
-  const confrontatieBezetteLaag = useCallback((positieInLaag: number) => {
-    setState((huidig) => confrontatieBezetteLaagActie(huidig, positieInLaag));
+  const confrontatieBezetteStreek = useCallback((positieInStreek: number) => {
+    setState((huidig) => confrontatieBezetteStreekActie(huidig, positieInStreek));
   }, []);
 
   const bevestigIneenstorting = useCallback(() => {
     setState((huidig) => bevestigIneenstortingActie(huidig));
   }, []);
 
-  const verplaatsSettlerNaar = useCallback((hoogte: number, positieInLaag: number) => {
-    setState((huidig) => metAutomatischeVolgendeBeurt(verplaatsSettlerNaarActie(huidig, hoogte, positieInLaag)));
+  const verplaatsSettlerNaar = useCallback((hoogte: number, positieInStreek: number) => {
+    setState((huidig) => metAutomatischeVolgendeBeurt(verplaatsSettlerNaarActie(huidig, hoogte, positieInStreek)));
   }, []);
 
   const legWegAan = useCallback(() => {
@@ -181,8 +181,8 @@ export function useGameEngine() {
     setState((huidig) => sluitTweedeAmberOntdektMeldingActie(huidig));
   }, []);
 
-  const versnelBouwMetGoud = useCallback((hoogte: number, positieInLaag: number) => {
-    setState((huidig) => versnelBouwMetGoudActie(huidig, hoogte, positieInLaag));
+  const versnelBouwMetGoud = useCallback((hoogte: number, positieInStreek: number) => {
+    setState((huidig) => versnelBouwMetGoudActie(huidig, hoogte, positieInStreek));
   }, []);
 
   const versnelCivielMetGoud = useCallback(() => {
@@ -209,8 +209,8 @@ export function useGameEngine() {
     setState((huidig) => bevestigGedwongenTribuutActie(huidig));
   }, []);
 
-  const bemanWachttoren = useCallback((strijderId: string, hoogte: number, positieInLaag: number) => {
-    setState((huidig) => bemanWachttorenActie(huidig, strijderId, hoogte, positieInLaag));
+  const bemanWachttoren = useCallback((strijderId: string, hoogte: number, positieInStreek: number) => {
+    setState((huidig) => bemanWachttorenActie(huidig, strijderId, hoogte, positieInStreek));
   }, []);
 
   const haalStrijderTerug = useCallback((strijderId: string) => {
@@ -225,11 +225,11 @@ export function useGameEngine() {
     setState((huidig) => kiesTechActie(huidig, techId));
   }, []);
 
-  // Bezette Laag, Missionaris & Verkenner (hoofdstuk 6, issue: "De Bezette
-  // Laag, missionaris en verkenner") — zelfde dunne wrapper-conventie als
+  // Bezette Streek, Missionaris & Verkenner (hoofdstuk 6, issue: "De Bezette
+  // Streek, missionaris en verkenner") — zelfde dunne wrapper-conventie als
   // hierboven.
-  const verken = useCallback((positieInLaag: number) => {
-    setState((huidig) => verkenActie(huidig, positieInLaag));
+  const verken = useCallback((positieInStreek: number) => {
+    setState((huidig) => verkenActie(huidig, positieInStreek));
   }, []);
 
   const startVerkennerRecrutering = useCallback(() => {
@@ -240,12 +240,12 @@ export function useGameEngine() {
     setState((huidig) => startMissionarisRecruteringActie(huidig));
   }, []);
 
-  const bemanLegerkamp = useCallback((strijderId: string, hoogte: number, positieInLaag: number) => {
-    setState((huidig) => bemanLegerkampActie(huidig, strijderId, hoogte, positieInLaag));
+  const bemanLegerkamp = useCallback((strijderId: string, hoogte: number, positieInStreek: number) => {
+    setState((huidig) => bemanLegerkampActie(huidig, strijderId, hoogte, positieInStreek));
   }, []);
 
-  const sluitBezetteLaagOntdektMelding = useCallback(() => {
-    setState((huidig) => sluitBezetteLaagOntdektMeldingActie(huidig));
+  const sluitBezetteStreekOntdektMelding = useCallback(() => {
+    setState((huidig) => sluitBezetteStreekOntdektMeldingActie(huidig));
   }, []);
 
   const sluitVijandelijkHeiligdomOnthuldMelding = useCallback(() => {
@@ -294,8 +294,8 @@ export function useGameEngine() {
     startVerkennerRecrutering,
     startMissionarisRecrutering,
     bemanLegerkamp,
-    confrontatieBezetteLaag,
-    sluitBezetteLaagOntdektMelding,
+    confrontatieBezetteStreek,
+    sluitBezetteStreekOntdektMelding,
     sluitVijandelijkHeiligdomOnthuldMelding,
     sluitVijandelijkHeiligdomVernietigdMelding,
     opslaan,

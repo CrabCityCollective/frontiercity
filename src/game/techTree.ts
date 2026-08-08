@@ -144,10 +144,10 @@ export const TECH_TREE: Record<TechId, TechNode> = {
 // tegen de Sterrencirkel-opbrengst uit Deel 1): `kosten(drempel) =
 // 10 + 10 × (drempel-1)²`, dus drempel 1 = 10, drempel 2 = 20, drempel 3 = 50.
 // Zwaarder dan zowel de basisterm als de kwadratische factor van de
-// cultuurcurve (`3 + 5 × (laag-1)²`, hoofdstuk 14) — bewust: wetenschap levert
+// cultuurcurve (`3 + 5 × (streek-1)²`, hoofdstuk 14) — bewust: wetenschap levert
 // permanente, structurele bonussen op (een boerderij die voorgoed 20% meer
 // opbrengt, een opslag-cap die voorgoed +10 is) in plaats van eenmalige
-// toegang tot een laag, wat een hogere prijs rechtvaardigt (hoofdstuk 11).
+// toegang tot een streek, wat een hogere prijs rechtvaardigt (hoofdstuk 11).
 //
 // Doorrekening (indicatief, zelfde stijl als de cultuur-doorrekening,
 // hoofdstuk 14): met een near-optimale opening (Houtkap → Boerderij →
@@ -156,10 +156,10 @@ export const TECH_TREE: Record<TechId, TechNode> = {
 // beurten bouwtijd + settler-wegaanleg, zelfde tempo als het Heiligdom).
 // Vanaf dan loopt wetenschap met 2/beurt op (1 Sterrencirkel op de frontier):
 // drempel 1 (10) rond beurt 22, drempel 2 (20) rond beurt 27, drempel 3 (50)
-// rond beurt 42 — 3 tot 9 beurten trager dan de vergelijkbare cultuurlagen
-// (laag 2 ~16, laag 3 ~24, laag 4 ~36), een oplopend en dus "merkbaar"
+// rond beurt 42 — 3 tot 9 beurten trager dan de vergelijkbare cultuurstreken
+// (streek 2 ~16, streek 3 ~24, streek 4 ~36), een oplopend en dus "merkbaar"
 // verschil, terwijl drempel 3 nog altijd ruim vóór het einde van de 12
-// tutorial-lagen valt (cultuurkosten lopen daar al op tot 400-600, hoofdstuk
+// tutorial-streken valt (cultuurkosten lopen daar al op tot 400-600, hoofdstuk
 // 14 — de tutorial duurt dus sowieso veel langer dan 42 beurten).
 const WETENSCHAP_KOSTEN_BASIS = 10;
 const WETENSCHAP_KOSTEN_KWADRATISCHE_FACTOR = 10;

@@ -1,9 +1,9 @@
 "use client";
 
 import ResourceIcoon from "@/components/ResourceIcoon";
-import { laagContent } from "@/game/tutorialContent";
-import { City, Layer, MateriaalType } from "@/game/types";
-import { hoogsteOntgrendeldeLaag } from "@/game/world";
+import { streekContent } from "@/game/tutorialContent";
+import { City, Streek, MateriaalType } from "@/game/types";
+import { hoogsteOntgrendeldeStreek } from "@/game/world";
 
 const STAD_GROOTTE_LABELS: Record<City["grootte"], string> = {
   klein: "Klein",
@@ -12,7 +12,7 @@ const STAD_GROOTTE_LABELS: Record<City["grootte"], string> = {
 };
 
 interface HistoriePaneelProps {
-  lagen: Layer[];
+  streken: Streek[];
   statistieken: {
     improvementenGebouwd: number;
     vervallen: number;
@@ -30,17 +30,17 @@ interface HistoriePaneelProps {
 // Historiescherm (issue: "spel-icoontje ... historie van deze run inzien";
 // uitgebreid met issue "Settings uitbreiden": aanvallen, afgeslagen aanvallen,
 // gesloopte wachttorens en gegeven tribuut): toont, in volgorde, de
-// mechaniek/flavor-tekst van elke laag die de speler al ontgrendeld heeft
-// (dezelfde vastgelegde tutorial-content als LaagIntroPaneel, hier alleen
-// achteraf terugkijkend i.p.v. alleen de huidige laag), plus een paar
+// mechaniek/flavor-tekst van elke streek die de speler al ontgrendeld heeft
+// (dezelfde vastgelegde tutorial-content als StreekIntroPaneel, hier alleen
+// achteraf terugkijkend i.p.v. alleen de huidige streek), plus een paar
 // samengevatte run-statistieken. Bereikbaar via het hoofdmenu (HoofdMenu) in
 // plaats van een los spel-icoontje (issue: "de historie ... toevoegen aan het
 // menu, ipv dat het een zelfstandige button is").
-export default function HistoriePaneel({ lagen, statistieken, onSluiten }: HistoriePaneelProps) {
-  const hoogste = hoogsteOntgrendeldeLaag(lagen);
+export default function HistoriePaneel({ streken, statistieken, onSluiten }: HistoriePaneelProps) {
+  const hoogste = hoogsteOntgrendeldeStreek(streken);
   const regels = Array.from({ length: hoogste }, (_, i) => i + 1)
-    .map((hoogte) => ({ hoogte, content: laagContent(hoogte) }))
-    .filter((regel): regel is { hoogte: number; content: NonNullable<ReturnType<typeof laagContent>> } =>
+    .map((hoogte) => ({ hoogte, content: streekContent(hoogte) }))
+    .filter((regel): regel is { hoogte: number; content: NonNullable<ReturnType<typeof streekContent>> } =>
       Boolean(regel.content)
     );
   // Alleen grondstoffen tonen die daadwerkelijk als tribuut gegeven zijn —
@@ -114,7 +114,7 @@ export default function HistoriePaneel({ lagen, statistieken, onSluiten }: Histo
           {regels.map(({ hoogte, content }) => (
             <div key={hoogte} style={{ borderTop: "1px solid var(--kleur-rand)", paddingTop: "0.5rem" }}>
               <strong>
-                Laag {hoogte} — {content.naam}
+                Streek {hoogte} — {content.naam}
               </strong>
               <div style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>
                 Nieuw: {content.mechaniek}

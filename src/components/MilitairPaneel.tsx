@@ -11,7 +11,7 @@ interface MilitairPaneelProps {
   tegenstanderSterkte: number;
   onStartRecrutering: () => void;
   // Klik op het Legerkamp-icoontje naast een nog niet toegewezen strijder
-  // (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel
+  // (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner", Deel
   // 5) — zet meteen de legerkamp-kies-modus aan (zie WachttorenKiesBanner).
   // Wachttoren-toewijzing loopt sinds issue "wachttorens bemannen" niet meer
   // via dit paneel, maar via de wachttoren-tile zelf op de kaart (zie
@@ -101,7 +101,7 @@ export default function MilitairPaneel({
                 return (
                   <span
                     key={strijder.id}
-                    title={`Bemant wachttoren op laag ${strijder.wachttoren.hoogte}`}
+                    title={`Bemant wachttoren op streek ${strijder.wachttoren.hoogte}`}
                     aria-label="Strijder bemant een wachttoren"
                     style={{ padding: "0.3rem 0.5rem", fontSize: "1rem", lineHeight: 1 }}
                   >
@@ -119,7 +119,7 @@ export default function MilitairPaneel({
                     key={strijder.id}
                     className="fc-knop"
                     onClick={() => onHaalTerug(strijder.id)}
-                    title={`Toegewezen aan een legerkamp op laag ${strijder.legerkamp.hoogte} — klik om terug te halen`}
+                    title={`Toegewezen aan een legerkamp op streek ${strijder.legerkamp.hoogte} — klik om terug te halen`}
                     aria-label="Strijder"
                     style={{ padding: "0.3rem 0.5rem", fontSize: "1rem", lineHeight: 1 }}
                   >
@@ -132,7 +132,7 @@ export default function MilitairPaneel({
                   key={strijder.id}
                   className="fc-knop"
                   onClick={() => onKiesStrijderVoorLegerkamp(strijder.id)}
-                  title="Wijs deze strijder toe aan een legerkamp (hoofdstuk 6: Bezette Laag-legerwaarde)"
+                  title="Wijs deze strijder toe aan een legerkamp (hoofdstuk 6: Bezette Streek-legerwaarde)"
                   aria-label="Strijder naar legerkamp"
                   style={{ padding: "0.3rem 0.4rem", fontSize: "0.8rem", lineHeight: 1 }}
                 >

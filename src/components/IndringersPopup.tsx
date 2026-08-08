@@ -20,8 +20,8 @@ interface IndringersPopupProps {
 }
 
 // Indringers-pop-up (hoofdstuk 6): verschijnt zodra `verwerkIndringers`
-// (economie.ts) toeslaat op een van de ontgrendelde lagen (niet meer alleen
-// de frontier-laag). Eén component met varianten, geschakeld op
+// (economie.ts) toeslaat op een van de ontgrendelde streken (niet meer alleen
+// de frontier-streek). Eén component met varianten, geschakeld op
 // `event.heeftWachttoren`/`event.fase`, omdat ze hetzelfde blokkerende
 // meldings-frame delen (zelfde patroon als
 // VoedselWaarschuwingPopup/MilitairUitlegPopup) en alleen in tekst/knoppen
@@ -30,7 +30,7 @@ interface IndringersPopupProps {
 // trekt het tribuut daadwerkelijk van de voorraad af.
 // `fase: "amber-onder-vuur"`/`"malus"`/`"bonus"` (issue: "wachttorens kunnen
 // vernietigd worden door indringers"): de derde-uitkomst-loot voor een
-// beschermde laag, en de losstaande Amberader-aankondiging die daar (of vóór
+// beschermde streek, en de losstaande Amberader-aankondiging die daar (of vóór
 // de gewone tribuut-afhandeling) aan vooraf kan gaan — zie
 // `bevestigAmberOnderVuur` in economie.ts voor de fase-overgang.
 export default function IndringersPopup({
@@ -75,7 +75,7 @@ export default function IndringersPopup({
         {event.fase === "amber-onder-vuur" && (
           <>
             <p style={{ margin: 0, lineHeight: 1.6 }}>
-              {event.stamNaam} dringt laag {event.laagHoogte} binnen. {AMBERADER_ONDER_VUUR_TEKST}
+              {event.stamNaam} dringt streek {event.streekHoogte} binnen. {AMBERADER_ONDER_VUUR_TEKST}
             </p>
             <button
               className="fc-knop"
@@ -90,7 +90,7 @@ export default function IndringersPopup({
         {event.heeftWachttoren && event.fase === "gemeld" && (
           <>
             <p style={{ margin: 0, lineHeight: 1.6 }}>
-              {event.stamNaam} dringt laag {event.laagHoogte} binnen. De wachttoren houdt stand — ze trekken zich
+              {event.stamNaam} dringt streek {event.streekHoogte} binnen. De wachttoren houdt stand — ze trekken zich
               terug zonder iets te nemen.
             </p>
             <button className="fc-knop" onClick={onSluiten} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
@@ -122,7 +122,7 @@ export default function IndringersPopup({
         {!event.heeftWachttoren && event.tribuut && event.fase === "gemeld" && (
           <>
             <p style={{ margin: 0, lineHeight: 1.6 }}>
-              {event.stamNaam} dringt laag {event.laagHoogte} binnen. Er staat geen bemande wachttoren — ze eisen{" "}
+              {event.stamNaam} dringt streek {event.streekHoogte} binnen. Er staat geen bemande wachttoren — ze eisen{" "}
               {event.tribuut.aantal} {resourceLabel} als tribuut. Geef je het, dan trekken ze zich terug. Weiger je,
               dan verwoesten ze de stad.
             </p>

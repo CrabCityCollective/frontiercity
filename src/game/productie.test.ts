@@ -12,16 +12,16 @@ test("de opslag-cap geldt per grondstof, niet als gezamenlijke som (basis van de
   state = {
     ...state,
     voorraad: { hout: OPSLAG_CAP, steen: OPSLAG_CAP, erts: 0, goud: 0 },
-    lagen: state.lagen.map((laag, idx) =>
+    streken: state.streken.map((streek, idx) =>
       idx !== 0
-        ? laag
+        ? streek
         : {
-            ...laag,
-            tiles: laag.tiles.map((tile) => {
-              if (tile.positieInLaag === 6) {
+            ...streek,
+            tiles: streek.tiles.map((tile) => {
+              if (tile.positieInStreek === 6) {
                 return { ...tile, status: "actief" as const, improvement: MIJN, heeftWeg: true, beurtenTotUitputting: MIJN.uitputtingBeurten };
               }
-              if (tile.positieInLaag === 5) {
+              if (tile.positieInStreek === 5) {
                 return { ...tile, heeftWeg: true };
               }
               return tile;
@@ -39,7 +39,7 @@ test("de opslag-cap geldt per grondstof, niet als gezamenlijke som (basis van de
 
 test("een Sterrencirkel produceert wetenschap per beurt zonder uit te putten", () => {
   let state = metWerkendeSterrencirkel();
-  const tile = () => state.lagen[0].tiles[2];
+  const tile = () => state.streken[0].tiles[2];
 
   assert.equal(tile().beurtenTotUitputting, undefined, "de Sterrencirkel put niet uit");
 
@@ -56,17 +56,17 @@ test('"vuur-temmen" verhoogt de boerderij-opbrengst met 20%', () => {
   const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
   state = {
     ...state,
-    lagen: state.lagen.map((laag, idx) =>
+    streken: state.streken.map((streek, idx) =>
       idx !== 0
-        ? laag
+        ? streek
         : {
-            ...laag,
-            tiles: laag.tiles.map((tile) => {
-              if (tile.positieInLaag === 0) {
+            ...streek,
+            tiles: streek.tiles.map((tile) => {
+              if (tile.positieInStreek === 0) {
                 return { ...tile, status: "actief" as const, improvement: BOERDERIJ, heeftWeg: true };
               }
               // Bruggetje naar de stad-tile (positie 4), zie ook hierboven.
-              if ([1, 2, 3].includes(tile.positieInLaag)) {
+              if ([1, 2, 3].includes(tile.positieInStreek)) {
                 return { ...tile, heeftWeg: true };
               }
               return tile;

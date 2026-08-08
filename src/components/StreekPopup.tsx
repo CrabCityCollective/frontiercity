@@ -1,20 +1,20 @@
 "use client";
 
-import { laagContent } from "@/game/tutorialContent";
+import { streekContent } from "@/game/tutorialContent";
 
-interface LaagPopupProps {
+interface StreekPopupProps {
   hoogte: number;
   onDoorgaan: () => void;
 }
 
-// Laag-popup (issue: "als je naar een nieuwe laag gaat, een popup vóór het
-// bouwcategorie-schermpje"): toont de laag-naam/nummer, wat er nieuw te
+// Streek-popup (issue: "als je naar een nieuwe streek gaat, een popup vóór het
+// bouwcategorie-schermpje"): toont de streek-naam/nummer, wat er nieuw te
 // bouwen is én de flavor-tekst. De flavor-tekst staat uitsluitend hier — het
-// blokje onderaan (LaagIntroPaneel) herhaalt alleen de laag en wat er nieuw
+// blokje onderaan (StreekIntroPaneel) herhaalt alleen de streek en wat er nieuw
 // is, zonder flavor-tekst. Blokkeert net als IntroScherm de rest van de UI
 // tot de speler doorklikt.
-export default function LaagPopup({ hoogte, onDoorgaan }: LaagPopupProps) {
-  const content = laagContent(hoogte);
+export default function StreekPopup({ hoogte, onDoorgaan }: StreekPopupProps) {
+  const content = streekContent(hoogte);
   if (!content) return null;
 
   return (
@@ -42,7 +42,7 @@ export default function LaagPopup({ hoogte, onDoorgaan }: LaagPopupProps) {
         }}
       >
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
-          Laag {hoogte} — {content.naam}
+          Streek {hoogte} — {content.naam}
         </strong>
         <span style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>Nieuw: {content.mechaniek}</span>
         <p style={{ margin: 0, whiteSpace: "pre-line", lineHeight: 1.6 }}>{content.flavorTekst}</p>

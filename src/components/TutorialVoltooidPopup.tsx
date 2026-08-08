@@ -2,7 +2,7 @@
 
 import {
   STICHTING_AFSLUITENDE_SCENE,
-  TUTORIAL_LAAG_CONTENT,
+  TUTORIAL_STREEK_CONTENT,
   TUTORIAL_VOLTOOID_INTRO,
   TUTORIAL_VOLTOOID_TITEL,
 } from "@/game/tutorialContent";
@@ -13,11 +13,11 @@ interface TutorialVoltooidPopupProps {
 
 // Tutorial-voltooid-pop-up (issue: "pop-up met een summary van wat je
 // geleerd hebt", getoond na het stichten van een nieuwe stad): vat
-// de mechanieken samen door dezelfde `TUTORIAL_LAAG_CONTENT` te doorlopen als
-// LaagPopup/LaagIntroPaneel, in plaats van een tweede lijst bij te houden die
+// de mechanieken samen door dezelfde `TUTORIAL_STREEK_CONTENT` te doorlopen als
+// StreekPopup/StreekIntroPaneel, in plaats van een tweede lijst bij te houden die
 // uit de pas kan lopen met die twee.
 export default function TutorialVoltooidPopup({ onDoorgaan }: TutorialVoltooidPopupProps) {
-  const lagen = Object.entries(TUTORIAL_LAAG_CONTENT)
+  const streken = Object.entries(TUTORIAL_STREEK_CONTENT)
     .map(([hoogte, content]) => ({ hoogte: Number(hoogte), ...content }))
     .sort((a, b) => a.hoogte - b.hoogte);
 
@@ -53,9 +53,9 @@ export default function TutorialVoltooidPopup({ onDoorgaan }: TutorialVoltooidPo
         <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: "pre-line" }}>{STICHTING_AFSLUITENDE_SCENE}</p>
         <p style={{ margin: 0, lineHeight: 1.6 }}>{TUTORIAL_VOLTOOID_INTRO}</p>
         <ul style={{ margin: 0, padding: 0, listStyle: "none", textAlign: "left", lineHeight: 1.8 }}>
-          {lagen.map((laag) => (
-            <li key={laag.hoogte}>
-              Laag {laag.hoogte} — {laag.mechaniek}
+          {streken.map((streek) => (
+            <li key={streek.hoogte}>
+              Streek {streek.hoogte} — {streek.mechaniek}
             </li>
           ))}
         </ul>

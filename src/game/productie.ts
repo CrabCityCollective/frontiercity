@@ -7,7 +7,7 @@
 // voedselbalans, cultuur-frontier-halvering) op één plek staan, gedeeld door
 // zowel `volgendeBeurt` (economie.ts) als de modules die dezelfde
 // berekeningen hergebruiken (uitputtingEnVerval.ts: voedseltekort-voorspelling,
-// laagOntgrendeling.ts: belegeringsvoortgang).
+// streekOntgrendeling.ts: belegeringsvoortgang).
 
 import {
   boerderijOpbrengstFactor,
@@ -15,7 +15,7 @@ import {
   voedselVerbruikVermindering,
 } from "./techTree";
 import { City, GameState, Improvement, ResourceType, TechId } from "./types";
-import { hoogsteOntgrendeldeLaag } from "./world";
+import { hoogsteOntgrendeldeStreek } from "./world";
 import { isTileVerbondenMetStad } from "./wegen";
 import { isMateriaalType } from "./materiaal";
 import { telBemandeWachttorens } from "./militair";
@@ -23,7 +23,7 @@ import { telBemandeWachttorens } from "./militair";
 // Voedseltekort-tuning (M6, hoofdstuk 4/14; issue: "stad instort of verlaten
 // alleen als er te weinig voedsel is"): bewuste MVP-placeholders, net als de
 // overige nog niet vastgelegde balansgetallen. Een grotere stad verbruikt
-// meer voedsel per beurt (hoofdstuk 10, laag 10-flavor: "meer monden, minder
+// meer voedsel per beurt (hoofdstuk 10, streek 10-flavor: "meer monden, minder
 // plek om ze allemaal te voeden"). De waarschuwing verschijnt zodra de
 // voorraad — bij het huidige productie/verbruikstempo — naar verwachting
 // binnen `VOEDSEL_WAARSCHUWING_BEURTEN` beurten op zou raken.
@@ -40,7 +40,7 @@ const VOEDSEL_VERBRUIK: Record<City["grootte"], number> = {
 // boerderij-opbrengst (4 voedsel/beurt, zie ECONOMISCH_LAND_IMPROVEMENTS):
 // zelfs een kleine stad met maar 1 actieve boerderij houdt na het eigen
 // verbruik (2) nog 2 voedsel/beurt over, genoeg voor 2 bemande wachttorens
-// zonder in de min te komen; een speler die gaandeweg de tutorial (12 lagen)
+// zonder in de min te komen; een speler die gaandeweg de tutorial (12 streken)
 // een paar boerderijen bijbouwt, houdt ruim voldoende marge over voor alle
 // wachttorens die realistisch nodig zijn (hoofdstuk 11 heeft de volledige
 // onderbouwing, hoofdstuk 14 de cijfers) — vandaar geen aanpassing elders in
@@ -63,13 +63,13 @@ function boerderijOpbrengst(waarde: number, technologieen: TechId[]): number {
 function berekenVoedselProductie(state: GameState): number {
   let productie = 0;
 
-  for (const laag of state.lagen) {
-    for (const tile of laag.tiles) {
+  for (const streek of state.streken) {
+    for (const tile of streek.tiles) {
       const effect = tile.improvement?.effect;
       if (tile.status !== "actief" || effect?.type !== "productie" || effect.resource !== "voedsel" || !effect.waarde) {
         continue;
       }
-      if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)) {
+      if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)) {
         continue;
       }
       productie +=
@@ -82,7 +82,7 @@ function berekenVoedselProductie(state: GameState): number {
 
 // Netto voedselverbruik per beurt (issue: "stad instort of verlaten alleen
 // als er te weinig voedsel is"): een grotere stad heeft meer monden te voeden
-// (hoofdstuk 10, laag 10-flavor), plus 1 voedsel per bemande Wachttoren
+// (hoofdstuk 10, streek 10-flavor), plus 1 voedsel per bemande Wachttoren
 // (hoofdstuk 6/11/14, `WACHTTOREN_VOEDSEL_VERBRUIK` hierboven). Nog geen
 // aparte multiplier per campagne nodig in de MVP (hoofdstuk 13).
 // "A2b. Voorraadschuur" (techTree.ts): verlaagt alleen het stadsverbruik
@@ -118,9 +118,9 @@ function steenOpbrengst(waarde: number, technologieen: TechId[]): number {
 // voedseltekort.
 //
 // Heiligdom & de frontier (hoofdstuk 6): cultuurproductie telt voluit mee op
-// de frontier-laag (de hoogst ontgrendelde laag) zelf, en voor de helft op
-// elke laag daaronder — uitbeelding van een Heiligdom dat vooral nabije,
-// nog niet "eigen" stammen omtovert, een effect dat afneemt naarmate de laag
+// de frontier-streek (de hoogst ontgrendelde streek) zelf, en voor de helft op
+// elke streek daaronder — uitbeelding van een Heiligdom dat vooral nabije,
+// nog niet "eigen" stammen omtovert, een effect dat afneemt naarmate de streek
 // verder van het actieve grensgebied ligt. De Sterrencirkel (hoofdstuk 3/9,
 // issue: "tech tree toevoegen" Deel 1) volgt voor wetenschap exact hetzelfde
 // patroon — "zelfde patroon als Heiligdom voor cultuur", inclusief deze
@@ -129,16 +129,16 @@ function steenOpbrengst(waarde: number, technologieen: TechId[]): number {
 // improvements) wegverbonden tiles met een cultuur-productie-effect, met
 // dezelfde frontier-halvering als hieronder in `verwerkProductie`. Los van
 // `verwerkProductie` zodat `verwerkBelegering` (hoofdstuk 6, issue: "De
-// Bezette Laag, missionaris en verkenner", Deel 4) dezelfde berekening kan
+// Bezette Streek, missionaris en verkenner", Deel 4) dezelfde berekening kan
 // hergebruiken om te bepalen hoeveel cultuur-inkomen er deze beurt naar de
-// belegeringsmeter omgeleid wordt zodra een Bezette Laag actief is — zelfde
+// belegeringsmeter omgeleid wordt zodra een Bezette Streek actief is — zelfde
 // patroon als `berekenVoedselProductie` hierboven.
 export function berekenCultuurProductieDitBeurt(state: GameState): number {
   let productie = 0;
-  const frontierHoogte = hoogsteOntgrendeldeLaag(state.lagen);
+  const frontierHoogte = hoogsteOntgrendeldeStreek(state.streken);
 
-  for (const laag of state.lagen) {
-    for (const tile of laag.tiles) {
+  for (const streek of state.streken) {
+    for (const tile of streek.tiles) {
       const effect = tile.improvement?.effect;
       if (
         tile.status !== "actief" ||
@@ -148,15 +148,15 @@ export function berekenCultuurProductieDitBeurt(state: GameState): number {
       ) {
         continue;
       }
-      if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)) {
+      if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)) {
         continue;
       }
-      productie += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+      productie += streek.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
     }
   }
 
   // Tempel/Grote Tempel (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
-  // 3): een city improvement staat niet op een specifieke laag, dus geen
+  // 3): een city improvement staat niet op een specifieke streek, dus geen
   // frontier-halvering — altijd de volle opbrengst, net als Opslagplaats
   // geen wegverbinding nodig heeft.
   productie += cityImprovementProductie(state.stad.cityImprovements, "cultuur");
@@ -185,9 +185,9 @@ export function verwerkProductie(state: GameState): GameState {
   let voedsel = state.voedsel;
   let cultuur = state.cultuur;
   let wetenschap = state.wetenschap;
-  const frontierHoogte = hoogsteOntgrendeldeLaag(state.lagen);
-  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
-  // verkenner", Deel 2): zolang er een actieve Bezette Laag is, bevriest de
+  const frontierHoogte = hoogsteOntgrendeldeStreek(state.streken);
+  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
+  // verkenner", Deel 2): zolang er een actieve Bezette Streek is, bevriest de
   // cumulatieve cultuurteller volledig — nieuwe cultuurproductie wordt hier
   // dus bewust overgeslagen (niet toegevoegd aan `cultuur`). `verwerkBelegering`
   // hieronder in de `volgendeBeurt`-pijplijn bepaalt zelf, via
@@ -195,10 +195,10 @@ export function verwerkProductie(state: GameState): GameState {
   // alsnog naar de belegeringsmeter omgeleid wordt, of (zonder Missionaris)
   // gewoon verloren gaat — "bevroren, maar niet verloren" geldt alleen voor
   // de reeds opgebouwde `cultuur`-waarde zelf, niet voor nieuwe productie.
-  const bezetteLaag = state.lagen.find((l) => l.bezet);
+  const bezetteStreek = state.streken.find((l) => l.bezet);
 
-  for (const laag of state.lagen) {
-    for (const tile of laag.tiles) {
+  for (const streek of state.streken) {
+    for (const tile of streek.tiles) {
       const effect = tile.improvement?.effect;
       if (tile.status !== "actief" || effect?.type !== "productie" || !effect.resource || !effect.waarde) {
         continue;
@@ -208,16 +208,16 @@ export function verwerkProductie(state: GameState): GameState {
       // pas zodra zijn vakje via een wegennetwerk met de stad verbonden is —
       // de stad zelf heeft geen `soort: "land"`-improvement, dus die blijft
       // hierdoor ongemoeid.
-      if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)) {
+      if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)) {
         continue;
       }
 
       if (effect.resource === "cultuur") {
-        if (!bezetteLaag) {
-          cultuur += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+        if (!bezetteStreek) {
+          cultuur += streek.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
         }
       } else if (effect.resource === "wetenschap") {
-        wetenschap += laag.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+        wetenschap += streek.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
       } else if (isMateriaalType(effect.resource)) {
         const opbrengst =
           effect.resource === "steen" && tile.improvement?.id === "steengroeve"
@@ -233,14 +233,14 @@ export function verwerkProductie(state: GameState): GameState {
   // City improvements (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
   // 3): Bibliotheek/Markt/Tempel/Grote Tempel produceren, net als
   // Opslagplaats, zonder wegverbinding en zonder frontier-halvering — een
-  // city improvement staat niet op een land-vakje. De Bezette-Laag-
+  // city improvement staat niet op een land-vakje. De Bezette-Streek-
   // cultuurbevriezing hierboven geldt onverkort ook voor Tempel/Grote Tempel.
   for (const improvement of state.stad.cityImprovements) {
     const effect = improvement.effect;
     if (effect.type !== "productie" || !effect.resource || !effect.waarde) continue;
 
     if (effect.resource === "cultuur") {
-      if (!bezetteLaag) cultuur += effect.waarde;
+      if (!bezetteStreek) cultuur += effect.waarde;
     } else if (effect.resource === "wetenschap") {
       wetenschap += effect.waarde;
     } else if (isMateriaalType(effect.resource)) {
@@ -258,12 +258,12 @@ export function verwerkProductie(state: GameState): GameState {
 // dezelfde wegverbindingsregel als `verwerkProductie` hierboven, zodat de
 // pop-up pas verschijnt zodra de boerderij daadwerkelijk voedsel oplevert.
 export function heeftWerkendeBoerderij(state: GameState): boolean {
-  return state.lagen.some((laag) =>
-    laag.tiles.some(
+  return state.streken.some((streek) =>
+    streek.tiles.some(
       (tile) =>
         tile.status === "actief" &&
         tile.improvement?.id === "boerderij" &&
-        isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)
+        isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)
     )
   );
 }
@@ -274,7 +274,7 @@ export function heeftWerkendeBoerderij(state: GameState): boolean {
 // wegverbonden is: het gaat om het moment van bouwen zelf, niet om erts dat
 // al daadwerkelijk de stad bereikt.
 export function heeftGebouwdeMijn(state: GameState): boolean {
-  return state.lagen.some((laag) =>
-    laag.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "mijn")
+  return state.streken.some((streek) =>
+    streek.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "mijn")
   );
 }

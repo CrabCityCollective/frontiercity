@@ -12,7 +12,7 @@ interface VijandelijkHeiligdomPopupProps {
   onSluiten: () => void;
 }
 
-// Vijandelijk-Heiligdom-pop-up (hoofdstuk 6, issue: "De Bezette Laag,
+// Vijandelijk-Heiligdom-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
 // missionaris en verkenner", Deel 4): meldt zowel het onthullen van een
 // vijandelijk Heiligdom (via Verkenning) als het vernietigen ervan (via de
 // belegeringsmeter) — twee losse momenten van dezelfde dreiging, zelfde

@@ -23,7 +23,7 @@ import {
 import { City, GameState, Improvement, Strijder } from "./types";
 import { STAD_POSITIE, VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
 import { investeerInBouwkosten, pasVersnellingToe } from "./bouwwachtrij";
-import { heeftOfferAltaar } from "./laagOntgrendeling";
+import { heeftOfferAltaar } from "./streekOntgrendeling";
 
 // Betaalt de bouwkosten van een lopende civiele stadsbouw (M6, hoofdstuk
 // 11/16): één gedeelde wachtrij voor de groei-tier (WOONWIJK) én een nieuwe
@@ -59,7 +59,7 @@ export function verwerkCivielInAanbouw(state: GameState): GameState {
         grootte,
         civielInAanbouw: undefined,
       },
-      settler: isSettler ? { hoogte: 1, positieInLaag: STAD_POSITIE } : state.settler,
+      settler: isSettler ? { hoogte: 1, positieInStreek: STAD_POSITIE } : state.settler,
     };
   }
 
@@ -322,7 +322,7 @@ export function verwerkRecrutering(state: GameState): GameState {
 }
 
 // Betaalt de bouwkosten van een lopende Verkenner-rekrutering (hoofdstuk 6,
-// issue: "De Bezette Laag, missionaris en verkenner", Deel 3) — zelfde
+// issue: "De Bezette Streek, missionaris en verkenner", Deel 3) — zelfde
 // wachtrij-patroon als `verwerkRecrutering` hierboven, eigen wachtrij
 // (`verkennerInAanbouw`) omdat een Verkenner een andere unit is dan Soldaat.
 export function verwerkVerkennerRecrutering(state: GameState): GameState {
@@ -484,7 +484,7 @@ export function startRecrutering(state: GameState): GameState {
 }
 
 // Start het rekruteren van een Verkenner (hoofdstuk 6, issue: "De Bezette
-// Laag, missionaris en verkenner", Deel 3) — geen vereiste zoals het Offer
+// Streek, missionaris en verkenner", Deel 3) — geen vereiste zoals het Offer
 // Altaar bij Missionaris hieronder, altijd trainbaar zodra er niet al een
 // Verkenner in opleiding is.
 export function startVerkennerRecrutering(state: GameState): GameState {
@@ -498,7 +498,7 @@ export function startVerkennerRecrutering(state: GameState): GameState {
 
 // Start het rekruteren van een Missionaris (Deel 4) — alleen mogelijk zodra
 // er een voltooid Offer Altaar staat (`heeftOfferAltaar` in
-// laagOntgrendeling.ts), net als de Missionaris-unit zelf tot nu toe nooit
+// streekOntgrendeling.ts), net als de Missionaris-unit zelf tot nu toe nooit
 // daadwerkelijk trainbaar was.
 export function startMissionarisRecrutering(state: GameState): GameState {
   if (state.stad.missionarisInAanbouw || !heeftOfferAltaar(state)) return state;

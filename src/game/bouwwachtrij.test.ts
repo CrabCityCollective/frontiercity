@@ -49,15 +49,15 @@ test("versnelBouwMetGoud koopt de volledige resterende bouwtijd van een land-til
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
-    lagen: state.lagen.map((laag) => (laag.hoogte === 7 ? { ...laag, ontgrendeld: true } : laag)),
+    streken: state.streken.map((streek) => (streek.hoogte === 7 ? { ...streek, ontgrendeld: true } : streek)),
   };
   state = startBouw(state, 7, AMBERADER, 0);
-  const voortgang = state.lagen.find((l) => l.hoogte === 7)!.tiles[0].bouwVoortgang!;
+  const voortgang = state.streken.find((l) => l.hoogte === 7)!.tiles[0].bouwVoortgang!;
   const kosten = rushKostenGoud(AMBERADER, voortgang);
   state = { ...state, voorraad: { ...state.voorraad, goud: kosten } };
 
   const naVersnellen = versnelBouwMetGoud(state, 7, 0);
-  const tile = naVersnellen.lagen.find((l) => l.hoogte === 7)!.tiles[0];
+  const tile = naVersnellen.streken.find((l) => l.hoogte === 7)!.tiles[0];
 
   assert.equal(tile.status, "actief");
   assert.equal(tile.bouwVoortgang, undefined);
@@ -69,7 +69,7 @@ test("versnelBouwMetGoud koopt maar een deel van de beurten weg als er niet geno
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
-    lagen: state.lagen.map((laag) => (laag.hoogte === 7 ? { ...laag, ontgrendeld: true } : laag)),
+    streken: state.streken.map((streek) => (streek.hoogte === 7 ? { ...streek, ontgrendeld: true } : streek)),
   };
   state = startBouw(state, 7, AMBERADER, 0);
   // AMBERADER kost hout 8/steen 4 over 3 beurten (perBeurt: 3 hout, 2 steen)
@@ -77,7 +77,7 @@ test("versnelBouwMetGoud koopt maar een deel van de beurten weg als er niet geno
   state = { ...state, voorraad: { ...state.voorraad, goud: RUSH_GOUD_PER_BEURT } };
 
   const naVersnellen = versnelBouwMetGoud(state, 7, 0);
-  const tile = naVersnellen.lagen.find((l) => l.hoogte === 7)!.tiles[0];
+  const tile = naVersnellen.streken.find((l) => l.hoogte === 7)!.tiles[0];
 
   assert.equal(tile.status, "in_aanbouw", "nog niet voltooid: er is maar goud voor 1 van de 3 resterende beurten");
   assert.deepEqual(tile.bouwVoortgang, { hout: 5, steen: 2 });

@@ -27,11 +27,11 @@ const KUDDE_VOEDSEL_PER_BEURT = 3;
 const HOUTHAKKEN_HOUT_PER_BEURT = 1;
 
 // Roofdieren (hoofdstuk 14/17, issue: "roofdieren toevoegen"): vanaf
-// `ROOFDIER_MIN_LAAG` heeft elke jachtactie (niet elke beurt/laag zoals
+// `ROOFDIER_MIN_STREEK` heeft elke jachtactie (niet elke beurt/streek zoals
 // indringers/kuddes in indringersEnDieren.ts) een kans om een roofdier op te
 // roepen op het jachtvakje zelf. Bewuste MVP-placeholder, net als de overige
 // tuning-getallen hierboven.
-const ROOFDIER_MIN_LAAG = 5;
+const ROOFDIER_MIN_STREEK = 5;
 const ROOFDIER_KANS = 0.15;
 
 // Verplaatst de settler naar een aangeklikte tile (issue: "de tegels waar je
@@ -41,11 +41,11 @@ const ROOFDIER_KANS = 0.15;
 // ongeldige zet — de canvas (GameRoot) markeert alleen de bereikbare vakjes
 // als klikbaar, dit is een tweede, veilige check (zelfde patroon als
 // `startBouw`/terrein-eisen).
-export function verplaatsSettlerNaar(state: GameState, hoogte: number, positieInLaag: number): GameState {
+export function verplaatsSettlerNaar(state: GameState, hoogte: number, positieInStreek: number): GameState {
   if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
 
-  const magErheen = bereikbarePosities(state.lagen, state.settler).some(
-    (positie) => positie.hoogte === hoogte && positie.positieInLaag === positieInLaag
+  const magErheen = bereikbarePosities(state.streken, state.settler).some(
+    (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
   );
   if (!magErheen) return state;
 
@@ -55,7 +55,7 @@ export function verplaatsSettlerNaar(state: GameState, hoogte: number, positieIn
   const kostGeenActie = settlerBeweegtGratis(state.technologieen);
   return {
     ...state,
-    settler: { hoogte, positieInLaag },
+    settler: { hoogte, positieInStreek },
     settlerActieGedaanDitBeurt: kostGeenActie ? state.settlerActieGedaanDitBeurt : true,
   };
 }
@@ -66,20 +66,20 @@ export function verplaatsSettlerNaar(state: GameState, hoogte: number, positieIn
 export function legWegAan(state: GameState): GameState {
   if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
 
-  const { hoogte, positieInLaag } = state.settler;
-  const laag = state.lagen.find((l) => l.hoogte === hoogte);
-  if (!laag || laag.tiles[positieInLaag]?.heeftWeg) return state;
+  const { hoogte, positieInStreek } = state.settler;
+  const streek = state.streken.find((l) => l.hoogte === hoogte);
+  if (!streek || streek.tiles[positieInStreek]?.heeftWeg) return state;
 
-  const lagen = state.lagen.map((l) => {
+  const streken = state.streken.map((l) => {
     if (l.hoogte !== hoogte) return l;
-    const tiles = l.tiles.map((tile, index) => (index === positieInLaag ? { ...tile, heeftWeg: true } : tile));
+    const tiles = l.tiles.map((tile, index) => (index === positieInStreek ? { ...tile, heeftWeg: true } : tile));
     return { ...l, tiles };
   });
 
   // "B1. Het wiel" (hoofdstuk 3/9, techTree.ts): wegaanleg kost dan geen
   // aparte settler-actie meer.
   const kostGeenActie = settlerWegaanlegGratis(state.technologieen);
-  return { ...state, lagen, settlerActieGedaanDitBeurt: kostGeenActie ? state.settlerActieGedaanDitBeurt : true };
+  return { ...state, streken, settlerActieGedaanDitBeurt: kostGeenActie ? state.settlerActieGedaanDitBeurt : true };
 }
 
 // Jaagt op de kudde waar de settler nu op staat (hoofdstuk 16/17, issue:
@@ -91,29 +91,29 @@ export function legWegAan(state: GameState): GameState {
 // (hoofdstuk 4), het vakje wordt gewoon weer een leeg vakje.
 //
 // Roofdieren (hoofdstuk 14/17, issue: "roofdieren toevoegen"): vanaf
-// `ROOFDIER_MIN_LAAG` heeft elke jachtbeurt een kans om een roofdier op te
+// `ROOFDIER_MIN_STREEK` heeft elke jachtbeurt een kans om een roofdier op te
 // roepen, op hetzelfde vakje. Meldt dit meteen (`roofdierEvent`,
 // fase "verschenen") — de daadwerkelijke aanval volgt pas een beurt later,
 // zie `verwerkRoofdieren` (indringersEnDieren.ts) in `volgendeBeurt`.
 export function jaag(state: GameState): GameState {
   if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
 
-  const { hoogte, positieInLaag } = state.settler;
-  const laag = state.lagen.find((l) => l.hoogte === hoogte);
-  const tile = laag?.tiles[positieInLaag];
-  if (!laag || !tile?.kudde) return state;
+  const { hoogte, positieInStreek } = state.settler;
+  const streek = state.streken.find((l) => l.hoogte === hoogte);
+  const tile = streek?.tiles[positieInStreek];
+  if (!streek || !tile?.kudde) return state;
 
   const beurtenResterend = tile.kudde.beurtenResterend - 1;
   // "B2. Speerwerper" / "B2a. Boogschieten" (hoofdstuk 3/9, techTree.ts):
   // verlagen de roofdier-kans (`roofdierKansFactor`); "B. Het spoor lezen" /
   // "B2a. Boogschieten" verhogen de jachtopbrengst (`jachtVoedselBonus`).
   const roofdierVerschijnt =
-    hoogte >= ROOFDIER_MIN_LAAG && Math.random() < ROOFDIER_KANS * roofdierKansFactor(state.technologieen);
+    hoogte >= ROOFDIER_MIN_STREEK && Math.random() < ROOFDIER_KANS * roofdierKansFactor(state.technologieen);
 
-  const lagen = state.lagen.map((l) => {
+  const streken = state.streken.map((l) => {
     if (l.hoogte !== hoogte) return l;
     const tiles = l.tiles.map((t, index) =>
-      index === positieInLaag
+      index === positieInStreek
         ? {
             ...t,
             kudde: beurtenResterend > 0 ? { beurtenResterend } : undefined,
@@ -125,12 +125,12 @@ export function jaag(state: GameState): GameState {
   });
 
   const roofdierEvent: RoofdierEvent | undefined = roofdierVerschijnt
-    ? { hoogte, positieInLaag, fase: "verschenen" }
+    ? { hoogte, positieInStreek, fase: "verschenen" }
     : state.roofdierEvent;
 
   return {
     ...state,
-    lagen,
+    streken,
     voedsel: state.voedsel + KUDDE_VOEDSEL_PER_BEURT + jachtVoedselBonus(state.technologieen),
     settlerActieGedaanDitBeurt: true,
     roofdierEvent,
@@ -150,10 +150,10 @@ export function jaag(state: GameState): GameState {
 export function hakHout(state: GameState): GameState {
   if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
 
-  const { hoogte, positieInLaag } = state.settler;
-  const laag = state.lagen.find((l) => l.hoogte === hoogte);
-  const tile = laag?.tiles[positieInLaag];
-  if (!laag || !tile || tile.terrein !== "bos" || tile.status === "ghost_town") return state;
+  const { hoogte, positieInStreek } = state.settler;
+  const streek = state.streken.find((l) => l.hoogte === hoogte);
+  const tile = streek?.tiles[positieInStreek];
+  if (!streek || !tile || tile.terrein !== "bos" || tile.status === "ghost_town") return state;
 
   const voorraad = {
     ...state.voorraad,
@@ -196,8 +196,8 @@ export const GESTICHTE_STAD_NAAM = "Vuurbron";
 export function kanStichten(state: GameState): boolean {
   const settler = state.settler;
   if (!settler) return false;
-  const laag = state.lagen.find((l) => l.hoogte === settler.hoogte);
-  const tile = laag?.tiles[settler.positieInLaag];
+  const streek = state.streken.find((l) => l.hoogte === settler.hoogte);
+  const tile = streek?.tiles[settler.positieInStreek];
   return Boolean(tile && isGeschiktVoorStichten(tile));
 }
 
@@ -216,7 +216,7 @@ export function heeftGenoegVoorStichten(state: GameState): boolean {
 
 // Sticht een nieuwe stad op het vakje waar de settler nu staat (hoofdstuk
 // 2/10/16, issue: "stad stichten op de frontier" deel 4 — vervangt "bereik
-// laag 12" als tutorial-einddoel). De settler zelf verdwijnt hierbij: "de
+// streek 12" als tutorial-einddoel). De settler zelf verdwijnt hierbij: "de
 // huifkar wordt de stad" (de UI waarschuwt hier vóóraf duidelijk voor, zie
 // StichtStadPopup — deze functie voert de al-bevestigde actie alleen nog
 // uit). Geen effect bij een ongeldige aanroep (verkeerde locatie of te
@@ -228,11 +228,11 @@ export function heeftGenoegVoorStichten(state: GameState): boolean {
 export function stichtStad(state: GameState): GameState {
   if (!kanStichten(state) || !heeftGenoegVoorStichten(state)) return state;
 
-  const { hoogte, positieInLaag } = state.settler!;
-  const lagen = state.lagen.map((laag) => {
-    if (laag.hoogte !== hoogte) return laag;
-    const tiles = laag.tiles.map((tile, index) => {
-      if (index !== positieInLaag) return tile;
+  const { hoogte, positieInStreek } = state.settler!;
+  const streken = state.streken.map((streek) => {
+    if (streek.hoogte !== hoogte) return streek;
+    const tiles = streek.tiles.map((tile, index) => {
+      if (index !== positieInStreek) return tile;
       return {
         ...tile,
         status: "actief" as const,
@@ -247,12 +247,12 @@ export function stichtStad(state: GameState): GameState {
         },
       };
     });
-    return { ...laag, tiles };
+    return { ...streek, tiles };
   });
 
   return {
     ...state,
-    lagen,
+    streken,
     voorraad: {
       ...state.voorraad,
       hout: state.voorraad.hout - STICHTING_KOSTEN.hout,

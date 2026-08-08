@@ -41,7 +41,7 @@ export default function KuddePopup({ event, onSluiten }: KuddePopupProps) {
           {KUDDE_TITEL}
         </strong>
         <p style={{ margin: 0, lineHeight: 1.6 }}>
-          {KUDDE_FLAVOR_TEKST} Laag {event.hoogte}, vakje {event.positieInLaag + 1}.
+          {KUDDE_FLAVOR_TEKST} Streek {event.hoogte}, vakje {event.positieInStreek + 1}.
         </p>
         <button className="fc-knop" onClick={onSluiten} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Begrepen

@@ -1,46 +1,46 @@
 "use client";
 
 import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "@/game/bouwwachtrij";
-import { BELEGERINGSDREMPEL, heeftOfferAltaar, kanVerkennen, VERKENNING_KOSTEN_WETENSCHAP } from "@/game/laagOntgrendeling";
-import { kanConfrontatieBezetteLaag } from "@/game/militair";
+import { BELEGERINGSDREMPEL, heeftOfferAltaar, kanVerkennen, VERKENNING_KOSTEN_WETENSCHAP } from "@/game/streekOntgrendeling";
+import { kanConfrontatieBezetteStreek } from "@/game/militair";
 import { MISSIONARIS, VERKENNER } from "@/game/improvements";
 import { GameState } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
 
-interface BezetteLaagPaneelProps {
+interface BezetteStreekPaneelProps {
   state: GameState;
   onStartVerkennerRecrutering: () => void;
   onActiveerVerkenningsModus: () => void;
   verkenningsModusActief: boolean;
   onStartMissionarisRecrutering: () => void;
-  onConfrontatieBezetteLaag: (positieInLaag: number) => void;
+  onConfrontatieBezetteStreek: (positieInStreek: number) => void;
 }
 
-// Bezette Laag & Confrontatie (hoofdstuk 6, issue: "De Bezette Laag,
+// Bezette Streek & Confrontatie (hoofdstuk 6, issue: "De Bezette Streek,
 // missionaris en verkenner"): bundelt Verkenner-rekrutering + Verkenning,
 // Missionaris-rekrutering + belegeringsmeter, en de lijst van mogelijke
-// Confrontatie-doelen — alleen zichtbaar zolang er een actieve Bezette Laag
+// Confrontatie-doelen — alleen zichtbaar zolang er een actieve Bezette Streek
 // is (anders `null`, zodat StadMenuPopup dit paneel altijd onvoorwaardelijk
 // kan renderen, net als de overige panelen).
-export default function BezetteLaagPaneel({
+export default function BezetteStreekPaneel({
   state,
   onStartVerkennerRecrutering,
   onActiveerVerkenningsModus,
   verkenningsModusActief,
   onStartMissionarisRecrutering,
-  onConfrontatieBezetteLaag,
-}: BezetteLaagPaneelProps) {
-  const bezetteLaag = state.lagen.find((l) => l.bezet);
-  if (!bezetteLaag) return null;
+  onConfrontatieBezetteStreek,
+}: BezetteStreekPaneelProps) {
+  const bezetteStreek = state.streken.find((l) => l.bezet);
+  if (!bezetteStreek) return null;
 
   const { stad } = state;
-  const vijandelijkeWachttorens = bezetteLaag.tiles.filter(
+  const vijandelijkeWachttorens = bezetteStreek.tiles.filter(
     (tile) => tile.status === "actief" && tile.improvement?.id === "vijandelijke-wachttoren"
   );
-  const heeftVijandelijkHeiligdom = bezetteLaag.tiles.some(
+  const heeftVijandelijkHeiligdom = bezetteStreek.tiles.some(
     (tile) =>
       (tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom") ||
-      (tile.verhuld && tile.bezetteLaagInhoud === "heiligdom")
+      (tile.verhuld && tile.bezetteStreekInhoud === "heiligdom")
   );
 
   const verkennerResterend = stad.verkennerInAanbouw
@@ -63,7 +63,7 @@ export default function BezetteLaagPaneel({
       }}
     >
       <strong className="fc-heading" style={{ color: "var(--kleur-gevaar)" }}>
-        Bezette Laag — {bezetteLaag.hoogte}
+        Bezette Streek — {bezetteStreek.hoogte}
       </strong>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -127,7 +127,7 @@ export default function BezetteLaagPaneel({
         </div>
         {heeftVijandelijkHeiligdom && (
           <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
-            Belegeringsmeter: {bezetteLaag.belegeringsVoortgang ?? 0} / {BELEGERINGSDREMPEL}
+            Belegeringsmeter: {bezetteStreek.belegeringsVoortgang ?? 0} / {BELEGERINGSDREMPEL}
             {stad.missionarissen.length === 0
               ? " — bevroren zonder Missionaris"
               : stad.missionarissen.length > 1 && ` (${stad.missionarissen.length}× snelheid)`}
@@ -139,33 +139,33 @@ export default function BezetteLaagPaneel({
         <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
           <span style={{ color: "var(--kleur-tekst-gedempt)" }}>Vijandelijke wachttorens:</span>
           {vijandelijkeWachttorens.map((tile) => {
-            const kan = kanConfrontatieBezetteLaag(state, tile.positieInLaag);
+            const kan = kanConfrontatieBezetteStreek(state, tile.positieInStreek);
             return (
               <button
-                key={tile.positieInLaag}
+                key={tile.positieInStreek}
                 className="fc-knop"
                 disabled={!kan}
-                onClick={() => onConfrontatieBezetteLaag(tile.positieInLaag)}
-                title={kan ? undefined : "Vereist een voltooide, bemande, wegverbonden eigen Wachttoren op de laag direct onder de Bezette Laag"}
+                onClick={() => onConfrontatieBezetteStreek(tile.positieInStreek)}
+                title={kan ? undefined : "Vereist een voltooide, bemande, wegverbonden eigen Wachttoren op de streek direct onder de Bezette Streek"}
                 style={{ padding: "0.3rem 0.6rem", opacity: kan ? 1 : 0.5, alignSelf: "flex-start" }}
               >
-                Confrontatie aangaan (vakje {tile.positieInLaag})
+                Confrontatie aangaan (vakje {tile.positieInStreek})
               </button>
             );
           })}
         </div>
       )}
 
-      {state.laatsteConfrontatieBezetteLaag && (
+      {state.laatsteConfrontatieBezetteStreek && (
         <p
           style={{
             margin: 0,
-            color: state.laatsteConfrontatieBezetteLaag.gewonnen ? "var(--kleur-mos)" : "var(--kleur-gevaar)",
+            color: state.laatsteConfrontatieBezetteStreek.gewonnen ? "var(--kleur-mos)" : "var(--kleur-gevaar)",
           }}
         >
-          {state.laatsteConfrontatieBezetteLaag.gewonnen ? "Overwinning" : "Verlies"} (winkans was{" "}
-          {Math.round(state.laatsteConfrontatieBezetteLaag.winkans * 100)}%)
-          {!state.laatsteConfrontatieBezetteLaag.gewonnen && " — de bemannende strijder is verloren gegaan"}
+          {state.laatsteConfrontatieBezetteStreek.gewonnen ? "Overwinning" : "Verlies"} (winkans was{" "}
+          {Math.round(state.laatsteConfrontatieBezetteStreek.winkans * 100)}%)
+          {!state.laatsteConfrontatieBezetteStreek.gewonnen && " — de bemannende strijder is verloren gegaan"}
         </p>
       )}
     </div>

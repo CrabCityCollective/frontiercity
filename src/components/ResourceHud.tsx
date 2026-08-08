@@ -3,7 +3,7 @@
 import { MATERIAAL_LABELS } from "@/game/improvements";
 import { wetenschapKostenVoorDrempel } from "@/game/techTree";
 import { GameState, MateriaalType, TechDrempel } from "@/game/types";
-import { cultuurKostenVoorLaag, hoogsteOntgrendeldeLaag } from "@/game/world";
+import { cultuurKostenVoorStreek, hoogsteOntgrendeldeStreek } from "@/game/world";
 import ResourceIcoon from "./ResourceIcoon";
 
 interface ResourceHudProps {
@@ -18,14 +18,14 @@ interface ResourceHudProps {
 // vóór beurt 2, zodra de bouwkeuze van beurt 1 gemaakt is), zie
 // `beurtMagAutomatischDoorgaan` in economie.ts.
 export default function ResourceHud({ state }: ResourceHudProps) {
-  const volgendeLaagHoogte = hoogsteOntgrendeldeLaag(state.lagen) + 1;
+  const volgendeStreekHoogte = hoogsteOntgrendeldeStreek(state.streken) + 1;
   const cultuurLabel =
-    volgendeLaagHoogte <= state.lagen.length
-      ? `${state.cultuur} / ${cultuurKostenVoorLaag(volgendeLaagHoogte)} (laag ${volgendeLaagHoogte})`
-      : `${state.cultuur} (alle lagen ontgrendeld)`;
+    volgendeStreekHoogte <= state.streken.length
+      ? `${state.cultuur} / ${cultuurKostenVoorStreek(volgendeStreekHoogte)} (streek ${volgendeStreekHoogte})`
+      : `${state.cultuur} (alle streken ontgrendeld)`;
   // Wetenschap → technologie-boom (hoofdstuk 3/9, issue: "tech tree
   // toevoegen") — zelfde label-patroon als cultuur hierboven, maar naar een
-  // drempel (1-3) in plaats van een laag.
+  // drempel (1-3) in plaats van een streek.
   const volgendeDrempel = (state.technologieen.length + 1) as TechDrempel;
   const wetenschapLabel =
     volgendeDrempel <= 3

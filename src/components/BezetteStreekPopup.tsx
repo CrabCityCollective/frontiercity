@@ -1,19 +1,19 @@
 "use client";
 
-import { BEZETTE_LAAG_TEKST, BEZETTE_LAAG_TITEL } from "@/game/tutorialContent";
+import { BEZETTE_STREEK_TEKST, BEZETTE_STREEK_TITEL } from "@/game/tutorialContent";
 
-interface BezetteLaagPopupProps {
+interface BezetteStreekPopupProps {
   onDoorgaan: () => void;
 }
 
-// Bezette-Laag-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Laag,
-// missionaris en verkenner", Deel 2): verschijnt zodra laag 12 "in beeld
-// komt" (economie.ts: `verwerkLaagOntgrendeling` zet `bezetteLaagOntdektEvent`
-// — dezelfde soort trigger als de gegarandeerde Amberader-vondst op laag 7).
+// Bezette-Streek-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
+// missionaris en verkenner", Deel 2): verschijnt zodra streek 12 "in beeld
+// komt" (economie.ts: `verwerkStreekOntgrendeling` zet `bezetteStreekOntdektEvent`
+// — dezelfde soort trigger als de gegarandeerde Amberader-vondst op streek 7).
 // Zelfde blokkerende overlay/stijl als de overige dynamische pop-ups
 // (IndringersPopup/KuddePopup) — vervangt de eerdere, kleinere
 // MilitairUitlegPopup volledig.
-export default function BezetteLaagPopup({ onDoorgaan }: BezetteLaagPopupProps) {
+export default function BezetteStreekPopup({ onDoorgaan }: BezetteStreekPopupProps) {
   return (
     <div
       style={{
@@ -39,9 +39,9 @@ export default function BezetteLaagPopup({ onDoorgaan }: BezetteLaagPopupProps) 
         }}
       >
         <strong className="fc-heading" style={{ color: "var(--kleur-gevaar)" }}>
-          {BEZETTE_LAAG_TITEL}
+          {BEZETTE_STREEK_TITEL}
         </strong>
-        <p style={{ margin: 0, lineHeight: 1.6 }}>{BEZETTE_LAAG_TEKST}</p>
+        <p style={{ margin: 0, lineHeight: 1.6 }}>{BEZETTE_STREEK_TEKST}</p>
         <button className="fc-knop" onClick={onDoorgaan} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Begrepen
         </button>

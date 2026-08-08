@@ -23,8 +23,8 @@ export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout, o
   const { settler } = state;
   if (!settler) return null;
 
-  const laag = state.lagen.find((l) => l.hoogte === settler.hoogte);
-  const huidigeTile = laag?.tiles[settler.positieInLaag];
+  const streek = state.streken.find((l) => l.hoogte === settler.hoogte);
+  const huidigeTile = streek?.tiles[settler.positieInStreek];
   const kanActie = !state.settlerActieGedaanDitBeurt;
   const heeftAlWeg = Boolean(huidigeTile?.heeftWeg);
   // Kuddes & houtkap (hoofdstuk 16/17, issue: "kuddes met dieren waar je op
@@ -63,7 +63,7 @@ export default function SettlerPaneel({ state, onLegWegAan, onJaag, onHakHout, o
         Settler
       </strong>
       <span>
-        Laag {settler.hoogte}, vakje {settler.positieInLaag + 1}
+        Streek {settler.hoogte}, vakje {settler.positieInStreek + 1}
         {heeftAlWeg ? " — hier ligt al een weg" : ""}
         {kudde ? ` — wilde kudde (nog ${kudde.beurtenResterend} beurten te jagen)` : ""}
         {roofdier ? " — een roofdier is hier gesignaleerd, beweeg de settler weg" : ""}

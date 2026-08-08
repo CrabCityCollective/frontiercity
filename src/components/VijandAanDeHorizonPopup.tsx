@@ -7,7 +7,7 @@ interface VijandAanDeHorizonPopupProps {
 }
 
 // De-vijand-aan-de-horizon-pop-up (issue: "tutorial popups wijzigen"),
-// getoond zodra laag 2 ontgrendelt (zie GameRoot: `toonVijandAanDeHorizonPopup`)
+// getoond zodra streek 2 ontgrendelt (zie GameRoot: `toonVijandAanDeHorizonPopup`)
 // — dit is het moment waarop Militair/de Wachttoren voor het eerst
 // beschikbaar komt. Zelfde blokkerende overlay als de andere uitleg-pop-ups.
 export default function VijandAanDeHorizonPopup({ onDoorgaan }: VijandAanDeHorizonPopupProps) {

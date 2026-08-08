@@ -213,9 +213,9 @@ export function verwerkBouwwachtrij(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
   let opslagCap = state.opslagCap;
 
-  const lagen = state.lagen.map((laag) => ({
-    ...laag,
-    tiles: laag.tiles.map((tile) => {
+  const streken = state.streken.map((streek) => ({
+    ...streek,
+    tiles: streek.tiles.map((tile) => {
       if (tile.status !== "in_aanbouw") return tile;
       const nieuweTile = verwerkTileInAanbouw(tile, voorraad, state.technologieen);
       if (nieuweTile.status === "actief" && nieuweTile.improvement?.effect.type === "opslag") {
@@ -225,7 +225,7 @@ export function verwerkBouwwachtrij(state: GameState): GameState {
     }),
   }));
 
-  return { ...state, lagen, voorraad, opslagCap };
+  return { ...state, streken, voorraad, opslagCap };
 }
 
 // Koopt de resterende bouwtijd van een land-tile-in-aanbouw af met goud
@@ -235,9 +235,9 @@ export function verwerkBouwwachtrij(state: GameState): GameState {
 // improvements zijn altijd `soort: "land"`, dus geen aparte uitsluiting nodig
 // zoals bij de civiele wachtrij (`versnelCivielMetGoud` in
 // groeiEnRekrutering.ts, die ook `soort: "unit"` kan bevatten).
-export function versnelBouwMetGoud(state: GameState, hoogte: number, positieInLaag: number): GameState {
-  const laag = state.lagen.find((l) => l.hoogte === hoogte);
-  const tile = laag?.tiles[positieInLaag];
+export function versnelBouwMetGoud(state: GameState, hoogte: number, positieInStreek: number): GameState {
+  const streek = state.streken.find((l) => l.hoogte === hoogte);
+  const tile = streek?.tiles[positieInStreek];
   if (!tile || tile.status !== "in_aanbouw" || !tile.improvement || !tile.bouwVoortgang) return state;
 
   const resultaat = pasVersnellingToe(tile.improvement, tile.bouwVoortgang, state.voorraad.goud);
@@ -250,11 +250,11 @@ export function versnelBouwMetGoud(state: GameState, hoogte: number, positieInLa
     opslagCap += nieuweTile.improvement.effect.waarde ?? 0;
   }
 
-  const lagen = state.lagen.map((l) =>
+  const streken = state.streken.map((l) =>
     l.hoogte !== hoogte
       ? l
-      : { ...l, tiles: l.tiles.map((t, index) => (index === positieInLaag ? nieuweTile : t)) }
+      : { ...l, tiles: l.tiles.map((t, index) => (index === positieInStreek ? nieuweTile : t)) }
   );
 
-  return { ...state, lagen, voorraad, opslagCap };
+  return { ...state, streken, voorraad, opslagCap };
 }

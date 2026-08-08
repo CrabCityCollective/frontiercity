@@ -11,7 +11,7 @@ interface IneenstortingSchermProps {
   statistieken?: {
     beurten: number;
     stedenGebouwd: number;
-    hoogsteLaag: number;
+    hoogsteStreek: number;
   };
 }
 
@@ -70,7 +70,7 @@ export default function IneenstortingScherm({ onDoorgaan, statistieken }: Ineens
           >
             <span>Beurten gespeeld: {statistieken.beurten}</span>
             <span>Steden gebouwd: {statistieken.stedenGebouwd}</span>
-            <span>Hoogste laag bereikt: {statistieken.hoogsteLaag}</span>
+            <span>Hoogste streek bereikt: {statistieken.hoogsteStreek}</span>
           </div>
         )}
 

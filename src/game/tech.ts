@@ -15,8 +15,8 @@ import { OPSLAGCAP_BONUS_WEVEN, techKinderen, wetenschapKostenVoorDrempel } from
 
 // Technologie-boom (hoofdstuk 3/9/11, issue: "tech tree toevoegen" Deel 2):
 // zodra de cumulatieve wetenschap de eerstvolgende drempel haalt, opent dit
-// een keuze tussen twee technologieën — anders dan `verwerkLaagOntgrendeling`
-// (laagOntgrendeling.ts) ontgrendelt dit niet automatisch, want de speler
+// een keuze tussen twee technologieën — anders dan `verwerkStreekOntgrendeling`
+// (streekOntgrendeling.ts) ontgrendelt dit niet automatisch, want de speler
 // moet zelf kiezen (zelfde blokkerende meldings-vorm als `verwerkIndringers`
 // in indringersEnDieren.ts: geen nieuwe gebeurtenis zolang een vorige nog
 // openstaat). Rolt hoogstens één drempel per aanroep: staat er na het

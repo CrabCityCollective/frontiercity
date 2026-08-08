@@ -18,19 +18,19 @@ import { metSettlerOpKuddeVakje, metRandomReeks, metVasteRandom, WACHTTOREN } fr
 test("een roofdier valt pas de beurt ná verschijnen aan, en doodt de settler als die er dan nog op staat", () => {
   let state = metSettlerOpKuddeVakje(5);
   state = metVasteRandom(0, () => jaag(state));
-  assert.deepEqual(state.lagen.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 1 });
+  assert.deepEqual(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 1 });
 
   // Eerste beurtovergang: de reactietijd, geen aanval.
   state = volgendeBeurt(state);
   assert.notEqual(state.settler, undefined, "de settler overleeft de eerste beurtovergang (reactietijd)");
-  assert.deepEqual(state.lagen.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 0 });
+  assert.deepEqual(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 0 });
 
   // Tweede beurtovergang: de settler is niet weggegaan, dus de aanval slaat toe.
   state = volgendeBeurt(state);
   assert.equal(state.settler, undefined, "de settler sterft als hij op het roofdier-vakje bleef staan");
   assert.equal(state.settlerVerlorenAanRoofdier, true);
-  assert.deepEqual(state.roofdierEvent, { hoogte: 5, positieInLaag: 0, fase: "aanval" });
-  assert.equal(state.lagen.find((l) => l.hoogte === 5)!.tiles[0].roofdier, undefined);
+  assert.deepEqual(state.roofdierEvent, { hoogte: 5, positieInStreek: 0, fase: "aanval" });
+  assert.equal(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, undefined);
 });
 
 test("de settler overleeft een roofdier als hij op tijd wegbeweegt", () => {
@@ -39,12 +39,12 @@ test("de settler overleeft een roofdier als hij op tijd wegbeweegt", () => {
 
   state = volgendeBeurt(state); // reactietijd
   state = verplaatsSettlerNaar(state, 5, 1);
-  assert.deepEqual(state.settler, { hoogte: 5, positieInLaag: 1 }, "de settler moet daadwerkelijk verplaatst zijn");
+  assert.deepEqual(state.settler, { hoogte: 5, positieInStreek: 1 }, "de settler moet daadwerkelijk verplaatst zijn");
 
   state = volgendeBeurt(state); // de aanval, maar de settler staat er niet meer
-  assert.deepEqual(state.settler, { hoogte: 5, positieInLaag: 1 }, "de settler overleeft");
+  assert.deepEqual(state.settler, { hoogte: 5, positieInStreek: 1 }, "de settler overleeft");
   assert.equal(state.settlerVerlorenAanRoofdier, undefined);
-  assert.equal(state.lagen.find((l) => l.hoogte === 5)!.tiles[0].roofdier, undefined);
+  assert.equal(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, undefined);
 });
 
 test("na het verlies van de settler aan een roofdier komt hij niet gratis terug, maar wel via de civiele pool", () => {
@@ -70,81 +70,81 @@ test("verwerkKuddes meldt een nieuwe kudde via kuddeEvent", () => {
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
-    lagen: state.lagen.map((laag) => (laag.hoogte === 4 ? { ...laag, ontgrendeld: true } : laag)),
+    streken: state.streken.map((streek) => (streek.hoogte === 4 ? { ...streek, ontgrendeld: true } : streek)),
   };
 
   state = metVasteRandom(0, () => volgendeBeurt(state));
 
-  assert.notEqual(state.kuddeEvent, undefined, "een gunstige worp op een ontgrendelde laag 4 moet een kudde melden");
-  const gemeldeLaag = state.lagen.find((l) => l.hoogte === state.kuddeEvent!.hoogte)!;
-  const tile = gemeldeLaag.tiles[state.kuddeEvent!.positieInLaag];
+  assert.notEqual(state.kuddeEvent, undefined, "een gunstige worp op een ontgrendelde streek 4 moet een kudde melden");
+  const gemeldeStreek = state.streken.find((l) => l.hoogte === state.kuddeEvent!.hoogte)!;
+  const tile = gemeldeStreek.tiles[state.kuddeEvent!.positieInStreek];
   assert.deepEqual(tile.kudde, { beurtenResterend: 4 });
 });
 
-test("een werkende Wachttoren beschermt ook de laag eronder, niet alleen zijn eigen laag (issue: wachttoren beschermt 2 lagen)", () => {
+test("een werkende Wachttoren beschermt ook de streek eronder, niet alleen zijn eigen streek (issue: wachttoren beschermt 2 streken)", () => {
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
-    stad: { ...state.stad, strijders: [{ id: "strijder-1", wachttoren: { hoogte: 2, positieInLaag: 4 } }] },
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte === 2
+    stad: { ...state.stad, strijders: [{ id: "strijder-1", wachttoren: { hoogte: 2, positieInStreek: 4 } }] },
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 2
         ? {
-            ...laag,
+            ...streek,
             ontgrendeld: true,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 4
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 4
                 ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
                 : tile
             ),
           }
-        : laag
+        : streek
     ),
   };
 
-  // Kans 0 dwingt zowel het incident zelf als de laag-trekking af. Laag 2
+  // Kans 0 dwingt zowel het incident zelf als de streek-trekking af. Streek 2
   // bevat verder niets dan de Wachttoren en doet dus niet mee in de trekking
-  // (`isAlleenWachttorenLaag`) — met alleen laag 1 en 2 ontgrendeld valt het
-  // incident daardoor gegarandeerd op laag 1, de laag onder de Wachttoren.
+  // (`isAlleenWachttorenStreek`) — met alleen streek 1 en 2 ontgrendeld valt het
+  // incident daardoor gegarandeerd op streek 1, de streek onder de Wachttoren.
   state = metVasteRandom(0, () => volgendeBeurt(state));
 
-  assert.equal(state.indringersEvent?.laagHoogte, 1);
+  assert.equal(state.indringersEvent?.streekHoogte, 1);
   assert.equal(
     state.indringersEvent?.heeftWachttoren,
     true,
-    "de bemande, wegverbonden Wachttoren op laag 2 moet ook laag 1 (de laag eronder) beschermen"
+    "de bemande, wegverbonden Wachttoren op streek 2 moet ook streek 1 (de streek eronder) beschermen"
   );
 });
 
-test("een laag met een actieve Amberader weegt zwaarder mee in de indringers-laag-trekking (issue: Amberader bonus/malus-koppeling)", () => {
+test("een streek met een actieve Amberader weegt zwaarder mee in de indringers-streek-trekking (issue: Amberader bonus/malus-koppeling)", () => {
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte === 2
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 2
         ? {
-            ...laag,
+            ...streek,
             ontgrendeld: true,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
             ),
           }
-        : laag
+        : streek
     ),
   };
 
-  // Twee ontgrendelde lagen doen mee: laag 1 (gewoon, gewicht 1) en laag 2
-  // (actieve Amberader, gewicht 2) — totaalgewicht 3, drempel voor laag 1 ligt
-  // dus op 1/3. Bij een zuiver uniforme trekking zou 0.4 nog altijd op laag 1
+  // Twee ontgrendelde streken doen mee: streek 1 (gewoon, gewicht 1) en streek 2
+  // (actieve Amberader, gewicht 2) — totaalgewicht 3, drempel voor streek 1 ligt
+  // dus op 1/3. Bij een zuiver uniforme trekking zou 0.4 nog altijd op streek 1
   // uitkomen (floor(0.4 * 2) = 0); met de Amberader-weging (0.4 > 1/3) komt
-  // dezelfde randomwaarde juist op laag 2 uit — het bewijs dat de weging
+  // dezelfde randomwaarde juist op streek 2 uit — het bewijs dat de weging
   // daadwerkelijk effect heeft. De derde waarde (stamnaam-trekking) is
   // irrelevant voor deze assertie.
   state = metRandomReeks([0, 0.4, 0], () => volgendeBeurt(state));
 
   assert.equal(
-    state.indringersEvent?.laagHoogte,
+    state.indringersEvent?.streekHoogte,
     2,
-    "de laag met de actieve Amberader moet bij dubbel gewicht op deze randomwaarde geloot worden, niet de gewone laag"
+    "de streek met de actieve Amberader moet bij dubbel gewicht op deze randomwaarde geloot worden, niet de gewone streek"
   );
 });
 
@@ -152,82 +152,82 @@ test("een uitgeputte Amberader (ghost town) telt niet meer mee voor het extra in
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte === 2
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 2
         ? {
-            ...laag,
+            ...streek,
             ontgrendeld: true,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 4 ? { ...tile, status: "ghost_town" as const, improvement: AMBERADER } : tile
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 4 ? { ...tile, status: "ghost_town" as const, improvement: AMBERADER } : tile
             ),
           }
-        : laag
+        : streek
     ),
   };
 
   // Zelfde randomwaarde als hierboven (0.4), maar nu is de Amberader
-  // uitgeput: beide lagen wegen even zwaar (gewicht 1), dus dit gedraagt zich
-  // weer als de gewone uniforme trekking en komt op laag 1 uit.
+  // uitgeput: beide streken wegen even zwaar (gewicht 1), dus dit gedraagt zich
+  // weer als de gewone uniforme trekking en komt op streek 1 uit.
   state = metRandomReeks([0, 0.4, 0], () => volgendeBeurt(state));
 
   assert.equal(
-    state.indringersEvent?.laagHoogte,
+    state.indringersEvent?.streekHoogte,
     1,
     "een uitgeputte Amberader mag geen verhoogd gewicht meer geven — een lege put trekt niemand meer"
   );
 });
 
 // Gedeelde opzet voor de derde-uitkomst-tests hieronder (issue: "wachttorens
-// kunnen vernietigd worden door indringers"): laag 2 krijgt een voltooide,
-// bemande, wegverbonden Wachttoren die (via "wachttoren beschermt 2 lagen")
-// laag 1 beschermt — zelfde opzet als de bestaande beschermings-test
-// hierboven, zodat het incident gegarandeerd op de beschermde laag 1 valt.
-function metBeschermdeLaag(): GameState {
+// kunnen vernietigd worden door indringers"): streek 2 krijgt een voltooide,
+// bemande, wegverbonden Wachttoren die (via "wachttoren beschermt 2 streken")
+// streek 1 beschermt — zelfde opzet als de bestaande beschermings-test
+// hierboven, zodat het incident gegarandeerd op de beschermde streek 1 valt.
+function metBeschermdeStreek(): GameState {
   let state = maakInitieleSpelStatus();
   return {
     ...state,
-    stad: { ...state.stad, strijders: [{ id: "strijder-1", wachttoren: { hoogte: 2, positieInLaag: 4 } }] },
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte === 2
+    stad: { ...state.stad, strijders: [{ id: "strijder-1", wachttoren: { hoogte: 2, positieInStreek: 4 } }] },
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 2
         ? {
-            ...laag,
+            ...streek,
             ontgrendeld: true,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 4
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 4
                 ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
                 : tile
             ),
           }
-        : laag
+        : streek
     ),
   };
 }
 
-test("malus-uitkomst: een beschermde laag kan de Wachttoren toch verliezen (issue: wachttorens kunnen vernietigd worden door indringers) — dit passieve incident blijft de Wachttoren zelf raken, anders dan de lichtere straf van een verloren Confrontatie tegen een Bezette Laag (issue: laatste confrontatie tweaken)", () => {
-  let state = metBeschermdeLaag();
+test("malus-uitkomst: een beschermde streek kan de Wachttoren toch verliezen (issue: wachttorens kunnen vernietigd worden door indringers) — dit passieve incident blijft de Wachttoren zelf raken, anders dan de lichtere straf van een verloren Confrontatie tegen een Bezette Streek (issue: laatste confrontatie tweaken)", () => {
+  let state = metBeschermdeStreek();
 
-  // kans-check (0) → incident; laag-trekking (0) → laag 1 (de beschermde
-  // laag); stamnaam (0); uitkomst-worp (0.9, tussen 0.85 en 0.95) → malus.
+  // kans-check (0) → incident; streek-trekking (0) → streek 1 (de beschermde
+  // streek); stamnaam (0); uitkomst-worp (0.9, tussen 0.85 en 0.95) → malus.
   state = metRandomReeks([0, 0, 0, 0.9], () => volgendeBeurt(state));
 
-  assert.equal(state.indringersEvent?.laagHoogte, 1);
+  assert.equal(state.indringersEvent?.streekHoogte, 1);
   assert.equal(state.indringersEvent?.heeftWachttoren, true);
   assert.equal(state.indringersEvent?.uitkomst, "malus");
   assert.equal(state.indringersEvent?.fase, "malus");
 
-  const wachttorenTile = state.lagen.find((l) => l.hoogte === 2)?.tiles[4];
+  const wachttorenTile = state.streken.find((l) => l.hoogte === 2)?.tiles[4];
   assert.equal(wachttorenTile?.status, "ruine", "de beschermende Wachttoren-tile vervalt tot ruïne");
   assert.equal(wachttorenTile?.improvement, undefined);
   assert.equal(state.stad.strijders.length, 0, "de bemannende strijder is blijvend verloren, geen reassignment");
 
   const naHerbouw = startBouw(state, 2, WACHTTOREN, 4);
-  const herbouwdeTile = naHerbouw.lagen.find((l) => l.hoogte === 2)!.tiles[4];
+  const herbouwdeTile = naHerbouw.streken.find((l) => l.hoogte === 2)!.tiles[4];
   assert.equal(herbouwdeTile.status, "in_aanbouw", "een ruïne-tile is, net als een leeg vakje, weer normaal herbouwbaar");
   assert.equal(herbouwdeTile.improvement?.id, "wachttoren");
 });
 
 test("bonus-uitkomst: de bemanning buit goud van de indringers (issue: wachttorens kunnen vernietigd worden door indringers)", () => {
-  let state = metBeschermdeLaag();
+  let state = metBeschermdeStreek();
   state = { ...state, voorraad: { ...state.voorraad, goud: 0 } };
 
   // Zelfde reeks als de malus-test, maar de uitkomst-worp (0.99) valt voorbij
@@ -239,29 +239,29 @@ test("bonus-uitkomst: de bemanning buit goud van de indringers (issue: wachttore
   assert.equal(state.indringersEvent?.buitGoud, 6);
   assert.equal(state.voorraad.goud, 6, "het buitgemaakte goud is meteen aan de voorraad toegevoegd");
 
-  const wachttorenTile = state.lagen.find((l) => l.hoogte === 2)?.tiles[4];
+  const wachttorenTile = state.streken.find((l) => l.hoogte === 2)?.tiles[4];
   assert.equal(wachttorenTile?.status, "actief", "de Wachttoren blijft bij een bonus-uitkomst gewoon intact");
   assert.equal(state.stad.strijders.length, 1, "de bemannende strijder blijft bij een bonus-uitkomst behouden");
 });
 
-test("een laag met een actieve Amberader krijgt eerst de 'Amberader onder vuur'-aankondiging, óók als de laag beschermd is — pas na bevestigAmberOnderVuur schuift de melding door naar de eigenlijke uitkomst", () => {
-  let state = metBeschermdeLaag();
+test("een streek met een actieve Amberader krijgt eerst de 'Amberader onder vuur'-aankondiging, óók als de streek beschermd is — pas na bevestigAmberOnderVuur schuift de melding door naar de eigenlijke uitkomst", () => {
+  let state = metBeschermdeStreek();
   state = {
     ...state,
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte === 1
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 1
         ? {
-            ...laag,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
+            ...streek,
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
             ),
           }
-        : laag
+        : streek
     ),
   };
 
-  // kans-check (0) → incident; laag-trekking (0) → laag 1 (enige laag die
-  // meedoet: laag 2 blijft "alleen een wachttoren" en telt niet mee);
+  // kans-check (0) → incident; streek-trekking (0) → streek 1 (enige streek die
+  // meedoet: streek 2 blijft "alleen een wachttoren" en telt niet mee);
   // stamnaam (0); uitkomst-worp (0.5) → standhouden.
   state = metRandomReeks([0, 0, 0, 0.5], () => volgendeBeurt(state));
 
@@ -286,7 +286,7 @@ test("kiesGeefTribuut trekt nog niets van de voorraad af — pas geefTribuut (na
     ...maakInitieleSpelStatus(),
     voorraad: { hout: 10, steen: 0, erts: 0, goud: 0 },
     indringersEvent: {
-      laagHoogte: 2,
+      streekHoogte: 2,
       stamNaam: "de stam van de Halve Maan",
       heeftWachttoren: false,
       tribuut: { resource: "hout", aantal: 5 },
@@ -308,7 +308,7 @@ test("een afgedwongen tribuut (na weigeren) trekt ook pas af zodra de laatste be
     ...maakInitieleSpelStatus(),
     voorraad: { hout: 10, steen: 0, erts: 0, goud: 0 },
     indringersEvent: {
-      laagHoogte: 2,
+      streekHoogte: 2,
       stamNaam: "de stam van de Bloedhoeven",
       heeftWachttoren: false,
       tribuut: { resource: "hout", aantal: 5 },

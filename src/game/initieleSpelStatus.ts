@@ -40,7 +40,7 @@ export function maakInitieleSpelStatus(): GameState {
       missionarissen: [],
       cityImprovements: [],
     },
-    lagen: maakInitieleWereld(),
+    streken: maakInitieleWereld(),
     voorraad: { ...STARTVOORRAAD },
     opslagCap: OPSLAG_CAP,
     voedsel: VOEDSEL_START,
