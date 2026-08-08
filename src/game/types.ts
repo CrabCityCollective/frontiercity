@@ -43,22 +43,22 @@ export type TechId =
 
 export type TechDrempel = 1 | 2 | 3;
 
-// Terrein-subtype van een los vakje binnen een laag (issue: "grotere
-// verscheidenheid van tiles per laag"). Een laag heeft daarnaast nog steeds
-// een eigen `terreinType`-label (hieronder, op `Layer`) voor de sfeer/flavor
-// (bv. "loofbos"), maar de 9 losse vakjes binnen die laag kunnen onderling
+// Terrein-subtype van een los vakje binnen een streek (issue: "grotere
+// verscheidenheid van tiles per streek"). Een streek heeft daarnaast nog steeds
+// een eigen `terreinType`-label (hieronder, op `Streek`) voor de sfeer/flavor
+// (bv. "loofbos"), maar de 9 losse vakjes binnen die streek kunnen onderling
 // verschillen — dat verschil bepaalt welke land improvements er geplaatst
 // mogen worden (zie `Improvement.terreinEisen`).
 export type TerreinType = "vlak" | "bos" | "heuvel" | "berg";
 
-// Vaste, verhulde inhoud van een vakje binnen een Bezette Laag (hoofdstuk 6,
-// issue: "De Bezette Laag, missionaris en verkenner"), bepaald bij het
-// ontstaan van de laag (zie world.ts) en pas zichtbaar zodra Verkenning het
+// Vaste, verhulde inhoud van een vakje binnen een Bezette Streek (hoofdstuk 6,
+// issue: "De Bezette Streek, missionaris en verkenner"), bepaald bij het
+// ontstaan van de streek (zie world.ts) en pas zichtbaar zodra Verkenning het
 // vakje onthult (`Tile.verhuld` hieronder). `undefined` op een vakje binnen
-// een Bezette Laag betekent: geen bijzondere inhoud, gewoon een leeg vakje
-// zodra onthuld — dat houdt één vakje per Bezette Laag "neutraal" in plaats
+// een Bezette Streek betekent: geen bijzondere inhoud, gewoon een leeg vakje
+// zodra onthuld — dat houdt één vakje per Bezette Streek "neutraal" in plaats
 // van dat alle 9 vakjes vijandelijke/cosmetische inhoud moeten dragen.
-export type BezetteLaagInhoud = "wachttoren" | "heiligdom" | "huisje";
+export type BezetteStreekInhoud = "wachttoren" | "heiligdom" | "huisje";
 
 export interface EffectDefinition {
   type: string;
@@ -69,7 +69,7 @@ export interface EffectDefinition {
 
 // Infrastructuur-eis (hoofdstuk 4/6/11/14, issue: "city improvements" Deel
 // 4): een bouw-drempel op basis van reeds gebouwde infrastructuur in plaats
-// van tech/laaghoogte — momenteel alleen gebruikt door Legerkamp (5 actieve
+// van tech/streekhoogte — momenteel alleen gebruikt door Legerkamp (5 actieve
 // Wachttorens + een Barakken) en Offer Altaar (5 actieve Heiligdommen + een
 // Grote Tempel). `landImprovementNaam`/`cityImprovementNaam` zijn puur voor
 // de voortgangstekst in de bouw-pop-up (bv. "3/5 Wachttorens, Barakken: nog
@@ -100,10 +100,10 @@ export interface Improvement {
   // `soort: "land"`.
   terreinEisen?: TerreinType[];
   // Expliciete uitzondering op de algemene regel "bouwen kan alleen op de
-  // frontier-laag" (hoofdstuk 6/11): momenteel alleen de Wachttoren. Zonder
-  // deze uitzondering zou een achtergelaten laag permanent onverdedigbaar
+  // frontier-streek" (hoofdstuk 6/11): momenteel alleen de Wachttoren. Zonder
+  // deze uitzondering zou een achtergelaten streek permanent onverdedigbaar
   // zijn zodra de frontier verder trekt, terwijl indringers-incidenten op
-  // elke ontgrendelde laag kunnen vallen (niet meer alleen de frontier).
+  // elke ontgrendelde streek kunnen vallen (niet meer alleen de frontier).
   // `undefined`/`false` = de normale frontier-only regel geldt.
   bouwbaarBuitenFrontier?: boolean;
   // Alleen beschikbaar in de bouw-opties nadat deze tech gekozen is (hoofdstuk
@@ -111,19 +111,19 @@ export interface Improvement {
   // ontgrendeld door "aardewerk". `undefined` = altijd beschikbaar (los van
   // de technologie-boom), zoals bijna elke andere improvement.
   vereisteTech?: TechId;
-  // Alleen beschikbaar in de bouw-opties zodra deze laaghoogte ontgrendeld is
+  // Alleen beschikbaar in de bouw-opties zodra deze streekhoogte ontgrendeld is
   // (issue: "tutorial popups wijzigen" — Sterrencirkel/Wetenschappelijk pas
-  // vanaf laag 3, Wachttoren/Militair pas vanaf laag 2, allebei uitgegrijsd
+  // vanaf streek 3, Wachttoren/Militair pas vanaf streek 2, allebei uitgegrijsd
   // ervoor). `undefined` = altijd beschikbaar, zoals bijna elke andere
-  // improvement. Gebruikt de hoogst ontgrendelde laag (frontier), niet de
-  // laag waar de speler op dat moment op bouwt — zelfde reden als
+  // improvement. Gebruikt de hoogst ontgrendelde streek (frontier), niet de
+  // streek waar de speler op dat moment op bouwt — zelfde reden als
   // `bouwbaarBuitenFrontier`: eenmaal ontgrendeld blijft de categorie
-  // beschikbaar, ook op een oudere laag.
-  minLaag?: number;
-  // Vijandelijke skin-variant (hoofdstuk 6, issue: "De Bezette Laag,
+  // beschikbaar, ook op een oudere streek.
+  minStreek?: number;
+  // Vijandelijke skin-variant (hoofdstuk 6, issue: "De Bezette Streek,
   // missionaris en verkenner", Deel 1): hergebruikt de bestaande Wachttoren-
   // en Heiligdom-tegel-typen met andere kleur/naam voor de vijandelijke tiles
-  // op een Bezette Laag — geen nieuwe game-logica voor het uiterlijk zelf,
+  // op een Bezette Streek — geen nieuwe game-logica voor het uiterlijk zelf,
   // alleen een vlag zodat canvas-rendering en de Confrontatie/Belegering-
   // doelherkenning ze kunnen onderscheiden van de eigen Wachttoren/Heiligdom.
   // Nooit onderdeel van IMPROVEMENT_POOLS/beschikbareOpties — deze tiles
@@ -142,19 +142,19 @@ export interface Improvement {
 }
 
 export interface Tile {
-  positieInLaag: number; // 0-8, 4 = centrum/stad
+  positieInStreek: number; // 0-8, 4 = centrum/stad
   // Vast, niet-procedureel terrein-subtype van dit specifieke vakje (zie
   // `TerreinType` hierboven) — bepaalt welke land improvements hier geplaatst
   // mogen worden. Elk vakje heeft er één, ook het stad-vakje (ongebruikt voor
   // plaatsingslogica, maar houdt het veld overal aanwezig i.p.v. optioneel).
   terrein: TerreinType;
   improvement?: Improvement;
-  // "ruine" (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // "ruine" (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 5): een eigen, beschermende Wachttoren die een verloren
-  // Confrontatie tegen een Bezette Laag meemaakte — anders dan "ghost_town"
+  // Confrontatie tegen een Bezette Streek meemaakte — anders dan "ghost_town"
   // (permanent onbebouwbaar) mag hier, net als op een gewoon "leeg" vakje,
   // een nieuwe Wachttoren (of iets anders) tegen de normale kosten/bouwtijd
-  // herbouwd worden (zie `kanImprovementOpLaag`/`startBouw` in
+  // herbouwd worden (zie `kanImprovementOpStreek`/`startBouw` in
   // improvements.ts/economie.ts).
   status: "leeg" | "in_aanbouw" | "actief" | "ghost_town" | "ruine";
   beurtenTotUitputting?: number;
@@ -167,7 +167,7 @@ export interface Tile {
   // wordt in één keer gezet zodra de settler de aanleg-actie uitvoert.
   heeftWeg?: boolean;
   // Wilde kudde (hoofdstuk 16/17, issue: "kuddes met dieren waar je op kunt
-  // jagen voor voedsel"): kan vanaf laag 4 op een leeg vakje verschijnen. De
+  // jagen voor voedsel"): kan vanaf streek 4 op een leeg vakje verschijnen. De
   // settler kan er `jaag` (economie.ts) op uitvoeren zolang
   // `beurtenResterend` boven nul staat; daarna is de kudde uitgeput en
   // verdwijnt dit veld weer.
@@ -175,7 +175,7 @@ export interface Tile {
     beurtenResterend: number;
   };
   // Roofdier (hoofdstuk 14/17, issue: "roofdieren toevoegen"): kan vanaf
-  // laag 5 verschijnen op het vakje waar de settler net gejaagd heeft (zie
+  // streek 5 verschijnen op het vakje waar de settler net gejaagd heeft (zie
   // `jaag` in economie.ts) — nooit los van een kudde-jachtactie. Valt pas de
   // beurt ná verschijnen aan (`beurtenTotAanval` telt af in
   // `verwerkRoofdieren`, economie.ts): staat de settler er op dat moment nog
@@ -184,19 +184,19 @@ export interface Tile {
   roofdier?: {
     beurtenTotAanval: number;
   };
-  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 1): een eigen, per-tegel verhullingslaag, los van de
-  // gewone laag-brede fog-of-war (`Layer.ontgrendeld`, hoofdstuk 2). Alleen
-  // relevant op vakjes binnen een Bezette Laag (`Layer.bezet`). `verhuld:
-  // true` betekent nog niet onthuld via Verkenning — `bezetteLaagInhoud`
+  // gewone streek-brede fog-of-war (`Streek.ontgrendeld`, hoofdstuk 2). Alleen
+  // relevant op vakjes binnen een Bezette Streek (`Streek.bezet`). `verhuld:
+  // true` betekent nog niet onthuld via Verkenning — `bezetteStreekInhoud`
   // (hierboven gedefinieerd) ligt dan al vast, maar `tile.improvement` zelf
   // blijft leeg tot onthulling (zie `verken` in economie.ts).
   verhuld?: boolean;
-  bezetteLaagInhoud?: BezetteLaagInhoud;
+  bezetteStreekInhoud?: BezetteStreekInhoud;
   // Ligt dit vakje aan vers water — een rivier of een meer (hoofdstuk 2:
   // "een stad kan alleen gesticht worden op een vakje dat aan vers water
   // ligt")? Vast, niet-procedureel (net als `terrein`) — de tutorial-worldgen
-  // garandeert precies één zulk vakje, uitsluitend op de allerlaatste laag
+  // garandeert precies één zulk vakje, uitsluitend op de allerlaatste streek
   // (de oceaan aan de overkant, zie world.ts `TUTORIAL_VERS_WATER`) — de
   // enige plek in de hele tutorial met vers water. Geen terrein-eis op
   // zichzelf: een vlak, bos-, heuvel- of bergvakje kan allemaal aan water
@@ -208,7 +208,7 @@ export interface Tile {
   // en los van `terrein` bijgehouden: niet elk heuvel/bergvakje heeft een
   // amberader, in tegenstelling tot een gewone erts-mijn die op elk
   // heuvel/bergvakje mag. De tutorial-worldgen garandeert minstens één zulk
-  // vakje vanaf laag 7 (zie world.ts).
+  // vakje vanaf streek 7 (zie world.ts).
   amber?: boolean;
 }
 
@@ -217,33 +217,33 @@ export interface Tile {
 // omdat er precies één settler is, die nooit verloren kan gaan in de MVP.
 export interface Settler {
   hoogte: number;
-  positieInLaag: number;
+  positieInStreek: number;
 }
 
-export interface Layer {
+export interface Streek {
   hoogte: number;
   ontgrendeld: boolean;
   tiles: Tile[]; // lengte 9
   terreinType: string;
-  // Sterkte van de tegenstander bij een militaire confrontatie op deze laag
+  // Sterkte van de tegenstander bij een militaire confrontatie op deze streek
   // (M7, hoofdstuk 6). Was al als optioneel veld voorbereid; vanaf M7
   // daadwerkelijk gevuld (zie wereld.ts) en dus niet meer ongebruikt. Wordt
-  // sinds "De Bezette Laag" ook hergebruikt als de legerwaarde van een
-  // vijandelijke Wachttoren op deze laag (economie.ts: `confrontatieBezetteLaag`)
+  // sinds "De Bezette Streek" ook hergebruikt als de legerwaarde van een
+  // vijandelijke Wachttoren op deze streek (economie.ts: `confrontatieBezetteStreek`)
   // — dezelfde precedent-waarde als een gewone Confrontatie op de frontier.
   dreigingsniveau?: number;
-  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner"): generiek, herbruikbaar mechanisme (ook voor latere
-  // campagnes) — `true` zolang deze laag geblokkeerd is door vijandelijke
+  // campagnes) — `true` zolang deze streek geblokkeerd is door vijandelijke
   // Wachttoren-/Heiligdom-tiles die eerst via Verkenning/Confrontatie/
   // Belegering opgelost moeten worden (zie world.ts voor de tutorial-
-  // scripting op laag 12, en economie.ts `verwerkLaagOntgrendeling` voor de
+  // scripting op streek 12, en economie.ts `verwerkStreekOntgrendeling` voor de
   // bevriezing van de normale cultuur-ontgrendeling). Wordt `false` zodra
-  // alle vijandelijke Heiligdommen vernietigd zijn (Deel 6) — de laag telt
+  // alle vijandelijke Heiligdommen vernietigd zijn (Deel 6) — de streek telt
   // dan als normaal ontgrendeld.
   bezet?: boolean;
   // Cumulatieve belegeringsvoortgang tegen de vijandelijke Heiligdommen op
-  // deze Bezette Laag (Deel 4) — vult zich met cultuur-inkomen dat anders
+  // deze Bezette Streek (Deel 4) — vult zich met cultuur-inkomen dat anders
   // verloren zou gaan, maar uitsluitend zolang de speler minstens één
   // Missionaris heeft (zie `verwerkBelegering` in economie.ts). Bereikt de
   // drempel, dan wordt één vijandelijk Heiligdom vernietigd en begint de
@@ -269,15 +269,15 @@ export interface Relic {
 // tweaks").
 export interface Strijder {
   id: string;
-  wachttoren?: { hoogte: number; positieInLaag: number };
-  // Legerkamp-toewijzing (hoofdstuk 6, issue: "De Bezette Laag, missionaris
+  wachttoren?: { hoogte: number; positieInStreek: number };
+  // Legerkamp-toewijzing (hoofdstuk 6, issue: "De Bezette Streek, missionaris
   // en verkenner", Deel 5) — zelfde soort interactie als `wachttoren`
   // hierboven (omkeerbaar, instant), maar telt in plaats van de gewone
   // Wachttoren-verdedigingsbonus mee als extra legerwaarde bij een
-  // Confrontatie tegen een Bezette Laag, ongeacht op welke laag het
+  // Confrontatie tegen een Bezette Streek, ongeacht op welke streek het
   // Legerkamp staat. Een strijder heeft hoogstens één van de twee
   // toewijzingen tegelijk.
-  legerkamp?: { hoogte: number; positieInLaag: number };
+  legerkamp?: { hoogte: number; positieInStreek: number };
 }
 
 export interface City {
@@ -319,7 +319,7 @@ export interface City {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
-  // Verkenner-eenheden (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // Verkenner-eenheden (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 3) — wetenschappelijke units, trainbaar via hetzelfde
   // wachtrij-patroon als Soldaat (`verkennerInAanbouw`/`strijders`
   // hierboven), zonder toewijzingsconcept (geen "wachttoren"-achtig veld
@@ -335,7 +335,7 @@ export interface City {
   // `startMissionarisRecrutering` in economie.ts). Net als Verkenner
   // hierboven geen toewijzingsconcept: alleen hun bestaan telt (de
   // "vereenvoudiging" uit Deel 4 van het issue) om cultuur-inkomen om te
-  // leiden naar de belegeringsmeter van een Bezette Laag.
+  // leiden naar de belegeringsmeter van een Bezette Streek.
   missionarissen: { id: string }[];
   missionarisInAanbouw?: {
     improvement: Improvement;
@@ -363,7 +363,7 @@ export interface City {
 }
 
 // Uitkomst van een militaire confrontatie (M7, hoofdstuk 6): een vergelijking
-// van eigen legerwaarde tegen de dreiging op de actieve laag, met een
+// van eigen legerwaarde tegen de dreiging op de actieve streek, met een
 // winkans in plaats van een gegarandeerde uitkomst. Bewaard in GameState
 // zodat de UI het laatste resultaat kan tonen na `volgendeBeurt`/interactie.
 export interface ConfrontatieResultaat {
@@ -414,11 +414,11 @@ export interface CampaignConfig {
 // onderdeel van deze gedeelde pool (aparte voorraad resp. drempel-tellers).
 export type MateriaalType = "hout" | "steen" | "erts" | "goud";
 
-// Indringers & tribuut (hoofdstuk 6): elke beurt is er, zodra laag 2
+// Indringers & tribuut (hoofdstuk 6): elke beurt is er, zodra streek 2
 // ontgrendeld is, een kans dat er ergens een incident plaatsvindt — de
-// getroffen laag wordt geloot uit alle ontgrendelde lagen (ook beschermde).
+// getroffen streek wordt geloot uit alle ontgrendelde streken (ook beschermde).
 // `tribuut` is alleen aanwezig als er geen beschermende Wachttoren (voltooid,
-// bemand én wegverbonden) op die laag staat.
+// bemand én wegverbonden) op die streek staat.
 export interface IndringersTribuut {
   resource: MateriaalType;
   aantal: number;
@@ -438,7 +438,7 @@ export interface IndringersTribuut {
 //
 // `uitkomst` (issue: "wachttorens kunnen vernietigd worden door indringers"):
 // alleen gezet als `heeftWachttoren` — de derde-uitkomst-loot (hoofdstuk 6)
-// voor een beschermde laag (frontier of niet). `"standhouden"` is het
+// voor een beschermde streek (frontier of niet). `"standhouden"` is het
 // bestaande gedrag (fase "gemeld", "houdt stand"-tekst); `"malus"` en
 // `"bonus"` krijgen elk hun eigen fase/pop-up hieronder. De bijbehorende
 // state-mutatie (ruïne + strijderverlies, resp. goud) is al toegepast door
@@ -449,11 +449,11 @@ export interface IndringersTribuut {
 //
 // `amberOnderVuur`/`fase: "amber-onder-vuur"`: onafhankelijk van
 // `heeftWachttoren`/`uitkomst` — geldt voor élke indringers-melding op een
-// laag met een actieve Amberader (ook de gewone tribuut-afhandeling), en
+// streek met een actieve Amberader (ook de gewone tribuut-afhandeling), en
 // wordt altijd als eerste getoond vóór de eigenlijke uitkomst-fase
 // (`bevestigAmberOnderVuur` schuift daarna door naar die fase).
 export interface IndringersEvent {
-  laagHoogte: number;
+  streekHoogte: number;
   stamNaam: string;
   heeftWachttoren: boolean;
   tribuut?: IndringersTribuut;
@@ -467,7 +467,7 @@ export interface IndringersEvent {
 // (issue: "hoe vaak je aangevallen bent, en hoe vaak de aanval succesvol is
 // afgeslagen, hoeveel tribuut gegeven is (met exacte aantallen), en hoeveel
 // wachttorens door indringers zijn gesloopt"). Een "aanval" is elk
-// indringers-incident op een laag met een beschermende Wachttoren (zie
+// indringers-incident op een streek met een beschermende Wachttoren (zie
 // `verwerkIndringers` in indringersEnDieren.ts) — zonder Wachttoren eisen de
 // indringers in plaats daarvan tribuut, dat hier los geteld wordt.
 // `aanvallenAfgeslagen` telt de uitkomsten "standhouden" en "bonus" (de
@@ -489,7 +489,7 @@ export interface IndringersStatistieken {
 // klikt 'm gewoon weg via `sluitKuddeMelding`.
 export interface KuddeEvent {
   hoogte: number;
-  positieInLaag: number;
+  positieInStreek: number;
 }
 
 // Roofdier-melding (hoofdstuk 14/17, issue: "roofdieren toevoegen"): gezet
@@ -499,20 +499,20 @@ export interface KuddeEvent {
 // zelfde patroon als `IndringersEvent.fase` hierboven.
 export interface RoofdierEvent {
   hoogte: number;
-  positieInLaag: number;
+  positieInStreek: number;
   fase: "verschenen" | "aanval";
 }
 
 // Volledige spelstatus voor de MVP (één actieve stad, één band van 9 vakjes,
-// meerdere lagen). Zie hoofdstuk 13 voor de scope-afbakening.
+// meerdere streken). Zie hoofdstuk 13 voor de scope-afbakening.
 export interface GameState {
   stad: City;
-  lagen: Layer[];
+  streken: Streek[];
   voorraad: Record<MateriaalType, number>;
   opslagCap: number;
   voedsel: number; // aparte voorraad, geen gedeelde cap (hoofdstuk 5 / 11)
-  // Voortgangs-valuta richting laag-ontgrendeling (M5): geen opslag-cap, blijft
-  // cumulatief oplopen (ook voorbij de drempel van de eerstvolgende laag) —
+  // Voortgangs-valuta richting streek-ontgrendeling (M5): geen opslag-cap, blijft
+  // cumulatief oplopen (ook voorbij de drempel van de eerstvolgende streek) —
   // zie hoofdstuk 5, "Voortgangs-valuta".
   cultuur: number;
   // Wetenschap (hoofdstuk 3/5/9/11/13, issue: "tech tree toevoegen"): net als
@@ -551,13 +551,13 @@ export interface GameState {
   // systeem.
   laatsteIneenstorting?: boolean;
   // Momentopname van de zojuist geëindigde run (issue: "game-over-scherm
-  // met beurten/steden/lagen"), genomen vlak vóór `verwerkVerval` de status
+  // met beurten/steden/streken"), genomen vlak vóór `verwerkVerval` de status
   // terugzet naar een verse start. Alleen relevant zolang
   // `laatsteIneenstorting` `true` is; puur UI-weergave, geen spelregel.
   laatsteRunStatistieken?: {
     beurten: number;
     stedenGebouwd: number;
-    hoogsteLaag: number;
+    hoogsteStreek: number;
   };
   // Settler & wegen (M10, hoofdstuk 16). `settler` is `undefined` tot beurt 2
   // (hij verschijnt dan in de stad, zie economie.ts `volgendeBeurt`).
@@ -576,7 +576,7 @@ export interface GameState {
   // dan geen andere pop-ups.
   indringersEvent?: IndringersEvent;
   // Gezet zodra de speler een nieuwe stad heeft gesticht (hoofdstuk 2/10/16,
-  // issue: "stad stichten op de frontier" — vervangt "bereik laag 12" als
+  // issue: "stad stichten op de frontier" — vervangt "bereik streek 12" als
   // tutorial-einddoel). De settler is dan al verdwenen (`settler` teruggezet
   // naar `undefined` door `stichtStad` in economie.ts) en dit vlag triggert
   // de afsluitende tutorial-scène/samenvatting (zie GameRoot), net als
@@ -589,18 +589,18 @@ export interface GameState {
   kuddeEvent?: KuddeEvent;
   roofdierEvent?: RoofdierEvent;
   // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): gezet
-  // door `verwerkLaagOntgrendeling` in economie.ts zodra laag
-  // `AMBER_ONTDEKKING_LAAG` (world.ts) voor het eerst ontgrendeld wordt — de
-  // gegarandeerde eerste Amberader-locatie ligt op die laag. Puur een
+  // door `verwerkStreekOntgrendeling` in economie.ts zodra streek
+  // `AMBER_ONTDEKKING_STREEK` (world.ts) voor het eerst ontgrendeld wordt — de
+  // gegarandeerde eerste Amberader-locatie ligt op die streek. Puur een
   // meldings-vlag (geen keuze), zelfde patroon als `kuddeEvent` hierboven; de
   // speler klikt 'm gewoon weg via `sluitAmberOntdektMelding`.
   amberOntdektEvent?: boolean;
   // Tweede Amberader-ontdekking (hoofdstuk 3/11/14, issue: "Amberader
-  // sowieso op laag 12"): zelfde meldings-vlag-patroon als
-  // `amberOntdektEvent` hierboven, maar gezet zodra laag
-  // `AMBER_ONTDEKKING_LAAG_2` (world.ts) voor het eerst ontgrendeld wordt —
+  // sowieso op streek 12"): zelfde meldings-vlag-patroon als
+  // `amberOntdektEvent` hierboven, maar gezet zodra streek
+  // `AMBER_ONTDEKKING_STREEK_2` (world.ts) voor het eerst ontgrendeld wordt —
   // de gegarandeerde tweede Amberader-locatie, softlock-preventie vlak vóór
-  // de Bezette Laag. Los gehouden van `amberOntdektEvent` zodat beide
+  // de Bezette Streek. Los gehouden van `amberOntdektEvent` zodat beide
   // meldingen onafhankelijk van elkaar getriggerd en weggeklikt worden.
   tweedeAmberOntdektEvent?: boolean;
   // Gezet zodra een roofdier de settler daadwerkelijk doodt (hoofdstuk 17,
@@ -611,29 +611,29 @@ export interface GameState {
   // krijgen via de civiele improvement-pool (`startNieuweSettler`), zoals
   // hoofdstuk 17 beschrijft.
   settlerVerlorenAanRoofdier?: boolean;
-  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 3): Verkenning is een losse actie, gescheiden van de
   // settler-acties (`settlerActieGedaanDitBeurt` hierboven) — hoogstens 1
   // keer per beurt, zelfde patroon, teruggezet door `volgendeBeurt`.
   verkenningGedaanDitBeurt: boolean;
-  // Dynamische pop-up-meldingen voor de Bezette Laag (Deel 2/4) — zelfde
+  // Dynamische pop-up-meldingen voor de Bezette Streek (Deel 2/4) — zelfde
   // meldings-vlag-patroon als `amberOntdektEvent` hierboven: `undefined`/
   // `false` zolang er geen (onopgeloste) melding is.
-  bezetteLaagOntdektEvent?: boolean;
+  bezetteStreekOntdektEvent?: boolean;
   vijandelijkHeiligdomOnthuldEvent?: boolean;
   vijandelijkHeiligdomVernietigdEvent?: boolean;
-  // Resultaat van de laatst afgehandelde Confrontatie tegen een Bezette Laag
+  // Resultaat van de laatst afgehandelde Confrontatie tegen een Bezette Streek
   // (Deel 5) — los van `laatsteConfrontatie` hierboven (dat blijft de gewone
   // frontier-Confrontatie) omdat de twee losstaande systemen zijn met een
   // eigen eigen-legerwaarde-formule en een eigen verlies-effect (ruïne i.p.v.
   // versnelde uitputting).
-  laatsteConfrontatieBezetteLaag?: ConfrontatieResultaat;
+  laatsteConfrontatieBezetteStreek?: ConfrontatieResultaat;
   // Per-run instelling (issue: "een setting waarmee je deze uitleg pop-ups
   // aan en uit kunt zetten ... voor deze run specifiek") — schakelt alle
   // tutorial-uitleg-pop-ups (openings-uitleg, settler, voedsel/boerderij,
   // militair) in of uit via het hoofdmenu, los van de standaard-instelling
   // (zie save.ts: `standaardUitlegAan`) waarmee elke nieuwe run start. Laat
-  // laag-flavor, indringers-meldingen en de tutorial-voltooid-samenvatting
+  // streek-flavor, indringers-meldingen en de tutorial-voltooid-samenvatting
   // ongemoeid — dat is kerninhoud, geen uitleg.
   uitlegPopupsAan: boolean;
   // Cumulatieve indringers-statistieken van deze run (issue: "Settings

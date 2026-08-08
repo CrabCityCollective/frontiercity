@@ -4,7 +4,7 @@ import { AMBER_ONTDEKKING_TEKST, AMBER_ONTDEKKING_TITEL } from "@/game/tutorialC
 
 interface AmberOntdektPopupProps {
   onSluiten: () => void;
-  // Optionele titel/tekst-override (issue: "Amberader sowieso op laag 12"):
+  // Optionele titel/tekst-override (issue: "Amberader sowieso op streek 12"):
   // laat deze zelfde component ook de tweede-vondst-melding tonen
   // (`AMBER_ONTDEKKING_TWEEDE_TITEL`/`_TEKST`, tutorialContent.ts) zonder een
   // los component te bouwen — zelfde blokkerende meldings-frame en stijl,
@@ -14,7 +14,7 @@ interface AmberOntdektPopupProps {
 }
 
 // Amberader-ontdekkingspop-up (hoofdstuk 3/14, issue: "toevoeging Goud"):
-// verschijnt zodra `verwerkLaagOntgrendeling` (economie.ts) de gegarandeerde
+// verschijnt zodra `verwerkStreekOntgrendeling` (economie.ts) de gegarandeerde
 // eerste Amberader-locatie ontgrendelt — zelfde blokkerende meldings-frame en
 // stijl als KuddePopup, zonder keuze: de speler klikt 'm gewoon weg.
 export default function AmberOntdektPopup({ onSluiten, titel, tekst }: AmberOntdektPopupProps) {

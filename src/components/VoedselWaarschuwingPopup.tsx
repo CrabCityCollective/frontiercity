@@ -10,7 +10,7 @@ interface VoedselWaarschuwingPopupProps {
 // Voedselwaarschuwing-pop-up (issue: "dat mag in een aparte pop-up, die hoeft
 // pas te komen als de dreiging van te weinig voedsel 5 beurten ver weg is"),
 // getoond zodra de stad voor het eerst "kritiek" wordt (zie GameRoot) — zelfde
-// blokkerende overlay als MilitairUitlegPopup/LaagPopup.
+// blokkerende overlay als MilitairUitlegPopup/StreekPopup.
 export default function VoedselWaarschuwingPopup({ beurtenResterend, onDoorgaan }: VoedselWaarschuwingPopupProps) {
   return (
     <div

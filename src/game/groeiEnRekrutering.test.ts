@@ -13,15 +13,15 @@ import {
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
 } from "./groeiEnRekrutering";
-import { heeftOfferAltaar, verken } from "./laagOntgrendeling";
-import { berekenLegerwaarde, confrontatieBezetteLaag } from "./militair";
+import { heeftOfferAltaar, verken } from "./streekOntgrendeling";
+import { berekenLegerwaarde, confrontatieBezetteStreek } from "./militair";
 import { BARAKKEN, BIBLIOTHEEK, GROTE_TEMPEL, GROTE_WOONWIJK, MARKT, TEMPEL } from "./improvements";
 import { GameState } from "./types";
 import { VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
 import {
   HEILIGDOM,
-  metBeschermendeWachttorenOpLaag11,
-  metBezetteLaagEnVerkenner,
+  metBeschermendeWachttorenOpStreek11,
+  metBezetteStreekEnVerkenner,
   metVasteRandom,
   WACHTTOREN,
 } from "./testHelpers";
@@ -78,13 +78,13 @@ test("heeftOfferAltaar en startMissionarisRecrutering: Missionaris is pas trainb
 
   state = {
     ...state,
-    lagen: state.lagen.map((laag, idx) =>
+    streken: state.streken.map((streek, idx) =>
       idx !== 0
-        ? laag
+        ? streek
         : {
-            ...laag,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 2 ? { ...tile, status: "actief" as const, improvement: HEILIGDOM } : tile
+            ...streek,
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 2 ? { ...tile, status: "actief" as const, improvement: HEILIGDOM } : tile
             ),
           }
     ),
@@ -183,23 +183,23 @@ test("Bibliotheek en Markt produceren automatisch zodra ze gebouwd zijn, zonder 
   assert.equal(middelStaat.voorraad.goud, goudVoor + (MARKT.effect.waarde ?? 0));
 });
 
-test("Barakken levert een vaste, stad-brede legerwaarde-bonus die meetelt bij zowel de gewone Confrontatie als de Confrontatie tegen een Bezette Laag (Deel 3)", () => {
+test("Barakken levert een vaste, stad-brede legerwaarde-bonus die meetelt bij zowel de gewone Confrontatie als de Confrontatie tegen een Bezette Streek (Deel 3)", () => {
   let state = maakInitieleSpelStatus();
   const zonderBarakken = berekenLegerwaarde(state);
 
   state = { ...state, stad: { ...state.stad, cityImprovements: [BARAKKEN] } };
   assert.equal(berekenLegerwaarde(state), zonderBarakken + (BARAKKEN.effect.waarde ?? 0));
 
-  // Ook meetellen in de Bezette-Laag-Confrontatie: een geforceerde winst
+  // Ook meetellen in de Bezette-Streek-Confrontatie: een geforceerde winst
   // (winkans 100%) is alleen te garanderen als de Barakken-bonus daadwerkelijk
   // meetelt in de eigen legerwaarde tegenover een fors dreigingsniveau.
-  let bezetteLaagStaat = metBezetteLaagEnVerkenner();
-  bezetteLaagStaat = verken(bezetteLaagStaat, 0);
-  bezetteLaagStaat = metBeschermendeWachttorenOpLaag11(bezetteLaagStaat);
-  bezetteLaagStaat = { ...bezetteLaagStaat, stad: { ...bezetteLaagStaat.stad, cityImprovements: [BARAKKEN] } };
-  const resultaat = metVasteRandom(0, () => confrontatieBezetteLaag(bezetteLaagStaat, 0));
+  let bezetteStreekStaat = metBezetteStreekEnVerkenner();
+  bezetteStreekStaat = verken(bezetteStreekStaat, 0);
+  bezetteStreekStaat = metBeschermendeWachttorenOpStreek11(bezetteStreekStaat);
+  bezetteStreekStaat = { ...bezetteStreekStaat, stad: { ...bezetteStreekStaat.stad, cityImprovements: [BARAKKEN] } };
+  const resultaat = metVasteRandom(0, () => confrontatieBezetteStreek(bezetteStreekStaat, 0));
   assert.equal(
-    resultaat.laatsteConfrontatieBezetteLaag?.eigenLegerwaarde,
+    resultaat.laatsteConfrontatieBezetteStreek?.eigenLegerwaarde,
     (WACHTTOREN.effect.waarde ?? 0) + (BARAKKEN.effect.waarde ?? 0)
   );
 });

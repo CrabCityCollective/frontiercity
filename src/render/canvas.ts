@@ -1,4 +1,4 @@
-// Canvas-rendering van de tegel-band (M1: grid & laag-rendering).
+// Canvas-rendering van de tegel-band (M1: grid & streek-rendering).
 // Losse tegel-tekeningen per improvement, geen naadloos geschilderd tafereel —
 // zie frontier-city-design-doc.md hoofdstuk 12 (visuele stijl). De MVP-stijl
 // volgt de Riven/Myst-referentie uit hoofdstuk 13: stil, schilderachtig,
@@ -10,9 +10,9 @@
 
 import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
-import { City, Layer, Settler, TerreinType, Tile } from "@/game/types";
+import { City, Streek, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
-import { BAND_WIDTH_TILES, eindeOceaanZichtbaar, isVooruitkijkLaag } from "@/game/world";
+import { BAND_WIDTH_TILES, eindeOceaanZichtbaar, isVooruitkijkStreek } from "@/game/world";
 
 export { BAND_WIDTH_TILES };
 
@@ -489,7 +489,7 @@ function tekenHeiligdom(ctx: CanvasRenderingContext2D, x: number, y: number, siz
   ctx.stroke();
 }
 
-// Offer Altaar (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+// Offer Altaar (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
 // verkenner", Deel 4) — een lage stenen altaar met een offervuur, bewust een
 // andere silhouet/kleur dan het Heiligdom (rechtopstaande steen, paarse
 // gloed) zodat de twee culturele improvements ook zonder tile-info-pop-up uit
@@ -514,7 +514,7 @@ function tekenOfferAltaar(ctx: CanvasRenderingContext2D, x: number, y: number, s
   tekenKampvuur(ctx, x + size * 0.5, baseY - size * 0.16, size * 0.09);
 }
 
-// Legerkamp (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+// Legerkamp (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
 // verkenner", Deel 5) — een kleine legertent, bewust anders dan de
 // Wachttoren-toren en de stad-tenten (gedempt olijfgroen i.p.v. warm
 // oker/bruin) zodat het meteen als "militair, maar geen toren" leesbaar is.
@@ -531,18 +531,18 @@ function tekenLegerkampIcon(ctx: CanvasRenderingContext2D, x: number, y: number,
   ctx.stroke();
 }
 
-// Cosmetisch huisje van een Bezette Laag (Deel 1): geen economische functie,
+// Cosmetisch huisje van een Bezette Streek (Deel 1): geen economische functie,
 // niet interactief — een klein, stil huisje, duidelijk kleiner en stiller
 // (geen kampvuur-gloed) dan de stad-tenten, zodat het meteen als "decor"
 // leesbaar is.
-function tekenBezetteLaagHuisje(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+function tekenBezetteStreekHuisje(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
   const baseY = y + size * 0.86;
   tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.4);
   tekenTent(ctx, x + size * 0.5, baseY, size * 0.32, "#8a7a68");
 }
 
-// Vijandelijke Wachttoren-/Heiligdom-varianten van een Bezette Laag
-// (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel 1):
+// Vijandelijke Wachttoren-/Heiligdom-varianten van een Bezette Streek
+// (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner", Deel 1):
 // hergebruikt de bestaande Wachttoren-/Heiligdom-tekenaars met een duidelijk
 // andere kleurskin (een killere, dreigende rode/grijze palet i.p.v. het
 // warme hout/paars van de eigen versies) — geen nieuwe game-logica, puur
@@ -843,7 +843,7 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   legerkamp: (ctx, x, y, size) => tekenLegerkampIcon(ctx, x, y, size),
   "vijandelijke-wachttoren": (ctx, x, y, size) => tekenVijandelijkeWachttorenIcon(ctx, x, y, size),
   "vijandelijk-heiligdom": (ctx, x, y, size) => tekenVijandelijkHeiligdomIcon(ctx, x, y, size),
-  "bezette-laag-huisje": (ctx, x, y, size) => tekenBezetteLaagHuisje(ctx, x, y, size),
+  "bezette-streek-huisje": (ctx, x, y, size) => tekenBezetteStreekHuisje(ctx, x, y, size),
   sterrencirkel: (ctx, x, y, size, seed) => tekenSterrencirkel(ctx, x, y, size, seed),
   goudmijn: (ctx, x, y, size, seed) => tekenAmberader(ctx, x, y, size, seed),
   voorraadkuil: (ctx, x, y, size, seed) => tekenVoorraadkuil(ctx, x, y, size, seed),
@@ -872,7 +872,7 @@ function tekenLandImprovement(
 
 // --- Oceaan --------------------------------------------------------------
 
-// Rij oceaan-tegels onder de onderste laag (hoofdstuk 2: "Onderste laag =
+// Rij oceaan-tegels onder de onderste streek (hoofdstuk 2: "Onderste streek =
 // startstad, begint aan een oceaan") — puur sfeer zodat meteen duidelijk is
 // waar de reis begint, geen bebouwbare tiles. Zelfde geschilderde
 // verloop+textuur-aanpak als `tekenTerreinOndergrond`, maar met een
@@ -1025,7 +1025,7 @@ function tekenGhostTown(ctx: CanvasRenderingContext2D, x: number, y: number, siz
   }
 }
 
-// Ruïne (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner",
+// Ruïne (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner",
 // Deel 5: een eigen Wachttoren na een verloren Confrontatie) — zelfde
 // rubble-silhouet als `tekenGhostTown` hierboven, maar met een warme
 // rust-/asgloed in plaats van het koude grijs, zodat het visueel leesbaar is
@@ -1092,7 +1092,7 @@ function tekenVervalIndicator(
   ctx.fill();
 }
 
-// Zachte, wervelende mist voor onontdekte lagen (fog of war) — donker en
+// Zachte, wervelende mist voor onontdekte streken (fog of war) — donker en
 // stil, met een vleugje sterrenlicht voor het "verwondering"-gevoel uit
 // hoofdstuk 12, in plaats van een harde diagonale arcering.
 function tekenFogTile(
@@ -1132,9 +1132,9 @@ function tekenFogTile(
   }
 }
 
-// Verhuld vakje van een Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag,
+// Verhuld vakje van een Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek,
 // missionaris en verkenner", Deel 1) — een eigen, per-tegel verhullingslaag,
-// los van de gewone laag-brede fog-of-war hierboven (`tekenFogTile`). Zelfde
+// los van de gewone streek-brede fog-of-war hierboven (`tekenFogTile`). Zelfde
 // opbouw (donkere ondergrond + wervelende mist), maar met een dreigende
 // rossige gloed in plaats van het neutrale koud-grijze sterrenlicht, zodat
 // een speler het verschil ook zonder tekst herkent: dit is geen "nog niet
@@ -1170,7 +1170,7 @@ function tekenVerhuldeTile(ctx: CanvasRenderingContext2D, x: number, y: number, 
   }
 }
 
-// Vooruitkijk-tile (hoofdstuk 2, M8-laag 8: "vooruitkijk-bereik"): terrein
+// Vooruitkijk-tile (hoofdstuk 2, M8-streek 8: "vooruitkijk-bereik"): terrein
 // waarneembaar door een sluier heen, met een spiegelglas-icoon in plaats van
 // een letterlijk "?"-teken.
 function tekenVooruitkijkTile(
@@ -1214,7 +1214,7 @@ function tekenBouwSteiger(ctx: CanvasRenderingContext2D, x: number, y: number, s
 }
 
 // Zachte hint van het vakje-terreinsubtype op een nog onbebouwd vakje (issue:
-// "grotere verscheidenheid van tiles per laag") — laat vóór het bouwen al
+// "grotere verscheidenheid van tiles per streek") — laat vóór het bouwen al
 // zien of een vakje bos/heuvel/berg/vlak is, zodat de terrein-eis van een
 // improvement (zie improvements.ts: `terreinEisen`) ook zonder de tile-info-
 // pop-up herkenbaar is. `vlak` krijgt bewust geen extra vorm: dat is de
@@ -1402,7 +1402,7 @@ export function tekenSettlerBereikbaarMarkering(
 }
 
 // Markeert een actieve, nog onbemande Legerkamp-tile tijdens het bemannen
-// (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel 5)
+// (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner", Deel 5)
 // — zelfde patroon als `tekenSettlerBereikbaarMarkering` hierboven, maar
 // olijfgroen (net als `tekenLegerkampIcon`) zodat de twee klik-modi ook op de
 // kaart zelf te onderscheiden zijn.
@@ -1421,7 +1421,7 @@ export function tekenLegerkampBereikbaarMarkering(
   ctx.restore();
 }
 
-// Markeert een nog verhuld vakje van de actieve Bezette Laag tijdens
+// Markeert een nog verhuld vakje van de actieve Bezette Streek tijdens
 // Verkenning (Deel 3) — zelfde patroon, maar de dreigende rossige kleur van
 // `tekenVerhuldeTile` zodat de markering aansluit bij wat er onder zit.
 export function tekenVerkenningBereikbaarMarkering(
@@ -1450,13 +1450,13 @@ function tekenActieveTile(
   col: number,
   hoogte: number,
   verbondenMetStad: boolean,
-  lagen: Layer[]
+  streken: Streek[]
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrond(ctx, x, y, size, terreinType, seed);
 
   if (tile.heeftWeg) {
-    tekenWeg(ctx, x, y, size, seed, wegVerbindingen(lagen, hoogte, col));
+    tekenWeg(ctx, x, y, size, seed, wegVerbindingen(streken, hoogte, col));
   }
 
   if (tile.status === "ghost_town") {
@@ -1519,77 +1519,77 @@ function tekenActieveTile(
   }
 }
 
-// Tekent alle lagen (band van 9 vakjes breed), laag 1 onderaan het canvas,
+// Tekent alle streken (band van 9 vakjes breed), streek 1 onderaan het canvas,
 // oplopend naar boven — zie hoofdstuk 2 ("omhoog bouwen").
 export function tekenWereld(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  lagen: Layer[],
+  streken: Streek[],
   stad: City,
-  plaatsingsLaagHoogte?: number,
+  plaatsingsStreekHoogte?: number,
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
   legerkampBereikbarePosities?: Settler[],
   verkenningBereikbarePosities?: Settler[]
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
-  const totaalLagen = lagen.length;
-  // Afsluitende oceaan-rij bóven de laatste laag (issue: "laatste oceaan ook
+  const totaalStreken = streken.length;
+  // Afsluitende oceaan-rij bóven de laatste streek (issue: "laatste oceaan ook
   // visueel") — schuift alle rijen hieronder één tegel naar beneden zodra hij
   // getoond wordt, net zoals de startoceaan al een vaste extra rij onderaan is.
-  const topOffset = eindeOceaanZichtbaar(lagen) ? tileSize : 0;
+  const topOffset = eindeOceaanZichtbaar(streken) ? tileSize : 0;
 
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#100d0a";
   ctx.fillRect(0, 0, width, height);
 
-  for (const laag of lagen) {
-    const rijIndex = totaalLagen - laag.hoogte;
+  for (const streek of streken) {
+    const rijIndex = totaalStreken - streek.hoogte;
     const y = rijIndex * tileSize + topOffset;
-    const vooruitkijk = !laag.ontgrendeld && isVooruitkijkLaag(laag, lagen);
+    const vooruitkijk = !streek.ontgrendeld && isVooruitkijkStreek(streek, streken);
 
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
       const x = col * tileSize;
 
-      // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+      // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
       // verkenner", Deel 1): een eigen, per-tegel verhullingslaag, los van de
-      // gewone laag-brede fog-of-war hieronder — de laag zelf blijft
+      // gewone streek-brede fog-of-war hieronder — de streek zelf blijft
       // `ontgrendeld: false` zolang ze bezet is, maar de losse vakjes worden
       // hier al individueel getoond zodra ze onthuld zijn.
-      if (laag.bezet) {
-        const tile = laag.tiles[col];
+      if (streek.bezet) {
+        const tile = streek.tiles[col];
         if (tile.verhuld) {
-          tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, laag.hoogte));
+          tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
         } else {
-          const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
-          tekenActieveTile(ctx, x, y, tileSize, tile, laag.terreinType, stad, col, laag.hoogte, verbonden, lagen);
+          const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
+          tekenActieveTile(ctx, x, y, tileSize, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
         }
-      } else if (!laag.ontgrendeld && !vooruitkijk) {
-        tekenFogTile(ctx, x, y, tileSize, tileSeed(col, laag.hoogte));
-      } else if (!laag.ontgrendeld && vooruitkijk) {
-        tekenVooruitkijkTile(ctx, x, y, tileSize, laag.terreinType);
+      } else if (!streek.ontgrendeld && !vooruitkijk) {
+        tekenFogTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
+      } else if (!streek.ontgrendeld && vooruitkijk) {
+        tekenVooruitkijkTile(ctx, x, y, tileSize, streek.terreinType);
       } else {
-        const verbonden = isTileVerbondenMetStad(lagen, laag.hoogte, col);
-        tekenActieveTile(ctx, x, y, tileSize, laag.tiles[col], laag.terreinType, stad, col, laag.hoogte, verbonden, lagen);
-        if (laag.tiles[col].versWater) {
-          tekenVersWaterMarkering(ctx, x, y, tileSize, tileSeed(col, laag.hoogte, 2));
+        const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
+        tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+        if (streek.tiles[col].versWater) {
+          tekenVersWaterMarkering(ctx, x, y, tileSize, tileSeed(col, streek.hoogte, 2));
         }
       }
 
       tekenTileGrid(ctx, x, y, tileSize);
 
-      if (laag.hoogte === plaatsingsLaagHoogte && isBebouwbaarLeeg(laag.tiles[col])) {
+      if (streek.hoogte === plaatsingsStreekHoogte && isBebouwbaarLeeg(streek.tiles[col])) {
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
       }
 
-      if (settlerBereikbarePosities?.some((positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col)) {
+      if (settlerBereikbarePosities?.some((positie) => positie.hoogte === streek.hoogte && positie.positieInStreek === col)) {
         tekenSettlerBereikbaarMarkering(ctx, x, y, tileSize);
       }
 
       if (
         legerkampBereikbarePosities?.some(
-          (positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col
+          (positie) => positie.hoogte === streek.hoogte && positie.positieInStreek === col
         )
       ) {
         tekenLegerkampBereikbaarMarkering(ctx, x, y, tileSize);
@@ -1597,7 +1597,7 @@ export function tekenWereld(
 
       if (
         verkenningBereikbarePosities?.some(
-          (positie) => positie.hoogte === laag.hoogte && positie.positieInLaag === col
+          (positie) => positie.hoogte === streek.hoogte && positie.positieInStreek === col
         )
       ) {
         tekenVerkenningBereikbaarMarkering(ctx, x, y, tileSize);
@@ -1609,32 +1609,32 @@ export function tekenWereld(
   // waar hij op dat moment staat, zodat hij nooit onder een improvement-icoon
   // verdwijnt.
   if (settler) {
-    const rijIndex = totaalLagen - settler.hoogte;
-    if (rijIndex >= 0 && rijIndex < totaalLagen) {
-      tekenSettler(ctx, settler.positieInLaag * tileSize, rijIndex * tileSize + topOffset, tileSize);
+    const rijIndex = totaalStreken - settler.hoogte;
+    if (rijIndex >= 0 && rijIndex < totaalStreken) {
+      tekenSettler(ctx, settler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize);
     }
   }
 
-  // Rij oceaan-tegels vlak onder laag 1 (hoofdstuk 2: startstad begint aan een
+  // Rij oceaan-tegels vlak onder streek 1 (hoofdstuk 2: startstad begint aan een
   // oceaan) — één extra rij, klikbaar via dezelfde tile-geometrie als de
-  // overige lagen (zie GameCanvas: `bepaalAangeklikteTile`, hoogte 0).
-  const oceaanY = totaalLagen * tileSize + topOffset;
+  // overige streken (zie GameCanvas: `bepaalAangeklikteTile`, hoogte 0).
+  const oceaanY = totaalStreken * tileSize + topOffset;
   for (let col = 0; col < BAND_WIDTH_TILES; col++) {
     const x = col * tileSize;
     tekenOceaanTile(ctx, x, oceaanY, tileSize, tileSeed(col, 0));
     tekenTileGrid(ctx, x, oceaanY, tileSize);
   }
 
-  // Afsluitende oceaan-rij bóven de laatste laag (issue: "laatste oceaan ook
+  // Afsluitende oceaan-rij bóven de laatste streek (issue: "laatste oceaan ook
   // visueel") — symmetrisch met de startoceaan hierboven, maar dan de oceaan
-  // aan de overkant (hoofdstuk 2/10), pas getekend zodra de laatste laag
+  // aan de overkant (hoofdstuk 2/10), pas getekend zodra de laatste streek
   // ontgrendeld is (zie `eindeOceaanZichtbaar` in world.ts). Klikbaar via
   // dezelfde tile-geometrie (GameCanvas: `bepaalAangeklikteTile`, sentinel-
   // hoogte `EINDE_OCEAAN_HOOGTE`).
   if (topOffset > 0) {
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
       const x = col * tileSize;
-      tekenOceaanTile(ctx, x, 0, tileSize, tileSeed(col, totaalLagen + 1));
+      tekenOceaanTile(ctx, x, 0, tileSize, tileSeed(col, totaalStreken + 1));
       tekenTileGrid(ctx, x, 0, tileSize);
     }
   }

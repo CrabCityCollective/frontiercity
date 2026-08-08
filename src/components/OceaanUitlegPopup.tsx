@@ -7,8 +7,8 @@ interface OceaanUitlegPopupProps {
 }
 
 // Oceaan-uitleg-pop-up (issue: "tutorial laatste stad aan oceaan"), getoond
-// direct na de laag-pop-up van de laatste laag — zelfde blokkerende overlay
-// als LaagPopup/MilitairUitlegPopup.
+// direct na de streek-pop-up van de laatste streek — zelfde blokkerende overlay
+// als StreekPopup/MilitairUitlegPopup.
 export default function OceaanUitlegPopup({ onDoorgaan }: OceaanUitlegPopupProps) {
   return (
     <div

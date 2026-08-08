@@ -1,102 +1,102 @@
-// Cultuur & laag-ontgrendeling (M5): cultuur is een voortgangs-valuta zonder
+// Cultuur & streek-ontgrendeling (M5): cultuur is een voortgangs-valuta zonder
 // opslag-cap (hoofdstuk 5). Zodra de cumulatieve cultuur de drempel van de
-// eerstvolgende vergrendelde laag haalt, ontgrendelt die laag automatisch
+// eerstvolgende vergrendelde streek haalt, ontgrendelt die streek automatisch
 // (fog of war verdwijnt — hoofdstuk 2).
 //
-// Bezette Laag, Verkenning & belegering (hoofdstuk 6, issue: "De Bezette
-// Laag, missionaris en verkenner"): sommige lagen komen in plaats daarvan
+// Bezette Streek, Verkenning & belegering (hoofdstuk 6, issue: "De Bezette
+// Streek, missionaris en verkenner"): sommige streken komen in plaats daarvan
 // "in beeld" met verhulde vakjes — Verkenning (met wetenschap, dezelfde pool
 // als de technologie-boom) onthult ze één voor één, en zodra de speler een
 // Missionaris heeft, leidt de cultuurproductie van die beurt om naar een
-// belegeringsmeter tegen de vijandelijke Heiligdommen op die laag.
+// belegeringsmeter tegen de vijandelijke Heiligdommen op die streek.
 
 import {
-  BEZETTE_LAAG_HUISJE,
+  BEZETTE_STREEK_HUISJE,
   VIJANDELIJK_HEILIGDOM,
   VIJANDELIJKE_WACHTTOREN,
 } from "./improvements";
 import { GameState, Settler } from "./types";
 import {
-  AMBER_ONTDEKKING_LAAG,
-  AMBER_ONTDEKKING_LAAG_2,
-  cultuurKostenVoorLaag,
-  hoogsteOntgrendeldeLaag,
-  initialiseerBezetteLaag,
-  isBezetteLaagHoogte,
+  AMBER_ONTDEKKING_STREEK,
+  AMBER_ONTDEKKING_STREEK_2,
+  cultuurKostenVoorStreek,
+  hoogsteOntgrendeldeStreek,
+  initialiseerBezetteStreek,
+  isBezetteStreekHoogte,
 } from "./world";
 import { berekenCultuurProductieDitBeurt } from "./productie";
 
-// Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+// Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
 // verkenner"): kosten van één Verkenning (Deel 3) en de belegeringsdrempel
 // tegen een vijandelijk Heiligdom (Deel 4) — beide MVP-richtwaarden,
 // expliciet tunebaar genoemd in het issue (hoofdstuk 14).
 export const VERKENNING_KOSTEN_WETENSCHAP = 10;
 export const BELEGERINGSDREMPEL = 30;
 
-// Ontgrendelt de eerstvolgende vergrendelde laag zodra de cumulatieve cultuur
+// Ontgrendelt de eerstvolgende vergrendelde streek zodra de cumulatieve cultuur
 // de drempel haalt (M5, hoofdstuk 2/5). Cultuur wordt niet "uitgegeven" —
 // het blijft een oplopende teller, dus bij een grote overschot ontgrendelen
-// meteen meerdere lagen na elkaar in dezelfde beurt.
-export function verwerkLaagOntgrendeling(state: GameState): GameState {
-  let lagen = state.lagen;
-  let volgendeHoogte = hoogsteOntgrendeldeLaag(lagen) + 1;
+// meteen meerdere streken na elkaar in dezelfde beurt.
+export function verwerkStreekOntgrendeling(state: GameState): GameState {
+  let streken = state.streken;
+  let volgendeHoogte = hoogsteOntgrendeldeStreek(streken) + 1;
   let amberOntdektEvent = state.amberOntdektEvent;
   let tweedeAmberOntdektEvent = state.tweedeAmberOntdektEvent;
-  let bezetteLaagOntdektEvent = state.bezetteLaagOntdektEvent;
+  let bezetteStreekOntdektEvent = state.bezetteStreekOntdektEvent;
 
   while (
-    volgendeHoogte <= lagen.length &&
-    state.cultuur >= cultuurKostenVoorLaag(volgendeHoogte)
+    volgendeHoogte <= streken.length &&
+    state.cultuur >= cultuurKostenVoorStreek(volgendeHoogte)
   ) {
-    const huidigeLaag = lagen.find((laag) => laag.hoogte === volgendeHoogte)!;
+    const huidigeStreek = streken.find((streek) => streek.hoogte === volgendeHoogte)!;
 
-    // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+    // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
     // verkenner", Deel 2): in plaats van normaal te ontgrendelen, komt deze
-    // laag "in beeld" — dezelfde soort trigger als de gegarandeerde
-    // Amberader-vondst hieronder. De laag blijft `ontgrendeld: false` (dus
-    // de frontier blijft op de laag eronder staan) tot alle vijandelijke
+    // streek "in beeld" — dezelfde soort trigger als de gegarandeerde
+    // Amberader-vondst hieronder. De streek blijft `ontgrendeld: false` (dus
+    // de frontier blijft op de streek eronder staan) tot alle vijandelijke
     // Heiligdommen vernietigd zijn (`verwerkBelegering` hieronder in de
     // `volgendeBeurt`-pijplijn) — de `while`-lus stopt hier dus altijd,
     // zowel de eerste keer (initialisatie) als op elke latere beurt zolang
-    // de laag nog bezet is.
-    if (isBezetteLaagHoogte(volgendeHoogte)) {
-      if (!huidigeLaag.bezet) {
-        lagen = lagen.map((laag) => (laag.hoogte === volgendeHoogte ? initialiseerBezetteLaag(laag) : laag));
-        bezetteLaagOntdektEvent = true;
+    // de streek nog bezet is.
+    if (isBezetteStreekHoogte(volgendeHoogte)) {
+      if (!huidigeStreek.bezet) {
+        streken = streken.map((streek) => (streek.hoogte === volgendeHoogte ? initialiseerBezetteStreek(streek) : streek));
+        bezetteStreekOntdektEvent = true;
       }
       break;
     }
 
-    lagen = lagen.map((laag) =>
-      laag.hoogte === volgendeHoogte ? { ...laag, ontgrendeld: true } : laag
+    streken = streken.map((streek) =>
+      streek.hoogte === volgendeHoogte ? { ...streek, ontgrendeld: true } : streek
     );
     // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
-    // gegarandeerde eerste Amberader-locatie ligt op `AMBER_ONTDEKKING_LAAG`
+    // gegarandeerde eerste Amberader-locatie ligt op `AMBER_ONTDEKKING_STREEK`
     // (world.ts) — deze `while`-lus loopt precies één keer door die hoogte
     // heen op het moment dat hij ontgrendelt, dus dit triggert vanzelf maar
-    // één keer per run, net als de laag-ontgrendeling zelf.
-    if (volgendeHoogte === AMBER_ONTDEKKING_LAAG) {
+    // één keer per run, net als de streek-ontgrendeling zelf.
+    if (volgendeHoogte === AMBER_ONTDEKKING_STREEK) {
       amberOntdektEvent = true;
     }
     // Tweede Amberader-ontdekking (hoofdstuk 3/11/14, issue: "Amberader
-    // sowieso op laag 12"): zelfde eenmalige trigger als hierboven, maar op
-    // `AMBER_ONTDEKKING_LAAG_2` — de softlock-preventie vlak vóór de Bezette
-    // Laag.
-    if (volgendeHoogte === AMBER_ONTDEKKING_LAAG_2) {
+    // sowieso op streek 12"): zelfde eenmalige trigger als hierboven, maar op
+    // `AMBER_ONTDEKKING_STREEK_2` — de softlock-preventie vlak vóór de Bezette
+    // Streek.
+    if (volgendeHoogte === AMBER_ONTDEKKING_STREEK_2) {
       tweedeAmberOntdektEvent = true;
     }
     volgendeHoogte += 1;
   }
 
-  return lagen === state.lagen && bezetteLaagOntdektEvent === state.bezetteLaagOntdektEvent
+  return streken === state.streken && bezetteStreekOntdektEvent === state.bezetteStreekOntdektEvent
     ? state
-    : { ...state, lagen, amberOntdektEvent, tweedeAmberOntdektEvent, bezetteLaagOntdektEvent };
+    : { ...state, streken, amberOntdektEvent, tweedeAmberOntdektEvent, bezetteStreekOntdektEvent };
 }
 
-// Sluit de "Bezette Laag ontdekt"-melding (Deel 2) — puur een
+// Sluit de "Bezette Streek ontdekt"-melding (Deel 2) — puur een
 // UI-bevestiging, zelfde patroon als `sluitAmberOntdektMelding` hieronder.
-export function sluitBezetteLaagOntdektMelding(state: GameState): GameState {
-  return { ...state, bezetteLaagOntdektEvent: undefined };
+export function sluitBezetteStreekOntdektMelding(state: GameState): GameState {
+  return { ...state, bezetteStreekOntdektEvent: undefined };
 }
 
 // Sluit de Amberader-ontdekkingsmelding (hoofdstuk 3/14) — puur een
@@ -106,7 +106,7 @@ export function sluitAmberOntdektMelding(state: GameState): GameState {
 }
 
 // Sluit de tweede Amberader-ontdekkingsmelding (hoofdstuk 3/11/14, issue:
-// "Amberader sowieso op laag 12") — puur een UI-bevestiging, zelfde patroon
+// "Amberader sowieso op streek 12") — puur een UI-bevestiging, zelfde patroon
 // als `sluitAmberOntdektMelding` hierboven.
 export function sluitTweedeAmberOntdektMelding(state: GameState): GameState {
   return { ...state, tweedeAmberOntdektEvent: undefined };
@@ -117,13 +117,13 @@ export function sluitTweedeAmberOntdektMelding(state: GameState): GameState {
 // het gaat om het moment van bouwen zelf, niet om lopende productie (het
 // Offer Altaar produceert toch niets, zie improvements.ts).
 export function heeftOfferAltaar(state: GameState): boolean {
-  return state.lagen.some((laag) =>
-    laag.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "offer-altaar")
+  return state.streken.some((streek) =>
+    streek.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "offer-altaar")
   );
 }
 
-// Belegering tegen de vijandelijke Heiligdommen van een Bezette Laag
-// (hoofdstuk 6, issue: "De Bezette Laag, missionaris en verkenner", Deel 4).
+// Belegering tegen de vijandelijke Heiligdommen van een Bezette Streek
+// (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner", Deel 4).
 // Zolang de speler geen Missionaris heeft, blijft de bevroren cultuurteller
 // (`verwerkProductie` in productie.ts) gewoon bevroren en gebeurt er niets
 // met de belegeringsmeter — zodra er wél minstens één Missionaris is, wordt
@@ -136,20 +136,20 @@ export function heeftOfferAltaar(state: GameState): boolean {
 // eerst-onthulde nog-actieve vijandelijke Heiligdom vernietigd (positie als
 // tie-break, bij gebrek aan een onthullings-tijdstempel) en begint de meter
 // weer bij 0 voor het volgende, indien er nog een resterend is — vandaar de
-// `while`-lus, net als `verwerkLaagOntgrendeling` hierboven.
+// `while`-lus, net als `verwerkStreekOntgrendeling` hierboven.
 //
 // Los van de Missionaris-gate hierboven wordt bij elke beurt ook gecontroleerd
-// of de laag inmiddels volledig is opgelost (issue: "laatste confrontatie
+// of de streek inmiddels volledig is opgelost (issue: "laatste confrontatie
 // tweaken" — voorheen alleen een Heiligdom-eis, zie "Einde van de Bezette
-// Laag" hieronder): dat mag ook via een Confrontatie-actie in militair.ts
+// Streek" hieronder): dat mag ook via een Confrontatie-actie in militair.ts
 // gebeuren, die zelf geen Missionaris of cultuurproductie vereist, dus die
 // check mag niet achter de Missionaris-gate hierboven verstopt zitten.
 export function verwerkBelegering(state: GameState): GameState {
-  const bezetteLaag = state.lagen.find((l) => l.bezet);
-  if (!bezetteLaag) return state;
+  const bezetteStreek = state.streken.find((l) => l.bezet);
+  if (!bezetteStreek) return state;
 
-  let voortgang = bezetteLaag.belegeringsVoortgang ?? 0;
-  let tiles = bezetteLaag.tiles;
+  let voortgang = bezetteStreek.belegeringsVoortgang ?? 0;
+  let tiles = bezetteStreek.tiles;
   let vijandelijkHeiligdomVernietigdEvent = state.vijandelijkHeiligdomVernietigdEvent;
 
   if (state.stad.missionarissen.length > 0) {
@@ -172,31 +172,31 @@ export function verwerkBelegering(state: GameState): GameState {
     }
   }
 
-  // Einde van de Bezette Laag (Deel 6, uitgebreid — issue: "laatste
+  // Einde van de Bezette Streek (Deel 6, uitgebreid — issue: "laatste
   // confrontatie tweaken"): pas zodra zowel geen vijandelijk Heiligdom als
   // geen vijandelijke Wachttoren meer over is — noch onthuld-en-actief, noch
-  // nog verhuld — wordt de hele laag in één keer volledig onthuld (ook nog
+  // nog verhuld — wordt de hele streek in één keer volledig onthuld (ook nog
   // niet individueel verkende vakjes), eindigt de Bezette-status en telt de
-  // laag vanaf dan als normaal ontgrendeld (en dus pas vanaf dan betreedbaar
-  // voor de settler en bebouwbaar, zie `magSettlerNaar`/`hoogsteOntgrendeldeLaag`
-  // in wegen.ts/world.ts en de `laag.ontgrendeld`-eis in
+  // streek vanaf dan als normaal ontgrendeld (en dus pas vanaf dan betreedbaar
+  // voor de settler en bebouwbaar, zie `magSettlerNaar`/`hoogsteOntgrendeldeStreek`
+  // in wegen.ts/world.ts en de `streek.ontgrendeld`-eis in
   // infrastructuurEnBouw.ts — geen apart nieuw slot nodig, de bestaande
   // ontgrendel-gate dekt beide al). Voorheen kon een niet-geconfronteerde
-  // vijandelijke Wachttoren-tile permanent blijven staan zonder de laag te
+  // vijandelijke Wachttoren-tile permanent blijven staan zonder de streek te
   // blokkeren; nu moet de speler 'm via een Legerkamp-Confrontatie
-  // daadwerkelijk opruimen voordat de laag opengaat.
+  // daadwerkelijk opruimen voordat de streek opengaat.
   const heeftNogHeiligdom = tiles.some(
     (tile) =>
       (tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom") ||
-      (tile.verhuld && tile.bezetteLaagInhoud === "heiligdom")
+      (tile.verhuld && tile.bezetteStreekInhoud === "heiligdom")
   );
   const heeftNogWachttoren = tiles.some(
     (tile) =>
       (tile.status === "actief" && tile.improvement?.id === "vijandelijke-wachttoren") ||
-      (tile.verhuld && tile.bezetteLaagInhoud === "wachttoren")
+      (tile.verhuld && tile.bezetteStreekInhoud === "wachttoren")
   );
-  // `bezetteLaag` (hierboven) bestaat alleen zolang `laag.bezet` nog waar is
-  // — deze functie draait dus nooit meer opnieuw op een al opgeloste laag,
+  // `bezetteStreek` (hierboven) bestaat alleen zolang `streek.bezet` nog waar is
+  // — deze functie draait dus nooit meer opnieuw op een al opgeloste streek,
   // dus geen aparte "was dit al opgelost?"-check nodig.
   const opgelost = !heeftNogHeiligdom && !heeftNogWachttoren;
 
@@ -208,13 +208,13 @@ export function verwerkBelegering(state: GameState): GameState {
             ...tile,
             verhuld: false,
             improvement:
-              tile.bezetteLaagInhoud === "wachttoren"
+              tile.bezetteStreekInhoud === "wachttoren"
                 ? VIJANDELIJKE_WACHTTOREN
-                : tile.bezetteLaagInhoud === "huisje"
-                  ? BEZETTE_LAAG_HUISJE
+                : tile.bezetteStreekInhoud === "huisje"
+                  ? BEZETTE_STREEK_HUISJE
                   : undefined,
             status:
-              tile.bezetteLaagInhoud === "wachttoren" || tile.bezetteLaagInhoud === "huisje"
+              tile.bezetteStreekInhoud === "wachttoren" || tile.bezetteStreekInhoud === "huisje"
                 ? ("actief" as const)
                 : tile.status,
           }
@@ -223,24 +223,24 @@ export function verwerkBelegering(state: GameState): GameState {
 
   // Niets veranderd (geen siege-voortgang deze beurt, en nog niet opgelost)
   // — geef dezelfde state terug, zelfde no-op-conventie als
-  // `verwerkLaagOntgrendeling` hierboven.
-  if (tiles === bezetteLaag.tiles && voortgang === (bezetteLaag.belegeringsVoortgang ?? 0) && !opgelost) {
+  // `verwerkStreekOntgrendeling` hierboven.
+  if (tiles === bezetteStreek.tiles && voortgang === (bezetteStreek.belegeringsVoortgang ?? 0) && !opgelost) {
     return state;
   }
 
-  const lagen = state.lagen.map((laag) =>
-    laag.hoogte === bezetteLaag.hoogte
+  const streken = state.streken.map((streek) =>
+    streek.hoogte === bezetteStreek.hoogte
       ? {
-          ...laag,
+          ...streek,
           tiles,
           belegeringsVoortgang: voortgang,
-          bezet: opgelost ? false : laag.bezet,
-          ontgrendeld: opgelost ? true : laag.ontgrendeld,
+          bezet: opgelost ? false : streek.bezet,
+          ontgrendeld: opgelost ? true : streek.ontgrendeld,
         }
-      : laag
+      : streek
   );
 
-  return { ...state, lagen, vijandelijkHeiligdomVernietigdEvent };
+  return { ...state, streken, vijandelijkHeiligdomVernietigdEvent };
 }
 
 // Sluit de "vijandelijk Heiligdom vernietigd"-melding (Deel 4) — puur een
@@ -256,58 +256,58 @@ export function sluitVijandelijkHeiligdomOnthuldMelding(state: GameState): GameS
   return { ...state, vijandelijkHeiligdomOnthuldEvent: undefined };
 }
 
-// Of Verkenning uitgevoerd kan worden (Deel 3): een actieve Bezette Laag,
+// Of Verkenning uitgevoerd kan worden (Deel 3): een actieve Bezette Streek,
 // minstens één Verkenner, en de beurt-limiet (hoogstens 1 keer per beurt,
 // zelfde soort limiet als de settler-acties) nog niet gebruikt.
 export function kanVerkennen(state: GameState): boolean {
   return (
-    state.lagen.some((l) => l.bezet) &&
+    state.streken.some((l) => l.bezet) &&
     state.stad.verkenners.length > 0 &&
     !state.verkenningGedaanDitBeurt &&
     state.wetenschap >= VERKENNING_KOSTEN_WETENSCHAP
   );
 }
 
-// Alle nog verhulde vakjes van de actieve Bezette Laag — de geldige
+// Alle nog verhulde vakjes van de actieve Bezette Streek — de geldige
 // klik-doelen tijdens Verkenning (zelfde soort "bereikbare posities"-lijst
 // als `onbemandeWachttorenPosities`).
-export function verhuldeBezetteLaagPosities(state: GameState): Settler[] {
-  const bezetteLaag = state.lagen.find((l) => l.bezet);
-  if (!bezetteLaag) return [];
-  return bezetteLaag.tiles.filter((tile) => tile.verhuld).map((tile) => ({ hoogte: bezetteLaag.hoogte, positieInLaag: tile.positieInLaag }));
+export function verhuldeBezetteStreekPosities(state: GameState): Settler[] {
+  const bezetteStreek = state.streken.find((l) => l.bezet);
+  if (!bezetteStreek) return [];
+  return bezetteStreek.tiles.filter((tile) => tile.verhuld).map((tile) => ({ hoogte: bezetteStreek.hoogte, positieInStreek: tile.positieInStreek }));
 }
 
 // Voert een Verkenning uit op één door de speler gekozen, nog verhuld vakje
-// van de actieve Bezette Laag (Deel 3): kost `VERKENNING_KOSTEN_WETENSCHAP`
+// van de actieve Bezette Streek (Deel 3): kost `VERKENNING_KOSTEN_WETENSCHAP`
 // wetenschap (dezelfde pool als de technologie-boom, hoofdstuk 3/9 — een
 // bewuste afweging tussen verder verkennen en voortgang in de techboom),
 // onthult het vakje als Wachttoren, Heiligdom of cosmetisch huisje (of, op
 // het neutrale vakje, blijft het gewoon een leeg vakje). Negeert de aanroep
 // stilzwijgend bij een ongeldige aanroep — zelfde veilige-aanroep-conventie
 // als `startBouw`/`bemanWachttoren`.
-export function verken(state: GameState, positieInLaag: number): GameState {
+export function verken(state: GameState, positieInStreek: number): GameState {
   if (!kanVerkennen(state)) return state;
 
-  const bezetteLaag = state.lagen.find((l) => l.bezet)!;
-  const tile = bezetteLaag.tiles[positieInLaag];
+  const bezetteStreek = state.streken.find((l) => l.bezet)!;
+  const tile = bezetteStreek.tiles[positieInStreek];
   if (!tile?.verhuld) return state;
 
   const inhoudImprovement =
-    tile.bezetteLaagInhoud === "wachttoren"
+    tile.bezetteStreekInhoud === "wachttoren"
       ? VIJANDELIJKE_WACHTTOREN
-      : tile.bezetteLaagInhoud === "heiligdom"
+      : tile.bezetteStreekInhoud === "heiligdom"
         ? VIJANDELIJK_HEILIGDOM
-        : tile.bezetteLaagInhoud === "huisje"
-          ? BEZETTE_LAAG_HUISJE
+        : tile.bezetteStreekInhoud === "huisje"
+          ? BEZETTE_STREEK_HUISJE
           : undefined;
 
-  const lagen = state.lagen.map((laag) =>
-    laag.hoogte !== bezetteLaag.hoogte
-      ? laag
+  const streken = state.streken.map((streek) =>
+    streek.hoogte !== bezetteStreek.hoogte
+      ? streek
       : {
-          ...laag,
-          tiles: laag.tiles.map((t, index) =>
-            index !== positieInLaag
+          ...streek,
+          tiles: streek.tiles.map((t, index) =>
+            index !== positieInStreek
               ? t
               : {
                   ...t,
@@ -321,10 +321,10 @@ export function verken(state: GameState, positieInLaag: number): GameState {
 
   return {
     ...state,
-    lagen,
+    streken,
     wetenschap: state.wetenschap - VERKENNING_KOSTEN_WETENSCHAP,
     verkenningGedaanDitBeurt: true,
     vijandelijkHeiligdomOnthuldEvent:
-      tile.bezetteLaagInhoud === "heiligdom" ? true : state.vijandelijkHeiligdomOnthuldEvent,
+      tile.bezetteStreekInhoud === "heiligdom" ? true : state.vijandelijkHeiligdomOnthuldEvent,
   };
 }

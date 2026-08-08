@@ -6,9 +6,9 @@ Dit project bouwt "Frontier City", een rogue-like Civilization-achtig spel voor 
 
 We bouwen op dit moment **alleen de MVP** (zie hoofdstuk 13 van het design-document: "Technische opzet & bouwplan"). Dat betekent concreet:
 
-- Eén stad, één band van 9 vakjes, meerdere lagen — géén meerdere steden/frontier-verplaatsing nog.
-- Alleen de **tutorial-content** ("De Eerste Vuren", Het Hertenpad-volk, lagen 1-12) is speelbare inhoud. Geen Amerikaanse campagne, geen andere campagnes.
-- Geen zeldzaamheid (rijk/legendarisch), geen vooruitkijk verder dan 1 laag, geen culturele pushback-diplomatie. Deze staan bewust **niet** in scope — bouw er geen code voor die je later toch weg moet gooien, maar houd de data-schema's er wel op voorbereid (zie de TypeScript-interfaces in het document, die bevatten al optionele velden voor latere uitbreiding).
+- Eén stad, één band van 9 vakjes, meerdere streken — géén meerdere steden/frontier-verplaatsing nog.
+- Alleen de **tutorial-content** ("De Eerste Vuren", Het Hertenpad-volk, streken 1-12) is speelbare inhoud. Geen Amerikaanse campagne, geen andere campagnes.
+- Geen zeldzaamheid (rijk/legendarisch), geen vooruitkijk verder dan 1 streek, geen culturele pushback-diplomatie. Deze staan bewust **niet** in scope — bouw er geen code voor die je later toch weg moet gooien, maar houd de data-schema's er wel op voorbereid (zie de TypeScript-interfaces in het document, die bevatten al optionele velden voor latere uitbreiding).
 
 ## Stack
 

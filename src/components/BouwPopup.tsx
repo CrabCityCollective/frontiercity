@@ -9,7 +9,7 @@ import {
   improvementNaam,
   terreinEisenBeschrijving,
 } from "@/game/improvements";
-import { Categorie, Improvement, Layer, TechId } from "@/game/types";
+import { Categorie, Improvement, Streek, TechId } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
 
 const CATEGORIEEN = Object.keys(CATEGORIE_LABELS) as Categorie[];
@@ -75,12 +75,12 @@ function CategorieIcoon({ categorie }: { categorie: Categorie }) {
 }
 
 interface BouwPopupProps {
-  laag: Layer;
-  // Alle lagen (hoofdstuk 6/11): nodig om `bouwbaarBuitenFrontier`-improvements
+  streek: Streek;
+  // Alle streken (hoofdstuk 6/11): nodig om `bouwbaarBuitenFrontier`-improvements
   // (momenteel alleen de Wachttoren) als beschikbaar te herkennen zodra ze
-  // ergens op een ontgrendelde laag geplaatst kunnen worden, niet alleen op
-  // `laag` (de frontier) zelf.
-  alleLagen: Layer[];
+  // ergens op een ontgrendelde streek geplaatst kunnen worden, niet alleen op
+  // `streek` (de frontier) zelf.
+  alleStreken: Streek[];
   // Gekozen technologieën (hoofdstuk 3/9, issue: "tech tree toevoegen" Deel
   // 2) — bepaalt of tech-gated improvements (momenteel alleen de
   // Voorraadkuil, ontgrendeld door "aardewerk") als optie meegenomen worden.
@@ -106,8 +106,8 @@ interface BouwPopupProps {
 // GameRoot) en de speler wijst zelf een lege tile op de kaart aan om hem neer
 // te zetten — pas dan wordt `bouwKeuzeGedaanDitBeurt` gezet.
 export default function BouwPopup({
-  laag,
-  alleLagen,
+  streek,
+  alleStreken,
   technologieen,
   cityImprovements,
   zichtbaar,
@@ -128,11 +128,11 @@ export default function BouwPopup({
 
   if (!zichtbaar) return null;
 
-  const legeTilesResterend = laag.tiles.filter((tile) => tile.status === "leeg").length;
+  const legeTilesResterend = streek.tiles.filter((tile) => tile.status === "leeg").length;
 
   function kiesCategorie(categorie: Categorie) {
     setGekozenCategorie(categorie);
-    setOpties(beschikbareOpties(categorie, laag, alleLagen, technologieen));
+    setOpties(beschikbareOpties(categorie, streek, alleStreken, technologieen));
   }
 
   return (
@@ -174,9 +174,9 @@ export default function BouwPopup({
                 // improvements meer heeft met een geldig leeg vakje —
                 // `beschikbareOpties` kijkt voor `bouwbaarBuitenFrontier`-
                 // improvements (Wachttoren) ook naar andere ontgrendelde
-                // lagen, dus dit hoeft niet af te hangen van lege vakjes op
-                // déze (frontier-)laag specifiek.
-                const kanBouwen = beschikbareOpties(categorie, laag, alleLagen, technologieen).length > 0;
+                // streken, dus dit hoeft niet af te hangen van lege vakjes op
+                // déze (frontier-)streek specifiek.
+                const kanBouwen = beschikbareOpties(categorie, streek, alleStreken, technologieen).length > 0;
                 return (
                   <button
                     key={categorie}
@@ -213,7 +213,7 @@ export default function BouwPopup({
                 leeg vakje hebben — "geen lege vakjes" is dus alleen terecht
                 als er ook geen opties over zijn. */}
             {legeTilesResterend === 0 && opties.length === 0 && (
-              <p style={{ margin: 0 }}>Geen lege vakjes meer op deze laag.</p>
+              <p style={{ margin: 0 }}>Geen lege vakjes meer op deze streek.</p>
             )}
 
             {opties.length === 0 && legeTilesResterend > 0 && (
@@ -228,12 +228,12 @@ export default function BouwPopup({
                   const terreinEis = terreinEisenBeschrijving(improvement);
                   // Infrastructuur-eis (hoofdstuk 4/6/11/14, issue: "city
                   // improvements" Deel 4): Legerkamp/Offer Altaar blijven, in
-                  // tegenstelling tot een `minLaag`-gate, gewoon zichtbaar
+                  // tegenstelling tot een `minStreek`-gate, gewoon zichtbaar
                   // (uitgegrijsd) met een voortgangstekst — de speler moet
                   // kunnen zien hoe ver hij is, niet alleen dát het nog niet
                   // kan. `startBouw` in economie.ts is de daadwerkelijke
                   // blokkade; dit is puur de weergave.
-                  const voortgang = infrastructuurVoortgang(alleLagen, cityImprovements, improvement);
+                  const voortgang = infrastructuurVoortgang(alleStreken, cityImprovements, improvement);
                   const eis = improvement.infrastructuurEis;
                   return (
                     <button
@@ -251,7 +251,7 @@ export default function BouwPopup({
                       )}
                       {improvement.bouwbaarBuitenFrontier && (
                         <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
-                          Kan op elke ontgrendelde laag gebouwd worden
+                          Kan op elke ontgrendelde streek gebouwd worden
                         </span>
                       )}
                       {improvement.id === "wachttoren" && (

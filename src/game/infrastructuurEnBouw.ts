@@ -11,7 +11,7 @@
 // — de tussenliggende beurten zijn voor de settler (wegen aanleggen).
 
 import { improvementPastOpTile, isBebouwbaarLeeg } from "./improvements";
-import { GameState, Improvement, Layer } from "./types";
+import { GameState, Improvement, Streek } from "./types";
 
 // Bouw-ritme (M10, hoofdstuk 16): na een bouwkeuze (of het bewust overslaan
 // ervan) mag pas na zoveel beurten weer een nieuw bouwproject gestart worden
@@ -19,14 +19,14 @@ import { GameState, Improvement, Layer } from "./types";
 const BOUW_RITME_BEURTEN = 3;
 
 // Aantal actieve (niet vernietigde/ruïne) land-tiles met dit improvement-id,
-// over alle lagen heen — de basis van `infrastructuurVoortgang` hieronder.
+// over alle streken heen — de basis van `infrastructuurVoortgang` hieronder.
 // Bemand/onbemand maakt voor deze telling niet uit (hoofdstuk 4/6/11/14,
 // issue: "city improvements" Deel 4: "bemand of onbemand maakt voor deze
 // telling niet uit").
-function telActieveLandImprovement(alleLagen: Layer[], id: string): number {
+function telActieveLandImprovement(alleStreken: Streek[], id: string): number {
   let aantal = 0;
-  for (const laag of alleLagen) {
-    for (const tile of laag.tiles) {
+  for (const streek of alleStreken) {
+    for (const tile of streek.tiles) {
       if (tile.status === "actief" && tile.improvement?.id === id) aantal += 1;
     }
   }
@@ -42,19 +42,19 @@ export interface InfrastructuurVoortgang {
 
 // Voortgang t.o.v. `improvement.infrastructuurEis` (hoofdstuk 4/6/11/14,
 // issue: "city improvements" Deel 4) — `undefined` als dit improvement geen
-// infrastructuur-eis heeft. Puur op basis van `alleLagen`/`cityImprovements`
+// infrastructuur-eis heeft. Puur op basis van `alleStreken`/`cityImprovements`
 // (geen volledige `GameState` nodig) zodat zowel `voldoetAanInfrastructuurEis`
 // hieronder als BouwPopup.tsx (voor de voortgangstekst) dezelfde berekening
 // kunnen hergebruiken.
 export function infrastructuurVoortgang(
-  alleLagen: Layer[],
+  alleStreken: Streek[],
   cityImprovements: Improvement[],
   improvement: Improvement
 ): InfrastructuurVoortgang | undefined {
   const eis = improvement.infrastructuurEis;
   if (!eis) return undefined;
 
-  const aantalLandImprovement = telActieveLandImprovement(alleLagen, eis.landImprovementId);
+  const aantalLandImprovement = telActieveLandImprovement(alleStreken, eis.landImprovementId);
   const heeftCityImprovement = cityImprovements.some((ci) => ci.id === eis.cityImprovementId);
   return {
     aantalLandImprovement,
@@ -65,27 +65,27 @@ export function infrastructuurVoortgang(
 }
 
 function voldoetAanInfrastructuurEis(state: GameState, improvement: Improvement): boolean {
-  return infrastructuurVoortgang(state.lagen, state.stad.cityImprovements, improvement)?.vervuld ?? true;
+  return infrastructuurVoortgang(state.streken, state.stad.cityImprovements, improvement)?.vervuld ?? true;
 }
 
 // Start de bouw van een land improvement op de tile die de speler zelf heeft
 // aangewezen (klik-op-tile plaatsing, zie GameRoot: `plaatsingsImprovement`).
-// Geeft de ongewijzigde status terug als die laag niet ontgrendeld is, de
+// Geeft de ongewijzigde status terug als die streek niet ontgrendeld is, de
 // tile niet (meer) leeg is, of als het terrein niet aan de eis van de
 // improvement voldoet (issue: "houtkap alleen op bos" e.d.) — de aanroeper
 // controleert dit al vóór het tonen van de "hier bouwen?"-vraag, dit is een
-// tweede, veilige check. Bewust geen aparte "is dit de frontier-laag?"-check
+// tweede, veilige check. Bewust geen aparte "is dit de frontier-streek?"-check
 // hier: alleen de UI (GameRoot) beperkt normale improvements tot de
-// frontier-laag, terwijl `bouwbaarBuitenFrontier`-improvements (hoofdstuk
-// 6/11, momenteel alleen de Wachttoren) op elke ontgrendelde laag mogen —
-// deze functie staat dus élke ontgrendelde laag toe en vertrouwt op de
+// frontier-streek, terwijl `bouwbaarBuitenFrontier`-improvements (hoofdstuk
+// 6/11, momenteel alleen de Wachttoren) op elke ontgrendelde streek mogen —
+// deze functie staat dus élke ontgrendelde streek toe en vertrouwt op de
 // aanroeper voor de rest van die keuze. Verbruikt altijd de bouwkeuze van
 // deze beurt (hoofdstuk 11: hoogstens 1 bouwkeuze per beurt).
 export function startBouw(
   state: GameState,
-  laagHoogte: number,
+  streekHoogte: number,
   improvement: Improvement,
-  positieInLaag: number
+  positieInStreek: number
 ): GameState {
   // Infrastructuur-eis (hoofdstuk 4/6/11/14, issue: "city improvements" Deel
   // 4): Legerkamp/Offer Altaar blijven uitgegrijsd zolang de eis niet vervuld
@@ -93,18 +93,18 @@ export function startBouw(
   // — deze server-side check is de daadwerkelijke blokkade.
   if (!voldoetAanInfrastructuurEis(state, improvement)) return state;
 
-  const lagen = state.lagen.map((laag) => {
-    if (laag.hoogte !== laagHoogte) return laag;
-    if (!laag.ontgrendeld) return laag;
+  const streken = state.streken.map((streek) => {
+    if (streek.hoogte !== streekHoogte) return streek;
+    if (!streek.ontgrendeld) return streek;
 
-    const doelTile = laag.tiles[positieInLaag];
+    const doelTile = streek.tiles[positieInStreek];
     // Een "ruine"-vakje (Deel 5: een verloren Confrontatie tegen een Bezette
-    // Laag) is net zo herbouwbaar als een gewoon leeg vakje.
-    if (!doelTile || !isBebouwbaarLeeg(doelTile)) return laag;
-    if (!improvementPastOpTile(improvement, doelTile)) return laag;
+    // Streek) is net zo herbouwbaar als een gewoon leeg vakje.
+    if (!doelTile || !isBebouwbaarLeeg(doelTile)) return streek;
+    if (!improvementPastOpTile(improvement, doelTile)) return streek;
 
-    const tiles = laag.tiles.map((tile, index) => {
-      if (index !== positieInLaag) return tile;
+    const tiles = streek.tiles.map((tile, index) => {
+      if (index !== positieInStreek) return tile;
       return {
         ...tile,
         status: "in_aanbouw" as const,
@@ -119,12 +119,12 @@ export function startBouw(
       };
     });
 
-    return { ...laag, tiles };
+    return { ...streek, tiles };
   });
 
   return {
     ...state,
-    lagen,
+    streken,
     bouwKeuzeGedaanDitBeurt: true,
     volgendeBouwBeurt: state.beurt + BOUW_RITME_BEURTEN,
   };

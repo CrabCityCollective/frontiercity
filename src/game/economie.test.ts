@@ -29,7 +29,7 @@ test("beurtMagAutomatischDoorgaan: vanaf beurt 2 gaat de beurt pas automatisch d
   assert.ok(state.settler, "de settler is verschenen zodra beurt 2 begint");
   assert.equal(beurtMagAutomatischDoorgaan(state), false, "de settler heeft deze beurt nog niets gedaan");
 
-  const naVerplaatsing = verplaatsSettlerNaar(state, state.settler!.hoogte, state.settler!.positieInLaag + 1);
+  const naVerplaatsing = verplaatsSettlerNaar(state, state.settler!.hoogte, state.settler!.positieInStreek + 1);
   assert.equal(naVerplaatsing.settlerActieGedaanDitBeurt, true);
   assert.equal(beurtMagAutomatischDoorgaan(naVerplaatsing), true);
 });
@@ -39,7 +39,7 @@ test("beurtMagAutomatischDoorgaan: op een bouwmoment moet zowel de settler-actie
   state = volgendeBeurt(state);
   assert.ok(state.beurt >= (state.volgendeBouwBeurt ?? 1), "beurt 2 is (net als beurt 1) een bouwmoment");
 
-  const naSettlerActie = verplaatsSettlerNaar(state, state.settler!.hoogte, state.settler!.positieInLaag + 1);
+  const naSettlerActie = verplaatsSettlerNaar(state, state.settler!.hoogte, state.settler!.positieInStreek + 1);
   assert.equal(
     beurtMagAutomatischDoorgaan(naSettlerActie),
     false,

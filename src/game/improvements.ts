@@ -2,17 +2,17 @@
 // productiewachtrij (M3). Economisch, Cultureel, Militair en Wetenschappelijk
 // zijn gevuld: economisch levert de drie bouwmaterialen, voedsel (M3) en
 // (sindsdien "aardewerk" gekozen is, hoofdstuk 3/9) een kleine opslagbonus,
-// cultureel levert cultuur voor laag-ontgrendeling (M5), militair levert de
+// cultureel levert cultuur voor streek-ontgrendeling (M5), militair levert de
 // Wachttoren-verdedigingsbonus voor militaire confrontaties (M7) én, sindsdien
-// (hoofdstuk 6), de indringers-tribuut-bescherming van de hele laag,
+// (hoofdstuk 6), de indringers-tribuut-bescherming van de hele streek,
 // wetenschappelijk levert wetenschap voor de technologie-boom (hoofdstuk 3/9,
 // zie techTree.ts). Civiel blijft leeg: de groei-tier-improvement (M6, zie WOONWIJK hieronder)
 // is een stad-upgrade buiten de tegel-band, en de overige civiele
 // land-improvements (weg/brug) vallen buiten de MVP-scope — zie hoofdstuk 3
 // en hoofdstuk 13 van het design-document.
 
-import { CampaignConfig, Categorie, City, Improvement, Layer, MateriaalType, ResourceType, TechId, Tile, TerreinType } from "./types";
-import { hoogsteOntgrendeldeLaag } from "./world";
+import { CampaignConfig, Categorie, City, Improvement, Streek, MateriaalType, ResourceType, TechId, Tile, TerreinType } from "./types";
+import { hoogsteOntgrendeldeStreek } from "./world";
 
 // Nederlandse labels per categorie, gedeeld tussen de bouw-pop-up (M2) en de
 // tile-info-pop-up (klik-op-tile) zodat beide dezelfde terminologie tonen.
@@ -195,32 +195,32 @@ export const AMBERADER = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "goud
 export const VOORRAADKUIL = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "voorraadkuil")!;
 
 // Cultureel land improvement (hoofdstuk 3: "Heiligdom") — de eerste optie in
-// deze categorie, nodig om cultuur te produceren voor laag-ontgrendeling (M5).
+// deze categorie, nodig om cultuur te produceren voor streek-ontgrendeling (M5).
 // Geen `uitputtingBeurten` (hoofdstuk 4/6): een Heiligdom blijft, anders dan
 // de economische land-improvements, permanent actief in plaats van een
 // ghost-town-tile te worden. `verwerkProductie` in economie.ts halveert de
-// opbrengst wel zodra de tile niet op de frontier-laag (de hoogst
-// ontgrendelde laag) staat.
-// Offer Altaar (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+// opbrengst wel zodra de tile niet op de frontier-streek (de hoogst
+// ontgrendelde streek) staat.
+// Offer Altaar (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
 // verkenner", Deel 4): het tweede culturele land improvement. Ontgrendelt de
 // Missionaris-unit als trainbare optie (zie `MISSIONARIS` hieronder en
 // `heeftOfferAltaar`/`startMissionarisRecrutering` in economie.ts) — de
 // Missionaris staat al sinds hoofdstuk 3 in het ontwerp maar was tot nu toe
 // nooit daadwerkelijk bouwbaar. Normale bouwregel (hoofdstuk 6/11): geen
 // `bouwbaarBuitenFrontier`-uitzondering zoals de Wachttoren, dit hoeft niet
-// op de Bezette Laag zelf te staan. Kosten (hoofdstuk 14, MVP-richtwaarde,
+// op de Bezette Streek zelf te staan. Kosten (hoofdstuk 14, MVP-richtwaarde,
 // tunebaar): alle vier grondstoffen, in lijn met hoe de speler dit aanleverde.
 //
 // `infrastructuurEis` (hoofdstuk 4/6/11/14, issue: "city improvements" Deel
 // 4): pas bouwbaar zodra de speler minstens 5 actieve Heiligdommen heeft én
-// een Grote Tempel heeft gebouwd — een forse, meerdere-lagen-brede
-// opbouw-eis die de Bezette-Laag-climax pas opent nadat de speler zijn
+// een Grote Tempel heeft gebouwd — een forse, meerdere-streken-brede
+// opbouw-eis die de Bezette-Streek-climax pas opent nadat de speler zijn
 // culturele infrastructuur echt heeft uitgebouwd (zie hoofdstuk 11 voor de
 // volledige onderbouwing). `startBouw`/`voldoetAanInfrastructuurEis` in
 // economie.ts handhaven dit; `beschikbareOpties` hieronder blijft het Offer
 // Altaar bewust gewoon tonen (uitgegrijsd, met voortgangstekst in
 // BouwPopup.tsx) zodat de speler ziet hoe ver hij is, in plaats van het
-// helemaal te verbergen zoals bij een `minLaag`-eis.
+// helemaal te verbergen zoals bij een `minStreek`-eis.
 export const OFFER_ALTAAR: Improvement = {
   id: "offer-altaar",
   naam: "Offer Altaar",
@@ -269,9 +269,9 @@ export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
 // sterren en seizoenen bestudeert) sluit aan bij de Riven/Myst-tutorialsfeer
 // (hoofdstuk 12) en is verder ongewijzigd overgenomen uit het issue.
 //
-// `minLaag: 3` (issue: "tutorial popups wijzigen"): in de tutorial is
-// Wetenschappelijk pas vanaf laag 3 beschikbaar (uitgegrijsd ervoor via
-// `beschikbareOpties` hieronder) — het ontgrendelen van laag 3 gaat gepaard
+// `minStreek: 3` (issue: "tutorial popups wijzigen"): in de tutorial is
+// Wetenschappelijk pas vanaf streek 3 beschikbaar (uitgegrijsd ervoor via
+// `beschikbareOpties` hieronder) — het ontgrendelen van streek 3 gaat gepaard
 // met de "Goddelijke raadgeving"-pop-up (tutorialContent.ts) die precies naar
 // de Sterrencirkel verwijst.
 export const STERRENCIRKEL: Improvement = {
@@ -282,51 +282,51 @@ export const STERRENCIRKEL: Improvement = {
   kosten: { hout: 6, steen: 2 },
   bouwtijdBeurten: 2,
   effect: { type: "productie", resource: "wetenschap", waarde: 2 },
-  minLaag: 3,
+  minStreek: 3,
 };
 
 export const WETENSCHAPPELIJK_LAND_IMPROVEMENTS: Improvement[] = [STERRENCIRKEL];
 
 // Militair land improvement (hoofdstuk 3/6: "Wachttoren verdedigt de hele
-// laag tegen indringers"). Levert nog steeds de passieve verdedigingsbonus
+// streek tegen indringers"). Levert nog steeds de passieve verdedigingsbonus
 // die meetelt in `berekenLegerwaarde` (M7), én blokkeert sindsdien (hoofdstuk
 // 6) volledig de indringers-tribuut-eis van `verwerkIndringers` in
 // economie.ts, mits hij ook bemand én wegverbonden is met de stad — welke
-// laag getroffen wordt, doet er niet toe (hoofdstuk 6: elke ontgrendelde laag
-// komt in aanmerking, niet alleen de frontier-laag). Sinds issue "wachttoren
-// beschermt 2 lagen" beschermt een werkende Wachttoren behalve zijn eigen
-// laag ook de laag eronder (zie `heeftBeschermendeWachttoren` in
-// economie.ts) — anders had de speler op vrijwel elke laag apart een toren
+// streek getroffen wordt, doet er niet toe (hoofdstuk 6: elke ontgrendelde streek
+// komt in aanmerking, niet alleen de frontier-streek). Sinds issue "wachttoren
+// beschermt 2 streken" beschermt een werkende Wachttoren behalve zijn eigen
+// streek ook de streek eronder (zie `heeftBeschermendeWachttoren` in
+// economie.ts) — anders had de speler op vrijwel elke streek apart een toren
 // nodig. Geen `uitputtingBeurten` (hoofdstuk 4/6): een Wachttoren, net als
 // het Heiligdom hierboven, blijft permanent actief in plaats van uit te
 // putten.
 //
 // `bouwbaarBuitenFrontier` (hoofdstuk 6/11, issue: "wachttorens, bemanning en
 // bevoorrading"): een expliciete uitzondering op de algemene frontier-only
-// bouwregel — anders zou een achtergelaten laag permanent onverdedigbaar
+// bouwregel — anders zou een achtergelaten streek permanent onverdedigbaar
 // worden zodra de frontier verder trekt, terwijl indringers overal kunnen
 // toeslaan. Thematisch passend: forten werden juist áchter de oprukkende
 // grens aangelegd, niet aan de voorste rand.
 //
-// `minLaag: 2` (issue: "tutorial popups wijzigen"): in de tutorial is
-// Militair (en dus de Wachttoren) pas vanaf laag 2 beschikbaar (uitgegrijsd
-// ervoor via `beschikbareOpties` hieronder) — het ontgrendelen van laag 2
+// `minStreek: 2` (issue: "tutorial popups wijzigen"): in de tutorial is
+// Militair (en dus de Wachttoren) pas vanaf streek 2 beschikbaar (uitgegrijsd
+// ervoor via `beschikbareOpties` hieronder) — het ontgrendelen van streek 2
 // gaat gepaard met de "De vijand aan de horizon"-pop-up (tutorialContent.ts).
-// Legerkamp (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
-// verkenner", Deel 5): net als de Wachttoren op elke ontgrendelde laag
+// Legerkamp (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
+// verkenner", Deel 5): net als de Wachttoren op elke ontgrendelde streek
 // bouwbaar (`bouwbaarBuitenFrontier`) — thematisch omdat een gestationeerde
-// Soldaat zelf naar een Bezette Laag kan marcheren, ongeacht waar het
+// Soldaat zelf naar een Bezette Streek kan marcheren, ongeacht waar het
 // Legerkamp staat (hoofdstuk 6/11). Effect is puur een marker (geen
 // "verdediging"-waarde zoals de Wachttoren): elke toegewezen Soldaat telt
 // zelf zijn eigen legerwaarde mee bij een Confrontatie tegen een Bezette
-// Laag (zie `berekenLegerkampLegerwaarde` in economie.ts), het Legerkamp
+// Streek (zie `berekenLegerkampLegerwaarde` in economie.ts), het Legerkamp
 // zelf levert geen eigen bonus. Kosten (hoofdstuk 14, MVP-richtwaarde,
 // tunebaar): vooral hout, in lijn met een kamp i.p.v. een stenen toren.
 //
 // `infrastructuurEis` (hoofdstuk 4/6/11/14, issue: "city improvements" Deel
 // 4): pas bouwbaar zodra de speler minstens 5 actieve Wachttorens heeft én
 // een Barakken heeft gebouwd — zelfde soort forse infrastructuur-eis als het
-// Offer Altaar hieronder, nu voor de militaire kant van de Bezette-Laag-
+// Offer Altaar hieronder, nu voor de militaire kant van de Bezette-Streek-
 // climax. Zie de `infrastructuurEis`-comment bij `OFFER_ALTAAR` hieronder
 // voor de volledige onderbouwing.
 export const LEGERKAMP: Improvement = {
@@ -357,7 +357,7 @@ export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
     bouwtijdBeurten: 2,
     effect: { type: "verdediging", waarde: 3 },
     bouwbaarBuitenFrontier: true,
-    minLaag: 2,
+    minStreek: 2,
   },
   LEGERKAMP,
 ];
@@ -377,11 +377,11 @@ export const SOLDAAT: Improvement = {
   effect: { type: "leger", waarde: 4 },
 };
 
-// Verkenner (hoofdstuk 3/6, issue: "De Bezette Laag, missionaris en
+// Verkenner (hoofdstuk 3/6, issue: "De Bezette Streek, missionaris en
 // verkenner", Deel 3): wetenschappelijke unit — stond al sinds hoofdstuk 3 in
 // het ontwerp ("tijdelijke extra vooruitkijk"), maar krijgt hier voor het
 // eerst een daadwerkelijke functie: zodra er minstens één bestaat, kan de
-// speler de Verkenning-actie uitvoeren op een Bezette Laag (zie
+// speler de Verkenning-actie uitvoeren op een Bezette Streek (zie
 // `kanVerkennen`/`verken` in economie.ts). Eigen rekruteringswachtrij
 // (`City.verkennerInAanbouw`), net als Soldaat, dus geen onderdeel van
 // IMPROVEMENT_POOLS/beschikbareOpties. Kosten (hoofdstuk 14, MVP-richtwaarde,
@@ -396,11 +396,11 @@ export const VERKENNER: Improvement = {
   effect: { type: "verkenning" },
 };
 
-// Missionaris (hoofdstuk 3/6, issue: "De Bezette Laag, missionaris en
+// Missionaris (hoofdstuk 3/6, issue: "De Bezette Streek, missionaris en
 // verkenner", Deel 4): culturele unit — stond al sinds hoofdstuk 3 in het
 // ontwerp ("voor pushback"), maar krijgt hier voor het eerst een
 // daadwerkelijke functie: zodra er minstens één bestaat, wordt nieuwe
-// cultuurproductie omgeleid naar de belegeringsmeter van een Bezette Laag
+// cultuurproductie omgeleid naar de belegeringsmeter van een Bezette Streek
 // (zie `verwerkBelegering` in economie.ts) in plaats van verloren te gaan.
 // Alleen trainbaar zodra er een voltooid Offer Altaar staat (zie
 // `heeftOfferAltaar`/`startMissionarisRecrutering`). Eigen
@@ -417,13 +417,13 @@ export const MISSIONARIS: Improvement = {
   effect: { type: "belegering" },
 };
 
-// Vijandelijke tile-varianten van een Bezette Laag (hoofdstuk 6, issue: "De
-// Bezette Laag, missionaris en verkenner", Deel 1) — hergebruikt de
+// Vijandelijke tile-varianten van een Bezette Streek (hoofdstuk 6, issue: "De
+// Bezette Streek, missionaris en verkenner", Deel 1) — hergebruikt de
 // bestaande Wachttoren-/Heiligdom-improvement-typen (dus dezelfde soort/
 // effect-vorm) met een duidelijk andere naam/skin (`vijandelijk: true`, zie
 // canvas.ts/canvasPixelArt.ts voor de kleurvariant). Nooit onderdeel van
 // IMPROVEMENT_POOLS: deze worden alleen door Verkenning (economie.ts:
-// `verken`) of de laag-brede onthulling bij het einde van de Bezette Laag
+// `verken`) of de streek-brede onthulling bij het einde van de Bezette Streek
 // geplaatst, nooit door de speler gebouwd. Geen bouwkosten/-tijd (staan er
 // al, klaar bij onthulling).
 export const VIJANDELIJKE_WACHTTOREN: Improvement = {
@@ -451,12 +451,12 @@ export const VIJANDELIJK_HEILIGDOM: Improvement = {
 // Cosmetisch huisje (Deel 1): geen economische functie, niet interactief,
 // nooit een Confrontatie- of Belegeringsdoel — daarom geen `vijandelijk`-
 // vlag (dat betekent specifiek "geldig doel"). Blijft voor altijd staan
-// (ook nadat de Bezette Laag is opgelost, Deel 6): omdat `startBouw` alleen
+// (ook nadat de Bezette Streek is opgelost, Deel 6): omdat `startBouw` alleen
 // een `"leeg"`/`"ruine"`-vakje overschrijft en dit vakje na onthulling altijd
 // `"actief"` blijft met dit improvement erop, is het vanzelf permanent
 // onbebouwbaar — geen aparte "permanent"-vlag nodig.
-export const BEZETTE_LAAG_HUISJE: Improvement = {
-  id: "bezette-laag-huisje",
+export const BEZETTE_STREEK_HUISJE: Improvement = {
+  id: "bezette-streek-huisje",
   naam: "Verlaten huisje",
   categorie: "civiel",
   soort: "land",
@@ -468,7 +468,7 @@ export const BEZETTE_LAAG_HUISJE: Improvement = {
 // Stadsgroei-improvement (M6, hoofdstuk 3/4: "Aquaduct, riolering, woonwijk
 // (= groei-tiers)"). Dit is een `soort: "city"`-improvement die de stad zelf
 // upgradet, geen land-vakje — daarom geen onderdeel van IMPROVEMENT_POOLS/
-// beschikbareOpties (die zijn voor land-improvements op de actieve laag) en
+// beschikbareOpties (die zijn voor land-improvements op de actieve streek) en
 // wordt in plaats daarvan rechtstreeks gebruikt door de startGroei-actie in
 // economie.ts en het civiele paneel. Weg/brug (de land-improvements onder
 // civiel) blijven, net als de rest van IMPROVEMENT_POOLS.civiel, buiten de
@@ -577,8 +577,8 @@ export const MARKT: Improvement = {
 // als bemand), een vaste, stad-brede legerwaarde-bonus die geen bemanning
 // nodig heeft — vandaar het eigen effect-type "stad-legerwaarde" i.p.v.
 // "verdediging". Telt mee bij zowel de gewone Confrontatie
-// (`berekenLegerwaarde`) als de Confrontatie tegen een Bezette Laag
-// (`confrontatieBezetteLaag`), zie economie.ts. Ontgrendelt daarnaast, samen
+// (`berekenLegerwaarde`) als de Confrontatie tegen een Bezette Streek
+// (`confrontatieBezetteStreek`), zie economie.ts. Ontgrendelt daarnaast, samen
 // met 5 actieve Wachttorens, het Legerkamp (`LEGERKAMP.infrastructuurEis`
 // hierboven). `stadsgrootteEis: "middel"` is een aanname uit het issue zelf
 // ("pas aan als dat niet de bedoeling is").
@@ -655,8 +655,8 @@ const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   cultureel: CULTUREEL_LAND_IMPROVEMENTS,
 };
 
-// Een "ruine"-vakje (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
-// verkenner", Deel 5: een verloren Confrontatie tegen een Bezette Laag) is,
+// Een "ruine"-vakje (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
+// verkenner", Deel 5: een verloren Confrontatie tegen een Bezette Streek) is,
 // anders dan een permanente "ghost_town"-tile, net zo herbouwbaar als een
 // gewoon leeg vakje — tegen de normale kosten/bouwtijd van welk improvement
 // dan ook (niet uitsluitend de Wachttoren die er ooit stond).
@@ -664,26 +664,26 @@ export function isBebouwbaarLeeg(tile: Tile): boolean {
   return tile.status === "leeg" || tile.status === "ruine";
 }
 
-// Of `improvement` een leeg, terrein-geschikt vakje heeft op `laag`, en daar
-// niet al gebouwd staat — de kern-plaatsingscheck, per laag.
-function kanImprovementOpLaag(improvement: Improvement, laag: Layer): boolean {
-  const reedsGebouwd = laag.tiles.some((tile) => tile.improvement?.id === improvement.id);
+// Of `improvement` een leeg, terrein-geschikt vakje heeft op `streek`, en daar
+// niet al gebouwd staat — de kern-plaatsingscheck, per streek.
+function kanImprovementOpStreek(improvement: Improvement, streek: Streek): boolean {
+  const reedsGebouwd = streek.tiles.some((tile) => tile.improvement?.id === improvement.id);
   if (reedsGebouwd) return false;
-  return laag.tiles.some((tile) => isBebouwbaarLeeg(tile) && improvementPastOpTile(improvement, tile));
+  return streek.tiles.some((tile) => isBebouwbaarLeeg(tile) && improvementPastOpTile(improvement, tile));
 }
 
 // Opties voor de categorie-keuze-UI (hoofdstuk 11: eerst categorie, dan alle
 // op dat moment geldige land improvements binnen die categorie — geen
-// willekeurige subset meer). Sluit improvements uit die al op deze laag
+// willekeurige subset meer). Sluit improvements uit die al op deze streek
 // gebouwd zijn, én improvements met een terrein-eis (zie
-// `Improvement.terreinEisen`) die geen enkel leeg vakje op deze laag kan
+// `Improvement.terreinEisen`) die geen enkel leeg vakje op deze streek kan
 // plaatsen — anders zou de speler een optie kunnen kiezen die nergens
 // neergezet kan worden.
 //
 // `bouwbaarBuitenFrontier`-improvements (hoofdstuk 6/11: momenteel alleen de
 // Wachttoren) zijn hierop een uitzondering: die tellen als beschikbaar zodra
-// er ergens op een ontgrendelde laag (niet per se `laag` zelf) een geldig
-// leeg vakje voor ze is — `alleLagen` is nodig om dat over de hele band heen
+// er ergens op een ontgrendelde streek (niet per se `streek` zelf) een geldig
+// leeg vakje voor ze is — `alleStreken` is nodig om dat over de hele band heen
 // te checken.
 //
 // `technologieen` (hoofdstuk 3/9, issue: "tech tree toevoegen" Deel 2) sluit
@@ -692,25 +692,25 @@ function kanImprovementOpLaag(improvement: Improvement, laag: Layer): boolean {
 // gekozen is — een lege array (de default) sluit dus elke tech-gated
 // improvement uit, precies het gedrag vóórdat er ooit een tech gekozen is.
 //
-// `minLaag` (issue: "tutorial popups wijzigen") sluit op dezelfde manier
-// improvements uit zolang de hoogst ontgrendelde laag (frontier) de vereiste
-// hoogte nog niet bereikt heeft — momenteel de Sterrencirkel (laag 3) en de
-// Wachttoren (laag 2). Heeft een categorie hierdoor geen enkele optie meer
+// `minStreek` (issue: "tutorial popups wijzigen") sluit op dezelfde manier
+// improvements uit zolang de hoogst ontgrendelde streek (frontier) de vereiste
+// hoogte nog niet bereikt heeft — momenteel de Sterrencirkel (streek 3) en de
+// Wachttoren (streek 2). Heeft een categorie hierdoor geen enkele optie meer
 // over, dan toont de bouw-pop-up (BouwPopup.tsx) 'm uitgegrijsd, precies
 // zoals bij een categorie zonder geldig leeg vakje.
 export function beschikbareOpties(
   categorie: Improvement["categorie"],
-  laag: Layer,
-  alleLagen: Layer[],
+  streek: Streek,
+  alleStreken: Streek[],
   technologieen: TechId[] = []
 ): Improvement[] {
-  const frontierHoogte = hoogsteOntgrendeldeLaag(alleLagen);
+  const frontierHoogte = hoogsteOntgrendeldeStreek(alleStreken);
   return IMPROVEMENT_POOLS[categorie]
     .filter((improvement) => !improvement.vereisteTech || technologieen.includes(improvement.vereisteTech))
-    .filter((improvement) => !improvement.minLaag || frontierHoogte >= improvement.minLaag)
+    .filter((improvement) => !improvement.minStreek || frontierHoogte >= improvement.minStreek)
     .filter((improvement) =>
       improvement.bouwbaarBuitenFrontier
-        ? alleLagen.some((l) => l.ontgrendeld && kanImprovementOpLaag(improvement, l))
-        : kanImprovementOpLaag(improvement, laag)
+        ? alleStreken.some((l) => l.ontgrendeld && kanImprovementOpStreek(improvement, l))
+        : kanImprovementOpStreek(improvement, streek)
     );
 }

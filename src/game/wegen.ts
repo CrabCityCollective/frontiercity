@@ -3,13 +3,13 @@
 // wegverbinding wordt de productie van een land improvement daadwerkelijk
 // actief (zie economie.ts: `verwerkProductie`).
 //
-// Geometrie: elke laag is een rij van BAND_WIDTH_TILES vakjes
-// (`positieInLaag`), en lagen stapelen verticaal op dezelfde x-positie (zie
-// render/canvas.ts: `rijIndex = totaalLagen - laag.hoogte`) — "vooruit" en
-// "achteruit" bewegen dus in hoogte, "links" en "rechts" in `positieInLaag`.
+// Geometrie: elke streek is een rij van BAND_WIDTH_TILES vakjes
+// (`positieInStreek`), en streken stapelen verticaal op dezelfde x-positie (zie
+// render/canvas.ts: `rijIndex = totaalStreken - streek.hoogte`) — "vooruit" en
+// "achteruit" bewegen dus in hoogte, "links" en "rechts" in `positieInStreek`.
 
-import { Layer, Settler } from "./types";
-import { BAND_WIDTH_TILES, hoogsteOntgrendeldeLaag, STAD_POSITIE } from "./world";
+import { Streek, Settler } from "./types";
+import { BAND_WIDTH_TILES, hoogsteOntgrendeldeStreek, STAD_POSITIE } from "./world";
 
 export type SettlerRichting = "vooruit" | "achteruit" | "links" | "rechts";
 
@@ -22,17 +22,17 @@ export function volgendePositie(settler: Settler, richting: SettlerRichting): Se
     case "achteruit":
       return { ...settler, hoogte: settler.hoogte - 1 };
     case "links":
-      return { ...settler, positieInLaag: settler.positieInLaag - 1 };
+      return { ...settler, positieInStreek: settler.positieInStreek - 1 };
     case "rechts":
-      return { ...settler, positieInLaag: settler.positieInLaag + 1 };
+      return { ...settler, positieInStreek: settler.positieInStreek + 1 };
   }
 }
 
 // De settler blijft, net als de speler zelf, binnen al ontgrendeld gebied —
 // geen stappen de mist of de klikbare oceaan-rij in.
-export function magSettlerNaar(lagen: Layer[], positie: Settler): boolean {
-  if (positie.positieInLaag < 0 || positie.positieInLaag >= BAND_WIDTH_TILES) return false;
-  return positie.hoogte >= 1 && positie.hoogte <= hoogsteOntgrendeldeLaag(lagen);
+export function magSettlerNaar(streken: Streek[], positie: Settler): boolean {
+  if (positie.positieInStreek < 0 || positie.positieInStreek >= BAND_WIDTH_TILES) return false;
+  return positie.hoogte >= 1 && positie.hoogte <= hoogsteOntgrendeldeStreek(streken);
 }
 
 const ALLE_RICHTINGEN: SettlerRichting[] = ["vooruit", "achteruit", "links", "rechts"];
@@ -42,50 +42,50 @@ const ALLE_RICHTINGEN: SettlerRichting[] = ["vooruit", "achteruit", "links", "re
 // toe") — gebruikt zowel om die vakjes op de canvas te markeren als om een
 // klik op zo'n vakje als geldige zet te herkennen (zie economie.ts:
 // `verplaatsSettlerNaar`).
-export function bereikbarePosities(lagen: Layer[], settler: Settler): Settler[] {
+export function bereikbarePosities(streken: Streek[], settler: Settler): Settler[] {
   return ALLE_RICHTINGEN.map((richting) => volgendePositie(settler, richting)).filter((positie) =>
-    magSettlerNaar(lagen, positie)
+    magSettlerNaar(streken, positie)
   );
 }
 
-function tileSleutel(hoogte: number, positieInLaag: number): string {
-  return `${hoogte}:${positieInLaag}`;
+function tileSleutel(hoogte: number, positieInStreek: number): string {
+  return `${hoogte}:${positieInStreek}`;
 }
 
 function buurPosities(positie: Settler): Settler[] {
   const buren: Settler[] = [
-    { hoogte: positie.hoogte - 1, positieInLaag: positie.positieInLaag },
-    { hoogte: positie.hoogte + 1, positieInLaag: positie.positieInLaag },
+    { hoogte: positie.hoogte - 1, positieInStreek: positie.positieInStreek },
+    { hoogte: positie.hoogte + 1, positieInStreek: positie.positieInStreek },
   ];
-  if (positie.positieInLaag > 0) {
-    buren.push({ hoogte: positie.hoogte, positieInLaag: positie.positieInLaag - 1 });
+  if (positie.positieInStreek > 0) {
+    buren.push({ hoogte: positie.hoogte, positieInStreek: positie.positieInStreek - 1 });
   }
-  if (positie.positieInLaag < BAND_WIDTH_TILES - 1) {
-    buren.push({ hoogte: positie.hoogte, positieInLaag: positie.positieInLaag + 1 });
+  if (positie.positieInStreek < BAND_WIDTH_TILES - 1) {
+    buren.push({ hoogte: positie.hoogte, positieInStreek: positie.positieInStreek + 1 });
   }
   return buren;
 }
 
 // Of dit vakje "doorgang" biedt aan het wegennetwerk: de stad zelf (het
 // beginpunt) of een vakje met een aangelegde weg.
-function biedtDoorgang(lagen: Layer[], positie: Settler): boolean {
-  if (positie.hoogte === 1 && positie.positieInLaag === STAD_POSITIE) return true;
-  const laag = lagen.find((l) => l.hoogte === positie.hoogte);
-  return Boolean(laag?.tiles[positie.positieInLaag]?.heeftWeg);
+function biedtDoorgang(streken: Streek[], positie: Settler): boolean {
+  if (positie.hoogte === 1 && positie.positieInStreek === STAD_POSITIE) return true;
+  const streek = streken.find((l) => l.hoogte === positie.hoogte);
+  return Boolean(streek?.tiles[positie.positieInStreek]?.heeftWeg);
 }
 
 // Alle vakjes die via een aaneengesloten keten van wegen (of de stad zelf) te
 // bereiken zijn — het wegennetwerk (hoofdstuk 16).
-function wegNetwerk(lagen: Layer[]): Set<string> {
-  const start: Settler = { hoogte: 1, positieInLaag: STAD_POSITIE };
-  const bezocht = new Set<string>([tileSleutel(start.hoogte, start.positieInLaag)]);
+function wegNetwerk(streken: Streek[]): Set<string> {
+  const start: Settler = { hoogte: 1, positieInStreek: STAD_POSITIE };
+  const bezocht = new Set<string>([tileSleutel(start.hoogte, start.positieInStreek)]);
   const stapel: Settler[] = [start];
 
   while (stapel.length > 0) {
     const huidig = stapel.pop()!;
     for (const buur of buurPosities(huidig)) {
-      const sleutel = tileSleutel(buur.hoogte, buur.positieInLaag);
-      if (bezocht.has(sleutel) || buur.hoogte < 1 || !biedtDoorgang(lagen, buur)) continue;
+      const sleutel = tileSleutel(buur.hoogte, buur.positieInStreek);
+      if (bezocht.has(sleutel) || buur.hoogte < 1 || !biedtDoorgang(streken, buur)) continue;
       bezocht.add(sleutel);
       stapel.push(buur);
     }
@@ -100,9 +100,9 @@ function wegNetwerk(lagen: Layer[]): Set<string> {
 // improvement-vakje zelf moet dus zelf een weg hebben (`heeftWeg`) én die weg
 // moet via het wegennetwerk verbonden zijn met de stad — een weg die er
 // alleen naartoe leidt, zonder erop te liggen, is niet genoeg.
-export function isTileVerbondenMetStad(lagen: Layer[], hoogte: number, positieInLaag: number): boolean {
-  const netwerk = wegNetwerk(lagen);
-  return netwerk.has(tileSleutel(hoogte, positieInLaag));
+export function isTileVerbondenMetStad(streken: Streek[], hoogte: number, positieInStreek: number): boolean {
+  const netwerk = wegNetwerk(streken);
+  return netwerk.has(tileSleutel(hoogte, positieInStreek));
 }
 
 // Welke van de vier buren van een wegvakje zelf ook een weg hebben (issue:
@@ -110,7 +110,7 @@ export function isTileVerbondenMetStad(lagen: Layer[], hoogte: number, positieIn
 // vanaf een horizontale weg") — puur voor de tekenpijplijn (canvas.ts/
 // canvasPixelArt.ts), zodat een wegtegel als kruising/T-splitsing i.p.v. altijd
 // als los recht baantje getekend kan worden. `omhoog`/`omlaag` volgen dezelfde
-// hoogte-conventie als hierboven: `omhoog` is `hoogte + 1`, de laag die op het
+// hoogte-conventie als hierboven: `omhoog` is `hoogte + 1`, de streek die op het
 // canvas boven deze tegel getekend wordt (zie render/canvas.ts: `rijIndex`).
 // De stadstegel telt hierin gewoon mee als "heeft een weg" (`heeftWeg: true`,
 // zie world.ts), dus een weg die de stad raakt sluit ook zichtbaar op haar aan.
@@ -121,16 +121,16 @@ export interface WegVerbindingen {
   omlaag: boolean;
 }
 
-function heeftWegOp(lagen: Layer[], hoogte: number, positieInLaag: number): boolean {
-  const laag = lagen.find((l) => l.hoogte === hoogte);
-  return Boolean(laag?.tiles[positieInLaag]?.heeftWeg);
+function heeftWegOp(streken: Streek[], hoogte: number, positieInStreek: number): boolean {
+  const streek = streken.find((l) => l.hoogte === hoogte);
+  return Boolean(streek?.tiles[positieInStreek]?.heeftWeg);
 }
 
-export function wegVerbindingen(lagen: Layer[], hoogte: number, positieInLaag: number): WegVerbindingen {
+export function wegVerbindingen(streken: Streek[], hoogte: number, positieInStreek: number): WegVerbindingen {
   return {
-    links: positieInLaag > 0 && heeftWegOp(lagen, hoogte, positieInLaag - 1),
-    rechts: positieInLaag < BAND_WIDTH_TILES - 1 && heeftWegOp(lagen, hoogte, positieInLaag + 1),
-    omhoog: heeftWegOp(lagen, hoogte + 1, positieInLaag),
-    omlaag: heeftWegOp(lagen, hoogte - 1, positieInLaag),
+    links: positieInStreek > 0 && heeftWegOp(streken, hoogte, positieInStreek - 1),
+    rechts: positieInStreek < BAND_WIDTH_TILES - 1 && heeftWegOp(streken, hoogte, positieInStreek + 1),
+    omhoog: heeftWegOp(streken, hoogte + 1, positieInStreek),
+    omlaag: heeftWegOp(streken, hoogte - 1, positieInStreek),
   };
 }

@@ -12,7 +12,7 @@ import {
   STERRENCIRKEL,
 } from "./improvements";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
-import { BEZETTE_LAAG_HOOGTE, cultuurKostenVoorLaag } from "./world";
+import { BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek } from "./world";
 
 export const HOUTKAP = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "houtkap")!;
 export const MIJN = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "mijn")!;
@@ -36,8 +36,8 @@ export function metVasteRandom<T>(waarde: number, fn: () => T): T {
 
 // Zelfde opzet als `metVasteRandom` hierboven, maar met een eigen waarde per
 // opeenvolgende `Math.random()`-aanroep — nodig om de kans-trekking (is er
-// een incident?) los te zetten van de daaropvolgende laag-trekking (welke
-// laag?). Extra aanroepen voorbij `waarden` hergebruiken de laatste waarde.
+// een incident?) los te zetten van de daaropvolgende streek-trekking (welke
+// streek?). Extra aanroepen voorbij `waarden` hergebruiken de laatste waarde.
 export function metRandomReeks<T>(waarden: number[], fn: () => T): T {
   const origineel = Math.random;
   let i = 0;
@@ -49,45 +49,45 @@ export function metRandomReeks<T>(waarden: number[], fn: () => T): T {
   }
 }
 
-// Bouwt een status met de settler op een kudde-vakje van de opgegeven laag
+// Bouwt een status met de settler op een kudde-vakje van de opgegeven streek
 // (ontgrendeld, indien nodig) — gedeelde opzet voor de jaag-/roofdier-tests.
-export function metSettlerOpKuddeVakje(hoogte: number, positieInLaag = 0): GameState {
+export function metSettlerOpKuddeVakje(hoogte: number, positieInStreek = 0): GameState {
   const state = maakInitieleSpelStatus();
   return {
     ...state,
-    settler: { hoogte, positieInLaag },
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte === hoogte
+    settler: { hoogte, positieInStreek },
+    streken: state.streken.map((streek) =>
+      streek.hoogte === hoogte
         ? {
-            ...laag,
+            ...streek,
             ontgrendeld: true,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === positieInLaag ? { ...tile, kudde: { beurtenResterend: 4 } } : tile
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === positieInStreek ? { ...tile, kudde: { beurtenResterend: 4 } } : tile
             ),
           }
-        : laag
+        : streek
     ),
   };
 }
 
 // Bouwt een startstatus met een actieve, wegverbonden Sterrencirkel op de
-// frontier-laag (laag 1) — gedeelde opzet voor de technologie-boom-tests.
+// frontier-streek (streek 1) — gedeelde opzet voor de technologie-boom-tests.
 export function metWerkendeSterrencirkel(): GameState {
   const state = maakInitieleSpelStatus();
   return {
     ...state,
-    lagen: state.lagen.map((laag, idx) =>
+    streken: state.streken.map((streek, idx) =>
       idx !== 0
-        ? laag
+        ? streek
         : {
-            ...laag,
-            tiles: laag.tiles.map((tile) => {
-              if (tile.positieInLaag === 2) {
+            ...streek,
+            tiles: streek.tiles.map((tile) => {
+              if (tile.positieInStreek === 2) {
                 return { ...tile, status: "actief" as const, improvement: STERRENCIRKEL, heeftWeg: true };
               }
               // Bruggetje naar de stad-tile (positie 4): zonder dit tussenliggende
               // wegvakje is positie 2 niet daadwerkelijk verbonden (zie wegen.ts).
-              if (tile.positieInLaag === 3) {
+              if (tile.positieInStreek === 3) {
                 return { ...tile, heeftWeg: true };
               }
               return tile;
@@ -97,35 +97,35 @@ export function metWerkendeSterrencirkel(): GameState {
   };
 }
 
-// Duwt de cultuur naar de drempel van BEZETTE_LAAG_HOOGTE en verwerkt één
-// beurt, zodat de laag "in beeld komt" (Deel 2) — gedeelde opzet voor de
-// Bezette-Laag-tests.
-export function metBezetteLaagInBeeld(): GameState {
+// Duwt de cultuur naar de drempel van BEZETTE_STREEK_HOOGTE en verwerkt één
+// beurt, zodat de streek "in beeld komt" (Deel 2) — gedeelde opzet voor de
+// Bezette-Streek-tests.
+export function metBezetteStreekInBeeld(): GameState {
   let state = maakInitieleSpelStatus();
-  state = { ...state, cultuur: cultuurKostenVoorLaag(BEZETTE_LAAG_HOOGTE), voedsel: 10_000 };
+  state = { ...state, cultuur: cultuurKostenVoorStreek(BEZETTE_STREEK_HOOGTE), voedsel: 10_000 };
   return volgendeBeurt(state);
 }
 
-export function metBezetteLaagEnVerkenner(): GameState {
-  const state = metBezetteLaagInBeeld();
+export function metBezetteStreekEnVerkenner(): GameState {
+  const state = metBezetteStreekInBeeld();
   return { ...state, wetenschap: 100, stad: { ...state.stad, verkenners: [{ id: "verkenner-0" }] } };
 }
 
-// Zet een actieve, wegverbonden Heiligdom op laag 1 (positie 2, met een
+// Zet een actieve, wegverbonden Heiligdom op streek 1 (positie 2, met een
 // brugvakje naar de stad), voor tests die cultuur-inkomen nodig hebben.
-export function metActiefHeiligdomOpLaag1(state: GameState): GameState {
+export function metActiefHeiligdomOpStreek1(state: GameState): GameState {
   return {
     ...state,
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte !== 1
-        ? laag
+    streken: state.streken.map((streek) =>
+      streek.hoogte !== 1
+        ? streek
         : {
-            ...laag,
-            tiles: laag.tiles.map((tile) => {
-              if (tile.positieInLaag === 2) {
+            ...streek,
+            tiles: streek.tiles.map((tile) => {
+              if (tile.positieInStreek === 2) {
                 return { ...tile, status: "actief" as const, improvement: HEILIGDOM, heeftWeg: true };
               }
-              if (tile.positieInLaag === 3) return { ...tile, heeftWeg: true };
+              if (tile.positieInStreek === 3) return { ...tile, heeftWeg: true };
               return tile;
             }),
           }
@@ -133,33 +133,33 @@ export function metActiefHeiligdomOpLaag1(state: GameState): GameState {
   };
 }
 
-// Bouwt een vaste, wegverbonden corridor (positie 4, elke laag 1..totHoogte)
+// Bouwt een vaste, wegverbonden corridor (positie 4, elke streek 1..totHoogte)
 // zodat een improvement op `totHoogte` als wegverbonden geldt (zie
 // wegen.ts: de stad zelf is alleen op hoogte 1 automatisch "doorgang").
-export function metWegCorridorNaarLaag(state: GameState, totHoogte: number): GameState {
+export function metWegCorridorNaarStreek(state: GameState, totHoogte: number): GameState {
   return {
     ...state,
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte >= 1 && laag.hoogte <= totHoogte
-        ? { ...laag, tiles: laag.tiles.map((t) => (t.positieInLaag === 4 ? { ...t, heeftWeg: true } : t)) }
-        : laag
+    streken: state.streken.map((streek) =>
+      streek.hoogte >= 1 && streek.hoogte <= totHoogte
+        ? { ...streek, tiles: streek.tiles.map((t) => (t.positieInStreek === 4 ? { ...t, heeftWeg: true } : t)) }
+        : streek
     ),
   };
 }
 
-export function metBeschermendeWachttorenOpLaag11(state: GameState): GameState {
-  let s = metWegCorridorNaarLaag(state, 11);
+export function metBeschermendeWachttorenOpStreek11(state: GameState): GameState {
+  let s = metWegCorridorNaarStreek(state, 11);
   s = {
     ...s,
-    stad: { ...s.stad, strijders: [{ id: "strijder-wachter", wachttoren: { hoogte: 11, positieInLaag: 4 } }] },
-    lagen: s.lagen.map((laag) =>
-      laag.hoogte !== 11
-        ? laag
+    stad: { ...s.stad, strijders: [{ id: "strijder-wachter", wachttoren: { hoogte: 11, positieInStreek: 4 } }] },
+    streken: s.streken.map((streek) =>
+      streek.hoogte !== 11
+        ? streek
         : {
-            ...laag,
+            ...streek,
             ontgrendeld: true,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 4 ? { ...tile, status: "actief" as const, improvement: WACHTTOREN } : tile
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: WACHTTOREN } : tile
             ),
           }
     ),

@@ -16,7 +16,7 @@
 // run-niveau i.p.v. alleen stadsniveau).
 
 import { City, GameState, MateriaalType } from "./types";
-import { hoogsteOntgrendeldeLaag } from "./world";
+import { hoogsteOntgrendeldeStreek } from "./world";
 import { isTileVerbondenMetStad } from "./wegen";
 import { berekenVoedselNetto } from "./productie";
 import { maakInitieleSpelStatus } from "./initieleSpelStatus";
@@ -41,16 +41,16 @@ const VOEDSEL_WAARSCHUWING_BEURTEN = 5;
 // geldt zodra een verbinding later zou wegvallen: geen productie betekent
 // geen uitputting, ongeacht de oorzaak.
 export function verwerkUitputting(state: GameState): GameState {
-  const lagen = state.lagen.map((laag) => ({
-    ...laag,
-    tiles: laag.tiles.map((tile) => {
+  const streken = state.streken.map((streek) => ({
+    ...streek,
+    tiles: streek.tiles.map((tile) => {
       if (tile.status !== "actief" || tile.beurtenTotUitputting === undefined) {
         return tile;
       }
 
       if (
         tile.improvement?.soort === "land" &&
-        !isTileVerbondenMetStad(state.lagen, laag.hoogte, tile.positieInLaag)
+        !isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)
       ) {
         return tile;
       }
@@ -64,7 +64,7 @@ export function verwerkUitputting(state: GameState): GameState {
     }),
   }));
 
-  return { ...state, lagen };
+  return { ...state, streken };
 }
 
 // Telt de gebouwde land-tiles (actief + ghost_town) en hoeveel daarvan al
@@ -74,8 +74,8 @@ function telLandTiles(state: GameState): { totaal: number; ghostTowns: number } 
   let totaal = 0;
   let ghostTowns = 0;
 
-  for (const laag of state.lagen) {
-    for (const tile of laag.tiles) {
+  for (const streek of state.streken) {
+    for (const tile of streek.tiles) {
       const isGebouwdeLandTile =
         tile.improvement?.soort === "land" &&
         (tile.status === "actief" || tile.status === "ghost_town");
@@ -108,7 +108,7 @@ export function verwerkVerval(state: GameState): GameState {
     // spelstatus, met de ineenstortingsvlag erbovenop zodat de UI het
     // game-over-scherm toont tot de speler bevestigt. `laatsteRunStatistieken`
     // is een momentopname van de net geëindigde run (issue: "beurten/steden/
-    // lagen tonen op het game-over-scherm") — moet vóór de reset genomen
+    // streken tonen op het game-over-scherm") — moet vóór de reset genomen
     // worden, anders is er niets meer over om te tonen.
     return {
       ...maakInitieleSpelStatus(),
@@ -116,7 +116,7 @@ export function verwerkVerval(state: GameState): GameState {
       laatsteRunStatistieken: {
         beurten: state.beurt,
         stedenGebouwd: 1, // MVP: precies 1 stad per run (hoofdstuk 13, geen frontier-verplaatsing)
-        hoogsteLaag: hoogsteOntgrendeldeLaag(state.lagen),
+        hoogsteStreek: hoogsteOntgrendeldeStreek(state.streken),
       },
     };
   }

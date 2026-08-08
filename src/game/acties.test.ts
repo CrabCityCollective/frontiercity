@@ -14,13 +14,13 @@ import { HOUTKAP, metSettlerOpKuddeVakje, metVasteRandom } from "./testHelpers";
 
 test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbruikt daarna de settler", () => {
   let state = maakInitieleSpelStatus();
-  // Laag 13, positie 5 is in world.ts vastgelegd als het (enige) vers-water-
+  // Streek 13, positie 5 is in world.ts vastgelegd als het (enige) vers-water-
   // vakje van de tutorial (TUTORIAL_VERS_WATER) — de settler moet er wel
-  // eerst kunnen staan, dus die laag moet ontgrendeld zijn.
+  // eerst kunnen staan, dus die streek moet ontgrendeld zijn.
   state = {
     ...state,
-    settler: { hoogte: 13, positieInLaag: 5 },
-    lagen: state.lagen.map((laag) => (laag.hoogte === 13 ? { ...laag, ontgrendeld: true } : laag)),
+    settler: { hoogte: 13, positieInStreek: 5 },
+    streken: state.streken.map((streek) => (streek.hoogte === 13 ? { ...streek, ontgrendeld: true } : streek)),
   };
 
   assert.equal(kanStichten(state), true, "een leeg, vers-water-vakje met de settler erop is een geldig doel");
@@ -42,7 +42,7 @@ test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbr
   assert.equal(naStichten.voorraad.erts, 0);
   assert.equal(naStichten.voedsel, 0);
 
-  const gestichteTile = naStichten.lagen.find((l) => l.hoogte === 13)!.tiles[5];
+  const gestichteTile = naStichten.streken.find((l) => l.hoogte === 13)!.tiles[5];
   assert.equal(gestichteTile.status, "actief");
   assert.equal(gestichteTile.improvement?.soort, "city");
 
@@ -54,43 +54,43 @@ test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbr
 
 test("kanStichten is false op een vakje zonder vers water, of als het vakje al bebouwd is", () => {
   let state = maakInitieleSpelStatus();
-  // Startlaag/positie (STAD_POSITIE) heeft geen vers water in de tutorial-data.
-  state = { ...state, settler: { hoogte: 1, positieInLaag: 0 } };
+  // Startstreek/positie (STAD_POSITIE) heeft geen vers water in de tutorial-data.
+  state = { ...state, settler: { hoogte: 1, positieInStreek: 0 } };
   assert.equal(kanStichten(state), false);
 
   state = {
     ...state,
-    settler: { hoogte: 13, positieInLaag: 5 },
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte === 13
+    settler: { hoogte: 13, positieInStreek: 5 },
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 13
         ? {
-            ...laag,
+            ...streek,
             ontgrendeld: true,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 5 ? { ...tile, status: "actief" as const, improvement: HOUTKAP } : tile
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 5 ? { ...tile, status: "actief" as const, improvement: HOUTKAP } : tile
             ),
           }
-        : laag
+        : streek
     ),
   };
   assert.equal(kanStichten(state), false, "een al bebouwd vakje is geen geldig stichtingsdoel, ook al ligt het aan water");
 });
 
-test("jaag roept nooit een roofdier op onder laag 5, ook niet bij een gunstige worp", () => {
+test("jaag roept nooit een roofdier op onder streek 5, ook niet bij een gunstige worp", () => {
   const state = metSettlerOpKuddeVakje(4);
   const naJacht = metVasteRandom(0, () => jaag(state));
 
   assert.equal(naJacht.roofdierEvent, undefined);
-  const tile = naJacht.lagen.find((l) => l.hoogte === 4)!.tiles[0];
+  const tile = naJacht.streken.find((l) => l.hoogte === 4)!.tiles[0];
   assert.equal(tile.roofdier, undefined);
 });
 
-test("jaag roept vanaf laag 5 een roofdier op als de worp binnen de kans valt", () => {
+test("jaag roept vanaf streek 5 een roofdier op als de worp binnen de kans valt", () => {
   const state = metSettlerOpKuddeVakje(5);
   const naJacht = metVasteRandom(0, () => jaag(state));
 
-  assert.deepEqual(naJacht.roofdierEvent, { hoogte: 5, positieInLaag: 0, fase: "verschenen" });
-  const tile = naJacht.lagen.find((l) => l.hoogte === 5)!.tiles[0];
+  assert.deepEqual(naJacht.roofdierEvent, { hoogte: 5, positieInStreek: 0, fase: "verschenen" });
+  const tile = naJacht.streken.find((l) => l.hoogte === 5)!.tiles[0];
   assert.deepEqual(tile.roofdier, { beurtenTotAanval: 1 });
 });
 
@@ -99,13 +99,13 @@ test("jaag roept geen roofdier op bij een ongunstige worp", () => {
   const naJacht = metVasteRandom(0.99, () => jaag(state));
 
   assert.equal(naJacht.roofdierEvent, undefined);
-  const tile = naJacht.lagen.find((l) => l.hoogte === 5)!.tiles[0];
+  const tile = naJacht.streken.find((l) => l.hoogte === 5)!.tiles[0];
   assert.equal(tile.roofdier, undefined);
 });
 
-// Laag 1, positie 2 is vast terrein-subtype "bos" (world.ts, TUTORIAL_TERREIN).
+// Streek 1, positie 2 is vast terrein-subtype "bos" (world.ts, TUTORIAL_TERREIN).
 test("hakHout levert 1 hout op als de settler op een leeg bos-vakje staat", () => {
-  const state: GameState = { ...maakInitieleSpelStatus(), settler: { hoogte: 1, positieInLaag: 2 } };
+  const state: GameState = { ...maakInitieleSpelStatus(), settler: { hoogte: 1, positieInStreek: 2 } };
 
   const naHakken = hakHout(state);
 
@@ -117,14 +117,14 @@ test("hakHout doet niets op een uitgeputte (ghost_town) Houtkap-tile, ook al bli
   const state = maakInitieleSpelStatus();
   const metUitgeputteHoutkap: GameState = {
     ...state,
-    settler: { hoogte: 1, positieInLaag: 2 },
-    lagen: state.lagen.map((laag) =>
-      laag.hoogte !== 1
-        ? laag
+    settler: { hoogte: 1, positieInStreek: 2 },
+    streken: state.streken.map((streek) =>
+      streek.hoogte !== 1
+        ? streek
         : {
-            ...laag,
-            tiles: laag.tiles.map((tile) =>
-              tile.positieInLaag === 2 ? { ...tile, status: "ghost_town" as const, improvement: HOUTKAP } : tile
+            ...streek,
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 2 ? { ...tile, status: "ghost_town" as const, improvement: HOUTKAP } : tile
             ),
           }
     ),

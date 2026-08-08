@@ -7,9 +7,9 @@ import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "./bouwwachtri
 import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS } from "./improvements";
 import { isWachttorenBemand } from "./indringersEnDieren";
 import { WACHTTOREN_VOEDSEL_VERBRUIK } from "./productie";
-import { City, Improvement, Layer, MateriaalType, ResourceType, Tile } from "./types";
+import { City, Improvement, Streek, MateriaalType, ResourceType, Tile } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
-import { hoogsteOntgrendeldeLaag, isVooruitkijkLaag } from "./world";
+import { hoogsteOntgrendeldeStreek, isVooruitkijkStreek } from "./world";
 
 export interface TileInfo {
   titel: string;
@@ -18,18 +18,18 @@ export interface TileInfo {
 }
 
 // `opFrontier` is alleen relevant voor cultuurproductie (Heiligdom,
-// hoofdstuk 6): volle opbrengst op de frontier-laag zelf, de helft op elke
-// laag daaronder — zie `verwerkProductie` in economie.ts voor dezelfde regel.
+// hoofdstuk 6): volle opbrengst op de frontier-streek zelf, de helft op elke
+// streek daaronder — zie `verwerkProductie` in economie.ts voor dezelfde regel.
 function effectBeschrijving(improvement: Improvement, opFrontier = true): string {
   const { effect } = improvement;
   if (effect.type === "productie" && effect.resource && effect.waarde) {
     if (effect.resource === "cultuur" && !opFrontier) {
-      return `Levert +${effect.waarde / 2} cultuur per beurt (halve opbrengst — niet op de frontier-laag).`;
+      return `Levert +${effect.waarde / 2} cultuur per beurt (halve opbrengst — niet op de frontier-streek).`;
     }
     return `Levert +${effect.waarde} ${effect.resource} per beurt.`;
   }
   if (effect.type === "verdediging" && effect.waarde) {
-    return `Geeft +${effect.waarde} verdediging bij een militaire confrontatie, en beschermt deze laag én de laag eronder tegen indringers-tribuut.`;
+    return `Geeft +${effect.waarde} verdediging bij een militaire confrontatie, en beschermt deze streek én de streek eronder tegen indringers-tribuut.`;
   }
   if (effect.type === "opslag" && effect.waarde) {
     return `Verhoogt de opslag-cap met +${effect.waarde}, direct bij voltooiing.`;
@@ -37,18 +37,18 @@ function effectBeschrijving(improvement: Improvement, opFrontier = true): string
   if (effect.type === "stad") {
     return "Het centrum van je nederzetting.";
   }
-  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 1/4/5) — vijandelijke tile-varianten en het cosmetische
   // huisje hebben geen productie-/verdedigingseffect, maar wel een eigen
   // korte omschrijving.
   if (effect.type === "dreiging") {
-    return "Een vijandelijke Wachttoren. Vereist een eigen, bemande Wachttoren op de laag eronder om een Confrontatie aan te gaan.";
+    return "Een vijandelijke Wachttoren. Vereist een eigen, bemande Wachttoren op de streek eronder om een Confrontatie aan te gaan.";
   }
   if (effect.type === "belegeringsdoel") {
     return "Een vijandelijk Heiligdom. Belegeringsdoel zolang je minstens één Missionaris hebt.";
   }
   if (effect.type === "legerkamp") {
-    return "Elke hieraan toegewezen Soldaat telt mee als legerwaarde bij een Confrontatie tegen een Bezette Laag, ongeacht op welke laag dit Legerkamp staat.";
+    return "Elke hieraan toegewezen Soldaat telt mee als legerwaarde bij een Confrontatie tegen een Bezette Streek, ongeacht op welke streek dit Legerkamp staat.";
   }
   if (effect.type === "ontgrendelt-missionaris") {
     return "Ontgrendelt de Missionaris als trainbare eenheid.";
@@ -86,39 +86,39 @@ function bouwVoortgangBeschrijving(
   return ` Nog nodig: ${grondstoffenTekst}. Nog ${beurten} ${beurten === 1 ? "beurt" : "beurten"} tot voltooiing.`;
 }
 
-// Geeft de info voor de tile op `positieInLaag` binnen `laag`. Onontgrendelde
-// lagen (fog of war / vooruitkijk) hebben geen tile-detail — daar tonen we
-// alleen wat er over de laag zelf bekend is (hoofdstuk 2).
+// Geeft de info voor de tile op `positieInStreek` binnen `streek`. Onontgrendelde
+// streken (fog of war / vooruitkijk) hebben geen tile-detail — daar tonen we
+// alleen wat er over de streek zelf bekend is (hoofdstuk 2).
 export function beschrijfTile(
-  laag: Layer,
-  lagen: Layer[],
+  streek: Streek,
+  streken: Streek[],
   stad: City,
-  positieInLaag: number,
+  positieInStreek: number,
   voorraad: Record<MateriaalType, number>
 ): TileInfo {
-  const tile = laag.tiles[positieInLaag];
+  const tile = streek.tiles[positieInStreek];
 
-  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
-  // verkenner", Deel 1): een eigen, per-tegel verhullingslaag — de laag zelf
+  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
+  // verkenner", Deel 1): een eigen, per-tegel verhullingslaag — de streek zelf
   // blijft `ontgrendeld: false` zolang ze bezet is, dus dit moet vóór de
   // gewone fog-of-war-check hieronder afgehandeld worden. Een onthuld vakje
   // (`tile.verhuld === false`) valt gewoon door naar de normale
   // tile-detail-logica verderop, want `tile.status`/`tile.improvement` zijn
   // dan al echt gezet (zie `verken` in economie.ts).
-  if (laag.bezet) {
+  if (streek.bezet) {
     if (tile.verhuld) {
       return {
         titel: "Verhuld vakje",
-        ondertitel: `Bezette Laag ${laag.hoogte}`,
+        ondertitel: `Bezette Streek ${streek.hoogte}`,
         tekst: "Dit vakje is nog niet verkend. Leid een Verkenner op en verken het om te zien wat hier ligt.",
       };
     }
-  } else if (!laag.ontgrendeld) {
-    if (isVooruitkijkLaag(laag, lagen)) {
+  } else if (!streek.ontgrendeld) {
+    if (isVooruitkijkStreek(streek, streken)) {
       return {
-        titel: `Laag ${laag.hoogte} — nog niet ontgrendeld`,
-        ondertitel: laag.terreinType,
-        tekst: "Je kunt dit terrein in de verte zien, maar de vakjes zelf zijn nog verborgen. Ontgrendel deze laag door genoeg cultuur te verzamelen.",
+        titel: `Streek ${streek.hoogte} — nog niet ontgrendeld`,
+        ondertitel: streek.terreinType,
+        tekst: "Je kunt dit terrein in de verte zien, maar de vakjes zelf zijn nog verborgen. Ontgrendel deze streek door genoeg cultuur te verzamelen.",
       };
     }
     return {
@@ -131,7 +131,7 @@ export function beschrijfTile(
     return {
       titel: "Ruïne",
       ondertitel: "Voormalige Wachttoren",
-      tekst: "Een verloren Confrontatie tegen een Bezette Laag verwoestte deze Wachttoren. Herbouwbaar tegen de normale kosten en bouwtijd.",
+      tekst: "Een verloren Confrontatie tegen een Bezette Streek verwoestte deze Wachttoren. Herbouwbaar tegen de normale kosten en bouwtijd.",
     };
   }
 
@@ -179,7 +179,7 @@ export function beschrijfTile(
   }
 
   if (tile.status === "actief" && tile.improvement) {
-    const opFrontier = laag.hoogte === hoogsteOntgrendeldeLaag(lagen);
+    const opFrontier = streek.hoogte === hoogsteOntgrendeldeStreek(streken);
     const uitputting =
       tile.beurtenTotUitputting !== undefined
         ? ` Nog ${tile.beurtenTotUitputting} beurten actief voordat het uitgeput raakt.`
@@ -192,7 +192,7 @@ export function beschrijfTile(
     // irrelevant.
     const wegStatus =
       tile.improvement.soort === "land" && !tile.improvement.vijandelijk
-        ? isTileVerbondenMetStad(lagen, laag.hoogte, positieInLaag)
+        ? isTileVerbondenMetStad(streken, streek.hoogte, positieInStreek)
           ? " Verbonden met de stad via een weg."
           : " Nog niet verbonden met de stad — legt pas iets af zodra de settler op dit vakje zelf een weg heeft aangelegd, verbonden met het wegennetwerk naar de stad."
         : "";
@@ -204,7 +204,7 @@ export function beschrijfTile(
     // voedsel kost).
     const bemandStatus =
       tile.improvement.id === "wachttoren"
-        ? isWachttorenBemand(stad.strijders, laag.hoogte, positieInLaag)
+        ? isWachttorenBemand(stad.strijders, streek.hoogte, positieInStreek)
           ? ` Bemand door een strijder — actief, verbruikt ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
           : ` Nog niet bemand door een strijder — daardoor momenteel niet actief. Zodra bemand, verbruikt hij ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
         : "";
@@ -218,28 +218,28 @@ export function beschrijfTile(
   if (tile.kudde) {
     return {
       titel: "Wilde kudde",
-      ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
+      ondertitel: `${streek.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
       tekst: `Verplaats de settler hierheen en jaag voor voedsel. Nog ${tile.kudde.beurtenResterend} beurten te jagen voordat de kudde verder trekt.`,
     };
   }
 
-  // Bezette Laag (hoofdstuk 6, issue: "De Bezette Laag, missionaris en
+  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 1/2): het neutrale, onthulde vakje (geen vijandelijke/
   // cosmetische inhoud, zie world.ts) — bouwen blijft hier onmogelijk zolang
-  // de laag bezet is, ongeacht de normale frontier-only-regel hieronder.
-  if (laag.bezet) {
+  // de streek bezet is, ongeacht de normale frontier-only-regel hieronder.
+  if (streek.bezet) {
     return {
       titel: "Leeg vakje",
-      ondertitel: `Bezette Laag ${laag.hoogte}`,
-      tekst: "Hier ligt geen vijandelijke of cosmetische inhoud. Zolang de laag bezet is, kun je hier niet bouwen.",
+      ondertitel: `Bezette Streek ${streek.hoogte}`,
+      tekst: "Hier ligt geen vijandelijke of cosmetische inhoud. Zolang de streek bezet is, kun je hier niet bouwen.",
     };
   }
 
-  // Bouwen kan normaal alleen op de frontier-laag (de hoogst ontgrendelde) —
+  // Bouwen kan normaal alleen op de frontier-streek (de hoogst ontgrendelde) —
   // de Wachttoren is daarop een expliciete uitzondering (hoofdstuk 6/11,
   // issue: "wachttorens, bemanning en bevoorrading") en blijft dus overal
   // ontgrendeld bouwbaar.
-  const opFrontier = laag.hoogte === hoogsteOntgrendeldeLaag(lagen);
+  const opFrontier = streek.hoogte === hoogsteOntgrendeldeStreek(streken);
   // Vers water (hoofdstuk 2, issue: "stad stichten op de frontier" deel 1):
   // maakt op de kaart/tile-info zichtbaar welke vakjes geschikt zijn om een
   // nieuwe stad te stichten, zodat de speler ernaartoe kan plannen.
@@ -248,16 +248,16 @@ export function beschrijfTile(
     : "";
   return {
     titel: "Leeg vakje",
-    ondertitel: `${laag.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
+    ondertitel: `${streek.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
     tekst: (opFrontier
       ? "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond. Heiligdommen, sterrencirkels en wachttorens kunnen overal geplaatst worden."
-      : "Dit is niet meer de frontier-laag, dus hier is alleen nog een Wachttoren te bouwen — die mag, als uitzondering, op elke ontgrendelde laag geplaatst worden.") + versWaterTekst,
+      : "Dit is niet meer de frontier-streek, dus hier is alleen nog een Wachttoren te bouwen — die mag, als uitzondering, op elke ontgrendelde streek geplaatst worden.") + versWaterTekst,
   };
 }
 
-// Info voor de klikbare oceaan-rij onder laag 1 (hoofdstuk 2: "Onderste laag
+// Info voor de klikbare oceaan-rij onder streek 1 (hoofdstuk 2: "Onderste streek
 // = startstad, begint aan een oceaan"). Puur sfeer/flavor — er is hier niets
-// te bouwen, dus geen `Layer`/`Tile` nodig zoals bij `beschrijfTile`.
+// te bouwen, dus geen `Streek`/`Tile` nodig zoals bij `beschrijfTile`.
 export function beschrijfOceaanTile(): TileInfo {
   return {
     titel: "De oceaan",
@@ -266,10 +266,10 @@ export function beschrijfOceaanTile(): TileInfo {
   };
 }
 
-// Info voor de klikbare oceaan-rij bóven de laatste laag (issue: "laatste
+// Info voor de klikbare oceaan-rij bóven de laatste streek (issue: "laatste
 // oceaan ook visueel") — de oceaan aan de overkant (hoofdstuk 2/10), het
 // einddoel van de hele tocht. Zelfde puur-sfeer-patroon als `beschrijfOceaanTile`
-// hierboven, alleen getoond zodra die laatste laag ontgrendeld is (zie
+// hierboven, alleen getoond zodra die laatste streek ontgrendeld is (zie
 // world.ts: `eindeOceaanZichtbaar`).
 export function beschrijfEindeOceaanTile(): TileInfo {
   return {

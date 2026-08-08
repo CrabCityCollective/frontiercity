@@ -50,7 +50,7 @@ export default function RoofdierPopup({ event, onSluiten }: RoofdierPopupProps) 
           {titel}
         </strong>
         <p style={{ margin: 0, lineHeight: 1.6 }}>
-          {tekst} Laag {event.hoogte}, vakje {event.positieInLaag + 1}.
+          {tekst} Streek {event.hoogte}, vakje {event.positieInStreek + 1}.
         </p>
         <button className="fc-knop" onClick={onSluiten} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Begrepen
