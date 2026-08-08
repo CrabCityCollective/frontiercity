@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "pretest": "tsc --module commonjs --target es2020 --outDir ./dist-test --esModuleInterop --skipLibCheck --resolveJsonModule src/game/economie.test.ts",
+    "pretest": "tsc --module commonjs --target es2020 --outDir ./dist-test --esModuleInterop --skipLibCheck --resolveJsonModule src/game/*.test.ts",
     "test": "node --test dist-test/*.test.js"
   },
   "dependencies": {
