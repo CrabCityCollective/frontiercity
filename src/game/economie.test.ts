@@ -1283,6 +1283,32 @@ test("met minstens één Missionaris wordt cultuur-inkomen omgeleid naar de bele
   assert.equal(laag12.belegeringsVoortgang, (HEILIGDOM.effect.waarde ?? 0) / 2);
 });
 
+test("elke extra Missionaris vermenigvuldigt de belegeringsvoortgang (3 Missionarissen vullen de meter 3x zo snel als 1)", () => {
+  let metEenMissionaris = metBezetteLaagInBeeld();
+  metEenMissionaris = metActiefHeiligdomOpLaag1(metEenMissionaris);
+  metEenMissionaris = {
+    ...metEenMissionaris,
+    stad: { ...metEenMissionaris.stad, missionarissen: [{ id: "missionaris-0" }] },
+  };
+  metEenMissionaris = volgendeBeurt(metEenMissionaris);
+  const voortgangMetEen = metEenMissionaris.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!.belegeringsVoortgang ?? 0;
+
+  let metDrieMissionarissen = metBezetteLaagInBeeld();
+  metDrieMissionarissen = metActiefHeiligdomOpLaag1(metDrieMissionarissen);
+  metDrieMissionarissen = {
+    ...metDrieMissionarissen,
+    stad: {
+      ...metDrieMissionarissen.stad,
+      missionarissen: [{ id: "missionaris-0" }, { id: "missionaris-1" }, { id: "missionaris-2" }],
+    },
+  };
+  metDrieMissionarissen = volgendeBeurt(metDrieMissionarissen);
+  const voortgangMetDrie =
+    metDrieMissionarissen.lagen.find((l) => l.hoogte === BEZETTE_LAAG_HOOGTE)!.belegeringsVoortgang ?? 0;
+
+  assert.equal(voortgangMetDrie, voortgangMetEen * 3);
+});
+
 test("bij het bereiken van de belegeringsdrempel wordt het onthulde vijandelijke Heiligdom vernietigd en begint de meter opnieuw", () => {
   let state = metBezetteLaagEnVerkenner();
   state = verken(state, 1); // onthult het vijandelijke Heiligdom op positie 1
