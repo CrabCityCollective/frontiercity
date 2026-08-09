@@ -255,9 +255,14 @@ export default function BouwPopup({
                         </span>
                       )}
                       {improvement.id === "wachttoren" && (
-                        <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
-                          Verbruikt {WACHTTOREN_VOEDSEL_VERBRUIK} voedsel/beurt zodra bemand
-                        </span>
+                        <>
+                          <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                            Beschermt deze streek én de streek eronder tegen indringers-tribuut
+                          </span>
+                          <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                            Verbruikt {WACHTTOREN_VOEDSEL_VERBRUIK} voedsel/beurt zodra bemand
+                          </span>
+                        </>
                       )}
                       {voortgang && eis && (
                         <span
