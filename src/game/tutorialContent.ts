@@ -222,6 +222,17 @@ export const VIJAND_AAN_DE_HORIZON_TITEL = "De vijand aan de horizon";
 export const VIJAND_AAN_DE_HORIZON_TEKST =
   "Niet alle wilde stammen zitten op onze opmars te wachten, ze proberen ons gebied binnen te dringen. We hebben nu erts nodig uit de heuvels en bergen. Bouw een mijn. Dat is het eerste wat we nu nodig hebben.";
 
+// Frontier-uitleg-pop-up (issue: "meer uitleg"): getoond zodra streek 2 voor
+// het eerst ontgrendelt, direct na VIJAND_AAN_DE_HORIZON_* hierboven — dit is
+// het eerste moment waarop de frontier-only-bouwregel (hoofdstuk 2: alleen de
+// hoogst ontgrendelde streek is bebouwbaar, op de Wachttoren na) er ook echt
+// toe doet, omdat streek 1 daarmee niet langer bebouwbaar is. Tot dit issue
+// werd deze regel alleen reactief uitgelegd, in de tegel-infopopup zodra je
+// een leeg vakje op een oudere streek aanklikte (zie tileInfo.ts).
+export const FRONTIER_UITLEG_TITEL = "Bouwen kan alleen op de frontier";
+export const FRONTIER_UITLEG_TEKST =
+  "Vanaf nu geldt een belangrijke regel: nieuwe land-improvements bouw je alleen nog op de hoogst ontgrendelde streek, de frontier. Holenrots en de streek erachter blijven op de kaart staan, maar daar is alleen nog een Wachttoren te plaatsen. Trek verder de wildernis in om weer nieuwe grond te kunnen bebouwen.";
+
 // Strijders-opleiden-uitleg-pop-up (issue: "pop-ups wijzigen"): getoond zodra
 // er voor het eerst een gebouwde mijn staat (zie economie.ts
 // `heeftGebouwdeMijn`) — dit is het moment waarop het bouwen van een
