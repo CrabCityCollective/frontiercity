@@ -30,8 +30,10 @@ import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
 import UitlegPopup from "@/components/UitlegPopup";
 import VijandAanDeHorizonPopup from "@/components/VijandAanDeHorizonPopup";
 import VijandelijkHeiligdomPopup from "@/components/VijandelijkHeiligdomPopup";
+import VoedselBalansUitlegPopup from "@/components/VoedselBalansUitlegPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
+import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { verhuldeBezetteStreekPosities } from "@/game/streekOntgrendeling";
 import { AMBER_ONTDEKKING_TWEEDE_TEKST, AMBER_ONTDEKKING_TWEEDE_TITEL } from "@/game/tutorialContent";
@@ -210,6 +212,16 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // zodra streek 2 voor het eerst ontgrendelt is dit het eerste moment waarop
   // de frontier-only-bouwregel (hoofdstuk 2) er ook echt toe doet.
   const [frontierUitlegBevestigd, setFrontierUitlegBevestigd] = useState(false);
+  // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-
+  // confirm-vlag, getoond zodra streek 2 voor het eerst ontgrendelt — legt uit
+  // waarom de Wachttoren (anders dan alle andere bouwwerken) op elke
+  // ontgrendelde streek te plaatsen is.
+  const [wachttorenOveralUitlegBevestigd, setWachttorenOveralUitlegBevestigd] = useState(false);
+  // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-
+  // confirm-vlag, getoond zodra streek 4 voor het eerst ontgrendelt — het
+  // moment waarop de jacht als tweede voedselbron beschikbaar komt (naast de
+  // boerderij, al uitgelegd via BoerderijKlaarUitlegPopup).
+  const [voedselBalansUitlegBevestigd, setVoedselBalansUitlegBevestigd] = useState(false);
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is"): anders dan de
   // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
@@ -775,6 +787,64 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     Boolean(state.vijandelijkHeiligdomVernietigdEvent);
+  // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg"): laagste prioriteit
+  // van de uitleg-pop-ups, zodat hij nooit kerninhoud (indringers/kudde/
+  // roofdier/amber/tech/bezette streek) onderbreekt — verschijnt zodra streek
+  // 2 voor het eerst ontgrendelt en alle hogere-prioriteit pop-ups afgehandeld
+  // zijn.
+  const toonWachttorenOveralUitlegPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonFrontierUitlegPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVernietigdPopup &&
+    uitlegAan &&
+    !wachttorenOveralUitlegBevestigd &&
+    hoogsteOntgrendeldeStreek(state.streken) >= 2;
+  // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg"): direct na de pop-up
+  // hierboven, zelfde lage prioriteit — verschijnt zodra streek 4 voor het
+  // eerst ontgrendelt, het moment waarop de jacht als tweede voedselbron
+  // beschikbaar komt naast de boerderij.
+  const toonVoedselBalansUitlegPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonFrontierUitlegPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    uitlegAan &&
+    !voedselBalansUitlegBevestigd &&
+    hoogsteOntgrendeldeStreek(state.streken) >= 4;
   // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
   // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
   // "confrontatie op streek 12 gewonnen" als trigger: het stichten is nu het
@@ -800,6 +870,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
   // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
@@ -950,6 +1022,12 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonStadUpgradeUitlegPopup && (
           <StadUpgradeUitlegPopup onDoorgaan={() => setStadUpgradeUitlegBevestigd(true)} />
         )}
+        {toonWachttorenOveralUitlegPopup && (
+          <WachttorenOveralUitlegPopup onDoorgaan={() => setWachttorenOveralUitlegBevestigd(true)} />
+        )}
+        {toonVoedselBalansUitlegPopup && (
+          <VoedselBalansUitlegPopup onDoorgaan={() => setVoedselBalansUitlegBevestigd(true)} />
+        )}
         {legerkampKiesModusStrijderId && (
           <WachttorenKiesBanner onAnnuleren={() => setLegerkampKiesModusStrijderId(null)} />
         )}
@@ -1001,6 +1079,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonTechKeuzePopup &&
             !toonVijandelijkHeiligdomOnthuldPopup &&
             !toonVijandelijkHeiligdomVernietigdPopup &&
+            !toonWachttorenOveralUitlegPopup &&
+            !toonVoedselBalansUitlegPopup &&
             !toonTutorialVoltooidPopup &&
             !legerkampKiesModusStrijderId &&
             !verkenningsModusActief &&
