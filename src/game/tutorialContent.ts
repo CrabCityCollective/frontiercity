@@ -152,6 +152,31 @@ export const VOEDSEL_BALANS_UITLEG_TITEL = "Twee bronnen, twee monden";
 export const VOEDSEL_BALANS_UITLEG_TEKST =
   "Voedsel komt voortaan van twee kanten: de boerderij, en de jacht op kuddes. Wetenschap maakt beide opbrengsten groter. Er eten ook twee partijen mee: de stad zelf, en elke bemande wachttoren. Een grotere stad en meer wachttorens vragen samen steeds meer voedsel — hoe verder je komt, hoe scherper die balans.";
 
+// Settler-acties-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "de settler
+// bouwt wegen, jaagt en hakt hout ... maar voor het bouwen hoeft de settler niet
+// aanwezig te zijn"): getoond zodra de settler in beurt 2 verschijnt (zie
+// GameRoot: `toonSettlerActiesUitlegPopup`), net als SETTLER_UITLEG_* hierboven
+// — maar op de laagste prioriteit in de pop-up-volgorde, dus hij verschijnt pas
+// als er verder niets anders te melden is. Legt de drie losse settler-acties
+// (wegaanleg, jacht, houtkap — `acties.ts`: `legWegAan`/`jaag`/`hakHout`) naast
+// elkaar, en het punt dat verrast: bouwen zelf (`startBouw`, infrastructuurEnBouw.ts)
+// controleert nergens waar de settler staat.
+export const SETTLER_ACTIES_UITLEG_TITEL = "Wat de settler allemaal kan";
+export const SETTLER_ACTIES_UITLEG_TEKST =
+  "De settler doet elke beurt hoogstens één ding: een weg aanleggen, jagen op een kudde, of hout hakken in het bos. Een weg is nodig om een gebouw op de voorraad aan te sluiten — zonder weg bereiken de grondstoffen de stad niet. Bouwen zelf werkt los daarvan: dat kies je ergens op de frontier, ook als de settler daar zelf niet staat.";
+
+// Beurtensysteem-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "het
+// beurten systeem: iedere beurt worden resources berekend: hoeveel heb je
+// nodig voor bouwen van nieuwe gebouwen, hoeveel komt er binnen"): getoond
+// zodra beurt 2 begint (zie GameRoot: `toonBeurtensysteemUitlegPopup`) — dat
+// is het eerste moment waarop er al een volledige beurt is doorgerekend (zie
+// economie.ts `volgendeBeurt`), zodat de speler al iets heeft zien
+// veranderen om de uitleg aan op te hangen. Zelfde laagste prioriteit als
+// SETTLER_ACTIES_UITLEG_* hierboven.
+export const BEURTENSYSTEEM_UITLEG_TITEL = "Elke beurt wordt afgerekend";
+export const BEURTENSYSTEEM_UITLEG_TEKST =
+  "Elke beurt rekent het spel af: wat een gebouw in aanbouw nog kost, gaat van de voorraad af zodra die genoeg heeft. Tegelijk komt er nieuwe productie binnen — hout, steen, erts, voedsel — en verbruiken de stad en elke bemande wachttoren weer voedsel. Zo groeit of slinkt de voorraad, beurt na beurt.";
+
 // Bezette-Streek-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
 // missionaris en verkenner", Deel 2), getoond zodra streek 12 "in beeld komt"
 // (dezelfde soort trigger als de gegarandeerde Amberader-vondst op streek 7),
