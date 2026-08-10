@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import AmberOntdektPopup from "@/components/AmberOntdektPopup";
+import BeurtensysteemUitlegPopup from "@/components/BeurtensysteemUitlegPopup";
 import BezetteStreekPopup from "@/components/BezetteStreekPopup";
 import BoerderijKlaarUitlegPopup from "@/components/BoerderijKlaarUitlegPopup";
 import BouwPopup from "@/components/BouwPopup";
@@ -18,6 +19,7 @@ import StreekPopup from "@/components/StreekPopup";
 import OceaanUitlegPopup from "@/components/OceaanUitlegPopup";
 import ResourceHud from "@/components/ResourceHud";
 import RoofdierPopup from "@/components/RoofdierPopup";
+import SettlerActiesUitlegPopup from "@/components/SettlerActiesUitlegPopup";
 import SettlerPaneel from "@/components/SettlerPaneel";
 import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
 import StadMenuPopup from "@/components/StadMenuPopup";
@@ -222,6 +224,15 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // moment waarop de jacht als tweede voedselbron beschikbaar komt (naast de
   // boerderij, al uitgelegd via BoerderijKlaarUitlegPopup).
   const [voedselBalansUitlegBevestigd, setVoedselBalansUitlegBevestigd] = useState(false);
+  // Settler-acties-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-
+  // confirm-vlag, getoond zodra de settler in beurt 2 verschijnt — legt de
+  // drie losse settler-acties uit (wegaanleg, jacht, houtkap), en dat bouwen
+  // zelf niet vereist dat de settler op de bouwplek staat.
+  const [settlerActiesUitlegBevestigd, setSettlerActiesUitlegBevestigd] = useState(false);
+  // Beurtensysteem-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-
+  // confirm-vlag, getoond zodra beurt 2 begint — het eerste moment waarop een
+  // volledige beurt (verbruik + productie) al is doorgerekend.
+  const [beurtensysteemUitlegBevestigd, setBeurtensysteemUitlegBevestigd] = useState(false);
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is"): anders dan de
   // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
@@ -845,6 +856,68 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !voedselBalansUitlegBevestigd &&
     hoogsteOntgrendeldeStreek(state.streken) >= 4;
+  // Settler-acties-uitleg-pop-up (issue: "meer uitleg"): zelfde lage
+  // prioriteit als de twee pop-ups hierboven — verschijnt zodra de settler in
+  // beurt 2 verschijnt (zelfde trigger als SettlerUitlegPopup), en legt de
+  // drie losse settler-acties (weg aanleggen, jagen, hout hakken) uit, plus
+  // dat bouwen zelf niet vereist dat de settler op de bouwplek staat.
+  const toonSettlerActiesUitlegPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonFrontierUitlegPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    uitlegAan &&
+    !settlerActiesUitlegBevestigd &&
+    Boolean(state.settler);
+  // Beurtensysteem-uitleg-pop-up (issue: "meer uitleg"): zelfde lage
+  // prioriteit, direct na de pop-up hierboven — verschijnt zodra beurt 2
+  // begint, het eerste moment waarop een volledige beurt (verbruik +
+  // productie) al is doorgerekend.
+  const toonBeurtensysteemUitlegPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonFrontierUitlegPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    uitlegAan &&
+    !beurtensysteemUitlegBevestigd &&
+    state.beurt >= 2;
   // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
   // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
   // "confrontatie op streek 12 gewonnen" als trigger: het stichten is nu het
@@ -872,6 +945,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandelijkHeiligdomVernietigdPopup &&
     !toonWachttorenOveralUitlegPopup &&
     !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
   // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
@@ -1028,6 +1103,12 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonVoedselBalansUitlegPopup && (
           <VoedselBalansUitlegPopup onDoorgaan={() => setVoedselBalansUitlegBevestigd(true)} />
         )}
+        {toonSettlerActiesUitlegPopup && (
+          <SettlerActiesUitlegPopup onDoorgaan={() => setSettlerActiesUitlegBevestigd(true)} />
+        )}
+        {toonBeurtensysteemUitlegPopup && (
+          <BeurtensysteemUitlegPopup onDoorgaan={() => setBeurtensysteemUitlegBevestigd(true)} />
+        )}
         {legerkampKiesModusStrijderId && (
           <WachttorenKiesBanner onAnnuleren={() => setLegerkampKiesModusStrijderId(null)} />
         )}
@@ -1081,6 +1162,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonVijandelijkHeiligdomVernietigdPopup &&
             !toonWachttorenOveralUitlegPopup &&
             !toonVoedselBalansUitlegPopup &&
+            !toonSettlerActiesUitlegPopup &&
+            !toonBeurtensysteemUitlegPopup &&
             !toonTutorialVoltooidPopup &&
             !legerkampKiesModusStrijderId &&
             !verkenningsModusActief &&
