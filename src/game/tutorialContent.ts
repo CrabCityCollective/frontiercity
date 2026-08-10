@@ -127,6 +127,31 @@ export function streekContent(hoogte: number): StreekContent | undefined {
   return TUTORIAL_STREEK_CONTENT[hoogte];
 }
 
+// Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "wachttorens
+// mag je als enige op alle laag bouwen ... dat komt ook omdat indringers soms je
+// wachttoren kunnen vernietigen op een oudere laag"): getoond zodra streek 2 voor
+// het eerst ontgrendelt (zie GameRoot: `toonWachttorenOveralUitlegPopup`) — dat is
+// hetzelfde moment als FRONTIER_UITLEG_* hierboven, dat de Wachttoren al kort als
+// uitzondering noemt. Deze pop-up legt de uitzondering zelf uit, en vooral de
+// reden erachter (`bouwbaarBuitenFrontier` in improvements.ts, en
+// `WACHTTOREN_OVERROMPELD_TEKST` verderop in dit bestand voor het gevolg als je
+// een oudere streek onbewaakt laat).
+export const WACHTTOREN_OVERAL_UITLEG_TITEL = "De wachttoren kent geen grens";
+export const WACHTTOREN_OVERAL_UITLEG_TEKST =
+  "De meeste gebouwen komen alleen op de frontier. De wachttoren niet: die zet je neer op elke streek die je al ontgrendeld hebt, ook ver achter je. Reden: indringers kiezen niet altijd de frontier als doelwit, soms zoeken ze een oudere streek uit. Een onbemande wachttoren houdt dan geen stand. Verspreid je wachttorens dus over de hele tocht, niet alleen vooraan.";
+
+// Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "voedsel komt
+// van 2 bronnen ... die zijn te optimaliseren met wetenschap ... er zijn ook 2
+// afnemers ... door het groeien van je stad en het aantal wachttorens wordt het
+// steeds lastiger om voedsel te managen"): getoond zodra streek 4 voor het eerst
+// ontgrendelt (zie GameRoot: `toonVoedselBalansUitlegPopup`) — dat is het moment
+// waarop de jacht als tweede voedselbron beschikbaar komt (TUTORIAL_STREEK_CONTENT[4]:
+// "Kuddes en jacht"), naast de boerderij die al eerder is uitgelegd
+// (BOERDERIJ_KLAAR_TITEL/-TEKST hierboven).
+export const VOEDSEL_BALANS_UITLEG_TITEL = "Twee bronnen, twee monden";
+export const VOEDSEL_BALANS_UITLEG_TEKST =
+  "Voedsel komt voortaan van twee kanten: de boerderij, en de jacht op kuddes. Wetenschap maakt beide opbrengsten groter. Er eten ook twee partijen mee: de stad zelf, en elke bemande wachttoren. Een grotere stad en meer wachttorens vragen samen steeds meer voedsel — hoe verder je komt, hoe scherper die balans.";
+
 // Bezette-Streek-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
 // missionaris en verkenner", Deel 2), getoond zodra streek 12 "in beeld komt"
 // (dezelfde soort trigger als de gegarandeerde Amberader-vondst op streek 7),
