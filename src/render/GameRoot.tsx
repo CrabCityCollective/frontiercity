@@ -844,10 +844,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !wachttorenOveralUitlegBevestigd &&
     hoogsteOntgrendeldeStreek(state.streken) >= 3;
   // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
-  // van streek 4 naar streek 1 door "jagen en farmen omdraaien"): direct na
-  // de pop-up hierboven, zelfde lage prioriteit — verschijnt al zodra streek
-  // 1 ontgrendelt (dus vrijwel altijd, streek 1 is al bij de start
-  // ontgrendeld), het moment waarop de jacht de enige voedselbron is.
+  // van streek 4 naar streek 1 door "jagen en farmen omdraaien"; opnieuw
+  // verschoven, issue: "genoeg hout om ook boerderij te bouwen" — van "streek
+  // 1 ontgrendeld" (vrijwel altijd meteen bij de start) naar "de gegarandeerde
+  // startkudde is verschenen"): direct na de kudde-pop-up hierboven (zelfde
+  // lage prioriteit, `!toonKuddePopup`), zodat deze uitleg pas komt op het
+  // moment waarop de tekst ("er is een kudde verschenen") ook daadwerkelijk
+  // klopt.
   const toonVoedselBalansUitlegPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
@@ -872,7 +875,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonWachttorenOveralUitlegPopup &&
     uitlegAan &&
     !voedselBalansUitlegBevestigd &&
-    hoogsteOntgrendeldeStreek(state.streken) >= 1;
+    Boolean(state.eersteKuddeVerschenen);
   // Settler-acties-uitleg-pop-up (issue: "meer uitleg"): zelfde lage
   // prioriteit als de twee pop-ups hierboven — verschijnt zodra de settler in
   // beurt 2 verschijnt (zelfde trigger als SettlerUitlegPopup), en legt de

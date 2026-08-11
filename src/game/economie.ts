@@ -49,7 +49,7 @@ import {
   verwerkRecrutering,
   verwerkVerkennerRecrutering,
 } from "./groeiEnRekrutering";
-import { verwerkIndringers, verwerkKuddes, verwerkRoofdieren } from "./indringersEnDieren";
+import { verwerkEersteKudde, verwerkIndringers, verwerkKuddes, verwerkRoofdieren } from "./indringersEnDieren";
 
 // Opslag-cap, startstatus en de city-improvement-cap staan inhoudelijk in
 // eigen modules (initieleSpelStatus.ts resp. improvements.ts) in plaats van
@@ -73,7 +73,10 @@ export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
 // Verwerkt één spelbeurt: eerst uitputting van de actieve tiles (M4), dan
 // verbruik/voortgang van de land-tile-bouwwachtrij — een tile die deze beurt
 // klaar is, wordt hier al "actief" en begint pas volgende beurt met
-// aftellen (vandaar vóór de productiestap hieronder) — dan productie van
+// aftellen (vandaar vóór de productiestap hieronder) — dan de gegarandeerde
+// eerste kudde op streek 1 zodra de Steengroeve daar net "actief" is geworden
+// (issue: "genoeg hout om ook boerderij te bouwen", `verwerkEersteKudde` in
+// indringersEnDieren.ts), dan productie van
 // alle (incl. deze beurt net voltooide) actieve improvements (incl.
 // voedselverbruik en cultuur), dan streek-ontgrendeling op basis van die
 // cultuur (M5), dan de technologie-boom op basis van diezelfde-beurt
@@ -99,7 +102,11 @@ export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
 export function volgendeBeurt(state: GameState): GameState {
   const naUitputting = verwerkUitputting(state);
   const naBouw = verwerkBouwwachtrij(naUitputting);
-  const naProductie = verwerkProductie(naBouw);
+  // Gegarandeerde eerste kudde (issue: "genoeg hout om ook boerderij te
+  // bouwen"): direct na de bouwwachtrij, zodat een Steengroeve die deze beurt
+  // net voltooid is (`naBouw`) meteen dezelfde beurt de kudde nog oplevert.
+  const naEersteKudde = verwerkEersteKudde(naBouw);
+  const naProductie = verwerkProductie(naEersteKudde);
   const naOntgrendeling = verwerkStreekOntgrendeling(naProductie);
   // Belegering (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 4): direct na de streek-ontgrendeling, op dezelfde

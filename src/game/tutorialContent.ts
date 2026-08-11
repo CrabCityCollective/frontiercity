@@ -167,15 +167,18 @@ export const WACHTTOREN_OVERAL_UITLEG_TEKST =
 // van 2 bronnen ... die zijn te optimaliseren met wetenschap ... er zijn ook 2
 // afnemers ... door het groeien van je stad en het aantal wachttorens wordt het
 // steeds lastiger om voedsel te managen"; volgorde omgedraaid, issue: "jagen en
-// farmen omdraaien"): getoond zodra streek 1 voor het eerst ontgrendelt (zie
-// GameRoot: `toonVoedselBalansUitlegPopup`) — dat is meteen bij de start, het
-// moment waarop de jacht de enige voedselbron is (TUTORIAL_STREEK_CONTENT[1]).
-// De boerderij komt pas op streek 2 (issue: "Tweede streek boerderij" — was
+// farmen omdraaien"; tekst en trigger vervangen, issue: "genoeg hout om ook
+// boerderij te bouwen" — de eerdere tekst ("Eén bron, één mond") verscheen
+// meteen bij de start, nog vóórdat er een kudde te zien was; deze versie
+// verschijnt pas zodra de gegarandeerde startkudde daadwerkelijk verschenen is
+// (zie GameRoot: `toonVoedselBalansUitlegPopup`, `state.eersteKuddeVerschenen`
+// in indringersEnDieren.ts), direct ná de bijbehorende kudde-pop-up. De
+// boerderij komt pas op streek 2 (issue: "Tweede streek boerderij" — was
 // streek 3, zie BOERDERIJ_KLAAR_TITEL/-TEKST hieronder, die op dat moment de
 // balans naar twee bronnen uitbreidt); wachttorens volgen pas op streek 3.
-export const VOEDSEL_BALANS_UITLEG_TITEL = "Eén bron, één mond";
+export const VOEDSEL_BALANS_UITLEG_TITEL = "Voedsel verzamelen";
 export const VOEDSEL_BALANS_UITLEG_TEKST =
-  "Voedsel komt voorlopig van maar één kant: de jacht op kuddes. Stuur de settler naar een kudde en jaag — er is nog geen boerderij om op terug te vallen. Er eet ook maar één partij mee: de stad zelf. Zodra er een boerderij en later wachttorens bijkomen, wordt deze balans drukker.";
+  "Het kamp heeft dringend voedsel nodig. Er is een kudde verschenen, waar we op kunnen jagen. Dat is voor nu genoeg om te overleven.";
 
 // Settler-acties-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "de settler
 // bouwt wegen, jaagt en hakt hout ... maar voor het bouwen hoeft de settler niet

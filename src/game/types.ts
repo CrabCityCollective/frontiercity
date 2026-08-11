@@ -591,6 +591,14 @@ export interface GameState {
   // melding is, net als `indringersEvent` hierboven.
   kuddeEvent?: KuddeEvent;
   roofdierEvent?: RoofdierEvent;
+  // Gezet door `verwerkEersteKudde` (indringersEnDieren.ts) zodra de
+  // gegarandeerde startkudde op streek 1 geplaatst is (issue: "genoeg hout om
+  // ook boerderij te bouwen" — verschoven van "direct bij de start" naar "zodra
+  // de Steengroeve voltooid is"). Blijft daarna permanent `true`, ook nadat de
+  // kudde is leeggejaagd: voorkomt dat dezelfde garantie een tweede keer
+  // afgaat, en opent tegelijk streek 1 voor de gewone, willekeurige
+  // `verwerkKuddes`-trekking (die streek 1 tot dan toe overslaat).
+  eersteKuddeVerschenen?: boolean;
   // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): gezet
   // door `verwerkStreekOntgrendeling` in economie.ts zodra streek
   // `AMBER_ONTDEKKING_STREEK` (world.ts) voor het eerst ontgrendeld wordt — de

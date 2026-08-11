@@ -15,6 +15,7 @@ import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek } from "./world";
 
 export const HOUTKAP = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "houtkap")!;
+export const STEENGROEVE = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "steengroeve")!;
 export const MIJN = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "mijn")!;
 export const WACHTTOREN = MILITAIR_LAND_IMPROVEMENTS.find((i) => i.id === "wachttoren")!;
 export const LEGERKAMP = MILITAIR_LAND_IMPROVEMENTS.find((i) => i.id === "legerkamp")!;

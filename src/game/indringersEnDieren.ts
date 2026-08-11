@@ -15,7 +15,7 @@
 // staat (`verwerkRoofdieren` hieronder).
 
 import { GameState, IndringersTribuut, KuddeEvent, Streek, MateriaalType, RoofdierEvent, Strijder, Tile } from "./types";
-import { hoogsteOntgrendeldeStreek, KUDDE_JACHT_BEURTEN } from "./world";
+import { hoogsteOntgrendeldeStreek, KUDDE_JACHT_BEURTEN, STARTKUDDE_POSITIE } from "./world";
 import { kuddeKansFactor } from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
 import { isTileVerbondenMetStad } from "./wegen";
@@ -364,6 +364,13 @@ export function verwerkKuddes(state: GameState): GameState {
   const kandidaten: { hoogte: number; positieInStreek: number }[] = [];
   for (const streek of state.streken) {
     if (!streek.ontgrendeld || streek.hoogte < KUDDE_MIN_STREEK) continue;
+    // Streek 1 blijft gesloten voor de willekeurige trekking tot de
+    // gegarandeerde eerste kudde er geweest is (issue: "genoeg hout om ook
+    // boerderij te bouwen" — de kudde mag hier pas verschijnen ná de
+    // Steengroeve, zie `verwerkEersteKudde` hieronder). Zonder deze
+    // uitzondering zou een gunstige worp alsnog voortijdig een kudde op
+    // streek 1 kunnen neerzetten, nog vóór de speler de Steengroeve heeft.
+    if (streek.hoogte === 1 && !state.eersteKuddeVerschenen) continue;
     for (const tile of streek.tiles) {
       if (tile.status === "leeg" && !tile.kudde) {
         kandidaten.push({ hoogte: streek.hoogte, positieInStreek: tile.positieInStreek });
@@ -387,6 +394,40 @@ export function verwerkKuddes(state: GameState): GameState {
   const kuddeEvent: KuddeEvent = { hoogte: doel.hoogte, positieInStreek: doel.positieInStreek };
 
   return { ...state, streken, kuddeEvent };
+}
+
+// Gegarandeerde eerste kudde op streek 1 (issue: "genoeg hout om ook
+// boerderij te bouwen" — vervangt de eerdere direct-bij-de-start-garantie uit
+// issue "Eerste streek gegarandeerd een kudde"): zodra de Steengroeve op
+// streek 1 voltooid is, staat de kudde er sowieso, dezelfde
+// softlock-preventie als voorheen (jacht is de enige voedselbron tot de
+// Boerderij op streek 2) — alleen nu bewust pas ná die eerste bouwkeuze, in
+// plaats van al bij de allereerste blik op de kaart. `eersteKuddeVerschenen`
+// (types.ts) zorgt dat dit precies één keer gebeurt: zonder die vlag zou deze
+// functie elke volgende beurt opnieuw een kudde neerzetten zodra de vorige is
+// leeggejaagd, want de Steengroeve blijft daarna gewoon actief staan.
+export function verwerkEersteKudde(state: GameState): GameState {
+  if (state.eersteKuddeVerschenen) return state;
+
+  const streek1 = state.streken.find((streek) => streek.hoogte === 1);
+  const steengroeveKlaar = streek1?.tiles.some(
+    (tile) => tile.status === "actief" && tile.improvement?.id === "steengroeve"
+  );
+  if (!steengroeveKlaar) return state;
+
+  const streken = state.streken.map((streek) =>
+    streek.hoogte !== 1
+      ? streek
+      : {
+          ...streek,
+          tiles: streek.tiles.map((tile, index) =>
+            index === STARTKUDDE_POSITIE ? { ...tile, kudde: { beurtenResterend: KUDDE_JACHT_BEURTEN } } : tile
+          ),
+        }
+  );
+
+  const kuddeEvent: KuddeEvent = { hoogte: 1, positieInStreek: STARTKUDDE_POSITIE };
+  return { ...state, streken, eersteKuddeVerschenen: true, kuddeEvent };
 }
 
 // Sluit een kudde-melding (hoofdstuk 17) — puur een UI-bevestiging, de kudde
