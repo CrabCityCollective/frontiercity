@@ -29,10 +29,14 @@ import { isTileVerbondenMetStad } from "./wegen";
 // wachttoren waardeloos, en 40% per beurt op één streek is erg hoog").
 const INDRINGERS_KANS = 0.2;
 
-// Het mechanisme is pas een factor zodra deze streek ontgrendeld is (issue:
-// "het mechanisme start pas zodra de speler streek 2 heeft ontgrendeld") — de
-// eerste streek blijft zo een rustige introductie zonder dat risico. Was streek 3.
-const INDRINGERS_MIN_STREEK = 2;
+// Het mechanisme is pas een factor zodra deze streek ontgrendeld is — terug
+// naar streek 3 (issue: "Tweede streek boerderij", was tijdelijk streek 2
+// sinds "het mechanisme start pas zodra de speler streek 2 heeft
+// ontgrendeld"): streek 2 introduceert nu alleen de Boerderij (zie
+// improvements.ts), zodat de speler daar eerst een tweede voedselbron kan
+// opbouwen vóórdat indringers (en de bijbehorende, voedsel-etende Wachttoren,
+// ook verschoven naar streek 3) een factor worden.
+const INDRINGERS_MIN_STREEK = 3;
 
 // Eerste rogue-like bonus/malus-koppeling (hoofdstuk 6/11/14, issue:
 // "Amberader: bonus/malus-koppeling" — waardevolle vondsten trekken ook

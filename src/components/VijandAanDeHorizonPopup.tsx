@@ -6,10 +6,12 @@ interface VijandAanDeHorizonPopupProps {
   onDoorgaan: () => void;
 }
 
-// De-vijand-aan-de-horizon-pop-up (issue: "tutorial popups wijzigen"),
-// getoond zodra streek 2 ontgrendelt (zie GameRoot: `toonVijandAanDeHorizonPopup`)
-// — dit is het moment waarop Militair/de Wachttoren voor het eerst
-// beschikbaar komt. Zelfde blokkerende overlay als de andere uitleg-pop-ups.
+// De-vijand-aan-de-horizon-pop-up (issue: "tutorial popups wijzigen", trigger
+// verschoven van streek 2 naar 3 door "Tweede streek boerderij"), getoond
+// zodra streek 3 ontgrendelt (zie GameRoot: `toonVijandAanDeHorizonPopup`) —
+// dit is het moment waarop Militair/de Wachttoren en Economisch/de Mijn voor
+// het eerst beschikbaar komen. Zelfde blokkerende overlay als de andere
+// uitleg-pop-ups.
 export default function VijandAanDeHorizonPopup({ onDoorgaan }: VijandAanDeHorizonPopupProps) {
   return (
     <div

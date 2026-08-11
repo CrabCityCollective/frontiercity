@@ -25,7 +25,8 @@ const STARTVOORRAAD: Record<MateriaalType, number> = {
 };
 
 // Startvoedsel: overbrugt de openingsbeurten tot de jacht op gang komt (de
-// enige voedselbron tot de Boerderij op streek 3) — de settler moet eerst
+// enige voedselbron tot de Boerderij op streek 2, issue: "Tweede streek
+// boerderij" — verschoven van streek 3) — de settler moet eerst
 // naar de kudde toe lopen (sinds issue: "Eerste streek gegarandeerd een
 // kudde" gegarandeerd aanwezig op streek 1, zie STARTKUDDE_POSITIE in
 // world.ts) en die vervolgens bejagen, waarna de voedselwaarschuwing-pop-up

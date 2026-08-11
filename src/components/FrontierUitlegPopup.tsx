@@ -6,8 +6,9 @@ interface FrontierUitlegPopupProps {
   onDoorgaan: () => void;
 }
 
-// Frontier-uitleg-pop-up (issue: "meer uitleg"), getoond zodra streek 2 voor
-// het eerst ontgrendelt — zelfde blokkerende overlay als de andere
+// Frontier-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van streek
+// 2 naar 3 door "Tweede streek boerderij"), getoond zodra streek 3 voor het
+// eerst ontgrendelt — zelfde blokkerende overlay als de andere
 // uitleg-pop-ups (VijandAanDeHorizonPopup, SettlerUitlegPopup, ...).
 export default function FrontierUitlegPopup({ onDoorgaan }: FrontierUitlegPopupProps) {
   return (

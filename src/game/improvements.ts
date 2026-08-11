@@ -139,11 +139,13 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     // Alleen op heuvel/berg (issue: "een mijn kun je alleen op een heuvel of
     // berg zetten").
     terreinEisen: ["heuvel", "berg"],
-    // `minStreek: 2` (issue: "jagen en farmen omdraaien"): zelfde streek als
-    // de Wachttoren/erts-introductie (zie VIJAND_AAN_DE_HORIZON_TEKST in
-    // tutorialContent.ts) — op streek 1 is alleen Steengroeve en Heiligdom
-    // bouwbaar.
-    minStreek: 2,
+    // `minStreek: 3` (issue: "Tweede streek boerderij" — verschoven van
+    // streek 2 naar 3, samen met de Wachttoren/erts-introductie, zie
+    // VIJAND_AAN_DE_HORIZON_TEKST in tutorialContent.ts): streek 2 was qua
+    // voedsel niet haalbaar zolang de Boerderij daar nog niet stond maar er
+    // al wel een voedsel-etende Wachttoren bij kon komen. Erts/Mijn schuift
+    // daarom mee naar streek 3, ná de Boerderij.
+    minStreek: 3,
   },
   {
     id: "boerderij",
@@ -157,9 +159,13 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     // Alleen op vlakke grond (issue: "boerderij kun je juist niet op bergen
     // en bossen zetten, alleen op vlakke grond").
     terreinEisen: ["vlak"],
-    // `minStreek: 3` (issue: "jagen en farmen omdraaien"): de Boerderij komt
-    // pas op streek 3 — vóór die tijd is de jacht de enige voedselbron.
-    minStreek: 3,
+    // `minStreek: 2` (issue: "Tweede streek boerderij" — verschoven van
+    // streek 3 naar 2): streek 2 bleek qua voedsel niet door te komen met
+    // alleen de jacht als bron, dus de Boerderij komt nu een streek eerder
+    // — vóór Mijn en Wachttoren (nu allebei streek 3, zie hieronder), zodat
+    // er al een tweede voedselbron staat vóórdat een bemande Wachttoren extra
+    // voedsel gaat kosten.
+    minStreek: 2,
   },
   // Ontgrendeld door de "aardewerk"-tech (drempel 2, techTree.ts; issue: "tech
   // tree toevoegen" Deel 2 — "A1. Aardewerk: nieuw goedkoop land improvement:
@@ -322,10 +328,14 @@ export const WETENSCHAPPELIJK_LAND_IMPROVEMENTS: Improvement[] = [STERRENCIRKEL]
 // toeslaan. Thematisch passend: forten werden juist áchter de oprukkende
 // grens aangelegd, niet aan de voorste rand.
 //
-// `minStreek: 2` (issue: "tutorial popups wijzigen"): in de tutorial is
-// Militair (en dus de Wachttoren) pas vanaf streek 2 beschikbaar (uitgegrijsd
-// ervoor via `beschikbareOpties` hieronder) — het ontgrendelen van streek 2
-// gaat gepaard met de "De vijand aan de horizon"-pop-up (tutorialContent.ts).
+// `minStreek: 3` (issue: "Tweede streek boerderij" — verschoven van streek 2
+// naar 3): in de tutorial is Militair (en dus de Wachttoren) pas vanaf streek
+// 3 beschikbaar (uitgegrijsd ervoor via `beschikbareOpties` hieronder) — het
+// ontgrendelen van streek 3 gaat gepaard met de "De vijand aan de
+// horizon"-pop-up (tutorialContent.ts). Streek 2 blijft zo een zuivere
+// Boerderij-introductie zonder dat er meteen ook al een voedsel-etende
+// Wachttoren bij kan komen (zie de `minStreek`-comment bij de Boerderij
+// hierboven in `ECONOMISCH_LAND_IMPROVEMENTS`).
 // Legerkamp (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
 // verkenner", Deel 5): net als de Wachttoren op elke ontgrendelde streek
 // bouwbaar (`bouwbaarBuitenFrontier`) — thematisch omdat een gestationeerde
@@ -371,7 +381,7 @@ export const MILITAIR_LAND_IMPROVEMENTS: Improvement[] = [
     bouwtijdBeurten: 2,
     effect: { type: "verdediging", waarde: 3 },
     bouwbaarBuitenFrontier: true,
-    minStreek: 2,
+    minStreek: 3,
   },
   LEGERKAMP,
 ];
@@ -707,13 +717,13 @@ function kanImprovementOpStreek(improvement: Improvement, streek: Streek): boole
 // improvement uit, precies het gedrag vóórdat er ooit een tech gekozen is.
 //
 // `minStreek` (issue: "tutorial popups wijzigen", volgorde verschoven door
-// "jagen en farmen omdraaien") sluit op dezelfde manier improvements uit
-// zolang de hoogst ontgrendelde streek (frontier) de vereiste hoogte nog niet
-// bereikt heeft — momenteel Houtkap en Mijn (streek 2), de Wachttoren (streek
-// 2), de Boerderij (streek 3) en de Sterrencirkel (streek 4). Heeft een
-// categorie hierdoor geen enkele optie meer over, dan toont de bouw-pop-up
-// (BouwPopup.tsx) 'm uitgegrijsd, precies zoals bij een categorie zonder
-// geldig leeg vakje.
+// "jagen en farmen omdraaien" en, later, "Tweede streek boerderij") sluit op
+// dezelfde manier improvements uit zolang de hoogst ontgrendelde streek
+// (frontier) de vereiste hoogte nog niet bereikt heeft — momenteel Houtkap
+// (streek 2), de Boerderij (streek 2), de Mijn en de Wachttoren (allebei
+// streek 3) en de Sterrencirkel (streek 4). Heeft een categorie hierdoor geen
+// enkele optie meer over, dan toont de bouw-pop-up (BouwPopup.tsx) 'm
+// uitgegrijsd, precies zoals bij een categorie zonder geldig leeg vakje.
 export function beschikbareOpties(
   categorie: Improvement["categorie"],
   streek: Streek,

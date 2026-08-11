@@ -56,8 +56,11 @@ export const STARTKUDDE_POSITIE = 5;
 const TUTORIAL_TERREINTYPES = [
   "oevervlakte",
   "rietmoeras",
-  // Nieuwe streek 3 (issue: "jagen en farmen omdraaien" — de Boerderij komt
-  // pas hier, niet meer meteen bouwbaar vanaf streek 1).
+  // Terreintype-naam en -mix (hieronder, `TUTORIAL_TILE_TERREIN`) blijven
+  // ongewijzigd gekoppeld aan deze hoogte, ook nadat de Boerderij zelf
+  // (issue: "Tweede streek boerderij") van streek 3 naar streek 2 verschoof
+  // — puur cosmetisch/flavor, losstaand van welke improvement-`minStreek` er
+  // op dat moment geldt (zie improvements.ts).
   "akkerland",
   "bosrand",
   "loofbos",
@@ -88,10 +91,12 @@ function terreinTypeVoorStreek(hoogte: number): string {
 // eenzame boom na) zodat de terreinkeuze voelbaar blijft.
 const TUTORIAL_TILE_TERREIN: Record<number, TerreinType[]> = {
   1: ["vlak", "vlak", "bos", "vlak", "vlak", "vlak", "heuvel", "vlak", "vlak"],
+  // Ruim voldoende vlakke grond voor de Boerderij (sinds "Tweede streek
+  // boerderij" vanaf hier bouwbaar, zie improvements.ts), met minstens één
+  // bos- en één heuvelvakje (zelfde mix-conventie als elke andere streek).
   2: ["vlak", "bos", "vlak", "heuvel", "vlak", "vlak", "vlak", "bos", "vlak"],
-  // Nieuwe streek 3 (issue: "jagen en farmen omdraaien"): vooral vlakke grond
-  // voor de Boerderij, met minstens één bos- en één heuvelvakje (zelfde
-  // mix-conventie als elke andere streek hieronder).
+  // Minstens één heuvelvakje voor de Mijn en géén terrein-eis voor de
+  // Wachttoren (beide sinds "Tweede streek boerderij" vanaf hier bouwbaar).
   3: ["vlak", "vlak", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
   4: ["bos", "vlak", "bos", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
   5: ["bos", "bos", "vlak", "bos", "vlak", "heuvel", "bos", "vlak", "bos"],

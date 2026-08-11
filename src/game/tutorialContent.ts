@@ -23,10 +23,19 @@ export interface StreekContent {
 
 // Streek-indeling herschikt (issue: "jagen en farmen omdraaien"): de jacht is
 // nu vanaf streek 1 de eerste voedselbron (in plaats van de boerderij), en de
-// boerderij krijgt een eigen, latere streek (3) — één streek méér dan de
+// boerderij krijgt een eigen, latere streek — één streek méér dan de
 // oorspronkelijke 13, want de boerderij vervangt geen bestaande streek, ze
 // komt er echt bij. Wetenschap/Sterrencirkel (voorheen streek 3) en alles
 // daarna schuift daardoor een streek op.
+//
+// Streek 2/3 nogmaals herschikt (issue: "Tweede streek boerderij"): streek 2
+// bleek qua voedsel niet haalbaar met alleen de jacht als bron zolang de
+// Boerderij pas op streek 3 kwam — zeker zodra daar ook meteen een
+// voedsel-etende Wachttoren bij kon komen. De Boerderij schuift daarom naar
+// streek 2, en Wachttoren/Mijn/indringers (voorheen allemaal streek 2, zie
+// improvements.ts en indringersEnDieren.ts) schuiven samen naar streek 3 —
+// Houtkap blijft op streek 2. Het totaal blijft 14 streken; alleen de
+// mechaniek-inhoud van streek 2 en 3 is omgewisseld, geen nieuwe streek.
 export const TUTORIAL_STREEK_CONTENT: Record<number, StreekContent> = {
   1: {
     naam: "De Oevervlakte",
@@ -34,15 +43,15 @@ export const TUTORIAL_STREEK_CONTENT: Record<number, StreekContent> = {
     flavorTekst: "Water aan de ene kant, gras aan de andere. Er is maar 1 richting: voorwaarts.",
   },
   2: {
-    naam: "Het Rietmoeras",
-    mechaniek: "Houtkap, wachttoren en verdedigen tegen indringers",
-    flavorTekst:
-      "De wereld bleek wreder dan gedacht. Maar het Goddelijke Licht dan wel de Menselijke Speer zal blijven staan.",
+    naam: "Het Akkerland",
+    mechaniek: "Houtkap en de boerderij",
+    flavorTekst: "Vlak land, tot aan de horizon. Genoeg om meer te zaaien dan de jacht alleen ooit kon voeden.",
   },
   3: {
-    naam: "Het Akkerland",
-    mechaniek: "De boerderij",
-    flavorTekst: "Vlak land, tot aan de horizon. Genoeg om meer te zaaien dan de jacht alleen ooit kon voeden.",
+    naam: "Het Rietmoeras",
+    mechaniek: "Wachttoren, mijnbouw en verdedigen tegen indringers",
+    flavorTekst:
+      "De wereld bleek wreder dan gedacht. Maar het Goddelijke Licht dan wel de Menselijke Speer zal blijven staan.",
   },
   4: {
     naam: "De Bosrand",
@@ -141,9 +150,11 @@ export function streekContent(hoogte: number): StreekContent | undefined {
 
 // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "wachttorens
 // mag je als enige op alle laag bouwen ... dat komt ook omdat indringers soms je
-// wachttoren kunnen vernietigen op een oudere laag"): getoond zodra streek 2 voor
-// het eerst ontgrendelt (zie GameRoot: `toonWachttorenOveralUitlegPopup`) — dat is
-// hetzelfde moment als FRONTIER_UITLEG_* hierboven, dat de Wachttoren al kort als
+// wachttoren kunnen vernietigen op een oudere laag"): getoond zodra streek 3 voor
+// het eerst ontgrendelt (zie GameRoot: `toonWachttorenOveralUitlegPopup` — was
+// streek 2 vóór issue "Tweede streek boerderij", zie improvements.ts:
+// `MILITAIR_LAND_IMPROVEMENTS[0].minStreek`) — dat is hetzelfde moment als
+// VIJAND_AAN_DE_HORIZON_* hierboven, dat de Wachttoren al kort als
 // uitzondering noemt. Deze pop-up legt de uitzondering zelf uit, en vooral de
 // reden erachter (`bouwbaarBuitenFrontier` in improvements.ts, en
 // `WACHTTOREN_OVERROMPELD_TEKST` verderop in dit bestand voor het gevolg als je
@@ -159,11 +170,12 @@ export const WACHTTOREN_OVERAL_UITLEG_TEKST =
 // farmen omdraaien"): getoond zodra streek 1 voor het eerst ontgrendelt (zie
 // GameRoot: `toonVoedselBalansUitlegPopup`) — dat is meteen bij de start, het
 // moment waarop de jacht de enige voedselbron is (TUTORIAL_STREEK_CONTENT[1]).
-// De boerderij komt pas op streek 3 (zie BOERDERIJ_KLAAR_TITEL/-TEKST
-// hieronder, die op dat moment de balans naar twee bronnen uitbreidt).
+// De boerderij komt pas op streek 2 (issue: "Tweede streek boerderij" — was
+// streek 3, zie BOERDERIJ_KLAAR_TITEL/-TEKST hieronder, die op dat moment de
+// balans naar twee bronnen uitbreidt); wachttorens volgen pas op streek 3.
 export const VOEDSEL_BALANS_UITLEG_TITEL = "Eén bron, één mond";
 export const VOEDSEL_BALANS_UITLEG_TEKST =
-  "Voedsel komt voorlopig van maar één kant: de jacht op kuddes. Stuur de settler naar een kudde en jaag — er is nog geen boerderij om op terug te vallen. Er eet ook maar één partij mee: de stad zelf. Zodra er wachttorens en een boerderij bijkomen, wordt deze balans drukker.";
+  "Voedsel komt voorlopig van maar één kant: de jacht op kuddes. Stuur de settler naar een kudde en jaag — er is nog geen boerderij om op terug te vallen. Er eet ook maar één partij mee: de stad zelf. Zodra er een boerderij en later wachttorens bijkomen, wordt deze balans drukker.";
 
 // Settler-acties-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "de settler
 // bouwt wegen, jaagt en hakt hout ... maar voor het bouwen hoeft de settler niet
@@ -252,26 +264,26 @@ export const INTRO_FLAVOR_TEKST =
 // eerst "kritiek" wordt (zie economie.ts `verwerkVerval`) — dynamisch op het
 // moment dat de voedseldreiging zich voordoet, in plaats van op een vast
 // beurtnummer. Tekst wijst naar de jacht (issue: "jagen en farmen omdraaien"
-// — dit kan al op streek 1 triggeren, ruim vóór de Boerderij op streek 3
-// bestaat), met de boerderij als aanvulling zodra die er wél al staat.
+// — dit kan al op streek 1 triggeren, ruim vóór de Boerderij op streek 2
+// bestaat, issue: "Tweede streek boerderij"), met de boerderij als aanvulling
+// zodra die er wél al staat.
 export const VOEDSEL_WAARSCHUWING_TITEL = "De voorraad slinkt";
 export const VOEDSEL_WAARSCHUWING_TEKST =
   "De bodem van de voedselvoorraad komt behoorlijk dichtbij. Als het voedsel op, verlaat de stam het kamp, en gaat iedereen op zijn houtje de wildernis in. Jaag met de settler op een kudde voor snel voedsel. Staat er al een boerderij, zorg dan dat hij met een weg verbonden blijft.";
 
 // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen",
-// tekst bijgewerkt in issue "tutorial popups wijzigen", en nogmaals in
-// "jagen en farmen omdraaien"): getoond zodra er voor het eerst een actieve,
-// wegverbonden boerderij meeproduceert (zie economie.ts
-// `heeftWerkendeBoerderij`) — dat is nu ten vroegste op streek 3, ná het
-// Heiligdom (al gebouwd op streek 1) en de Wachttoren (streek 2, zie
-// VIJAND_AAN_DE_HORIZON_TITEL/-TEKST hieronder), dus die twee hoeven hier
-// niet meer geïntroduceerd te worden. In plaats daarvan legt deze pop-up uit
-// dat de jacht (streek 1) er nu een tweede voedselbron bij krijgt — dezelfde
-// "twee bronnen, twee monden"-uitleg die vóór "jagen en farmen omdraaien" bij
-// VOEDSEL_BALANS_UITLEG_* stond.
+// tekst bijgewerkt in issue "tutorial popups wijzigen", nogmaals in "jagen en
+// farmen omdraaien", en nogmaals in "Tweede streek boerderij"): getoond zodra
+// er voor het eerst een actieve, wegverbonden boerderij meeproduceert (zie
+// economie.ts `heeftWerkendeBoerderij`) — dat is nu ten vroegste op streek 2,
+// ná het Heiligdom (al gebouwd op streek 1) maar vóór de Wachttoren (nu pas
+// streek 3, zie VIJAND_AAN_DE_HORIZON_TITEL/-TEKST hieronder). De tekst mag
+// de Wachttoren dus niet meer als al-bestaande tweede voedselverbruiker
+// noemen — dat is nu nog toekomstmuziek — en foreshadowt 'm in plaats daarvan
+// alvast, dezelfde functie als VOEDSEL_BALANS_UITLEG_* eerder al deed.
 export const BOERDERIJ_KLAAR_TITEL = "Twee bronnen, twee monden";
 export const BOERDERIJ_KLAAR_TEKST =
-  "De boerderij levert voortaan naast de jacht een tweede stroom voedsel. Wetenschap maakt beide opbrengsten groter. Er eten ook twee partijen mee: de stad zelf, en elke bemande wachttoren. Een grotere stad en meer wachttorens vragen samen steeds meer voedsel — hoe verder je komt, hoe scherper die balans.";
+  "De boerderij levert voortaan naast de jacht een tweede stroom voedsel. Wetenschap maakt beide opbrengsten groter. Er eet voorlopig nog maar één partij mee: de stad zelf. Later, zodra er bemande wachttorens bijkomen, eten die ook mee — hoe verder je komt, hoe scherper die balans wordt.";
 
 // Goddelijke-raadgeving-pop-up (issue: "tutorial popups wijzigen", trigger
 // verschoven van streek 3 naar 4 door "jagen en farmen omdraaien"): getoond
@@ -283,22 +295,29 @@ export const GODDELIJKE_RAADGEVING_TITEL = "Goddelijke raadgeving";
 export const GODDELIJKE_RAADGEVING_TEKST =
   "Hoe meer land we tot onze beschikking hebben, hoe meer de goden ons leren over wereld. Bouw een Sterrencirkel om kennis neer te laten dalen op aarde.";
 
-// De-vijand-aan-de-horizon-pop-up (issue: "tutorial popups wijzigen"):
-// getoond zodra streek 2 ontgrendelt (zie GameRoot: `toonVijandAanDeHorizonPopup`)
-// — dit is het moment waarop Militair (en dus de Wachttoren, zie
-// improvements.ts: `MILITAIR_LAND_IMPROVEMENTS[0].minStreek`) voor het eerst
-// beschikbaar komt in de bouw-pop-up, ervoor stond de categorie uitgegrijsd.
+// De-vijand-aan-de-horizon-pop-up (issue: "tutorial popups wijzigen", trigger
+// verschoven van streek 2 naar 3 door "Tweede streek boerderij"): getoond
+// zodra streek 3 ontgrendelt (zie GameRoot: `toonVijandAanDeHorizonPopup`) —
+// dit is het moment waarop Militair (en dus de Wachttoren, zie
+// improvements.ts: `MILITAIR_LAND_IMPROVEMENTS[0].minStreek`) én de Mijn voor
+// het eerst beschikbaar komen in de bouw-pop-up, ervoor stond Militair
+// uitgegrijsd (Mijn viel ervoor al onder Economisch, maar was zelf ook nog
+// niet bouwbaar).
 export const VIJAND_AAN_DE_HORIZON_TITEL = "De vijand aan de horizon";
 export const VIJAND_AAN_DE_HORIZON_TEKST =
   "Niet alle wilde stammen zitten op onze opmars te wachten, ze proberen ons gebied binnen te dringen. We hebben nu erts nodig uit de heuvels en bergen. Bouw een mijn. Dat is het eerste wat we nu nodig hebben.";
 
-// Frontier-uitleg-pop-up (issue: "meer uitleg"): getoond zodra streek 2 voor
-// het eerst ontgrendelt, direct na VIJAND_AAN_DE_HORIZON_* hierboven — dit is
-// het eerste moment waarop de frontier-only-bouwregel (hoofdstuk 2: alleen de
-// hoogst ontgrendelde streek is bebouwbaar, op de Wachttoren na) er ook echt
-// toe doet, omdat streek 1 daarmee niet langer bebouwbaar is. Tot dit issue
-// werd deze regel alleen reactief uitgelegd, in de tegel-infopopup zodra je
-// een leeg vakje op een oudere streek aanklikte (zie tileInfo.ts).
+// Frontier-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van streek
+// 2 naar 3 door "Tweede streek boerderij" — anders zou deze pop-up de
+// Wachttoren al noemen als bouwbare uitzondering vóórdat die überhaupt
+// bestaat): getoond zodra streek 3 voor het eerst ontgrendelt, direct na
+// VIJAND_AAN_DE_HORIZON_* hierboven. Streek 1 is technisch al niet meer
+// bebouwbaar zodra streek 2 ontgrendelt, maar pas hier — samen met de
+// Wachttoren-uitzondering op die regel — wordt de frontier-only-bouwregel
+// (hoofdstuk 2: alleen de hoogst ontgrendelde streek is bebouwbaar) ook echt
+// voelbaar. Tot het originele issue werd deze regel alleen reactief
+// uitgelegd, in de tegel-infopopup zodra je een leeg vakje op een oudere
+// streek aanklikte (zie tileInfo.ts).
 export const FRONTIER_UITLEG_TITEL = "Bouwen kan alleen op de frontier";
 export const FRONTIER_UITLEG_TEKST =
   "Vanaf nu geldt een belangrijke regel: nieuwe land-improvements bouw je alleen nog op de hoogst ontgrendelde streek, de frontier. Holenrots en de streek erachter blijven op de kaart staan, maar daar is alleen nog een Wachttoren te plaatsen. Trek verder de wildernis in om weer nieuwe grond te kunnen bebouwen.";
@@ -307,8 +326,8 @@ export const FRONTIER_UITLEG_TEKST =
 // er voor het eerst een gebouwde mijn staat (zie economie.ts
 // `heeftGebouwdeMijn`) — dit is het moment waarop het bouwen van een
 // Wachttoren en het opleiden van een strijder allebei relevant worden, ná de
-// erts-introductie hierboven maar vóór VIJAND_AAN_DE_HORIZON een wachttoren
-// noemde.
+// erts/mijn-introductie via VIJAND_AAN_DE_HORIZON_* hierboven (sinds "Tweede
+// streek boerderij" allebei streek 3).
 export const STRIJDERS_OPLEIDEN_TITEL = "Strijders opleiden";
 export const STRIJDERS_OPLEIDEN_TEKST =
   "Bouw nu een wachttoren. Leidt tegelijkertijd een strijder op. Klik op de stad en begin de opleiding van een strijder. Zodra hij klaar is, klik je op de wachttoren zelf op de kaart en kies je Wachttoren bemannen om hem toe te wijzen.";
