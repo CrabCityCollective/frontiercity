@@ -38,15 +38,15 @@ test("amberOntdektEvent wordt precies één keer gezet, zodra AMBER_ONTDEKKING_S
 });
 
 // Softlock-preventie (issue: "Amberader sowieso op streek 12"): een tweede
-// gegarandeerde Amberader-locatie op streek 11, positie 2 — een bergvakje —
+// gegarandeerde Amberader-locatie op streek 12, positie 2 — een bergvakje —
 // zodat een speler die de eerste Amberader liet uitputten zonder Markt nog
-// op tijd goud kan opbouwen vóór de Bezette Streek (streek 12) Offer
+// op tijd goud kan opbouwen vóór de Bezette Streek (streek 13) Offer
 // Altaar/Legerkamp vereist.
 test("tweedeAmberOntdektEvent wordt precies één keer gezet, zodra AMBER_ONTDEKKING_STREEK_2 voor het eerst ontgrendelt", () => {
   let state = maakInitieleSpelStatus();
-  const streek11 = state.streken.find((l) => l.hoogte === AMBER_ONTDEKKING_STREEK_2)!;
-  assert.equal(streek11.tiles[2].amber, true, "de gegarandeerde tweede amberader-vondst");
-  assert.equal(streek11.tiles[2].terrein, "berg", "op een berg- of heuvelvakje, zoals de eerste Amberader");
+  const streek12 = state.streken.find((l) => l.hoogte === AMBER_ONTDEKKING_STREEK_2)!;
+  assert.equal(streek12.tiles[2].amber, true, "de gegarandeerde tweede amberader-vondst");
+  assert.equal(streek12.tiles[2].terrein, "berg", "op een berg- of heuvelvakje, zoals de eerste Amberader");
 
   state = { ...state, cultuur: cultuurKostenVoorStreek(AMBER_ONTDEKKING_STREEK_2) };
 
@@ -65,21 +65,21 @@ test("tweedeAmberOntdektEvent wordt precies één keer gezet, zodra AMBER_ONTDEK
   );
 });
 
-test('streek 12 komt "in beeld" als Bezette Streek i.p.v. normaal te ontgrendelen zodra de cultuurdrempel gehaald wordt', () => {
+test('streek 13 komt "in beeld" als Bezette Streek i.p.v. normaal te ontgrendelen zodra de cultuurdrempel gehaald wordt', () => {
   const state = metBezetteStreekInBeeld();
-  const streek12 = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
+  const streek13 = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
 
-  assert.equal(streek12.ontgrendeld, false, "de streek blijft vergrendeld — de frontier blijft op streek 11 staan");
-  assert.equal(streek12.bezet, true);
+  assert.equal(streek13.ontgrendeld, false, "de streek blijft vergrendeld — de frontier blijft op streek 12 staan");
+  assert.equal(streek13.bezet, true);
   assert.equal(state.bezetteStreekOntdektEvent, true);
-  assert.equal(streek12.tiles.every((t) => t.verhuld), true, "elk vakje is individueel verhuld");
+  assert.equal(streek13.tiles.every((t) => t.verhuld), true, "elk vakje is individueel verhuld");
 
-  const inhoudTypes = streek12.tiles.map((t) => t.bezetteStreekInhoud).filter(Boolean);
+  const inhoudTypes = streek13.tiles.map((t) => t.bezetteStreekInhoud).filter(Boolean);
   assert.equal(inhoudTypes.length, 8, "8 van de 9 vakjes dragen vaste vijandelijke/cosmetische inhoud");
-  assert.equal(streek12.tiles[4].bezetteStreekInhoud, undefined, "het middelste vakje blijft neutraal");
+  assert.equal(streek13.tiles[4].bezetteStreekInhoud, undefined, "het middelste vakje blijft neutraal");
 
-  assert.equal(state.streken.find((l) => l.hoogte === 11)!.ontgrendeld, true, "streek 11 ontgrendelt gewoon normaal");
-  assert.equal(state.streken.find((l) => l.hoogte === 13)!.ontgrendeld, false, "streek 13 blijft geblokkeerd achter de Bezette Streek");
+  assert.equal(state.streken.find((l) => l.hoogte === 12)!.ontgrendeld, true, "streek 12 ontgrendelt gewoon normaal");
+  assert.equal(state.streken.find((l) => l.hoogte === 14)!.ontgrendeld, false, "streek 14 blijft geblokkeerd achter de Bezette Streek");
 });
 
 test("cultuur-voortgang bevriest volledig zolang de Bezette Streek actief is, ook met Heiligdom-productie elders", () => {
@@ -283,9 +283,9 @@ test("Deel 6, uitgebreid (issue: laatste confrontatie tweaken): een nog niet ver
   assert.equal(streek12.ontgrendeld, false);
 
   assert.deepEqual(
-    bereikbarePosities(state.streken, { hoogte: 11, positieInStreek: 4 }).find((p) => p.hoogte === 12),
+    bereikbarePosities(state.streken, { hoogte: 12, positieInStreek: 4 }).find((p) => p.hoogte === 13),
     undefined,
-    "de settler kan nog niet naar streek 12 bewegen"
+    "de settler kan nog niet naar streek 13 bewegen"
   );
   assert.equal(
     startBouw(state, BEZETTE_STREEK_HOOGTE, WACHTTOREN, 2).streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!.tiles[2]

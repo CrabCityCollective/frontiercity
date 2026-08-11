@@ -6,28 +6,28 @@ import { AMBERADER, BARAKKEN, GROTE_TEMPEL, OFFER_ALTAAR } from "./improvements"
 import { GameState, Improvement } from "./types";
 import { HEILIGDOM, LEGERKAMP, WACHTTOREN } from "./testHelpers";
 
-// Streek 7, positie 0 is in world.ts vastgelegd als de gegarandeerde eerste
+// Streek 8, positie 0 is in world.ts vastgelegd als de gegarandeerde eerste
 // amberader-vondst (TUTORIAL_AMBER); positie 1 op diezelfde streek is ook
 // heuvel/berg-terrein maar zonder amberader.
 test("Amberader mag alleen gebouwd worden op een vakje met een amberader-vondst, niet op elk heuvel/bergvakje", () => {
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
-    streken: state.streken.map((streek) => (streek.hoogte === 7 ? { ...streek, ontgrendeld: true } : streek)),
+    streken: state.streken.map((streek) => (streek.hoogte === 8 ? { ...streek, ontgrendeld: true } : streek)),
   };
-  const streek7 = state.streken.find((l) => l.hoogte === 7)!;
-  assert.equal(streek7.tiles[0].amber, true);
-  assert.equal(streek7.tiles[1].amber, false, "heuvel/berg-terrein zonder amberader-vondst");
+  const streek8 = state.streken.find((l) => l.hoogte === 8)!;
+  assert.equal(streek8.tiles[0].amber, true);
+  assert.equal(streek8.tiles[1].amber, false, "heuvel/berg-terrein zonder amberader-vondst");
 
-  const nietGeplaatst = startBouw(state, 7, AMBERADER, 1);
+  const nietGeplaatst = startBouw(state, 8, AMBERADER, 1);
   assert.equal(
-    nietGeplaatst.streken.find((l) => l.hoogte === 7)!.tiles[1].status,
+    nietGeplaatst.streken.find((l) => l.hoogte === 8)!.tiles[1].status,
     "leeg",
     "een gewoon heuvel/bergvakje zonder amberader is geen geldig Amberader-doel"
   );
 
-  const welGeplaatst = startBouw(state, 7, AMBERADER, 0);
-  assert.equal(welGeplaatst.streken.find((l) => l.hoogte === 7)!.tiles[0].status, "in_aanbouw");
+  const welGeplaatst = startBouw(state, 8, AMBERADER, 0);
+  assert.equal(welGeplaatst.streken.find((l) => l.hoogte === 8)!.tiles[0].status, "in_aanbouw");
 });
 
 test("AMBERADER.uitputtingBeurten valt binnen de 'gewoon'-range uit het issue (10-14 beurten)", () => {

@@ -10,22 +10,24 @@ import { maakInitieleWereld } from "./world";
 
 export const OPSLAG_CAP = 30;
 
-// Startgrondstoffen (issue: "je begint met bijna geen grondstoffen, alleen
-// net genoeg om een houtkap te bouwen"): precies genoeg steen voor een
-// Houtkap (kosten: `steen: 6`) en niets daarnaast — een Steengroeve, Mijn of
-// Boerderij is bij de start dus nog niet te betalen.
+// Startgrondstoffen (issue: "jagen en farmen omdraaien" — Houtkap schuift
+// naar streek 2, dus op streek 1 is alleen Steengroeve en Heiligdom
+// bouwbaar): precies genoeg hout en steen voor exact die twee (Steengroeve
+// `hout: 6`, Heiligdom `hout: 4, steen: 4` — samen hout 10, steen 4) en
+// niets daarnaast. Zonder een Houtkap is er op streek 1 geen lopende
+// hout-productie, dus dit bedrag moet in zijn geheel uit de startvoorraad
+// komen.
 const STARTVOORRAAD: Record<MateriaalType, number> = {
-  hout: 0,
-  steen: 6,
+  hout: 10,
+  steen: 4,
   erts: 0,
   goud: 0,
 };
 
-// Startvoedsel (issue: "genoeg voedsel om het net genoeg beurten te
-// overleven zodat de houtkap, plus de wegen ernaartoe, net klaar zijn"):
-// afgestemd op het bouw/wegen-tempo van de openingszet — genoeg om de
-// Houtkap (2 beurten bouwtijd + 1-2 beurten wegaanleg) te overbruggen,
-// waarna de voedselwaarschuwing verschijnt en een Boerderij nodig wordt.
+// Startvoedsel: overbrugt de openingsbeurten tot de jacht op gang komt (de
+// enige voedselbron tot de Boerderij op streek 3) — de settler moet eerst
+// een kudde vinden en bejagen, waarna de voedselwaarschuwing-pop-up bijspringt
+// als het toch krap wordt.
 const VOEDSEL_START = 14;
 
 export function maakInitieleSpelStatus(): GameState {

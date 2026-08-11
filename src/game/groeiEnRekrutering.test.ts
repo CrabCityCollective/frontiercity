@@ -20,7 +20,7 @@ import { GameState } from "./types";
 import { VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
 import {
   HEILIGDOM,
-  metBeschermendeWachttorenOpStreek11,
+  metBeschermendeWachttorenOpStreek12,
   metBezetteStreekEnVerkenner,
   metVasteRandom,
   WACHTTOREN,
@@ -195,7 +195,7 @@ test("Barakken levert een vaste, stad-brede legerwaarde-bonus die meetelt bij zo
   // meetelt in de eigen legerwaarde tegenover een fors dreigingsniveau.
   let bezetteStreekStaat = metBezetteStreekEnVerkenner();
   bezetteStreekStaat = verken(bezetteStreekStaat, 0);
-  bezetteStreekStaat = metBeschermendeWachttorenOpStreek11(bezetteStreekStaat);
+  bezetteStreekStaat = metBeschermendeWachttorenOpStreek12(bezetteStreekStaat);
   bezetteStreekStaat = { ...bezetteStreekStaat, stad: { ...bezetteStreekStaat.stad, cityImprovements: [BARAKKEN] } };
   const resultaat = metVasteRandom(0, () => confrontatieBezetteStreek(bezetteStreekStaat, 0));
   assert.equal(

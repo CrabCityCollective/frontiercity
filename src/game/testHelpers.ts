@@ -147,13 +147,15 @@ export function metWegCorridorNaarStreek(state: GameState, totHoogte: number): G
   };
 }
 
-export function metBeschermendeWachttorenOpStreek11(state: GameState): GameState {
-  let s = metWegCorridorNaarStreek(state, 11);
+// Streek 12 (de streek direct onder de Bezette Streek, BEZETTE_STREEK_HOOGTE
+// = 13 — verschoven van 11/12 door "jagen en farmen omdraaien").
+export function metBeschermendeWachttorenOpStreek12(state: GameState): GameState {
+  let s = metWegCorridorNaarStreek(state, 12);
   s = {
     ...s,
-    stad: { ...s.stad, strijders: [{ id: "strijder-wachter", wachttoren: { hoogte: 11, positieInStreek: 4 } }] },
+    stad: { ...s.stad, strijders: [{ id: "strijder-wachter", wachttoren: { hoogte: 12, positieInStreek: 4 } }] },
     streken: s.streken.map((streek) =>
-      streek.hoogte !== 11
+      streek.hoogte !== 12
         ? streek
         : {
             ...streek,

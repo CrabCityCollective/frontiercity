@@ -63,13 +63,15 @@ const INDRINGERS_MALUS_KANS = 0.1;
 // richtwaarde, tunebaar.
 const INDRINGERS_BUIT_GOUD = 6;
 
-// Kuddes verschijnen pas vanaf `KUDDE_MIN_STREEK` (issue: "vanaf streek 4 mogen
-// kuddes voorkomen"). KUDDE_KANS verstreekd van 0,15 naar 0,05 (issue: "kudde
-// frequentie verstreken") — bij de oude 15%/beurt, zonder natuurlijk verval van
-// een ongejaagde kudde (alleen leegjagen of overbouwen verwijdert er een),
-// stapelden kuddes zich in de praktijk sneller op dan een actief jagende
-// speler kon bijhouden. Zie hoofdstuk 14 voor de doorrekening.
-const KUDDE_MIN_STREEK = 4;
+// Kuddes verschijnen vanaf `KUDDE_MIN_STREEK` (issue: "jagen en farmen
+// omdraaien" — de jacht is nu vanaf streek 1 de eerste voedselbron, dus
+// kuddes moeten daar al kunnen verschijnen; was voorheen streek 4). KUDDE_KANS
+// verstreekd van 0,15 naar 0,05 (issue: "kudde frequentie verstreken") — bij
+// de oude 15%/beurt, zonder natuurlijk verval van een ongejaagde kudde
+// (alleen leegjagen of overbouwen verwijdert er een), stapelden kuddes zich
+// in de praktijk sneller op dan een actief jagende speler kon bijhouden. Zie
+// hoofdstuk 14 voor de doorrekening.
+const KUDDE_MIN_STREEK = 1;
 const KUDDE_KANS = 0.05;
 const KUDDE_JACHT_BEURTEN = 4;
 

@@ -203,8 +203,9 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // hieronder).
   const [stadUpgradeUitlegBevestigd, setStadUpgradeUitlegBevestigd] = useState(false);
   // "De vijand aan de horizon"- en "Goddelijke raadgeving"-pop-ups (issue:
-  // "tutorial popups wijzigen"): zelfde eenmalige-confirm-vlaggen, getoond
-  // zodra respectievelijk streek 2 (Militair/Wachttoren) en streek 3
+  // "tutorial popups wijzigen", trigger van de laatste verschoven van streek 3
+  // naar 4 door "jagen en farmen omdraaien"): zelfde eenmalige-confirm-vlaggen,
+  // getoond zodra respectievelijk streek 2 (Militair/Wachttoren) en streek 4
   // (Wetenschappelijk/Sterrencirkel) voor het eerst ontgrendeld worden — zie
   // `toonVijandAanDeHorizonPopup`/`toonGoddelijkeRaadgevingPopup` hieronder.
   const [vijandAanDeHorizonBevestigd, setVijandAanDeHorizonBevestigd] = useState(false);
@@ -219,10 +220,11 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // waarom de Wachttoren (anders dan alle andere bouwwerken) op elke
   // ontgrendelde streek te plaatsen is.
   const [wachttorenOveralUitlegBevestigd, setWachttorenOveralUitlegBevestigd] = useState(false);
-  // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-
-  // confirm-vlag, getoond zodra streek 4 voor het eerst ontgrendelt — het
-  // moment waarop de jacht als tweede voedselbron beschikbaar komt (naast de
-  // boerderij, al uitgelegd via BoerderijKlaarUitlegPopup).
+  // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van
+  // streek 4 naar streek 1 door "jagen en farmen omdraaien"): zelfde
+  // eenmalige-confirm-vlag, getoond zodra streek 1 voor het eerst ontgrendelt
+  // — vrijwel meteen, het moment waarop de jacht de enige voedselbron is (de
+  // boerderij komt pas later bij, uitgelegd via BoerderijKlaarUitlegPopup).
   const [voedselBalansUitlegBevestigd, setVoedselBalansUitlegBevestigd] = useState(false);
   // Settler-acties-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-
   // confirm-vlag, getoond zodra de settler in beurt 2 verschijnt — legt de
@@ -536,8 +538,9 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !frontierUitlegBevestigd &&
     hoogsteOntgrendeldeStreek(state.streken) >= 2;
-  // "Goddelijke raadgeving"-pop-up (issue: "tutorial popups wijzigen"): zodra
-  // streek 3 voor het eerst ontgrendelt — het moment waarop Wetenschappelijk/de
+  // "Goddelijke raadgeving"-pop-up (issue: "tutorial popups wijzigen", trigger
+  // verschoven van streek 3 naar 4 door "jagen en farmen omdraaien"): zodra
+  // streek 4 voor het eerst ontgrendelt — het moment waarop Wetenschappelijk/de
   // Sterrencirkel beschikbaar komt (zie improvements.ts: `minStreek`).
   const toonGoddelijkeRaadgevingPopup =
     !toonStreekPopup &&
@@ -547,11 +550,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     uitlegAan &&
     !goddelijkeRaadgevingBevestigd &&
-    hoogsteOntgrendeldeStreek(state.streken) >= 3;
-  // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"):
-  // zodra er voor het eerst een actieve, wegverbonden boerderij meeproduceert
-  // — de introductie van het Heiligdom/cultuur (issue: "tutorial popups
-  // wijzigen").
+    hoogsteOntgrendeldeStreek(state.streken) >= 4;
+  // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen",
+  // inhoud aangepast door "jagen en farmen omdraaien"): zodra er voor het
+  // eerst een actieve, wegverbonden boerderij meeproduceert — dat is nu ten
+  // vroegste streek 3, en dit introduceert de boerderij als tweede
+  // voedselbron naast de jacht (het Heiligdom/de Wachttoren zijn dan al
+  // langer bekend, zie tutorialContent.ts: `BOERDERIJ_KLAAR_TEKST`).
   const toonBoerderijKlaarUitlegPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
@@ -580,7 +585,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     heeftGebouwdeMijn(state);
   // Bezette-Streek-intro (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 2 — vervangt de eerdere, kleinere MilitairUitlegPopup):
-  // verschijnt zodra `verwerkStreekOntgrendeling` (economie.ts) streek 12 "in
+  // verschijnt zodra `verwerkStreekOntgrendeling` (economie.ts) streek 13 "in
   // beeld" brengt. Los van de uitleg-toggle (kerninhoud, geen uitleg, net als
   // de indringers-/amberader-pop-ups) — daarom hier bewust géén `uitlegAan`-
   // check, ook al staat de flag qua prioriteit tussen de uitleg-pop-ups in.
@@ -827,10 +832,11 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !wachttorenOveralUitlegBevestigd &&
     hoogsteOntgrendeldeStreek(state.streken) >= 2;
-  // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg"): direct na de pop-up
-  // hierboven, zelfde lage prioriteit — verschijnt zodra streek 4 voor het
-  // eerst ontgrendelt, het moment waarop de jacht als tweede voedselbron
-  // beschikbaar komt naast de boerderij.
+  // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
+  // van streek 4 naar streek 1 door "jagen en farmen omdraaien"): direct na
+  // de pop-up hierboven, zelfde lage prioriteit — verschijnt al zodra streek
+  // 1 ontgrendelt (dus vrijwel altijd, streek 1 is al bij de start
+  // ontgrendeld), het moment waarop de jacht de enige voedselbron is.
   const toonVoedselBalansUitlegPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
@@ -855,7 +861,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonWachttorenOveralUitlegPopup &&
     uitlegAan &&
     !voedselBalansUitlegBevestigd &&
-    hoogsteOntgrendeldeStreek(state.streken) >= 4;
+    hoogsteOntgrendeldeStreek(state.streken) >= 1;
   // Settler-acties-uitleg-pop-up (issue: "meer uitleg"): zelfde lage
   // prioriteit als de twee pop-ups hierboven — verschijnt zodra de settler in
   // beurt 2 verschijnt (zelfde trigger als SettlerUitlegPopup), en legt de

@@ -26,12 +26,15 @@ const KUDDE_VOEDSEL_PER_BEURT = 3;
 // (hoofdstuk 16: bouw-ritme).
 const HOUTHAKKEN_HOUT_PER_BEURT = 1;
 
-// Roofdieren (hoofdstuk 14/17, issue: "roofdieren toevoegen"): vanaf
-// `ROOFDIER_MIN_STREEK` heeft elke jachtactie (niet elke beurt/streek zoals
-// indringers/kuddes in indringersEnDieren.ts) een kans om een roofdier op te
-// roepen op het jachtvakje zelf. Bewuste MVP-placeholder, net als de overige
+// Roofdieren (hoofdstuk 14/17, issue: "roofdieren toevoegen"; verschoven naar
+// streek 1, issue: "jagen en farmen omdraaien" — nu de jacht al vanaf streek
+// 1 de belangrijkste voedselbron is, hoort het roofdier-risico er vanaf het
+// begin bij, niet pas veel later): vanaf `ROOFDIER_MIN_STREEK` heeft elke
+// jachtactie (niet elke beurt/streek zoals indringers/kuddes in
+// indringersEnDieren.ts) een kans om een roofdier op te roepen op het
+// jachtvakje zelf. Bewuste MVP-placeholder, net als de overige
 // tuning-getallen hierboven.
-const ROOFDIER_MIN_STREEK = 5;
+const ROOFDIER_MIN_STREEK = 1;
 const ROOFDIER_KANS = 0.15;
 
 // Verplaatst de settler naar een aangeklikte tile (issue: "de tegels waar je

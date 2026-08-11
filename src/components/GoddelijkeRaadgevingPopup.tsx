@@ -6,8 +6,9 @@ interface GoddelijkeRaadgevingPopupProps {
   onDoorgaan: () => void;
 }
 
-// Goddelijke-raadgeving-pop-up (issue: "tutorial popups wijzigen"), getoond
-// zodra streek 3 ontgrendelt (zie GameRoot: `toonGoddelijkeRaadgevingPopup`) —
+// Goddelijke-raadgeving-pop-up (issue: "tutorial popups wijzigen", trigger
+// verschoven van streek 3 naar 4 door "jagen en farmen omdraaien"), getoond
+// zodra streek 4 ontgrendelt (zie GameRoot: `toonGoddelijkeRaadgevingPopup`) —
 // dit is het moment waarop Wetenschappelijk/de Sterrencirkel voor het eerst
 // beschikbaar komt. Zelfde blokkerende overlay als de andere uitleg-pop-ups.
 export default function GoddelijkeRaadgevingPopup({ onDoorgaan }: GoddelijkeRaadgevingPopupProps) {

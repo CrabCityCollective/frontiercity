@@ -6,9 +6,10 @@ interface VoedselBalansUitlegPopupProps {
   onDoorgaan: () => void;
 }
 
-// Voedsel-balans-uitleg-pop-up (issue: "meer uitleg"), getoond zodra streek 4
-// voor het eerst ontgrendelt — zelfde blokkerende overlay als de andere
-// uitleg-pop-ups (BoerderijKlaarUitlegPopup, VoedselWaarschuwingPopup, ...).
+// Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van
+// streek 4 naar streek 1 door "jagen en farmen omdraaien"), getoond zodra
+// streek 1 voor het eerst ontgrendelt — zelfde blokkerende overlay als de
+// andere uitleg-pop-ups (BoerderijKlaarUitlegPopup, VoedselWaarschuwingPopup, ...).
 export default function VoedselBalansUitlegPopup({ onDoorgaan }: VoedselBalansUitlegPopupProps) {
   return (
     <div
