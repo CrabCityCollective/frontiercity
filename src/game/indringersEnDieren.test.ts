@@ -81,6 +81,21 @@ test("verwerkKuddes meldt een nieuwe kudde via kuddeEvent", () => {
   assert.deepEqual(tile.kudde, { beurtenResterend: 4 });
 });
 
+// Issue: "Eerste streek gegarandeerd een kudde" — zonder deze garantie hing
+// de allereerste jachtkans volledig af van de willekeurige `verwerkKuddes`-
+// trekking (5% per beurt), wat bij pech de startvoorraad voedsel kon laten
+// opraken vóór er ooit een kudde verscheen (jacht is de enige voedselbron tot
+// de Boerderij op streek 3).
+test("maakInitieleSpelStatus garandeert een kudde op streek 1, zodat de eerste jacht nooit van toeval afhangt", () => {
+  const state = maakInitieleSpelStatus();
+  const streek1 = state.streken.find((l) => l.hoogte === 1)!;
+  const kuddeTiles = streek1.tiles.filter((tile) => tile.kudde !== undefined);
+
+  assert.equal(kuddeTiles.length, 1, "precies één gegarandeerde startkudde op streek 1");
+  assert.deepEqual(kuddeTiles[0].kudde, { beurtenResterend: 4 });
+  assert.notEqual(kuddeTiles[0].status, "actief", "de startkudde staat niet op het stad-vakje");
+});
+
 test("een werkende Wachttoren beschermt ook de streek eronder, niet alleen zijn eigen streek (issue: wachttoren beschermt 2 streken)", () => {
   let state = maakInitieleSpelStatus();
   state = {
