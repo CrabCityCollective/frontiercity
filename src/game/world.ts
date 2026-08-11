@@ -36,13 +36,19 @@ export function isBezetteStreekHoogte(hoogte: number): boolean {
 export const KUDDE_JACHT_BEURTEN = 4;
 
 // Positie op streek 1 van de gegarandeerde startkudde (issue: "Eerste streek
-// gegarandeerd een kudde"): tot dusver verscheen de allereerste kudde pas via
-// de gewone, willekeurige `verwerkKuddes`-trekking (KUDDE_KANS = 5% per
-// beurt) — bij pech kon dat zo lang duren dat de startvoorraad voedsel
+// gegarandeerd een kudde"; timing sindsdien verschoven, issue: "genoeg hout om
+// ook boerderij te bouwen" — de kudde verschijnt nu pas zodra de speler de
+// Steengroeve op streek 1 voltooid heeft, zie `verwerkEersteKudde` in
+// indringersEnDieren.ts, in plaats van al bij de allereerste blik op de kaart
+// te staan). Zonder deze garantie zou de allereerste kudde pas via de gewone,
+// willekeurige `verwerkKuddes`-trekking (KUDDE_KANS = 5% per beurt)
+// verschijnen — bij pech kon dat zo lang duren dat de startvoorraad voedsel
 // (VOEDSEL_START, initieleSpelStatus.ts) al op was voordat er ooit een kudde
 // verscheen, zonder enige manier om dat af te wenden. Jacht is de enige
-// voedselbron tot de Boerderij op streek 3 (zie initieleSpelStatus.ts), dus
-// een ontbrekende eerste kudde was een gegarandeerde softlock.
+// voedselbron tot de Boerderij op streek 2 (zie initieleSpelStatus.ts), dus
+// een ontbrekende eerste kudde was een gegarandeerde softlock — de
+// Steengroeve-koppeling blijft even deterministisch (geen toevalstrekking),
+// alleen nu bewust later.
 // Positie 5, pal naast het enige heuvel-vakje van streek 1 (positie 6, de
 // enige geldige Steengroeve-plek — zie TUTORIAL_TILE_TERREIN hieronder)
 // (issue: "Eerste streek kudde naast de steengroeve" — de kudde moet
@@ -258,14 +264,9 @@ function maakStartStreek(): Streek {
       effect: { type: "stad" },
     },
   };
-  // Gegarandeerde startkudde (zie STARTKUDDE_POSITIE hierboven) — elke run
-  // begint hiermee, in plaats van te wachten op de willekeurige
-  // `verwerkKuddes`-trekking.
-  tiles[STARTKUDDE_POSITIE] = {
-    ...tiles[STARTKUDDE_POSITIE],
-    kudde: { beurtenResterend: KUDDE_JACHT_BEURTEN },
-  };
-
+  // Geen kudde meer bij het begin van de run (zie STARTKUDDE_POSITIE
+  // hierboven): `verwerkEersteKudde` in indringersEnDieren.ts zet 'm pas neer
+  // zodra de Steengroeve hier voltooid is.
   return {
     hoogte: 1,
     ontgrendeld: true,

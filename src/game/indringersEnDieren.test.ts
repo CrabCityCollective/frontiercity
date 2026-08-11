@@ -13,7 +13,7 @@ import {
 import { startBouw } from "./infrastructuurEnBouw";
 import { AMBERADER } from "./improvements";
 import { GameState } from "./types";
-import { metSettlerOpKuddeVakje, metRandomReeks, metVasteRandom, WACHTTOREN } from "./testHelpers";
+import { metSettlerOpKuddeVakje, metRandomReeks, metVasteRandom, STEENGROEVE, WACHTTOREN } from "./testHelpers";
 
 test("een roofdier valt pas de beurt ná verschijnen aan, en doodt de settler als die er dan nog op staat", () => {
   let state = metSettlerOpKuddeVakje(5);
@@ -85,15 +85,34 @@ test("verwerkKuddes meldt een nieuwe kudde via kuddeEvent", () => {
 // de allereerste jachtkans volledig af van de willekeurige `verwerkKuddes`-
 // trekking (5% per beurt), wat bij pech de startvoorraad voedsel kon laten
 // opraken vóór er ooit een kudde verscheen (jacht is de enige voedselbron tot
-// de Boerderij op streek 3).
-test("maakInitieleSpelStatus garandeert een kudde op streek 1, zodat de eerste jacht nooit van toeval afhangt", () => {
-  const state = maakInitieleSpelStatus();
-  const streek1 = state.streken.find((l) => l.hoogte === 1)!;
-  const kuddeTiles = streek1.tiles.filter((tile) => tile.kudde !== undefined);
+// de Boerderij op streek 2). Timing verschoven, issue: "genoeg hout om ook
+// boerderij te bouwen" — de garantie geldt nu pas zodra de Steengroeve op
+// streek 1 voltooid is, in plaats van al bij de allereerste blik op de kaart.
+test("de startkudde op streek 1 verschijnt pas zodra de Steengroeve voltooid is, gegarandeerd (geen toevalstrekking)", () => {
+  let state = maakInitieleSpelStatus();
+  const streek1Voor = state.streken.find((l) => l.hoogte === 1)!;
+  assert.equal(
+    streek1Voor.tiles.some((tile) => tile.kudde !== undefined),
+    false,
+    "nog geen kudde vóór de Steengroeve gebouwd is"
+  );
 
-  assert.equal(kuddeTiles.length, 1, "precies één gegarandeerde startkudde op streek 1");
+  state = startBouw(state, 1, STEENGROEVE, 6);
+  // Vaste random 1 (nooit onder KUDDE_KANS) zodat alleen de garantie, en geen
+  // toevalstrekking van `verwerkKuddes`, hier een kudde kan neerzetten.
+  state = metVasteRandom(1, () => volgendeBeurt(state)); // 1 van 2 bouwbeurten
+  state = metVasteRandom(1, () => volgendeBeurt(state)); // Steengroeve (hout 6 / bouwtijd 2) is nu voltooid
+
+  const streek1 = state.streken.find((l) => l.hoogte === 1)!;
+  assert.equal(streek1.tiles[6].improvement?.id, "steengroeve");
+  assert.equal(streek1.tiles[6].status, "actief", "de Steengroeve moet na 2 beurten voltooid zijn");
+
+  const kuddeTiles = streek1.tiles.filter((tile) => tile.kudde !== undefined);
+  assert.equal(kuddeTiles.length, 1, "precies één gegarandeerde startkudde, verschenen zodra de Steengroeve klaar is");
   assert.deepEqual(kuddeTiles[0].kudde, { beurtenResterend: 4 });
   assert.notEqual(kuddeTiles[0].status, "actief", "de startkudde staat niet op het stad-vakje");
+  assert.deepEqual(state.kuddeEvent, { hoogte: 1, positieInStreek: 5 });
+  assert.equal(state.eersteKuddeVerschenen, true);
 });
 
 test("een werkende Wachttoren beschermt ook de streek eronder, niet alleen zijn eigen streek (issue: wachttoren beschermt 2 streken)", () => {
