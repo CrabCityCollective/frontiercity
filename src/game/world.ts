@@ -42,11 +42,14 @@ export const KUDDE_JACHT_BEURTEN = 4;
 // (VOEDSEL_START, initieleSpelStatus.ts) al op was voordat er ooit een kudde
 // verscheen, zonder enige manier om dat af te wenden. Jacht is de enige
 // voedselbron tot de Boerderij op streek 3 (zie initieleSpelStatus.ts), dus
-// een ontbrekende eerste kudde was een gegarandeerde softlock. Positie 1 (drie
-// vakjes van de stad op positie 4) ligt bewust niet direct naast de stad — de
-// speler moet de settler er nog wel echt naartoe sturen, net als bij elke
-// latere kudde, maar niet tot aan de rand van de streek.
-export const STARTKUDDE_POSITIE = 1;
+// een ontbrekende eerste kudde was een gegarandeerde softlock.
+// Positie 5, pal naast het enige heuvel-vakje van streek 1 (positie 6, de
+// enige geldige Steengroeve-plek — zie TUTORIAL_TILE_TERREIN hieronder)
+// (issue: "Eerste streek kudde naast de steengroeve" — de kudde moet
+// herkenbaar bij de Steengroeve staan, niet op een willekeurig, ongerelateerd
+// vakje). Bewust niet op positie 6 zelf: dat vakje is voor de Steengroeve
+// gereserveerd, een kudde staat er los naast.
+export const STARTKUDDE_POSITIE = 5;
 
 // Vaste (niet-procedurele) terreintypes voor de tutorial-streken — de tutorial is
 // vastgelegde inhoud, geen random worldgen zoals bij latere campagnes (hoofdstuk 8).
