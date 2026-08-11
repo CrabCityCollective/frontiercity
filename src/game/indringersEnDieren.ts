@@ -15,7 +15,7 @@
 // staat (`verwerkRoofdieren` hieronder).
 
 import { GameState, IndringersTribuut, KuddeEvent, Streek, MateriaalType, RoofdierEvent, Strijder, Tile } from "./types";
-import { hoogsteOntgrendeldeStreek } from "./world";
+import { hoogsteOntgrendeldeStreek, KUDDE_JACHT_BEURTEN } from "./world";
 import { kuddeKansFactor } from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
 import { isTileVerbondenMetStad } from "./wegen";
@@ -73,7 +73,6 @@ const INDRINGERS_BUIT_GOUD = 6;
 // hoofdstuk 14 voor de doorrekening.
 const KUDDE_MIN_STREEK = 1;
 const KUDDE_KANS = 0.05;
-const KUDDE_JACHT_BEURTEN = 4;
 
 // Een Wachttoren beschermt de streek waarop hij staat alleen als hij voltooid,
 // bemand én via een aaneengesloten wegketen met de stad verbonden is (issue:

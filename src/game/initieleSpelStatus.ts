@@ -26,9 +26,15 @@ const STARTVOORRAAD: Record<MateriaalType, number> = {
 
 // Startvoedsel: overbrugt de openingsbeurten tot de jacht op gang komt (de
 // enige voedselbron tot de Boerderij op streek 3) — de settler moet eerst
-// een kudde vinden en bejagen, waarna de voedselwaarschuwing-pop-up bijspringt
-// als het toch krap wordt.
-const VOEDSEL_START = 14;
+// naar de kudde toe lopen (sinds issue: "Eerste streek gegarandeerd een
+// kudde" gegarandeerd aanwezig op streek 1, zie STARTKUDDE_POSITIE in
+// world.ts) en die vervolgens bejagen, waarna de voedselwaarschuwing-pop-up
+// bijspringt als het toch krap wordt. Verhoogd van 14 naar 20 (zelfde issue)
+// — de settler staat pas vanaf beurt 2 klaar (hoofdstuk 16) en heeft
+// daarna nog meerdere beurten nodig om te lopen vóór de eerste jachtbeurt
+// iets oplevert; 14 liet daarvoor nauwelijks marge over voor een extra beurt
+// (bv. eerst een weg aanleggen, of pech met een roofdier onderweg).
+const VOEDSEL_START = 20;
 
 export function maakInitieleSpelStatus(): GameState {
   return {

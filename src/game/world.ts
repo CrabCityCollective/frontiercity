@@ -27,6 +27,27 @@ export function isBezetteStreekHoogte(hoogte: number): boolean {
   return hoogte === BEZETTE_STREEK_HOOGTE;
 }
 
+// Hoeveel jachtbeurten een kudde in totaal biedt voordat ze uitgeput is en
+// verder trekt (hoofdstuk 17). Hier gedefinieerd (i.p.v. lokaal in
+// indringersEnDieren.ts, dat er ook mee rekent) zodat `maakStartStreek`
+// hieronder dezelfde waarde kan gebruiken voor de gegarandeerde startkudde,
+// zonder een circulaire import (indringersEnDieren.ts importeert al van
+// world.ts, niet andersom).
+export const KUDDE_JACHT_BEURTEN = 4;
+
+// Positie op streek 1 van de gegarandeerde startkudde (issue: "Eerste streek
+// gegarandeerd een kudde"): tot dusver verscheen de allereerste kudde pas via
+// de gewone, willekeurige `verwerkKuddes`-trekking (KUDDE_KANS = 5% per
+// beurt) — bij pech kon dat zo lang duren dat de startvoorraad voedsel
+// (VOEDSEL_START, initieleSpelStatus.ts) al op was voordat er ooit een kudde
+// verscheen, zonder enige manier om dat af te wenden. Jacht is de enige
+// voedselbron tot de Boerderij op streek 3 (zie initieleSpelStatus.ts), dus
+// een ontbrekende eerste kudde was een gegarandeerde softlock. Positie 1 (drie
+// vakjes van de stad op positie 4) ligt bewust niet direct naast de stad — de
+// speler moet de settler er nog wel echt naartoe sturen, net als bij elke
+// latere kudde, maar niet tot aan de rand van de streek.
+export const STARTKUDDE_POSITIE = 1;
+
 // Vaste (niet-procedurele) terreintypes voor de tutorial-streken — de tutorial is
 // vastgelegde inhoud, geen random worldgen zoals bij latere campagnes (hoofdstuk 8).
 const TUTORIAL_TERREINTYPES = [
@@ -228,6 +249,13 @@ function maakStartStreek(): Streek {
       bouwtijdBeurten: 0,
       effect: { type: "stad" },
     },
+  };
+  // Gegarandeerde startkudde (zie STARTKUDDE_POSITIE hierboven) — elke run
+  // begint hiermee, in plaats van te wachten op de willekeurige
+  // `verwerkKuddes`-trekking.
+  tiles[STARTKUDDE_POSITIE] = {
+    ...tiles[STARTKUDDE_POSITIE],
+    kudde: { beurtenResterend: KUDDE_JACHT_BEURTEN },
   };
 
   return {
