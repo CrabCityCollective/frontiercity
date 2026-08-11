@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Frontier City",
     short_name: "Frontier City",
-    description: "De Eerste Vuren — Het Hertenpad-volk",
+    description:
+      "De Frontier spaart niemand. De Geschiedenis blijft zich herhalen. Gaan we het ooit leren?",
     start_url: "/",
     display: "standalone",
     background_color: "#3d2e26",

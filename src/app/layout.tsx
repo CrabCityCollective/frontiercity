@@ -2,13 +2,25 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
+const TAGLINE =
+  "De Frontier spaart niemand. De Geschiedenis blijft zich herhalen. Gaan we het ooit leren?";
+
 export const metadata: Metadata = {
   title: "Frontier City",
-  description: "De Eerste Vuren — Het Hertenpad-volk",
+  description: TAGLINE,
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Frontier City",
+  },
+  openGraph: {
+    title: "Frontier City",
+    description: TAGLINE,
+  },
+  twitter: {
+    card: "summary",
+    title: "Frontier City",
+    description: TAGLINE,
   },
 };
 
