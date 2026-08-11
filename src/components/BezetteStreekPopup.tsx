@@ -7,9 +7,9 @@ interface BezetteStreekPopupProps {
 }
 
 // Bezette-Streek-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
-// missionaris en verkenner", Deel 2): verschijnt zodra streek 12 "in beeld
+// missionaris en verkenner", Deel 2): verschijnt zodra streek 13 "in beeld
 // komt" (economie.ts: `verwerkStreekOntgrendeling` zet `bezetteStreekOntdektEvent`
-// — dezelfde soort trigger als de gegarandeerde Amberader-vondst op streek 7).
+// — dezelfde soort trigger als de gegarandeerde Amberader-vondst op streek 8).
 // Zelfde blokkerende overlay/stijl als de overige dynamische pop-ups
 // (IndringersPopup/KuddePopup) — vervangt de eerdere, kleinere
 // MilitairUitlegPopup volledig.

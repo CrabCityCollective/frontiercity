@@ -152,7 +152,7 @@ export const TECH_TREE: Record<TechId, TechNode> = {
 // Basis en kwadratische factor verdubbeld van 10 naar 20 (issue: "techtree
 // langzamer") — de oorspronkelijke curve (10/20/50) liet de volledige boom
 // al rond beurt 42 voltooien (zie de doorrekening hieronder), ruim vóórdat de
-// Bezette Streek (streek 12, hoofdstuk 6) in beeld komt: wetenschap stapelde
+// Bezette Streek (streek 13, hoofdstuk 6) in beeld komt: wetenschap stapelde
 // zich daarna vrijwel ongebruikt op, dus Verkenning (`VERKENNING_KOSTEN_WETENSCHAP`,
 // streekOntgrendeling.ts, dezelfde wetenschap-pool) hoefde in de praktijk
 // nooit te concurreren met een openstaande techkeuze. De verdubbelde curve
@@ -161,8 +161,11 @@ export const TECH_TREE: Record<TechId, TechNode> = {
 // aan Verkenning.
 //
 // Doorrekening (indicatief, zelfde stijl als de cultuur-doorrekening,
-// hoofdstuk 14): met een near-optimale opening (Houtkap → Boerderij →
-// Steengroeve → Heiligdom, hoofdstuk 14) is het bouw-ritme na het Heiligdom
+// hoofdstuk 14) — LET OP: deze cijfers dateren van vóór "jagen en farmen
+// omdraaien" (Sterrencirkel/Wetenschappelijk schoof van streek 3 naar 4, de
+// openingsbouw is nu Steengroeve/Heiligdom i.p.v. Houtkap → Boerderij →
+// Steengroeve → Heiligdom), en zijn dus indicatief, geen herrekende balans:
+// met een near-optimale opening is het bouw-ritme na het Heiligdom
 // (rond beurt 10) vrij voor een Sterrencirkel — actief rond beurt 17 (2
 // beurten bouwtijd + settler-wegaanleg, zelfde tempo als het Heiligdom).
 // Vanaf dan loopt wetenschap met 2/beurt op (1 Sterrencirkel op de frontier):
@@ -170,7 +173,7 @@ export const TECH_TREE: Record<TechId, TechNode> = {
 // rond beurt 67 — een fors groter en oplopend verschil met de vergelijkbare
 // cultuurstreken (streek 2 ~16, streek 3 ~24, streek 4 ~36) dan voorheen (3
 // tot 9 beurten), en nu ook duidelijk voorbij het moment waarop de Bezette
-// Streek gemiddeld in beeld komt (streek 12, rond beurt 26 bij een
+// Streek gemiddeld in beeld komt (streek 13, rond beurt 26 bij een
 // gemiddelde build, hoofdstuk 14) — precies de gevraagde concurrentie met
 // Verkenning.
 const WETENSCHAP_KOSTEN_BASIS = 20;

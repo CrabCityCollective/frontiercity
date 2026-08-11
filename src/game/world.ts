@@ -1,11 +1,14 @@
-// Bouwt de initiële wereldstaat voor de tutorial ("De Eerste Vuren", streken 1-13).
+// Bouwt de initiële wereldstaat voor de tutorial ("De Eerste Vuren", streken 1-14).
 // Zie frontier-city-design-doc.md hoofdstuk 2 (ruimtelijk model) en hoofdstuk 10 (tutorial-opzet).
 
 import { BezetteStreekInhoud, Streek, TerreinType, Tile } from "./types";
 
 export const BAND_WIDTH_TILES = 9;
 export const STAD_POSITIE = 4; // middelste vakje van de band = stad
-export const TUTORIAL_STREEK_AANTAL = 13;
+// 14 streken (issue: "jagen en farmen omdraaien" — de Boerderij krijgt een
+// eigen streek (3), in plaats van meteen vanaf streek 1 bouwbaar te zijn),
+// één meer dan de oorspronkelijke 13.
+export const TUTORIAL_STREEK_AANTAL = 14;
 
 // Streek van de Bezette Streek ("De Bergkam", hoofdstuk 6, issue: "De Bezette
 // Streek, missionaris en verkenner" — vervangt de eerdere, kleinere
@@ -16,7 +19,9 @@ export const TUTORIAL_STREEK_AANTAL = 13;
 // Confrontatie) leeft in economie.ts en kent alleen deze ene hoogte als
 // tutorial-specifieke scripting — een latere campagne zou hier een eigen
 // hoogte (of meerdere) voor kunnen definiëren.
-export const BEZETTE_STREEK_HOOGTE = 12;
+// Schoof van 12 naar 13 (issue: "jagen en farmen omdraaien" — de nieuwe
+// Boerderij-streek 3 duwt alles vanaf de oude streek 3 een plek op).
+export const BEZETTE_STREEK_HOOGTE = 13;
 
 export function isBezetteStreekHoogte(hoogte: number): boolean {
   return hoogte === BEZETTE_STREEK_HOOGTE;
@@ -27,6 +32,9 @@ export function isBezetteStreekHoogte(hoogte: number): boolean {
 const TUTORIAL_TERREINTYPES = [
   "oevervlakte",
   "rietmoeras",
+  // Nieuwe streek 3 (issue: "jagen en farmen omdraaien" — de Boerderij komt
+  // pas hier, niet meer meteen bouwbaar vanaf streek 1).
+  "akkerland",
   "bosrand",
   "loofbos",
   "heuvelvoet",
@@ -57,17 +65,21 @@ function terreinTypeVoorStreek(hoogte: number): string {
 const TUTORIAL_TILE_TERREIN: Record<number, TerreinType[]> = {
   1: ["vlak", "vlak", "bos", "vlak", "vlak", "vlak", "heuvel", "vlak", "vlak"],
   2: ["vlak", "bos", "vlak", "heuvel", "vlak", "vlak", "vlak", "bos", "vlak"],
-  3: ["bos", "vlak", "bos", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
-  4: ["bos", "bos", "vlak", "bos", "vlak", "heuvel", "bos", "vlak", "bos"],
-  5: ["heuvel", "vlak", "heuvel", "vlak", "vlak", "bos", "heuvel", "vlak", "vlak"],
-  6: ["heuvel", "heuvel", "vlak", "heuvel", "vlak", "bos", "heuvel", "vlak", "heuvel"],
-  7: ["berg", "heuvel", "berg", "bos", "vlak", "heuvel", "berg", "vlak", "heuvel"],
-  8: ["berg", "berg", "heuvel", "bos", "vlak", "berg", "heuvel", "vlak", "berg"],
-  9: ["bos", "bos", "heuvel", "bos", "vlak", "vlak", "bos", "heuvel", "bos"],
-  10: ["vlak", "heuvel", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
-  11: ["berg", "heuvel", "berg", "heuvel", "vlak", "vlak", "bos", "vlak", "heuvel"],
-  12: ["berg", "berg", "heuvel", "berg", "vlak", "vlak", "bos", "heuvel", "berg"],
-  13: ["vlak", "bos", "vlak", "heuvel", "vlak", "vlak", "bos", "heuvel", "vlak"],
+  // Nieuwe streek 3 (issue: "jagen en farmen omdraaien"): vooral vlakke grond
+  // voor de Boerderij, met minstens één bos- en één heuvelvakje (zelfde
+  // mix-conventie als elke andere streek hieronder).
+  3: ["vlak", "vlak", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
+  4: ["bos", "vlak", "bos", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
+  5: ["bos", "bos", "vlak", "bos", "vlak", "heuvel", "bos", "vlak", "bos"],
+  6: ["heuvel", "vlak", "heuvel", "vlak", "vlak", "bos", "heuvel", "vlak", "vlak"],
+  7: ["heuvel", "heuvel", "vlak", "heuvel", "vlak", "bos", "heuvel", "vlak", "heuvel"],
+  8: ["berg", "heuvel", "berg", "bos", "vlak", "heuvel", "berg", "vlak", "heuvel"],
+  9: ["berg", "berg", "heuvel", "bos", "vlak", "berg", "heuvel", "vlak", "berg"],
+  10: ["bos", "bos", "heuvel", "bos", "vlak", "vlak", "bos", "heuvel", "bos"],
+  11: ["vlak", "heuvel", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "vlak"],
+  12: ["berg", "heuvel", "berg", "heuvel", "vlak", "vlak", "bos", "vlak", "heuvel"],
+  13: ["berg", "berg", "heuvel", "berg", "vlak", "vlak", "bos", "heuvel", "berg"],
+  14: ["vlak", "bos", "vlak", "heuvel", "vlak", "vlak", "bos", "heuvel", "vlak"],
 };
 
 function terreinVoorTile(hoogte: number, positieInStreek: number): TerreinType {
@@ -86,7 +98,7 @@ function terreinVoorTile(hoogte: number, positieInStreek: number): TerreinType {
 // boerderij-kandidaat is — plannen waar je een stad sticht versus waar je
 // verbouwt, is een bewuste keuze, geen dwangkeuze.
 const TUTORIAL_VERS_WATER: Record<number, number[]> = {
-  13: [5],
+  14: [5],
 };
 
 function versWaterVoorTile(hoogte: number, positieInStreek: number): boolean {
@@ -97,18 +109,18 @@ function versWaterVoorTile(hoogte: number, positieInStreek: number): boolean {
 // wordt (issue: "toevoeging Goud" Deel 1) — gedeeld met `verwerkStreekOntgrendeling`
 // in economie.ts, die op precies deze streek de ontdekkings-pop-up (hoofdstuk
 // 3/14) triggert.
-export const AMBER_ONTDEKKING_STREEK = 7;
+export const AMBER_ONTDEKKING_STREEK = 8;
 
 // Streek waarop de tweede, gegarandeerde Amberader-locatie beschikbaar komt
 // (issue: "Amberader sowieso op streek 12" — softlock-preventie): een speler
-// die de eerste Amberader (streek 7) liet uitputten zonder ooit een Markt te
+// die de eerste Amberader (streek 8) liet uitputten zonder ooit een Markt te
 // bouwen, zou anders zonder lopend goud-inkomen tegen de Bezette Streek (streek
-// 12, hoofdstuk 6) kunnen aanlopen terwijl zowel Offer Altaar als Legerkamp
-// goud vereisen (hoofdstuk 11/14). Bewust vlak vóór streek 12 gekozen — laat
+// 13, hoofdstuk 6) kunnen aanlopen terwijl zowel Offer Altaar als Legerkamp
+// goud vereisen (hoofdstuk 11/14). Bewust vlak vóór streek 13 gekozen — laat
 // (de speler heeft de kans gehad zelf een Markt te bouwen) maar nog op tijd
 // om alsnog goud op te bouwen. Zelfde trigger-patroon als
 // `AMBER_ONTDEKKING_STREEK` hierboven.
-export const AMBER_ONTDEKKING_STREEK_2 = 11;
+export const AMBER_ONTDEKKING_STREEK_2 = 12;
 
 // Vakjes met een amberader — de vondst-eis van de Amberader/goudmijn-
 // improvement (hoofdstuk 3/14), bovenop de gewone heuvel/berg-terreineis van
@@ -122,9 +134,9 @@ export const AMBER_ONTDEKKING_STREEK_2 = 11;
 // de eerste kans op een Amberader. Streek `AMBER_ONTDEKKING_STREEK_2` (positie 2,
 // een bergvakje) is op dezelfde manier gegarandeerd de tweede vondst.
 const TUTORIAL_AMBER: Record<number, number[]> = {
-  7: [0],
-  8: [5],
-  11: [2],
+  8: [0],
+  9: [5],
+  12: [2],
 };
 
 function amberVoorTile(hoogte: number, positieInStreek: number): boolean {
@@ -134,7 +146,7 @@ function amberVoorTile(hoogte: number, positieInStreek: number): boolean {
 // Vaste inhoud-verdeling van de Bezette Streek (hoofdstuk 6, issue: "De
 // Bezette Streek, missionaris en verkenner", Deel 1 — aantal wachttorens/
 // heiligdommen bijgesteld naar issue "laatste confrontatie tweaken")
-// — tutorial-scripting op `BEZETTE_STREEK_HOOGTE` (streek 12), net zo
+// — tutorial-scripting op `BEZETTE_STREEK_HOOGTE` (streek 13), net zo
 // vastgelegd/niet-procedureel als `TUTORIAL_AMBER` hierboven. Verspreid over
 // 8 van de 9 vakjes: precies één vijandelijke Wachttoren (het enige
 // Confrontatie-doel) en één vijandelijk Heiligdom (het enige
@@ -163,7 +175,7 @@ function bezetteStreekInhoudVoorTile(hoogte: number, positieInStreek: number): B
 
 // Initialiseert een Bezette Streek zodra ze "in beeld komt" (economie.ts:
 // `verwerkStreekOntgrendeling`, dezelfde soort trigger als de gegarandeerde
-// Amberader-vondst op streek 7): zet `bezet: true` en verhult elk vakje
+// Amberader-vondst op streek 8): zet `bezet: true` en verhult elk vakje
 // individueel (`Tile.verhuld`), los van de gewone streek-brede fog-of-war —
 // de streek zelf blijft `ontgrendeld: false` tot alle vijandelijke
 // Heiligdommen vernietigd zijn (zie `verwerkBelegering` in economie.ts).

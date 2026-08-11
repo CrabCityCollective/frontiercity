@@ -109,6 +109,10 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     // Alleen op bos-vakjes: je kapt geen bomen op vlakke grond of een kale
     // heuvel (issue: "een houtkap alleen maar op een bos zetten").
     terreinEisen: ["bos"],
+    // `minStreek: 2` (issue: "jagen en farmen omdraaien"): op streek 1 is
+    // alleen Steengroeve en Heiligdom bouwbaar — de starteconomie (zie
+    // initieleSpelStatus.ts) start daarom ook met hout in plaats van steen.
+    minStreek: 2,
   },
   {
     id: "steengroeve",
@@ -135,6 +139,11 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     // Alleen op heuvel/berg (issue: "een mijn kun je alleen op een heuvel of
     // berg zetten").
     terreinEisen: ["heuvel", "berg"],
+    // `minStreek: 2` (issue: "jagen en farmen omdraaien"): zelfde streek als
+    // de Wachttoren/erts-introductie (zie VIJAND_AAN_DE_HORIZON_TEKST in
+    // tutorialContent.ts) — op streek 1 is alleen Steengroeve en Heiligdom
+    // bouwbaar.
+    minStreek: 2,
   },
   {
     id: "boerderij",
@@ -148,6 +157,9 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     // Alleen op vlakke grond (issue: "boerderij kun je juist niet op bergen
     // en bossen zetten, alleen op vlakke grond").
     terreinEisen: ["vlak"],
+    // `minStreek: 3` (issue: "jagen en farmen omdraaien"): de Boerderij komt
+    // pas op streek 3 — vóór die tijd is de jacht de enige voedselbron.
+    minStreek: 3,
   },
   // Ontgrendeld door de "aardewerk"-tech (drempel 2, techTree.ts; issue: "tech
   // tree toevoegen" Deel 2 — "A1. Aardewerk: nieuw goedkoop land improvement:
@@ -269,11 +281,13 @@ export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
 // sterren en seizoenen bestudeert) sluit aan bij de Riven/Myst-tutorialsfeer
 // (hoofdstuk 12) en is verder ongewijzigd overgenomen uit het issue.
 //
-// `minStreek: 3` (issue: "tutorial popups wijzigen"): in de tutorial is
-// Wetenschappelijk pas vanaf streek 3 beschikbaar (uitgegrijsd ervoor via
-// `beschikbareOpties` hieronder) — het ontgrendelen van streek 3 gaat gepaard
-// met de "Goddelijke raadgeving"-pop-up (tutorialContent.ts) die precies naar
-// de Sterrencirkel verwijst.
+// `minStreek: 4` (issue: "tutorial popups wijzigen", verschoven van 3 naar 4
+// door "jagen en farmen omdraaien" — de nieuwe Boerderij-streek 3 duwt
+// Wetenschap een streek op): in de tutorial is Wetenschappelijk pas vanaf
+// streek 4 beschikbaar (uitgegrijsd ervoor via `beschikbareOpties`
+// hieronder) — het ontgrendelen van streek 4 gaat gepaard met de
+// "Goddelijke raadgeving"-pop-up (tutorialContent.ts) die precies naar de
+// Sterrencirkel verwijst.
 export const STERRENCIRKEL: Improvement = {
   id: "sterrencirkel",
   naam: "Sterrencirkel",
@@ -282,7 +296,7 @@ export const STERRENCIRKEL: Improvement = {
   kosten: { hout: 6, steen: 2 },
   bouwtijdBeurten: 2,
   effect: { type: "productie", resource: "wetenschap", waarde: 2 },
-  minStreek: 3,
+  minStreek: 4,
 };
 
 export const WETENSCHAPPELIJK_LAND_IMPROVEMENTS: Improvement[] = [STERRENCIRKEL];
@@ -692,12 +706,14 @@ function kanImprovementOpStreek(improvement: Improvement, streek: Streek): boole
 // gekozen is — een lege array (de default) sluit dus elke tech-gated
 // improvement uit, precies het gedrag vóórdat er ooit een tech gekozen is.
 //
-// `minStreek` (issue: "tutorial popups wijzigen") sluit op dezelfde manier
-// improvements uit zolang de hoogst ontgrendelde streek (frontier) de vereiste
-// hoogte nog niet bereikt heeft — momenteel de Sterrencirkel (streek 3) en de
-// Wachttoren (streek 2). Heeft een categorie hierdoor geen enkele optie meer
-// over, dan toont de bouw-pop-up (BouwPopup.tsx) 'm uitgegrijsd, precies
-// zoals bij een categorie zonder geldig leeg vakje.
+// `minStreek` (issue: "tutorial popups wijzigen", volgorde verschoven door
+// "jagen en farmen omdraaien") sluit op dezelfde manier improvements uit
+// zolang de hoogst ontgrendelde streek (frontier) de vereiste hoogte nog niet
+// bereikt heeft — momenteel Houtkap en Mijn (streek 2), de Wachttoren (streek
+// 2), de Boerderij (streek 3) en de Sterrencirkel (streek 4). Heeft een
+// categorie hierdoor geen enkele optie meer over, dan toont de bouw-pop-up
+// (BouwPopup.tsx) 'm uitgegrijsd, precies zoals bij een categorie zonder
+// geldig leeg vakje.
 export function beschikbareOpties(
   categorie: Improvement["categorie"],
   streek: Streek,

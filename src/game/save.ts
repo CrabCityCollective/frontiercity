@@ -49,7 +49,8 @@ export function heeftOpgeslagenSpel(): boolean {
 // maar of hij ooit gehaald is, moet een herstart/nieuwe run overleven.
 const TUTORIAL_VOLTOOID_KEY = "frontier-city:tutorial-voltooid";
 
-// Gezet zodra de speler de afsluitende samenvatting op streek 12 wegklikt (zie
+// Gezet zodra de speler de afsluitende samenvatting bij het stichten van een
+// nieuwe stad wegklikt (zie
 // TutorialVoltooidPopup/GameRoot). Fouten worden net als bij `saveSpel`
 // bewust genegeerd — een ontbrekend vinkje breekt de speelsessie niet.
 export function markeerTutorialVoltooid(): void {

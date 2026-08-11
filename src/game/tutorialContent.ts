@@ -1,5 +1,7 @@
 // Tutorial-content (M8, hoofdstuk 10 & 13): de vastgelegde mechaniek-volgorde
-// en flavor-teksten voor streken 1-13 van "De Eerste Vuren" (Het Hertenpad-volk).
+// en flavor-teksten voor streken 1-14 van "De Eerste Vuren" (Het Hertenpad-volk)
+// — 14 in plaats van de oorspronkelijke 13 sinds "jagen en farmen omdraaien"
+// de Boerderij een eigen streek gaf.
 // De mechanieken zelf zijn al gebouwd in M1-M7 — dit bestand voegt alleen de
 // vaste, geschreven inhoud toe die per streek hoort (geen nieuwe systemen).
 //
@@ -7,7 +9,7 @@
 // emotie-bijvoeglijke naamwoorden, geen moreel oordeel, concreet/zintuiglijk
 // boven abstract, herhaling als stijlmiddel toegestaan, stiltes toegestaan.
 //
-// Streek 9 ("Zeldzaamheid") en de framing van streek 10/11 als "gescript,
+// Streek 10 ("Zeldzaamheid") en de framing van streek 11/12 als "gescript,
 // ongevaarlijk" horen bij post-MVP-uitbreidingen (hoofdstuk 13: geen
 // zeldzaamheid, geen aparte tutorial-veilige verval-variant in de MVP) — de
 // flavor-tekst hieronder zet de sfeer alvast neer zonder een apart systeem te
@@ -19,66 +21,76 @@ export interface StreekContent {
   flavorTekst: string;
 }
 
+// Streek-indeling herschikt (issue: "jagen en farmen omdraaien"): de jacht is
+// nu vanaf streek 1 de eerste voedselbron (in plaats van de boerderij), en de
+// boerderij krijgt een eigen, latere streek (3) — één streek méér dan de
+// oorspronkelijke 13, want de boerderij vervangt geen bestaande streek, ze
+// komt er echt bij. Wetenschap/Sterrencirkel (voorheen streek 3) en alles
+// daarna schuift daardoor een streek op.
 export const TUTORIAL_STREEK_CONTENT: Record<number, StreekContent> = {
   1: {
     naam: "De Oevervlakte",
-    mechaniek: "Bouwen en overleven",
+    mechaniek: "Jagen, voedselbalans, heiligdom en steengroeve",
     flavorTekst: "Water aan de ene kant, gras aan de andere. Er is maar 1 richting: voorwaarts.",
   },
   2: {
     naam: "Het Rietmoeras",
-    mechaniek: "Verdedigen tegen indringers",
+    mechaniek: "Houtkap, wachttoren en verdedigen tegen indringers",
     flavorTekst:
       "De wereld bleek wreder dan gedacht. Maar het Goddelijke Licht dan wel de Menselijke Speer zal blijven staan.",
   },
   3: {
+    naam: "Het Akkerland",
+    mechaniek: "De boerderij",
+    flavorTekst: "Vlak land, tot aan de horizon. Genoeg om meer te zaaien dan de jacht alleen ooit kon voeden.",
+  },
+  4: {
     naam: "De Bosrand",
     mechaniek: "Wetenschap en de techtree",
     flavorTekst: "We zijn al van ver gekomen. Hoewel, als we op de heuvel staan, kunnen we het kamp nog zien.",
   },
-  4: {
-    naam: "Het Loofbos",
-    mechaniek: "Kuddes en jacht",
-    flavorTekst:
-      "De stam heeft niet genoeg aan alleen boerderijen, we moeten jagen op de sappige wilde dieren om ons menu uit te breiden.",
-  },
   5: {
-    naam: "De Heuvelvoet",
-    mechaniek: "Roofdieren",
-    flavorTekst: "Jagen heeft het nadeel dat er ook dieren verschijnen die de jagers van onze stam ook heel sappig vinden.",
+    naam: "Het Loofbos",
+    mechaniek: "Grotere kuddes",
+    flavorTekst: "De kuddes trekken hier dieper het bos in. De jacht gaat gewoon door, verder van het kamp.",
   },
   6: {
+    naam: "De Heuvelvoet",
+    mechaniek: "Diepere jachtgronden",
+    flavorTekst: "De heuvels bieden schuilplekken — voor de kuddes, en voor wat hen al sinds het begin volgt.",
+  },
+  7: {
     naam: "De Heuvels",
     mechaniek: "De stad groter laten groeien",
     flavorTekst: "De heuvels bieden eindelijk ruimte. Groter worden kan — meer monden om te voeden ook.",
   },
-  7: {
+  8: {
     naam: "De Rotsrichel",
     mechaniek: "Amber en Mijnbouw",
     flavorTekst: "Het mooiste materiaal ooit gezien, het trekt ook de verkeerde mensen aan.",
   },
-  8: {
+  9: {
     naam: "De Hooggebergte-voet",
     mechaniek: "Kennis en technologie",
     flavorTekst: "Aan de voet van het hooggebergte ligt de lucht al dunner. Wie hier kijkt, ziet verder dan ooit.",
   },
-  9: {
+  10: {
     naam: "Het Naaldwoud",
     mechaniek: "Dieper de wildernis in",
     flavorTekst: "In het naaldwoud fluistert men over bomen ouder dan het Hertenpad-volk zelf.",
   },
-  10: {
+  11: {
     naam: "De Boomgrens",
     mechaniek: "Nog eens groeien: van middel naar groot",
     flavorTekst:
       "Boven de boomgrens is er minder beschutting, maar wel meer land. Groter worden is hier een keuze, geen vanzelfsprekendheid.",
   },
-  11: {
+  12: {
     naam: "De Besneeuwde Flank",
     mechaniek: "Een tweede amberader",
     flavorTekst: "Onder de sneeuw glinstert iets dat we al kennen. Een tweede ader, dieper dan de eerste.",
   },
-  12: {
+  13: {
     naam: "De Bergkam",
     mechaniek: "Een vijandige stam overnemen (cultureel/militair)",
     flavorTekst:
@@ -90,7 +102,7 @@ export const TUTORIAL_STREEK_CONTENT: Record<number, StreekContent> = {
   // het eind van de tutorial-tocht. De enige streek met vers water (zie
   // world.ts `TUTORIAL_VERS_WATER`), en dus de enige plek waar de laatste
   // stad gesticht kan worden.
-  13: {
+  14: {
     naam: "De Oceaanoever",
     mechaniek: "Stad stichten aan het vers water",
     flavorTekst:
@@ -143,14 +155,15 @@ export const WACHTTOREN_OVERAL_UITLEG_TEKST =
 // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "voedsel komt
 // van 2 bronnen ... die zijn te optimaliseren met wetenschap ... er zijn ook 2
 // afnemers ... door het groeien van je stad en het aantal wachttorens wordt het
-// steeds lastiger om voedsel te managen"): getoond zodra streek 4 voor het eerst
-// ontgrendelt (zie GameRoot: `toonVoedselBalansUitlegPopup`) — dat is het moment
-// waarop de jacht als tweede voedselbron beschikbaar komt (TUTORIAL_STREEK_CONTENT[4]:
-// "Kuddes en jacht"), naast de boerderij die al eerder is uitgelegd
-// (BOERDERIJ_KLAAR_TITEL/-TEKST hierboven).
-export const VOEDSEL_BALANS_UITLEG_TITEL = "Twee bronnen, twee monden";
+// steeds lastiger om voedsel te managen"; volgorde omgedraaid, issue: "jagen en
+// farmen omdraaien"): getoond zodra streek 1 voor het eerst ontgrendelt (zie
+// GameRoot: `toonVoedselBalansUitlegPopup`) — dat is meteen bij de start, het
+// moment waarop de jacht de enige voedselbron is (TUTORIAL_STREEK_CONTENT[1]).
+// De boerderij komt pas op streek 3 (zie BOERDERIJ_KLAAR_TITEL/-TEKST
+// hieronder, die op dat moment de balans naar twee bronnen uitbreidt).
+export const VOEDSEL_BALANS_UITLEG_TITEL = "Eén bron, één mond";
 export const VOEDSEL_BALANS_UITLEG_TEKST =
-  "Voedsel komt voortaan van twee kanten: de boerderij, en de jacht op kuddes. Wetenschap maakt beide opbrengsten groter. Er eten ook twee partijen mee: de stad zelf, en elke bemande wachttoren. Een grotere stad en meer wachttorens vragen samen steeds meer voedsel — hoe verder je komt, hoe scherper die balans.";
+  "Voedsel komt voorlopig van maar één kant: de jacht op kuddes. Stuur de settler naar een kudde en jaag — er is nog geen boerderij om op terug te vallen. Er eet ook maar één partij mee: de stad zelf. Zodra er wachttorens en een boerderij bijkomen, wordt deze balans drukker.";
 
 // Settler-acties-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "de settler
 // bouwt wegen, jaagt en hakt hout ... maar voor het bouwen hoeft de settler niet
@@ -178,8 +191,8 @@ export const BEURTENSYSTEEM_UITLEG_TEKST =
   "Elke beurt rekent het spel af: wat een gebouw in aanbouw nog kost, gaat van de voorraad af zodra die genoeg heeft. Tegelijk komt er nieuwe productie binnen — hout, steen, erts, voedsel — en verbruiken de stad en elke bemande wachttoren weer voedsel. Zo groeit of slinkt de voorraad, beurt na beurt.";
 
 // Bezette-Streek-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
-// missionaris en verkenner", Deel 2), getoond zodra streek 12 "in beeld komt"
-// (dezelfde soort trigger als de gegarandeerde Amberader-vondst op streek 7),
+// missionaris en verkenner", Deel 2), getoond zodra streek 13 "in beeld komt"
+// (dezelfde soort trigger als de gegarandeerde Amberader-vondst op streek 8),
 // direct na de gewone streek-pop-up hierboven — vervangt de eerdere, kleinere
 // MILITAIR_UITLEG_*-pop-up volledig.
 export const BEZETTE_STREEK_TITEL = "De Bergkam is bezet";
@@ -214,7 +227,7 @@ export const OCEAAN_UITLEG_TEKST =
 // patroon als BEZETTE_STREEK_* hierboven.
 export const SETTLER_UITLEG_TITEL = "De settler";
 export const SETTLER_UITLEG_TEKST =
-  "We gaan vooruit de wildenis in. De settlers kunnen bewegen over de kaart, en wegen bouwen. We moeten een weg naar de houtkap bouwen, anders kan het hout de voorraad niet bereiken.";
+  "We gaan vooruit de wildenis in. De settlers kunnen bewegen over de kaart, en wegen bouwen. We moeten een weg naar onze eerste gebouwen aanleggen, anders bereiken de grondstoffen de voorraad niet.";
 
 // Tutorial-voltooid-pop-up (issue: "pop-up met een summary van wat je
 // geleerd hebt"), getoond zodra een nieuwe stad gesticht is (hoofdstuk
@@ -238,24 +251,31 @@ export const INTRO_FLAVOR_TEKST =
 // vervangt de vroegere vaste beurt-3-pop-up): getoond zodra de stad voor het
 // eerst "kritiek" wordt (zie economie.ts `verwerkVerval`) — dynamisch op het
 // moment dat de voedseldreiging zich voordoet, in plaats van op een vast
-// beurtnummer.
+// beurtnummer. Tekst wijst naar de jacht (issue: "jagen en farmen omdraaien"
+// — dit kan al op streek 1 triggeren, ruim vóór de Boerderij op streek 3
+// bestaat), met de boerderij als aanvulling zodra die er wél al staat.
 export const VOEDSEL_WAARSCHUWING_TITEL = "De voorraad slinkt";
 export const VOEDSEL_WAARSCHUWING_TEKST =
-  "De bodem van de voedselvoorraad komt behoorlijk dichtbij. Als het voedsel op, verlaat de stam het kamp, en gaat iedereen op zijn houtje de wildernis in. Bouw een boerderij om de voedselvoorraad weer aan te vullen. Vergeet niet de boerderij met een weg te verbinden.";
+  "De bodem van de voedselvoorraad komt behoorlijk dichtbij. Als het voedsel op, verlaat de stam het kamp, en gaat iedereen op zijn houtje de wildernis in. Jaag met de settler op een kudde voor snel voedsel. Staat er al een boerderij, zorg dan dat hij met een weg verbonden blijft.";
 
 // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen",
-// tekst bijgewerkt in issue "tutorial popups wijzigen"): getoond zodra er
-// voor het eerst een actieve, wegverbonden boerderij meeproduceert (zie
-// economie.ts `heeftWerkendeBoerderij`) — de voedselcrisis is dan bezworen,
-// en dit introduceert nu het Heiligdom/cultuur (in plaats van de Wachttoren:
-// die introductie hoort sinds "tutorial popups wijzigen" bij het ontgrendelen
-// van streek 2 zelf, zie VIJAND_AAN_DE_HORIZON_TITEL/-TEKST hieronder).
-export const BOERDERIJ_KLAAR_TITEL = "Voedsel bereikt het kamp";
+// tekst bijgewerkt in issue "tutorial popups wijzigen", en nogmaals in
+// "jagen en farmen omdraaien"): getoond zodra er voor het eerst een actieve,
+// wegverbonden boerderij meeproduceert (zie economie.ts
+// `heeftWerkendeBoerderij`) — dat is nu ten vroegste op streek 3, ná het
+// Heiligdom (al gebouwd op streek 1) en de Wachttoren (streek 2, zie
+// VIJAND_AAN_DE_HORIZON_TITEL/-TEKST hieronder), dus die twee hoeven hier
+// niet meer geïntroduceerd te worden. In plaats daarvan legt deze pop-up uit
+// dat de jacht (streek 1) er nu een tweede voedselbron bij krijgt — dezelfde
+// "twee bronnen, twee monden"-uitleg die vóór "jagen en farmen omdraaien" bij
+// VOEDSEL_BALANS_UITLEG_* stond.
+export const BOERDERIJ_KLAAR_TITEL = "Twee bronnen, twee monden";
 export const BOERDERIJ_KLAAR_TEKST =
-  "Voedsel bereikt het kamp, de ergste hongersnood is geweken. De tijd is nu gekomen om de wilde stammen te verenigen onder de glorie van onze voorouders. Bouw een Heiligdom, opdat ons licht over de wereld gaat stralen. (een Heiligdom heeft voldoende steen nodig om te bouwen)";
+  "De boerderij levert voortaan naast de jacht een tweede stroom voedsel. Wetenschap maakt beide opbrengsten groter. Er eten ook twee partijen mee: de stad zelf, en elke bemande wachttoren. Een grotere stad en meer wachttorens vragen samen steeds meer voedsel — hoe verder je komt, hoe scherper die balans.";
 
-// Goddelijke-raadgeving-pop-up (issue: "tutorial popups wijzigen"): getoond
-// zodra streek 3 ontgrendelt (zie GameRoot: `toonGoddelijkeRaadgevingPopup`) —
+// Goddelijke-raadgeving-pop-up (issue: "tutorial popups wijzigen", trigger
+// verschoven van streek 3 naar 4 door "jagen en farmen omdraaien"): getoond
+// zodra streek 4 ontgrendelt (zie GameRoot: `toonGoddelijkeRaadgevingPopup`) —
 // dit is het moment waarop Wetenschappelijk (en dus de Sterrencirkel, zie
 // improvements.ts: `STERRENCIRKEL.minStreek`) voor het eerst beschikbaar komt
 // in de bouw-pop-up, ervoor stond de categorie uitgegrijsd.

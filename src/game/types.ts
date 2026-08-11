@@ -112,9 +112,11 @@ export interface Improvement {
   // de technologie-boom), zoals bijna elke andere improvement.
   vereisteTech?: TechId;
   // Alleen beschikbaar in de bouw-opties zodra deze streekhoogte ontgrendeld is
-  // (issue: "tutorial popups wijzigen" — Sterrencirkel/Wetenschappelijk pas
-  // vanaf streek 3, Wachttoren/Militair pas vanaf streek 2, allebei uitgegrijsd
-  // ervoor). `undefined` = altijd beschikbaar, zoals bijna elke andere
+  // (issue: "tutorial popups wijzigen", volgorde verschoven door "jagen en
+  // farmen omdraaien" — Sterrencirkel/Wetenschappelijk pas vanaf streek 4,
+  // Wachttoren/Militair, Houtkap en Mijn pas vanaf streek 2, Boerderij pas
+  // vanaf streek 3, allemaal uitgegrijsd ervoor). `undefined` = altijd
+  // beschikbaar, zoals bijna elke andere
   // improvement. Gebruikt de hoogst ontgrendelde streek (frontier), niet de
   // streek waar de speler op dat moment op bouwt — zelfde reden als
   // `bouwbaarBuitenFrontier`: eenmaal ontgrendeld blijft de categorie
@@ -167,16 +169,17 @@ export interface Tile {
   // wordt in één keer gezet zodra de settler de aanleg-actie uitvoert.
   heeftWeg?: boolean;
   // Wilde kudde (hoofdstuk 16/17, issue: "kuddes met dieren waar je op kunt
-  // jagen voor voedsel"): kan vanaf streek 4 op een leeg vakje verschijnen. De
-  // settler kan er `jaag` (economie.ts) op uitvoeren zolang
-  // `beurtenResterend` boven nul staat; daarna is de kudde uitgeput en
-  // verdwijnt dit veld weer.
+  // jagen voor voedsel"; vanaf streek 1, issue: "jagen en farmen omdraaien"):
+  // kan op een leeg vakje verschijnen. De settler kan er `jaag` (economie.ts)
+  // op uitvoeren zolang `beurtenResterend` boven nul staat; daarna is de
+  // kudde uitgeput en verdwijnt dit veld weer.
   kudde?: {
     beurtenResterend: number;
   };
-  // Roofdier (hoofdstuk 14/17, issue: "roofdieren toevoegen"): kan vanaf
-  // streek 5 verschijnen op het vakje waar de settler net gejaagd heeft (zie
-  // `jaag` in economie.ts) — nooit los van een kudde-jachtactie. Valt pas de
+  // Roofdier (hoofdstuk 14/17, issue: "roofdieren toevoegen"; vanaf streek 1,
+  // issue: "jagen en farmen omdraaien"): kan verschijnen op het vakje waar de
+  // settler net gejaagd heeft (zie `jaag` in economie.ts) — nooit los van een
+  // kudde-jachtactie. Valt pas de
   // beurt ná verschijnen aan (`beurtenTotAanval` telt af in
   // `verwerkRoofdieren`, economie.ts): staat de settler er op dat moment nog
   // (of weer) op, dan sterft hij. Geen eigen ghost-town-achtige nasleep — het
@@ -208,7 +211,7 @@ export interface Tile {
   // en los van `terrein` bijgehouden: niet elk heuvel/bergvakje heeft een
   // amberader, in tegenstelling tot een gewone erts-mijn die op elk
   // heuvel/bergvakje mag. De tutorial-worldgen garandeert minstens één zulk
-  // vakje vanaf streek 7 (zie world.ts).
+  // vakje vanaf streek 8 (zie world.ts).
   amber?: boolean;
 }
 
@@ -237,7 +240,7 @@ export interface Streek {
   // campagnes) — `true` zolang deze streek geblokkeerd is door vijandelijke
   // Wachttoren-/Heiligdom-tiles die eerst via Verkenning/Confrontatie/
   // Belegering opgelost moeten worden (zie world.ts voor de tutorial-
-  // scripting op streek 12, en economie.ts `verwerkStreekOntgrendeling` voor de
+  // scripting op streek 13, en economie.ts `verwerkStreekOntgrendeling` voor de
   // bevriezing van de normale cultuur-ontgrendeling). Wordt `false` zodra
   // alle vijandelijke Heiligdommen vernietigd zijn (Deel 6) — de streek telt
   // dan als normaal ontgrendeld.

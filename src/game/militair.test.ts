@@ -21,7 +21,7 @@ import { BEZETTE_STREEK_HOOGTE } from "./world";
 import {
   HOUTKAP,
   LEGERKAMP,
-  metBeschermendeWachttorenOpStreek11,
+  metBeschermendeWachttorenOpStreek12,
   metBezetteStreekEnVerkenner,
   metVasteRandom,
   MIJN,
@@ -175,9 +175,9 @@ test("kanConfrontatieBezetteStreek vereist een voltooide, bemande, wegverbonden 
   let state = metBezetteStreekEnVerkenner();
   state = verken(state, 0); // onthult de vijandelijke Wachttoren op positie 0
 
-  assert.equal(kanConfrontatieBezetteStreek(state, 0), false, "geen eigen Wachttoren op streek 11: nog niet beschikbaar");
+  assert.equal(kanConfrontatieBezetteStreek(state, 0), false, "geen eigen Wachttoren op streek 12: nog niet beschikbaar");
 
-  state = metBeschermendeWachttorenOpStreek11(state);
+  state = metBeschermendeWachttorenOpStreek12(state);
   assert.equal(kanConfrontatieBezetteStreek(state, 0), true);
   // Een niet-onthuld of niet-vijandelijk-Wachttoren-vakje is nooit een geldig doel.
   assert.equal(kanConfrontatieBezetteStreek(state, 3), false);
@@ -186,7 +186,7 @@ test("kanConfrontatieBezetteStreek vereist een voltooide, bemande, wegverbonden 
 test("confrontatieBezetteStreek: winst ruimt de vijandelijke Wachttoren-tile op (geen dreiging/doel meer)", () => {
   let state = metBezetteStreekEnVerkenner();
   state = verken(state, 0);
-  state = metBeschermendeWachttorenOpStreek11(state);
+  state = metBeschermendeWachttorenOpStreek12(state);
 
   const naWinst = metVasteRandom(0, () => confrontatieBezetteStreek(state, 0));
   assert.equal(naWinst.laatsteConfrontatieBezetteStreek?.gewonnen, true);
@@ -194,7 +194,7 @@ test("confrontatieBezetteStreek: winst ruimt de vijandelijke Wachttoren-tile op 
   assert.equal(doelTile.status, "leeg");
   assert.equal(doelTile.improvement, undefined);
   // De eigen Wachttoren en zijn bemanning blijven bij winst gewoon intact.
-  const wachttorenTile = naWinst.streken.find((l) => l.hoogte === 11)!.tiles[4];
+  const wachttorenTile = naWinst.streken.find((l) => l.hoogte === 12)!.tiles[4];
   assert.equal(wachttorenTile.status, "actief");
   assert.equal(naWinst.stad.strijders.length, 1);
 });
@@ -202,7 +202,7 @@ test("confrontatieBezetteStreek: winst ruimt de vijandelijke Wachttoren-tile op 
 test("confrontatieBezetteStreek: verlies kost de bemannende strijder permanent, maar de eigen Wachttoren blijft intact — lichtere straf (issue: laatste confrontatie tweaken), en Legerkamp-strijders blijven sowieso gespaard", () => {
   let state = metBezetteStreekEnVerkenner();
   state = verken(state, 0);
-  state = metBeschermendeWachttorenOpStreek11(state);
+  state = metBeschermendeWachttorenOpStreek12(state);
   // Een tweede, aan een Legerkamp toegewezen strijder — moet bij verlies
   // gewoon behouden blijven (alleen de Wachttoren-bemanning gaat verloren).
   state = {
@@ -232,7 +232,7 @@ test("confrontatieBezetteStreek: verlies kost de bemannende strijder permanent, 
   // De eigen beschermende Wachttoren zelf blijft gewoon staan (geen ruïne
   // meer) — alleen de bemanning is kwijt, dus de toren staat er nu onbemand
   // bij (`isWachttorenBemand` zou hier false geven).
-  const wachttorenTile = naVerlies.streken.find((l) => l.hoogte === 11)!.tiles[4];
+  const wachttorenTile = naVerlies.streken.find((l) => l.hoogte === 12)!.tiles[4];
   assert.equal(wachttorenTile.status, "actief");
   assert.equal(wachttorenTile.improvement?.id, "wachttoren");
 
@@ -282,7 +282,7 @@ test("vijandelijkeWachttorenPosities geeft alleen onthulde, nog niet opgeruimde 
   state = verken(state, 0);
   assert.deepEqual(vijandelijkeWachttorenPosities(state), [{ hoogte: BEZETTE_STREEK_HOOGTE, positieInStreek: 0 }]);
 
-  state = metBeschermendeWachttorenOpStreek11(state);
+  state = metBeschermendeWachttorenOpStreek12(state);
   state = metVasteRandom(0, () => confrontatieBezetteStreek(state, 0));
   assert.deepEqual(vijandelijkeWachttorenPosities(state), [], "na winst telt de tile niet meer mee als doel");
 });
