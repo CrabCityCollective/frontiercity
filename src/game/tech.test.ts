@@ -7,7 +7,11 @@ import { wetenschapKostenVoorDrempel } from "./techTree";
 import { metWerkendeSterrencirkel } from "./testHelpers";
 
 test("bij drempel 1 opent een technologie-keuze met de twee vaste startrichtingen", () => {
-  let state = metWerkendeSterrencirkel();
+  // `voedsel` ruim gezet zodat de stad de wachttijd tot drempel 1 (na het
+  // verzwaren van de wetenschapskosten, issue: "techtree langzamer") overleeft
+  // zonder in te storten — deze test draait puur om de tech-drempel, niet om
+  // de voedseleconomie, zelfde aanpak als `metBezetteStreekInBeeld` elders.
+  let state = { ...metWerkendeSterrencirkel(), voedsel: 10_000 };
   const beurtenTotDrempel1 = Math.ceil(wetenschapKostenVoorDrempel(1) / (STERRENCIRKEL.effect.waarde ?? 1));
 
   for (let i = 0; i < beurtenTotDrempel1; i++) {

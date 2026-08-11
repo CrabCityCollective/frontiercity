@@ -142,12 +142,23 @@ export const TECH_TREE: Record<TechId, TechNode> = {
 
 // Drempelkosten (hoofdstuk 14, Deel 3 van "tech tree toevoegen" — doorgerekend
 // tegen de Sterrencirkel-opbrengst uit Deel 1): `kosten(drempel) =
-// 10 + 10 × (drempel-1)²`, dus drempel 1 = 10, drempel 2 = 20, drempel 3 = 50.
+// 20 + 20 × (drempel-1)²`, dus drempel 1 = 20, drempel 2 = 40, drempel 3 = 100.
 // Zwaarder dan zowel de basisterm als de kwadratische factor van de
 // cultuurcurve (`3 + 5 × (streek-1)²`, hoofdstuk 14) — bewust: wetenschap levert
 // permanente, structurele bonussen op (een boerderij die voorgoed 20% meer
 // opbrengt, een opslag-cap die voorgoed +10 is) in plaats van eenmalige
 // toegang tot een streek, wat een hogere prijs rechtvaardigt (hoofdstuk 11).
+//
+// Basis en kwadratische factor verdubbeld van 10 naar 20 (issue: "techtree
+// langzamer") — de oorspronkelijke curve (10/20/50) liet de volledige boom
+// al rond beurt 42 voltooien (zie de doorrekening hieronder), ruim vóórdat de
+// Bezette Streek (streek 12, hoofdstuk 6) in beeld komt: wetenschap stapelde
+// zich daarna vrijwel ongebruikt op, dus Verkenning (`VERKENNING_KOSTEN_WETENSCHAP`,
+// streekOntgrendeling.ts, dezelfde wetenschap-pool) hoefde in de praktijk
+// nooit te concurreren met een openstaande techkeuze. De verdubbelde curve
+// duwt drempel 3 voorbij dat punt, zodat er middenspel nog een reëele
+// afweging is tussen sparen voor de volgende drempel en wetenschap uitgeven
+// aan Verkenning.
 //
 // Doorrekening (indicatief, zelfde stijl als de cultuur-doorrekening,
 // hoofdstuk 14): met een near-optimale opening (Houtkap → Boerderij →
@@ -155,14 +166,15 @@ export const TECH_TREE: Record<TechId, TechNode> = {
 // (rond beurt 10) vrij voor een Sterrencirkel — actief rond beurt 17 (2
 // beurten bouwtijd + settler-wegaanleg, zelfde tempo als het Heiligdom).
 // Vanaf dan loopt wetenschap met 2/beurt op (1 Sterrencirkel op de frontier):
-// drempel 1 (10) rond beurt 22, drempel 2 (20) rond beurt 27, drempel 3 (50)
-// rond beurt 42 — 3 tot 9 beurten trager dan de vergelijkbare cultuurstreken
-// (streek 2 ~16, streek 3 ~24, streek 4 ~36), een oplopend en dus "merkbaar"
-// verschil, terwijl drempel 3 nog altijd ruim vóór het einde van de 12
-// tutorial-streken valt (cultuurkosten lopen daar al op tot 400-600, hoofdstuk
-// 14 — de tutorial duurt dus sowieso veel langer dan 42 beurten).
-const WETENSCHAP_KOSTEN_BASIS = 10;
-const WETENSCHAP_KOSTEN_KWADRATISCHE_FACTOR = 10;
+// drempel 1 (20) rond beurt 27, drempel 2 (40) rond beurt 37, drempel 3 (100)
+// rond beurt 67 — een fors groter en oplopend verschil met de vergelijkbare
+// cultuurstreken (streek 2 ~16, streek 3 ~24, streek 4 ~36) dan voorheen (3
+// tot 9 beurten), en nu ook duidelijk voorbij het moment waarop de Bezette
+// Streek gemiddeld in beeld komt (streek 12, rond beurt 26 bij een
+// gemiddelde build, hoofdstuk 14) — precies de gevraagde concurrentie met
+// Verkenning.
+const WETENSCHAP_KOSTEN_BASIS = 20;
+const WETENSCHAP_KOSTEN_KWADRATISCHE_FACTOR = 20;
 
 export function wetenschapKostenVoorDrempel(drempel: TechDrempel): number {
   return WETENSCHAP_KOSTEN_BASIS + WETENSCHAP_KOSTEN_KWADRATISCHE_FACTOR * (drempel - 1) ** 2;
