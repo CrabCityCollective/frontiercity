@@ -6,7 +6,7 @@
 
 import { standaardUitlegAan } from "./save";
 import { GameState, MateriaalType } from "./types";
-import { maakInitieleWereld } from "./world";
+import { maakInitieleWereld, STARTKUDDE_POSITIE } from "./world";
 
 export const OPSLAG_CAP = 30;
 
@@ -60,6 +60,14 @@ export function maakInitieleSpelStatus(): GameState {
     settlerActieGedaanDitBeurt: false,
     verkenningGedaanDitBeurt: false,
     volgendeBouwBeurt: 1,
+    // Meldt de gegarandeerde startkudde (STARTKUDDE_POSITIE hierboven) meteen
+    // via de bestaande kudde-pop-up (issue: "Eerste streek kudde naast de
+    // steengroeve": "graag een pop-up erbij") — dezelfde pop-up als elke
+    // latere, willekeurige kudde (`verwerkKuddes`, indringersEnDieren.ts), nu
+    // ook voor deze eerste. Staat achteraan in de pop-up-prioriteit (zie
+    // GameRoot) en verschijnt dus pas nadat de speler de openings-uitleg-
+    // pop-ups heeft weggeklikt.
+    kuddeEvent: { hoogte: 1, positieInStreek: STARTKUDDE_POSITIE },
     // Standaard-instelling (issue: "een setting waarmee je deze uitleg
     // pop-ups aan en uit kunt zetten ... standaard voor alle nieuwe potjes")
     // bepaalt de startwaarde; de per-run toggle in het hoofdmenu wijzigt
