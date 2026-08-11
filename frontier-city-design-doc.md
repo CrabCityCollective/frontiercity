@@ -566,23 +566,25 @@ Twee dingen volgen hieruit. Eén: de trage start heeft inderdaad **deels een and
 
 *Sterrencirkel*: **6 hout, 2 steen**, bouwtijd **2 beurten** — vergelijkbaar bouwprofiel als het Heiligdom (4 hout, 4 steen, 2 beurten, hoofdstuk 3), maar verschoven naar "vooral hout, een beetje steen" zoals gevraagd; hetzelfde totaal (8) en dezelfde bouwtijd, alleen de verhouding wijkt af. Opbrengst **2 wetenschap/beurt**, exact hetzelfde patroon als het Heiligdom voor cultuur (hoofdstuk 6): geen uitputting, volle opbrengst op de frontier-streek, de helft daaronder.
 
-*Drempelkosten*: `kosten(drempel) = 10 + 10 × (drempel-1)²` — drempel 1 = 10, drempel 2 = 20, drempel 3 = 50. Afgeweken van het voorstel in het issue (`8 + 5 × (drempel-1)²`, drempel 1/2/3 = 8/13/28): bij een near-optimale opening levert dat voorstel een curve op die de cultuurcurve (hieronder) nauwelijks trager haalt — met een basisterm en kwadratische factor die allebei maar net boven cultuur (3 en 5) uitkomen, groeit het verschil tussen de twee curves te langzaam om "merkbaar" te blijven voorbij de eerste drempel (zie de doorrekening hieronder). Zowel de basisterm als de kwadratische factor zijn daarom naar **10** gezet.
+*Drempelkosten*: `kosten(drempel) = 20 + 20 × (drempel-1)²` — drempel 1 = 20, drempel 2 = 40, drempel 3 = 100. Afgeweken van het voorstel in het issue (`8 + 5 × (drempel-1)²`, drempel 1/2/3 = 8/13/28): bij een near-optimale opening levert dat voorstel een curve op die de cultuurcurve (hieronder) nauwelijks trager haalt — met een basisterm en kwadratische factor die allebei maar net boven cultuur (3 en 5) uitkomen, groeit het verschil tussen de twee curves te langzaam om "merkbaar" te blijven voorbij de eerste drempel (zie de doorrekening hieronder). Zowel de basisterm als de kwadratische factor waren daarom naar **10** gezet, en zijn sindsdien verder verdubbeld naar **20** (zie de correctie hieronder, issue: "techtree langzamer").
 
 | Drempel | Wetenschapskosten (cumulatief) |
 |---|---|
-| 1 | 10 |
-| 2 | 20 |
-| 3 | 50 |
+| 1 | 20 |
+| 2 | 40 |
+| 3 | 100 |
+
+**Correctie (issue: "techtree langzamer")**: de oorspronkelijke curve hierboven (basis en kwadratische factor **10**, drempel 1/2/3 = 10/20/50) voltooide de hele boom rond beurt 42 (zie de doorrekening hieronder) — ruim vóórdat de Bezette Streek (streek 12, hoofdstuk 6) gemiddeld in beeld komt. Wetenschap stapelde zich daarna grotendeels ongebruikt op, dus Verkenning (`VERKENNING_KOSTEN_WETENSCHAP`, hoofdstuk 6, dezelfde wetenschap-pool) concurreerde in de praktijk nauwelijks met een openstaande techkeuze. Basis en kwadratische factor zijn daarom verdubbeld naar **20**, met de doorrekening hieronder bijgewerkt.
 
 *Doorrekening tegen de Sterrencirkel-opbrengst*: met dezelfde near-optimale opening als de cultuur-doorrekening hierboven (Houtkap → Boerderij → Steengroeve → Heiligdom, actief rond beurt 10-13) is het bouw-ritme (hoofdstuk 16: 1 nieuw project per 3 beurten) na het Heiligdom vrij voor een Sterrencirkel — met dezelfde bouwtijd en wegaanleg-tijd als het Heiligdom komt die rond **beurt 17** actief. Vanaf dan loopt wetenschap met 2/beurt op (één Sterrencirkel op de frontier):
 
 | Drempel | Wetenschapskosten | Beurt bereikt (indicatief) | Vergelijkbare cultuurstreek | Beurt bereikt (cultuur, indicatief) |
 |---|---|---|---|---|
-| 1 | 10 | ~22 | streek 2 (8) | ~16 |
-| 2 | 20 | ~27 | streek 3 (23) | ~24 |
-| 3 | 50 | ~42 | streek 4 (48) | ~36 |
+| 1 | 20 | ~27 | streek 3 (23) | ~24 |
+| 2 | 40 | ~37 | streek 4 (48) | ~36 |
+| 3 | 100 | ~67 | streek 5-6 (83-128) | ~48-60 (indicatief) |
 
-Het verschil met de vergelijkbare cultuurstreek loopt op van ~6 naar ~9 beurten — een oplopend, dus **merkbaar** tempoverschil, precies zoals het issue vraagt ("wetenschap moet spelbaar merkbaar trager gaan dan cultuur"), zonder dat de boom onbereikbaar wordt: drempel 3 valt ruim vóór het einde van de 12 tutorial-streken (de cultuurkosten lopen daar al op tot 400-600, zie de cultuurkosten-tabel hierboven — de tutorial duurt dus sowieso veel langer dan 42 beurten). Het zwaardere tempo is bewust: wetenschap levert permanente, structurele bonussen op (een boerderij die voorgoed 20% meer opbrengt, een opslag-cap die voorgoed +10 is) in plaats van eenmalige toegang tot een streek — zie hoofdstuk 11 voor de volledige onderbouwing.
+Het verschil met de vergelijkbare cultuurstreek loopt op van ~3 naar ~10+ beurten — een oplopend, dus **merkbaar** tempoverschil, en nu een stuk forser dan de eerdere 3-tot-9-beurten-marge. Belangrijker voor de gevraagde concurrentie met Verkenning: drempel 3 (~beurt 67) valt nu ruim ná het moment waarop de Bezette Streek gemiddeld in beeld komt (streek 12, rond beurt 26 bij een gemiddelde build, zie de cultuurinkomen-tabel hierboven) — een speler die de Bezette Streek bereikt vóórdat de techboom voltooid is, moet dus daadwerkelijk kiezen tussen wetenschap sparen voor de volgende drempel en wetenschap uitgeven aan Verkenning, in plaats van dat de boom allang klaar is en de wetenschap-pool vrijwel uitsluitend voor Verkenning overblijft. Drempel 3 blijft desondanks ruim vóór het einde van de 12 tutorial-streken haalbaar (de cultuurkosten lopen daar al op tot 400-600, zie de cultuurkosten-tabel hierboven). Het zwaardere tempo is bewust: wetenschap levert permanente, structurele bonussen op (een boerderij die voorgoed 20% meer opbrengt, een opslag-cap die voorgoed +10 is) in plaats van eenmalige toegang tot een streek — zie hoofdstuk 11 voor de volledige onderbouwing.
 
 > ⚠️ **Nog te implementeren — let op**: de tech **"vlotten"** (B1a) belooft dat de settler rivier-vakjes kan oversteken, maar heeft in de huidige MVP-code **geen enkel waarneembaar effect**: er bestaat nog geen enkele vorm van bewegingsbeperking bij water (`versWater` op een tile is uitsluitend een stichtings-geschiktheids-vlag, geen doorgangs-blokkade — zie `world.ts`/`wegen.ts`), dus er is niets om op te heffen. De functie `settlerKanRivierOversteken` (`src/game/techTree.ts`) bestaat al en staat klaar, maar wordt nergens aangeroepen. Dit moet alsnog gebouwd worden zodra een water-doorgangsregel wordt toegevoegd — tot die tijd is de keuze voor "vlotten" in de technologie-boom cosmetisch.
 >
