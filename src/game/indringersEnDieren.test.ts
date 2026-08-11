@@ -101,25 +101,41 @@ test("een werkende Wachttoren beschermt ook de streek eronder, niet alleen zijn 
   state = {
     ...state,
     stad: { ...state.stad, strijders: [{ id: "strijder-1", wachttoren: { hoogte: 2, positieInStreek: 4 } }] },
-    streken: state.streken.map((streek) =>
-      streek.hoogte === 2
-        ? {
-            ...streek,
-            ontgrendeld: true,
-            tiles: streek.tiles.map((tile) =>
-              tile.positieInStreek === 4
-                ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
-                : tile
-            ),
-          }
-        : streek
-    ),
+    streken: state.streken.map((streek) => {
+      if (streek.hoogte === 2) {
+        return {
+          ...streek,
+          ontgrendeld: true,
+          tiles: streek.tiles.map((tile) =>
+            tile.positieInStreek === 4
+              ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
+              : tile
+          ),
+        };
+      }
+      // Streek 3 ontgrendeld met alleen een kale Wachttoren-tile (issue:
+      // "Tweede streek boerderij" — indringers zijn nu pas een factor vanaf
+      // streek 3): net als streek 2 doet deze streek zelf niet mee in de
+      // trekking (`isAlleenWachttorenStreek`), maar tilt de frontier wel over
+      // de nieuwe `INDRINGERS_MIN_STREEK`-drempel heen.
+      if (streek.hoogte === 3) {
+        return {
+          ...streek,
+          ontgrendeld: true,
+          tiles: streek.tiles.map((tile) =>
+            tile.positieInStreek === 4 ? { ...tile, improvement: WACHTTOREN } : tile
+          ),
+        };
+      }
+      return streek;
+    }),
   };
 
   // Kans 0 dwingt zowel het incident zelf als de streek-trekking af. Streek 2
-  // bevat verder niets dan de Wachttoren en doet dus niet mee in de trekking
-  // (`isAlleenWachttorenStreek`) — met alleen streek 1 en 2 ontgrendeld valt het
-  // incident daardoor gegarandeerd op streek 1, de streek onder de Wachttoren.
+  // en 3 bevatten verder niets dan een Wachttoren en doen dus niet mee in de
+  // trekking (`isAlleenWachttorenStreek`) — met alleen streek 1, 2 en 3
+  // ontgrendeld valt het incident daardoor gegarandeerd op streek 1, de
+  // streek onder de (bemande, wegverbonden) Wachttoren op streek 2.
   state = metVasteRandom(0, () => volgendeBeurt(state));
 
   assert.equal(state.indringersEvent?.streekHoogte, 1);
@@ -130,20 +146,42 @@ test("een werkende Wachttoren beschermt ook de streek eronder, niet alleen zijn 
   );
 });
 
+// Ontgrendelt streek 3 met alleen een kale Wachttoren-tile (issue: "Tweede
+// streek boerderij" — indringers zijn nu pas een factor vanaf streek 3, zie
+// `INDRINGERS_MIN_STREEK`): een streek met uitsluitend een Wachttoren doet
+// zelf niet mee in de streek-trekking (`isAlleenWachttorenStreek`), dus dit
+// tilt alleen de frontier over de nieuwe drempel heen zonder de
+// lottery-berekening met een derde kandidaat te verstoren.
+function metOntgrendeldeStreek3(streken: GameState["streken"]): GameState["streken"] {
+  return streken.map((streek) =>
+    streek.hoogte === 3
+      ? {
+          ...streek,
+          ontgrendeld: true,
+          tiles: streek.tiles.map((tile) =>
+            tile.positieInStreek === 4 ? { ...tile, improvement: WACHTTOREN } : tile
+          ),
+        }
+      : streek
+  );
+}
+
 test("een streek met een actieve Amberader weegt zwaarder mee in de indringers-streek-trekking (issue: Amberader bonus/malus-koppeling)", () => {
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
-    streken: state.streken.map((streek) =>
-      streek.hoogte === 2
-        ? {
-            ...streek,
-            ontgrendeld: true,
-            tiles: streek.tiles.map((tile) =>
-              tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
-            ),
-          }
-        : streek
+    streken: metOntgrendeldeStreek3(
+      state.streken.map((streek) =>
+        streek.hoogte === 2
+          ? {
+              ...streek,
+              ontgrendeld: true,
+              tiles: streek.tiles.map((tile) =>
+                tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
+              ),
+            }
+          : streek
+      )
     ),
   };
 
@@ -167,16 +205,18 @@ test("een uitgeputte Amberader (ghost town) telt niet meer mee voor het extra in
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
-    streken: state.streken.map((streek) =>
-      streek.hoogte === 2
-        ? {
-            ...streek,
-            ontgrendeld: true,
-            tiles: streek.tiles.map((tile) =>
-              tile.positieInStreek === 4 ? { ...tile, status: "ghost_town" as const, improvement: AMBERADER } : tile
-            ),
-          }
-        : streek
+    streken: metOntgrendeldeStreek3(
+      state.streken.map((streek) =>
+        streek.hoogte === 2
+          ? {
+              ...streek,
+              ontgrendeld: true,
+              tiles: streek.tiles.map((tile) =>
+                tile.positieInStreek === 4 ? { ...tile, status: "ghost_town" as const, improvement: AMBERADER } : tile
+              ),
+            }
+          : streek
+      )
     ),
   };
 
@@ -202,18 +242,20 @@ function metBeschermdeStreek(): GameState {
   return {
     ...state,
     stad: { ...state.stad, strijders: [{ id: "strijder-1", wachttoren: { hoogte: 2, positieInStreek: 4 } }] },
-    streken: state.streken.map((streek) =>
-      streek.hoogte === 2
-        ? {
-            ...streek,
-            ontgrendeld: true,
-            tiles: streek.tiles.map((tile) =>
-              tile.positieInStreek === 4
-                ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
-                : tile
-            ),
-          }
-        : streek
+    streken: metOntgrendeldeStreek3(
+      state.streken.map((streek) =>
+        streek.hoogte === 2
+          ? {
+              ...streek,
+              ontgrendeld: true,
+              tiles: streek.tiles.map((tile) =>
+                tile.positieInStreek === 4
+                  ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
+                  : tile
+              ),
+            }
+          : streek
+      )
     ),
   };
 }

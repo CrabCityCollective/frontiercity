@@ -191,7 +191,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"):
   // zelfde eenmalige-confirm-vlag, getoond zodra er voor het eerst een
   // actieve, wegverbonden boerderij meeproduceert (zie economie.ts
-  // `heeftWerkendeBoerderij`).
+  // `heeftWerkendeBoerderij`) — sinds "Tweede streek boerderij" ten vroegste
+  // streek 2.
   const [boerderijKlaarBevestigd, setBoerderijKlaarBevestigd] = useState(false);
   // Strijders-opleiden-uitleg-pop-up (issue: "pop-ups wijzigen"): zelfde
   // eenmalige-confirm-vlag, getoond zodra er voor het eerst een gebouwde mijn
@@ -203,22 +204,27 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // hieronder).
   const [stadUpgradeUitlegBevestigd, setStadUpgradeUitlegBevestigd] = useState(false);
   // "De vijand aan de horizon"- en "Goddelijke raadgeving"-pop-ups (issue:
-  // "tutorial popups wijzigen", trigger van de laatste verschoven van streek 3
-  // naar 4 door "jagen en farmen omdraaien"): zelfde eenmalige-confirm-vlaggen,
-  // getoond zodra respectievelijk streek 2 (Militair/Wachttoren) en streek 4
+  // "tutorial popups wijzigen", trigger van de eerste verschoven van streek 2
+  // naar 3 door "Tweede streek boerderij", trigger van de laatste verschoven
+  // van streek 3 naar 4 door "jagen en farmen omdraaien"): zelfde
+  // eenmalige-confirm-vlaggen, getoond zodra respectievelijk streek 3
+  // (Militair/Wachttoren, Economisch/Mijn) en streek 4
   // (Wetenschappelijk/Sterrencirkel) voor het eerst ontgrendeld worden — zie
   // `toonVijandAanDeHorizonPopup`/`toonGoddelijkeRaadgevingPopup` hieronder.
   const [vijandAanDeHorizonBevestigd, setVijandAanDeHorizonBevestigd] = useState(false);
   const [goddelijkeRaadgevingBevestigd, setGoddelijkeRaadgevingBevestigd] = useState(false);
-  // Frontier-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-confirm-
-  // vlag, getoond direct na de "vijand aan de horizon"-pop-up hierboven —
-  // zodra streek 2 voor het eerst ontgrendelt is dit het eerste moment waarop
-  // de frontier-only-bouwregel (hoofdstuk 2) er ook echt toe doet.
+  // Frontier-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van
+  // streek 2 naar 3 door "Tweede streek boerderij"): zelfde
+  // eenmalige-confirm-vlag, getoond direct na de "vijand aan de
+  // horizon"-pop-up hierboven — zodra streek 3 voor het eerst ontgrendelt is
+  // dit het moment waarop zowel de frontier-only-bouwregel (hoofdstuk 2) als
+  // de Wachttoren-uitzondering daarop er ook echt toe doen.
   const [frontierUitlegBevestigd, setFrontierUitlegBevestigd] = useState(false);
-  // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-
-  // confirm-vlag, getoond zodra streek 2 voor het eerst ontgrendelt — legt uit
-  // waarom de Wachttoren (anders dan alle andere bouwwerken) op elke
-  // ontgrendelde streek te plaatsen is.
+  // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
+  // van streek 2 naar 3 door "Tweede streek boerderij"): zelfde
+  // eenmalige-confirm-vlag, getoond zodra streek 3 voor het eerst ontgrendelt
+  // — legt uit waarom de Wachttoren (anders dan alle andere bouwwerken) op
+  // elke ontgrendelde streek te plaatsen is.
   const [wachttorenOveralUitlegBevestigd, setWachttorenOveralUitlegBevestigd] = useState(false);
   // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van
   // streek 4 naar streek 1 door "jagen en farmen omdraaien"): zelfde
@@ -515,9 +521,11 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     state.stad.vervalStatus === "kritiek" &&
     !voedselWaarschuwingBevestigd;
-  // "De vijand aan de horizon"-pop-up (issue: "tutorial popups wijzigen"):
-  // zodra streek 2 voor het eerst ontgrendelt — het moment waarop Militair/de
-  // Wachttoren beschikbaar komt (zie improvements.ts: `minStreek`).
+  // "De vijand aan de horizon"-pop-up (issue: "tutorial popups wijzigen",
+  // trigger verschoven van streek 2 naar 3 door "Tweede streek boerderij"):
+  // zodra streek 3 voor het eerst ontgrendelt — het moment waarop Militair/de
+  // Wachttoren en Economisch/de Mijn beschikbaar komen (zie improvements.ts:
+  // `minStreek`).
   const toonVijandAanDeHorizonPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
@@ -525,10 +533,11 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     uitlegAan &&
     !vijandAanDeHorizonBevestigd &&
-    hoogsteOntgrendeldeStreek(state.streken) >= 2;
-  // Frontier-uitleg-pop-up (issue: "meer uitleg"): direct na de pop-up
-  // hierboven, zelfde ontgrendel-trigger (streek 2) — legt uit dat bouwen
-  // vanaf nu alleen nog op de frontier-streek kan.
+    hoogsteOntgrendeldeStreek(state.streken) >= 3;
+  // Frontier-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van
+  // streek 2 naar 3 door "Tweede streek boerderij"): direct na de pop-up
+  // hierboven, zelfde ontgrendel-trigger (streek 3) — legt uit dat bouwen
+  // vanaf nu alleen nog op de frontier-streek kan (op de Wachttoren na).
   const toonFrontierUitlegPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
@@ -537,7 +546,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandAanDeHorizonPopup &&
     uitlegAan &&
     !frontierUitlegBevestigd &&
-    hoogsteOntgrendeldeStreek(state.streken) >= 2;
+    hoogsteOntgrendeldeStreek(state.streken) >= 3;
   // "Goddelijke raadgeving"-pop-up (issue: "tutorial popups wijzigen", trigger
   // verschoven van streek 3 naar 4 door "jagen en farmen omdraaien"): zodra
   // streek 4 voor het eerst ontgrendelt — het moment waarop Wetenschappelijk/de
@@ -552,11 +561,12 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !goddelijkeRaadgevingBevestigd &&
     hoogsteOntgrendeldeStreek(state.streken) >= 4;
   // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen",
-  // inhoud aangepast door "jagen en farmen omdraaien"): zodra er voor het
-  // eerst een actieve, wegverbonden boerderij meeproduceert — dat is nu ten
-  // vroegste streek 3, en dit introduceert de boerderij als tweede
-  // voedselbron naast de jacht (het Heiligdom/de Wachttoren zijn dan al
-  // langer bekend, zie tutorialContent.ts: `BOERDERIJ_KLAAR_TEKST`).
+  // inhoud aangepast door "jagen en farmen omdraaien" en nogmaals door
+  // "Tweede streek boerderij"): zodra er voor het eerst een actieve,
+  // wegverbonden boerderij meeproduceert — dat is nu ten vroegste streek 2,
+  // en dit introduceert de boerderij als tweede voedselbron naast de jacht
+  // (het Heiligdom is dan al bekend, de Wachttoren nog niet — zie
+  // tutorialContent.ts: `BOERDERIJ_KLAAR_TEKST`).
   const toonBoerderijKlaarUitlegPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
@@ -803,10 +813,11 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     Boolean(state.vijandelijkHeiligdomVernietigdEvent);
-  // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg"): laagste prioriteit
+  // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
+  // van streek 2 naar 3 door "Tweede streek boerderij"): laagste prioriteit
   // van de uitleg-pop-ups, zodat hij nooit kerninhoud (indringers/kudde/
   // roofdier/amber/tech/bezette streek) onderbreekt — verschijnt zodra streek
-  // 2 voor het eerst ontgrendelt en alle hogere-prioriteit pop-ups afgehandeld
+  // 3 voor het eerst ontgrendelt en alle hogere-prioriteit pop-ups afgehandeld
   // zijn.
   const toonWachttorenOveralUitlegPopup =
     !toonStreekPopup &&
@@ -831,7 +842,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVijandelijkHeiligdomVernietigdPopup &&
     uitlegAan &&
     !wachttorenOveralUitlegBevestigd &&
-    hoogsteOntgrendeldeStreek(state.streken) >= 2;
+    hoogsteOntgrendeldeStreek(state.streken) >= 3;
   // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
   // van streek 4 naar streek 1 door "jagen en farmen omdraaien"): direct na
   // de pop-up hierboven, zelfde lage prioriteit — verschijnt al zodra streek
