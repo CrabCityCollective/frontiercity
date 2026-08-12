@@ -62,6 +62,7 @@ export function maakInitieleSpelStatus(): GameState {
     technologieen: [],
     beurt: 1,
     bouwKeuzeGedaanDitBeurt: false,
+    bouwPopupAfgehandeldTellerPerStreek: {},
     settlerActieGedaanDitBeurt: false,
     verkenningGedaanDitBeurt: false,
     volgendeBouwBeurt: 1,

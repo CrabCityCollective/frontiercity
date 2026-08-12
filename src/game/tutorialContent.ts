@@ -159,9 +159,9 @@ export function streekContent(hoogte: number): StreekContent | undefined {
 // reden erachter (`bouwbaarBuitenFrontier` in improvements.ts, en
 // `WACHTTOREN_OVERROMPELD_TEKST` verderop in dit bestand voor het gevolg als je
 // een oudere streek onbewaakt laat).
-export const WACHTTOREN_OVERAL_UITLEG_TITEL = "De wachttoren kent geen grens";
+export const WACHTTOREN_OVERAL_UITLEG_TITEL = "De wachttoren kun je overal bouwen";
 export const WACHTTOREN_OVERAL_UITLEG_TEKST =
-  "De meeste gebouwen komen alleen op de frontier. De wachttoren niet: die zet je neer op elke streek die je al ontgrendeld hebt, ook ver achter je. Reden: indringers kiezen niet altijd de frontier als doelwit, soms zoeken ze een oudere streek uit. Een onbemande wachttoren houdt dan geen stand. Verspreid je wachttorens dus over de hele tocht, niet alleen vooraan.";
+  "De meeste gebouwen komen alleen op de frontier. De wachttoren niet: die zet je neer op elke streek die je al ontgrendeld hebt, ook ver achter je. Reden: indringers kiezen niet altijd de frontier als doelwit, soms zoeken ze een oudere streek uit. Een wachttoren beschermd zijn eigen streek tegen indringers, en ook de streek precies eronder..";
 
 // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "voedsel komt
 // van 2 bronnen ... die zijn te optimaliseren met wetenschap ... er zijn ook 2
@@ -178,7 +178,7 @@ export const WACHTTOREN_OVERAL_UITLEG_TEKST =
 // balans naar twee bronnen uitbreidt); wachttorens volgen pas op streek 3.
 export const VOEDSEL_BALANS_UITLEG_TITEL = "Voedsel verzamelen";
 export const VOEDSEL_BALANS_UITLEG_TEKST =
-  "De stad heeft dringend voedsel nodig. Er is een kudde verschenen, waar we op kunnen jagen.";
+  "De stad heeft dringend voedsel nodig. Iedere beurt heeft de stad 2 voedsel nodig om te overleven. Wanneer de voedselvoorraad op 0 is gekomen, is het game over. Je krijgt een waarschuwing 5 beurten voordat dit gebeurt. Voor nu kunnen we jagen op de kudde om te overleven. Je kunt een aantal beurten jagen voordat de kudde weer wegtrekt.";
 
 // Settler-acties-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "de settler
 // bouwt wegen, jaagt en hakt hout ... maar voor het bouwen hoeft de settler niet
@@ -189,9 +189,9 @@ export const VOEDSEL_BALANS_UITLEG_TEKST =
 // (wegaanleg, jacht, houtkap — `acties.ts`: `legWegAan`/`jaag`/`hakHout`) naast
 // elkaar, en het punt dat verrast: bouwen zelf (`startBouw`, infrastructuurEnBouw.ts)
 // controleert nergens waar de settler staat.
-export const SETTLER_ACTIES_UITLEG_TITEL = "Wat de settler allemaal kan";
+export const SETTLER_ACTIES_UITLEG_TITEL = "De settler";
 export const SETTLER_ACTIES_UITLEG_TEKST =
-  "De settler doet elke beurt hoogstens één ding: een weg aanleggen, jagen op een kudde, of hout hakken in het bos. Bouwen zelf werkt los daarvan, je kunt overal bouwen op de frontier, ook als de settler er niet staat.";
+  "Behalve wegen aanleggen kan de settler ook jagen op wild en hout hakken in een bos. Iedere actie en iedere stap kost hem 1 beurt. Voor het bouwen is de settler niet nodig, alleen voor de weg ernaartoe.";
 
 // Beurtensysteem-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "het
 // beurten systeem: iedere beurt worden resources berekend: hoeveel heb je
@@ -203,7 +203,7 @@ export const SETTLER_ACTIES_UITLEG_TEKST =
 // SETTLER_ACTIES_UITLEG_* hierboven.
 export const BEURTENSYSTEEM_UITLEG_TITEL = "De grondstoffen economie";
 export const BEURTENSYSTEEM_UITLEG_TEKST =
-  "Elke beurt rekent het spel af: wat een gebouw in aanbouw nog kost, gaat van de voorraad indien er genoeg van is. Tegelijk komt er nieuwe productie binnen — hout, steen, erts, voedsel — en verbruiken de stad en elke bemande wachttoren weer voedsel. Zo groeit of slinkt de voorraad, beurt na beurt.";
+  "Elke beurt wordt berekend welke bouwmaterialen nodig zijn voor een gebouw in aanbouw. Tegelijk komt er nieuwe materiaal binnen: hout, steen, erts. Zo groeit of slinkt de voorraad, beurt na beurt.";
 
 // Bezette-Streek-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
 // missionaris en verkenner", Deel 2), getoond zodra streek 13 "in beeld komt"
@@ -240,9 +240,9 @@ export const OCEAAN_UITLEG_TEKST =
 // Settler-uitleg-pop-up (M10, hoofdstuk 16: settler-mechaniek + bouw-ritme),
 // getoond zodra de settler in beurt 2 verschijnt. Zelfde eenmalige-confirm-
 // patroon als BEZETTE_STREEK_* hierboven.
-export const SETTLER_UITLEG_TITEL = "De settler";
+export const SETTLER_UITLEG_TITEL = "Wegen bouwen";
 export const SETTLER_UITLEG_TEKST =
-  "De settler kan bewegen over de kaart, en wegen bouwen. We moeten nu een weg naar onze gebouwen aanleggen, anders bereiken de grondstoffen de voorraad niet.";
+  "We moeten eerst een weg naar onze gebouwen aanleggen, anders bereiken de grondstoffen de voorraad niet. Gebruik de settler om een weg aan te leggen van de stad naar de steengroeve.";
 
 // Tutorial-voltooid-pop-up (issue: "pop-up met een summary van wat je
 // geleerd hebt"), getoond zodra een nieuwe stad gesticht is (hoofdstuk
@@ -284,9 +284,9 @@ export const VOEDSEL_WAARSCHUWING_TEKST =
 // de Wachttoren dus niet meer als al-bestaande tweede voedselverbruiker
 // noemen — dat is nu nog toekomstmuziek — en foreshadowt 'm in plaats daarvan
 // alvast, dezelfde functie als VOEDSEL_BALANS_UITLEG_* eerder al deed.
-export const BOERDERIJ_KLAAR_TITEL = "Twee bronnen, twee monden";
+export const BOERDERIJ_KLAAR_TITEL = "Twee voedselbronnen";
 export const BOERDERIJ_KLAAR_TEKST =
-  "De boerderij levert voortaan naast de jacht een tweede stroom voedsel. Wetenschap maakt beide opbrengsten groter. Er eet voorlopig nog maar één partij mee: de stad zelf. Later, zodra er bemande wachttorens bijkomen, eten die ook mee — hoe verder je komt, hoe scherper die balans wordt.";
+  "De boerderij is een efficiëntere manier om voedsel te produceren dan de jacht, want je hebt je settler nu vrij voor andere dingen. Hoe verder je komt, hoe meer voedsel je nodig zal hebben. Ieder stuk grond raakt uitgeput na een aantal beurten. Dit staat aangegeven met een getalletje bij ieder gebouw. Als de grond uitgeput is, produceert het gebouw niets meer. Maar hoe groter de stad en hoe meer bemande wachttorens, hoe meer voedsel je nodig hebt.";
 
 // Goddelijke-raadgeving-pop-up (issue: "tutorial popups wijzigen", trigger
 // verschoven van streek 3 naar 4 door "jagen en farmen omdraaien"): getoond
@@ -310,20 +310,6 @@ export const VIJAND_AAN_DE_HORIZON_TITEL = "De vijand aan de horizon";
 export const VIJAND_AAN_DE_HORIZON_TEKST =
   "Niet alle wilde stammen zitten op onze opmars te wachten, ze proberen ons gebied binnen te dringen. We hebben nu erts nodig uit de heuvels en bergen. Bouw een mijn. Dat is het eerste wat we nu nodig hebben.";
 
-// Frontier-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van streek
-// 2 naar 3 door "Tweede streek boerderij" — anders zou deze pop-up de
-// Wachttoren al noemen als bouwbare uitzondering vóórdat die überhaupt
-// bestaat): getoond zodra streek 3 voor het eerst ontgrendelt, direct na
-// VIJAND_AAN_DE_HORIZON_* hierboven. Streek 1 is technisch al niet meer
-// bebouwbaar zodra streek 2 ontgrendelt, maar pas hier — samen met de
-// Wachttoren-uitzondering op die regel — wordt de frontier-only-bouwregel
-// (hoofdstuk 2: alleen de hoogst ontgrendelde streek is bebouwbaar) ook echt
-// voelbaar. Tot het originele issue werd deze regel alleen reactief
-// uitgelegd, in de tegel-infopopup zodra je een leeg vakje op een oudere
-// streek aanklikte (zie tileInfo.ts).
-export const FRONTIER_UITLEG_TITEL = "Bouwen kan alleen op de frontier";
-export const FRONTIER_UITLEG_TEKST =
-  "Vanaf nu geldt een belangrijke regel: nieuwe land-improvements bouw je alleen nog op de hoogst ontgrendelde streek, de frontier. Holenrots en de streek erachter blijven op de kaart staan, maar daar is alleen nog een Wachttoren te plaatsen. Trek verder de wildernis in om weer nieuwe grond te kunnen bebouwen.";
 
 // Strijders-opleiden-uitleg-pop-up (issue: "pop-ups wijzigen"): getoond zodra
 // er voor het eerst een gebouwde mijn staat (zie economie.ts
@@ -418,3 +404,35 @@ export const AMBER_ONTDEKKING_TEKST =
 export const AMBER_ONTDEKKING_TWEEDE_TITEL = "Nog een amberader";
 export const AMBER_ONTDEKKING_TWEEDE_TEKST =
   "Een tweede ader vol amber, verscholen in de rotsen. Mooi meegenomen, mocht de eerste ooit opdrogen — het goud dat eruit komt, blijft hier hard nodig.";
+
+// Heiligdom-uitleg-pop-up (issue: "Teksten aanpassen (nog meer)"): getoond in
+// plaats van de gewone bouw-pop-up, de tweede keer dat die op streek 1 zou
+// verschijnen (zie GameRoot: `toonHeiligdomUitlegPopup`, geteld via
+// `bouwPopupAfgehandeldTellerPerStreek`, infrastructuurEnBouw.ts).
+export const HEILIGDOM_UITLEG_TITEL = "Het Heiligdom";
+export const HEILIGDOM_UITLEG_TEKST =
+  "Bouw nu een Heiligdom. Die produceert 'cultuur'. Na een bepaalde hoeveel cultuur te hebben geproduceerd, opent zich de volgende streek waar je op kunt bouwen.";
+
+// Niet-bouwen-uitleg-pop-up (issue: "Teksten aanpassen (nog meer)"): getoond
+// in plaats van de gewone bouw-pop-up, de derde keer dat die op streek 1 zou
+// verschijnen — zelfde tel-mechanisme als `HEILIGDOM_UITLEG_*` hierboven.
+export const NIET_BOUWEN_UITLEG_TITEL = "Je hoeft niet te bouwen";
+export const NIET_BOUWEN_UITLEG_TEKST =
+  "Als je je grondstoffen wilt bewaren voor een later moment, dan kun je ook kiezen om een beurtje niets te bouwen. Voorkom dat je in de knel komt met bouwmaterialen, want ieder gebouw in aanbouw heeft wel grondstoffen nodig, maar produceert ze nog niet!";
+
+// Boerderij-streek-uitleg-pop-up (issue: "Teksten aanpassen (nog meer)"):
+// getoond in plaats van de gewone bouw-pop-up, de eerste keer dat die op
+// streek 2 verschijnt — zelfde tel-mechanisme als `HEILIGDOM_UITLEG_*`
+// hierboven. Los van `BOERDERIJ_KLAAR_TITEL`/`-TEKST` hierboven, die pas
+// verschijnt zodra de boerderij daadwerkelijk actief is.
+export const BOERDERIJ_STREEK_UITLEG_TITEL = "De boerderij";
+export const BOERDERIJ_STREEK_UITLEG_TEKST =
+  "Je hebt een nieuwe streek ontgrendeld. Dit is je nieuwe frontier. De frontier is enige laag waar je op kunt bouwen. Bouw nu de boerderij ergens op een vakje met vlakke grond, maar vergeet niet dat er een weg moet lopen voordat de boerderij voedsel oplevert voor je stad.";
+
+// Houtkap-streek-uitleg-pop-up (issue: "Teksten aanpassen (nog meer)"):
+// getoond in plaats van de gewone bouw-pop-up, de tweede keer dat die op
+// streek 2 verschijnt — zelfde tel-mechanisme als `HEILIGDOM_UITLEG_*`
+// hierboven.
+export const HOUTKAP_STREEK_UITLEG_TITEL = "Houtkap";
+export const HOUTKAP_STREEK_UITLEG_TEKST =
+  "Het bouwen van de boerderij kostte het laatste hout uit de voorraad dus dat moeten we als eerste weer aanvullen. Bouw een houtkap op een bos.";

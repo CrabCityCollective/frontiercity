@@ -6,7 +6,7 @@ import BeurtensysteemUitlegPopup from "@/components/BeurtensysteemUitlegPopup";
 import BezetteStreekPopup from "@/components/BezetteStreekPopup";
 import BoerderijKlaarUitlegPopup from "@/components/BoerderijKlaarUitlegPopup";
 import BouwPopup from "@/components/BouwPopup";
-import FrontierUitlegPopup from "@/components/FrontierUitlegPopup";
+import BouwUitlegPopup from "@/components/BouwUitlegPopup";
 import GoddelijkeRaadgevingPopup from "@/components/GoddelijkeRaadgevingPopup";
 import HistoriePaneel from "@/components/HistoriePaneel";
 import HoofdMenu from "@/components/HoofdMenu";
@@ -38,9 +38,20 @@ import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { verhuldeBezetteStreekPosities } from "@/game/streekOntgrendeling";
-import { AMBER_ONTDEKKING_TWEEDE_TEKST, AMBER_ONTDEKKING_TWEEDE_TITEL } from "@/game/tutorialContent";
+import {
+  AMBER_ONTDEKKING_TWEEDE_TEKST,
+  AMBER_ONTDEKKING_TWEEDE_TITEL,
+  BOERDERIJ_STREEK_UITLEG_TEKST,
+  BOERDERIJ_STREEK_UITLEG_TITEL,
+  HEILIGDOM_UITLEG_TEKST,
+  HEILIGDOM_UITLEG_TITEL,
+  HOUTKAP_STREEK_UITLEG_TEKST,
+  HOUTKAP_STREEK_UITLEG_TITEL,
+  NIET_BOUWEN_UITLEG_TEKST,
+  NIET_BOUWEN_UITLEG_TITEL,
+} from "@/game/tutorialContent";
 import { berekenLegerwaarde, onbemandeLegerkampPosities } from "@/game/militair";
-import { heeftGebouwdeMijn, heeftWerkendeBoerderij } from "@/game/productie";
+import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij } from "@/game/productie";
 import { grafischeStijl, heeftOpgeslagenSpel, markeerTutorialVoltooid, zetGrafischeStijl } from "@/game/save";
 import { beschrijfEindeOceaanTile, beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
@@ -213,13 +224,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // `toonVijandAanDeHorizonPopup`/`toonGoddelijkeRaadgevingPopup` hieronder.
   const [vijandAanDeHorizonBevestigd, setVijandAanDeHorizonBevestigd] = useState(false);
   const [goddelijkeRaadgevingBevestigd, setGoddelijkeRaadgevingBevestigd] = useState(false);
-  // Frontier-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van
-  // streek 2 naar 3 door "Tweede streek boerderij"): zelfde
-  // eenmalige-confirm-vlag, getoond direct na de "vijand aan de
-  // horizon"-pop-up hierboven — zodra streek 3 voor het eerst ontgrendelt is
-  // dit het moment waarop zowel de frontier-only-bouwregel (hoofdstuk 2) als
-  // de Wachttoren-uitzondering daarop er ook echt toe doen.
-  const [frontierUitlegBevestigd, setFrontierUitlegBevestigd] = useState(false);
   // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
   // van streek 2 naar 3 door "Tweede streek boerderij"): zelfde
   // eenmalige-confirm-vlag, getoond zodra streek 3 voor het eerst ontgrendelt
@@ -241,6 +245,14 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // confirm-vlag, getoond zodra beurt 2 begint — het eerste moment waarop een
   // volledige beurt (verbruik + productie) al is doorgerekend.
   const [beurtensysteemUitlegBevestigd, setBeurtensysteemUitlegBevestigd] = useState(false);
+  // Bouw-pop-up-vervangende uitleg-pop-ups (issue: "Teksten aanpassen (nog
+  // meer)"): zelfde eenmalige-confirm-vlaggen, getoond in plaats van de
+  // gewone bouw-pop-up op de tweede/derde bouw-beurt van streek 1 en de
+  // eerste/tweede van streek 2 — zie `toonHeiligdomUitlegPopup` e.a. hieronder.
+  const [heiligdomUitlegBevestigd, setHeiligdomUitlegBevestigd] = useState(false);
+  const [nietBouwenUitlegBevestigd, setNietBouwenUitlegBevestigd] = useState(false);
+  const [boerderijStreekUitlegBevestigd, setBoerderijStreekUitlegBevestigd] = useState(false);
+  const [houtkapStreekUitlegBevestigd, setHoutkapStreekUitlegBevestigd] = useState(false);
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is"): anders dan de
   // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
@@ -534,19 +546,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !vijandAanDeHorizonBevestigd &&
     hoogsteOntgrendeldeStreek(state.streken) >= 3;
-  // Frontier-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van
-  // streek 2 naar 3 door "Tweede streek boerderij"): direct na de pop-up
-  // hierboven, zelfde ontgrendel-trigger (streek 3) — legt uit dat bouwen
-  // vanaf nu alleen nog op de frontier-streek kan (op de Wachttoren na).
-  const toonFrontierUitlegPopup =
-    !toonStreekPopup &&
-    !toonUitlegPopup &&
-    !toonSettlerUitlegPopup &&
-    !toonVoedselWaarschuwingPopup &&
-    !toonVijandAanDeHorizonPopup &&
-    uitlegAan &&
-    !frontierUitlegBevestigd &&
-    hoogsteOntgrendeldeStreek(state.streken) >= 3;
   // "Goddelijke raadgeving"-pop-up (issue: "tutorial popups wijzigen", trigger
   // verschoven van streek 3 naar 4 door "jagen en farmen omdraaien"): zodra
   // streek 4 voor het eerst ontgrendelt — het moment waarop Wetenschappelijk/de
@@ -573,7 +572,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     uitlegAan &&
     !boerderijKlaarBevestigd &&
@@ -587,7 +585,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     uitlegAan &&
@@ -605,7 +602,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -619,7 +615,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -636,7 +631,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -658,7 +652,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -675,7 +668,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -690,7 +682,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -709,7 +700,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -730,7 +720,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -753,7 +742,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -778,7 +766,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -798,7 +785,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -825,7 +811,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -857,7 +842,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -887,7 +871,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -907,17 +890,17 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !settlerActiesUitlegBevestigd &&
     Boolean(state.settler);
-  // Beurtensysteem-uitleg-pop-up (issue: "meer uitleg"): zelfde lage
-  // prioriteit, direct na de pop-up hierboven — verschijnt zodra beurt 2
-  // begint, het eerste moment waarop een volledige beurt (verbruik +
-  // productie) al is doorgerekend.
+  // Beurtensysteem-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
+  // van "beurt 2 begint" naar "de Steengroeve is geplaatst" door issue:
+  // "Teksten aanpassen (nog meer)" — dat is het moment waarop de tekst, die
+  // over bouwmateriaal-verbruik gaat, ook daadwerkelijk relevant is): zelfde
+  // lage prioriteit, direct na de pop-up hierboven.
   const toonBeurtensysteemUitlegPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -937,18 +920,29 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerActiesUitlegPopup &&
     uitlegAan &&
     !beurtensysteemUitlegBevestigd &&
-    state.beurt >= 2;
-  // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
-  // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
-  // "confrontatie op streek 12 gewonnen" als trigger: het stichten is nu het
-  // tutorial-einddoel, niet het bereiken van streek 12).
-  const toonTutorialVoltooidPopup =
+    heeftGeplaatsteSteengroeve(state);
+  // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
+  // worden vanaf `volgendeBouwBeurt` — de `?? 1` is puur een veilige default
+  // voor een save van vóór dit veld bestond.
+  const kanBouwen = state.beurt >= (state.volgendeBouwBeurt ?? 1);
+  // Bouw-pop-up-vervangende uitleg-pop-ups (issue: "Teksten aanpassen (nog
+  // meer)"): op streek 1 vervangen ze de tweede en derde keer dat de bouw-
+  // pop-up zou verschijnen, op streek 2 de eerste en tweede keer — geteld via
+  // `bouwPopupAfgehandeldTellerPerStreek` (infrastructuurEnBouw.ts), dat elke
+  // keer ophoogt zodra de bouw-pop-up voor de huidige (frontier-)streek
+  // wordt afgehandeld (gebouwd óf overgeslagen). `+ 1` omdat de teller pas
+  // ná afhandeling ophoogt: de eerste keer staat hij nog op 0. Net als de
+  // gewone bouw-pop-up alleen relevant zolang er deze beurt nog een
+  // bouwkeuze openstaat (`kanBouwen && !state.bouwKeuzeGedaanDitBeurt`).
+  const bouwPopupWeergaveNummer =
+    (state.bouwPopupAfgehandeldTellerPerStreek?.[actieveStreek.hoogte] ?? 0) + 1;
+  const magBouwUitlegTonen = kanBouwen && !state.bouwKeuzeGedaanDitBeurt;
+  const toonHeiligdomUitlegPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
-    !toonFrontierUitlegPopup &&
     !toonGoddelijkeRaadgevingPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
@@ -967,12 +961,138 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
+    uitlegAan &&
+    !heiligdomUitlegBevestigd &&
+    magBouwUitlegTonen &&
+    actieveStreek.hoogte === 1 &&
+    bouwPopupWeergaveNummer === 2;
+  const toonNietBouwenUitlegPopup =
+    !toonHeiligdomUitlegPopup &&
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    uitlegAan &&
+    !nietBouwenUitlegBevestigd &&
+    magBouwUitlegTonen &&
+    actieveStreek.hoogte === 1 &&
+    bouwPopupWeergaveNummer === 3;
+  const toonBoerderijStreekUitlegPopup =
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    uitlegAan &&
+    !boerderijStreekUitlegBevestigd &&
+    magBouwUitlegTonen &&
+    actieveStreek.hoogte === 2 &&
+    bouwPopupWeergaveNummer === 1;
+  const toonHoutkapStreekUitlegPopup =
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    uitlegAan &&
+    !houtkapStreekUitlegBevestigd &&
+    magBouwUitlegTonen &&
+    actieveStreek.hoogte === 2 &&
+    bouwPopupWeergaveNummer === 2;
+  // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
+  // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
+  // "confrontatie op streek 12 gewonnen" als trigger: het stichten is nu het
+  // tutorial-einddoel, niet het bereiken van streek 12).
+  const toonTutorialVoltooidPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
-  // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
-  // worden vanaf `volgendeBouwBeurt` — de `?? 1` is puur een veilige default
-  // voor een save van vóór dit veld bestond.
-  const kanBouwen = state.beurt >= (state.volgendeBouwBeurt ?? 1);
 
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
@@ -1104,7 +1224,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonVijandAanDeHorizonPopup && (
           <VijandAanDeHorizonPopup onDoorgaan={() => setVijandAanDeHorizonBevestigd(true)} />
         )}
-        {toonFrontierUitlegPopup && <FrontierUitlegPopup onDoorgaan={() => setFrontierUitlegBevestigd(true)} />}
         {toonGoddelijkeRaadgevingPopup && (
           <GoddelijkeRaadgevingPopup onDoorgaan={() => setGoddelijkeRaadgevingBevestigd(true)} />
         )}
@@ -1128,6 +1247,34 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         )}
         {toonBeurtensysteemUitlegPopup && (
           <BeurtensysteemUitlegPopup onDoorgaan={() => setBeurtensysteemUitlegBevestigd(true)} />
+        )}
+        {toonHeiligdomUitlegPopup && (
+          <BouwUitlegPopup
+            titel={HEILIGDOM_UITLEG_TITEL}
+            tekst={HEILIGDOM_UITLEG_TEKST}
+            onDoorgaan={() => setHeiligdomUitlegBevestigd(true)}
+          />
+        )}
+        {toonNietBouwenUitlegPopup && (
+          <BouwUitlegPopup
+            titel={NIET_BOUWEN_UITLEG_TITEL}
+            tekst={NIET_BOUWEN_UITLEG_TEKST}
+            onDoorgaan={() => setNietBouwenUitlegBevestigd(true)}
+          />
+        )}
+        {toonBoerderijStreekUitlegPopup && (
+          <BouwUitlegPopup
+            titel={BOERDERIJ_STREEK_UITLEG_TITEL}
+            tekst={BOERDERIJ_STREEK_UITLEG_TEKST}
+            onDoorgaan={() => setBoerderijStreekUitlegBevestigd(true)}
+          />
+        )}
+        {toonHoutkapStreekUitlegPopup && (
+          <BouwUitlegPopup
+            titel={HOUTKAP_STREEK_UITLEG_TITEL}
+            tekst={HOUTKAP_STREEK_UITLEG_TEKST}
+            onDoorgaan={() => setHoutkapStreekUitlegBevestigd(true)}
+          />
         )}
         {legerkampKiesModusStrijderId && (
           <WachttorenKiesBanner onAnnuleren={() => setLegerkampKiesModusStrijderId(null)} />
@@ -1184,6 +1331,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonVoedselBalansUitlegPopup &&
             !toonSettlerActiesUitlegPopup &&
             !toonBeurtensysteemUitlegPopup &&
+            !toonHeiligdomUitlegPopup &&
+            !toonNietBouwenUitlegPopup &&
+            !toonBoerderijStreekUitlegPopup &&
+            !toonHoutkapStreekUitlegPopup &&
             !toonTutorialVoltooidPopup &&
             !legerkampKiesModusStrijderId &&
             !verkenningsModusActief &&

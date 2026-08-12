@@ -13,7 +13,7 @@ interface Campagne {
 // voor deze campagnes: dat blijft buiten de MVP-scope (CLAUDE.md), dit is
 // zuiver navigatie-UI.
 const CAMPAGNES: Campagne[] = [
-  { naam: "De Eerste Vuren", ondertitel: "Het Hertenpad-volk — Tutorial", beschikbaar: true },
+  { naam: "To the Elusive Coast", ondertitel: "Tutorial", beschikbaar: true },
   { naam: "Going West", ondertitel: "American Expansion", beschikbaar: false },
   { naam: "Through the Taiga", ondertitel: "Russian Expansion", beschikbaar: false },
   { naam: "Into the Footsteps of Alexander", ondertitel: "Grieks-Macedonische Veroveringen", beschikbaar: false },
