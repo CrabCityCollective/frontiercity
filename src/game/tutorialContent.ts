@@ -178,7 +178,7 @@ export const WACHTTOREN_OVERAL_UITLEG_TEKST =
 // balans naar twee bronnen uitbreidt); wachttorens volgen pas op streek 3.
 export const VOEDSEL_BALANS_UITLEG_TITEL = "Voedsel verzamelen";
 export const VOEDSEL_BALANS_UITLEG_TEKST =
-  "Het kamp heeft dringend voedsel nodig. Er is een kudde verschenen, waar we op kunnen jagen. Dat is voor nu genoeg om te overleven.";
+  "De stad heeft dringend voedsel nodig. Er is een kudde verschenen, waar we op kunnen jagen.";
 
 // Settler-acties-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "de settler
 // bouwt wegen, jaagt en hakt hout ... maar voor het bouwen hoeft de settler niet
@@ -191,7 +191,7 @@ export const VOEDSEL_BALANS_UITLEG_TEKST =
 // controleert nergens waar de settler staat.
 export const SETTLER_ACTIES_UITLEG_TITEL = "Wat de settler allemaal kan";
 export const SETTLER_ACTIES_UITLEG_TEKST =
-  "De settler doet elke beurt hoogstens één ding: een weg aanleggen, jagen op een kudde, of hout hakken in het bos. Een weg is nodig om een gebouw op de voorraad aan te sluiten — zonder weg bereiken de grondstoffen de stad niet. Bouwen zelf werkt los daarvan: dat kies je ergens op de frontier, ook als de settler daar zelf niet staat.";
+  "De settler doet elke beurt hoogstens één ding: een weg aanleggen, jagen op een kudde, of hout hakken in het bos. Bouwen zelf werkt los daarvan, je kunt overal bouwen op de frontier, ook als de settler er niet staat.";
 
 // Beurtensysteem-uitleg-pop-up (issue: "meer uitleg", vervolgvraag: "het
 // beurten systeem: iedere beurt worden resources berekend: hoeveel heb je
@@ -201,9 +201,9 @@ export const SETTLER_ACTIES_UITLEG_TEKST =
 // economie.ts `volgendeBeurt`), zodat de speler al iets heeft zien
 // veranderen om de uitleg aan op te hangen. Zelfde laagste prioriteit als
 // SETTLER_ACTIES_UITLEG_* hierboven.
-export const BEURTENSYSTEEM_UITLEG_TITEL = "Elke beurt wordt afgerekend";
+export const BEURTENSYSTEEM_UITLEG_TITEL = "De grondstoffen economie";
 export const BEURTENSYSTEEM_UITLEG_TEKST =
-  "Elke beurt rekent het spel af: wat een gebouw in aanbouw nog kost, gaat van de voorraad af zodra die genoeg heeft. Tegelijk komt er nieuwe productie binnen — hout, steen, erts, voedsel — en verbruiken de stad en elke bemande wachttoren weer voedsel. Zo groeit of slinkt de voorraad, beurt na beurt.";
+  "Elke beurt rekent het spel af: wat een gebouw in aanbouw nog kost, gaat van de voorraad indien er genoeg van is. Tegelijk komt er nieuwe productie binnen — hout, steen, erts, voedsel — en verbruiken de stad en elke bemande wachttoren weer voedsel. Zo groeit of slinkt de voorraad, beurt na beurt.";
 
 // Bezette-Streek-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
 // missionaris en verkenner", Deel 2), getoond zodra streek 13 "in beeld komt"
@@ -242,7 +242,7 @@ export const OCEAAN_UITLEG_TEKST =
 // patroon als BEZETTE_STREEK_* hierboven.
 export const SETTLER_UITLEG_TITEL = "De settler";
 export const SETTLER_UITLEG_TEKST =
-  "We gaan vooruit de wildenis in. De settlers kunnen bewegen over de kaart, en wegen bouwen. We moeten een weg naar onze eerste gebouwen aanleggen, anders bereiken de grondstoffen de voorraad niet.";
+  "De settler kan bewegen over de kaart, en wegen bouwen. We moeten nu een weg naar onze gebouwen aanleggen, anders bereiken de grondstoffen de voorraad niet.";
 
 // Tutorial-voltooid-pop-up (issue: "pop-up met een summary van wat je
 // geleerd hebt"), getoond zodra een nieuwe stad gesticht is (hoofdstuk
@@ -260,7 +260,7 @@ export const TUTORIAL_VOLTOOID_INTRO =
 export const INTRO_TITEL = "De Eerste Vuren";
 export const INTRO_SUBTITEL = "Het Hertenpad-volk";
 export const INTRO_FLAVOR_TEKST =
-  "Onze voorouders hebben aons lang op deze kust gewoond, maar de tijd is aangebroken om het binnenland in te trekken, op zoek naar nieuw land. Ruimte en Glorie voor onze stam! Het zal niet makkelijk worden, maar dankzij de goddelijke begeleiding zullen we de moeilijkheden kunnen doorstaan. (let op, deze tutorial is niet makkelijk)";
+  "Onze voorouders hebben aons lang op deze kust gewoond, maar de tijd is aangebroken om het binnenland in te trekken, op zoek naar nieuw land. (let op, deze tutorial is niet makkelijk)";
 
 // Voedselwaarschuwing-pop-up (issue: "uitleg pop-ups dynamisch tonen" —
 // vervangt de vroegere vaste beurt-3-pop-up): getoond zodra de stad voor het

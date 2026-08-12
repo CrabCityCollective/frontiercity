@@ -11,4 +11,4 @@
 
 export const OPENINGS_UITLEG_TITEL = "Bouwmaterialen";
 export const OPENINGS_UITLEG_TEKST =
-  "De stam gaat op pad, maar de materialen om te overleven zijn schaars. We hebben hout nodig, om te kunnen bouwen. Iedere 3 beurten krijg je de mogelijkheid om iets te bouwen om grondstoffen te vergaren. Onderin het scherm zie je je voorraad: hout, steen, erts, voedsel en cultuur. Begin eerst met de houtkap in een bos.";
+  "De materialen om onze stam op te bouwen zijn schaars. Onderin het scherm zie je je voorraad: hout, steen en erts. Bouw eerst een Steengroeve om Steen ver verzamelen.";
