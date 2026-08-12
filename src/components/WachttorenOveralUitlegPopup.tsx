@@ -9,7 +9,7 @@ interface WachttorenOveralUitlegPopupProps {
 // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
 // van streek 2 naar 3 door "Tweede streek boerderij"), getoond zodra streek 3
 // voor het eerst ontgrendelt — zelfde blokkerende overlay als de andere
-// uitleg-pop-ups (FrontierUitlegPopup, VijandAanDeHorizonPopup, ...).
+// uitleg-pop-ups (VijandAanDeHorizonPopup, SettlerUitlegPopup, ...).
 export default function WachttorenOveralUitlegPopup({ onDoorgaan }: WachttorenOveralUitlegPopupProps) {
   return (
     <div

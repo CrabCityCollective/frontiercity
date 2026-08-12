@@ -545,6 +545,12 @@ export interface GameState {
   // bouwen, en door `volgendeBeurt` weer teruggezet — een echte spelregel
   // die ook na een refresh/reload geldt, geen losse UI-vlag.
   bouwKeuzeGedaanDitBeurt: boolean;
+  // Telt, per streek-hoogte, hoe vaak de bouw-pop-up op die streek al is
+  // afgehandeld (issue: "Teksten aanpassen (nog meer)") — zie
+  // `metOpgehoogdeBouwPopupTeller` in infrastructuurEnBouw.ts. Gebruikt door
+  // GameRoot om een aantal eenmalige tutorial-pop-ups op de juiste
+  // bouw-beurt te tonen in plaats van de gewone bouw-pop-up.
+  bouwPopupAfgehandeldTellerPerStreek: Record<number, number>;
   // Gezet zodra de stad volledig instort (M6, hoofdstuk 4: hard verval). In de
   // MVP (één stad, geen frontier-verplaatsing) betekent dat het einde van de
   // run — de rest van deze `GameState` is dan al een verse tutorial-start

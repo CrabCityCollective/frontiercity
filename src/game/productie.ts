@@ -278,3 +278,12 @@ export function heeftGebouwdeMijn(state: GameState): boolean {
     streek.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "mijn")
   );
 }
+
+// Of de Steengroeve al geplaatst is (issue: "Teksten aanpassen (nog meer)" —
+// trigger voor BEURTENSYSTEEM_UITLEG_TEKST in tutorialContent.ts). Telt, anders
+// dan `heeftGebouwdeMijn` hierboven, ook een tile die nog "in_aanbouw" is mee:
+// het gaat om het moment van plaatsen zelf (de klik op het vakje), niet om een
+// voltooide bouw.
+export function heeftGeplaatsteSteengroeve(state: GameState): boolean {
+  return state.streken.some((streek) => streek.tiles.some((tile) => tile.improvement?.id === "steengroeve"));
+}

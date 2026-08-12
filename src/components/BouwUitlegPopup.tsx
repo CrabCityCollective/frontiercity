@@ -1,16 +1,18 @@
 "use client";
 
-import { FRONTIER_UITLEG_TEKST, FRONTIER_UITLEG_TITEL } from "@/game/tutorialContent";
-
-interface FrontierUitlegPopupProps {
+interface BouwUitlegPopupProps {
+  titel: string;
+  tekst: string;
   onDoorgaan: () => void;
 }
 
-// Frontier-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van streek
-// 2 naar 3 door "Tweede streek boerderij"), getoond zodra streek 3 voor het
-// eerst ontgrendelt — zelfde blokkerende overlay als de andere
-// uitleg-pop-ups (VijandAanDeHorizonPopup, SettlerUitlegPopup, ...).
-export default function FrontierUitlegPopup({ onDoorgaan }: FrontierUitlegPopupProps) {
+// Generieke bouw-pop-up-uitleg (issue: "Teksten aanpassen (nog meer)"):
+// vervangt, voor precies één beurt, de gewone bouw-pop-up door een korte
+// uitleg — gebruikt voor Heiligdom/Niet-bouwen (streek 1) en Boerderij/
+// Houtkap (streek 2), zie GameRoot: `bouwPopupWeergaveNummer`. Zelfde
+// blokkerende overlay als de andere eenmalige uitleg-pop-ups (SettlerUitlegPopup,
+// VijandAanDeHorizonPopup, ...) — alleen titel/tekst wisselen per aanroeper.
+export default function BouwUitlegPopup({ titel, tekst, onDoorgaan }: BouwUitlegPopupProps) {
   return (
     <div
       style={{
@@ -36,9 +38,9 @@ export default function FrontierUitlegPopup({ onDoorgaan }: FrontierUitlegPopupP
         }}
       >
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
-          {FRONTIER_UITLEG_TITEL}
+          {titel}
         </strong>
-        <p style={{ margin: 0, lineHeight: 1.6 }}>{FRONTIER_UITLEG_TEKST}</p>
+        <p style={{ margin: 0, lineHeight: 1.6 }}>{tekst}</p>
         <button className="fc-knop" onClick={onDoorgaan} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Begrepen
         </button>

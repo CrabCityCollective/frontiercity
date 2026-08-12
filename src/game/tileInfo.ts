@@ -250,7 +250,7 @@ export function beschrijfTile(
     titel: "Leeg vakje",
     ondertitel: `${streek.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
     tekst: (opFrontier
-      ? "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, een boerderij vereist vlakke grond. Heiligdommen, sterrencirkels en wachttorens kunnen overal geplaatst worden."
+      ? "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, net als een steengroeve. Een boerderij vereist vlakke grond. Heiligdommen, sterrencirkels en wachttorens kunnen overal geplaatst worden."
       : "Dit is niet meer de frontier-streek, dus hier is alleen nog een Wachttoren te bouwen — die mag, als uitzondering, op elke ontgrendelde streek geplaatst worden.") + versWaterTekst,
   };
 }

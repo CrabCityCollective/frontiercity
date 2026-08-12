@@ -11,4 +11,4 @@
 
 export const OPENINGS_UITLEG_TITEL = "Bouwmaterialen";
 export const OPENINGS_UITLEG_TEKST =
-  "De materialen om onze stam op te bouwen zijn schaars. Onderin het scherm zie je je voorraad: hout, steen en erts. Bouw eerst een Steengroeve om Steen ver verzamelen.";
+  "De materialen om onze stam op te bouwen zijn schaars. Onderin het scherm zie je je voorraad: hout, steen en erts. Bouw eerst een Steengroeve om Steen te verzamelen.";

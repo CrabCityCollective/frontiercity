@@ -12,11 +12,34 @@
 
 import { improvementPastOpTile, isBebouwbaarLeeg } from "./improvements";
 import { GameState, Improvement, Streek } from "./types";
+import { hoogsteOntgrendeldeStreek } from "./world";
 
 // Bouw-ritme (M10, hoofdstuk 16): na een bouwkeuze (of het bewust overslaan
 // ervan) mag pas na zoveel beurten weer een nieuw bouwproject gestart worden
 // — de tussenliggende beurten zijn voor de settler (wegen aanleggen).
 const BOUW_RITME_BEURTEN = 3;
+
+// Telt, per streek, hoe vaak de bouw-pop-up op die streek al is afgehandeld
+// (gebouwd óf bewust overgeslagen, issue: "Teksten aanpassen (nog meer)") —
+// gebruikt door GameRoot om een aantal eenmalige tutorial-pop-ups (Heiligdom/
+// Niet-bouwen op streek 1, Boerderij/Houtkap op streek 2) op de juiste
+// bouw-beurt te tonen in plaats van de gewone bouw-pop-up. Telt altijd de
+// frontier-streek (`hoogsteOntgrendeldeStreek`), niet het (voor de Wachttoren
+// mogelijk oudere) plaatsingsdoel van `startBouw` hieronder — de bouw-pop-up
+// zelf gaat altijd over de frontier-streek.
+function metOpgehoogdeBouwPopupTeller(state: GameState): Pick<GameState, "bouwPopupAfgehandeldTellerPerStreek"> {
+  // `?? {}` (net als `volgendeBouwBeurt`s `?? 1` elders): een opgeslagen save
+  // van vóór dit veld bestond, mist het na `JSON.parse` (save.ts) volledig.
+  const bestaandeTellers = state.bouwPopupAfgehandeldTellerPerStreek ?? {};
+  const frontierHoogte = hoogsteOntgrendeldeStreek(state.streken);
+  const huidig = bestaandeTellers[frontierHoogte] ?? 0;
+  return {
+    bouwPopupAfgehandeldTellerPerStreek: {
+      ...bestaandeTellers,
+      [frontierHoogte]: huidig + 1,
+    },
+  };
+}
 
 // Aantal actieve (niet vernietigde/ruïne) land-tiles met dit improvement-id,
 // over alle streken heen — de basis van `infrastructuurVoortgang` hieronder.
@@ -127,6 +150,7 @@ export function startBouw(
     streken,
     bouwKeuzeGedaanDitBeurt: true,
     volgendeBouwBeurt: state.beurt + BOUW_RITME_BEURTEN,
+    ...metOpgehoogdeBouwPopupTeller(state),
   };
 }
 
@@ -134,5 +158,10 @@ export function startBouw(
 // beurt ook overslaan) — verbruikt, net als `startBouw`, de bouwkeuze van
 // deze beurt én het eerstvolgende bouwmoment (hoofdstuk 16: bouw-ritme).
 export function sluitBouwKeuze(state: GameState): GameState {
-  return { ...state, bouwKeuzeGedaanDitBeurt: true, volgendeBouwBeurt: state.beurt + BOUW_RITME_BEURTEN };
+  return {
+    ...state,
+    bouwKeuzeGedaanDitBeurt: true,
+    volgendeBouwBeurt: state.beurt + BOUW_RITME_BEURTEN,
+    ...metOpgehoogdeBouwPopupTeller(state),
+  };
 }
