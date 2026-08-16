@@ -4,7 +4,7 @@
 // game-logica-modules in plaats van in een component.
 
 import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "./bouwwachtrij";
-import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS } from "./improvements";
+import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS, effectBeschrijving } from "./improvements";
 import { isWachttorenBemand } from "./indringersEnDieren";
 import { WACHTTOREN_VOEDSEL_VERBRUIK } from "./productie";
 import { City, Improvement, Streek, MateriaalType, ResourceType, Tile } from "./types";
@@ -15,48 +15,6 @@ export interface TileInfo {
   titel: string;
   ondertitel?: string;
   tekst: string;
-}
-
-// `opFrontier` is alleen relevant voor cultuurproductie (Heiligdom,
-// hoofdstuk 6): volle opbrengst op de frontier-streek zelf, de helft op elke
-// streek daaronder — zie `verwerkProductie` in economie.ts voor dezelfde regel.
-function effectBeschrijving(improvement: Improvement, opFrontier = true): string {
-  const { effect } = improvement;
-  if (effect.type === "productie" && effect.resource && effect.waarde) {
-    if (effect.resource === "cultuur" && !opFrontier) {
-      return `Levert +${effect.waarde / 2} cultuur per beurt (halve opbrengst — niet op de frontier-streek).`;
-    }
-    return `Levert +${effect.waarde} ${effect.resource} per beurt.`;
-  }
-  if (effect.type === "verdediging" && effect.waarde) {
-    return `Geeft +${effect.waarde} verdediging bij een militaire confrontatie, en beschermt deze streek én de streek eronder tegen indringers-tribuut.`;
-  }
-  if (effect.type === "opslag" && effect.waarde) {
-    return `Verhoogt de opslag-cap met +${effect.waarde}, direct bij voltooiing.`;
-  }
-  if (effect.type === "stad") {
-    return "Het centrum van je nederzetting.";
-  }
-  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
-  // verkenner", Deel 1/4/5) — vijandelijke tile-varianten en het cosmetische
-  // huisje hebben geen productie-/verdedigingseffect, maar wel een eigen
-  // korte omschrijving.
-  if (effect.type === "dreiging") {
-    return "Een vijandelijke Wachttoren. Vereist een eigen, bemande Wachttoren op de streek eronder om een Confrontatie aan te gaan.";
-  }
-  if (effect.type === "belegeringsdoel") {
-    return "Een vijandelijk Heiligdom. Belegeringsdoel zolang je minstens één Missionaris hebt.";
-  }
-  if (effect.type === "legerkamp") {
-    return "Elke hieraan toegewezen Soldaat telt mee als legerwaarde bij een Confrontatie tegen een Bezette Streek, ongeacht op welke streek dit Legerkamp staat.";
-  }
-  if (effect.type === "ontgrendelt-missionaris") {
-    return "Ontgrendelt de Missionaris als trainbare eenheid.";
-  }
-  if (effect.type === "decoratief") {
-    return "Een verlaten huisje. Geen functie, niet interactief.";
-  }
-  return "";
 }
 
 // Beschrijft de resterende grondstoffen en bouwtijd van een tile-in-aanbouw

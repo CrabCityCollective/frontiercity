@@ -6,6 +6,7 @@ import { WACHTTOREN_VOEDSEL_VERBRUIK } from "@/game/productie";
 import {
   beschikbareOpties,
   CATEGORIE_LABELS,
+  effectBeschrijving,
   improvementNaam,
   terreinEisenBeschrijving,
 } from "@/game/improvements";
@@ -244,6 +245,12 @@ export default function BouwPopup({
                     >
                       {improvementNaam(improvement)} (<KostenIcons kosten={improvement.kosten} />,{" "}
                       {improvement.bouwtijdBeurten} beurten)
+                      {/* Wat dit improvement oplevert/doet (issue: "teksten bij city
+                          gebouwen" — ontbrak hier volledig, zie effectBeschrijving() in
+                          improvements.ts, gedeeld met de klik-op-tile-info-pop-up). */}
+                      <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                        {effectBeschrijving(improvement)}
+                      </span>
                       {terreinEis && (
                         <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
                           Alleen op {terreinEis}
@@ -255,14 +262,9 @@ export default function BouwPopup({
                         </span>
                       )}
                       {improvement.id === "wachttoren" && (
-                        <>
-                          <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
-                            Beschermt deze streek én de streek eronder tegen indringers-tribuut
-                          </span>
-                          <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
-                            Verbruikt {WACHTTOREN_VOEDSEL_VERBRUIK} voedsel/beurt zodra bemand
-                          </span>
-                        </>
+                        <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                          Verbruikt {WACHTTOREN_VOEDSEL_VERBRUIK} voedsel/beurt zodra bemand
+                        </span>
                       )}
                       {voortgang && eis && (
                         <span
