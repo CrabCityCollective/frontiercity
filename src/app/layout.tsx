@@ -32,6 +32,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="nl">
       <head>
+        {/*
+          Handmatige manifest-link i.p.v. de Next.js manifest-file-convention:
+          Next zet op die link altijd crossorigin="use-credentials" (hardcoded,
+          niet uitzetbaar via de metadata-API). Dat laat de credentialed fetch
+          van de manifest vaak falen, waardoor "Op homescherm zetten" terugvalt
+          op een generiek icoon (effen theme-color vierkantje) i.p.v. het
+          pixel-art icoon.
+        */}
+        <link rel="manifest" href="/manifest.webmanifest" />
         {/* Sancreek (titels/UI-chrome) + Vollkorn (leestekst). */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
