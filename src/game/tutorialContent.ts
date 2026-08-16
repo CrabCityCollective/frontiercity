@@ -332,7 +332,7 @@ export const STRIJDERS_OPLEIDEN_TEKST =
 // de voordelen te noemen.
 export const STAD_UPGRADE_UITLEG_TITEL = "De stad kan groeien";
 export const STAD_UPGRADE_UITLEG_TEKST =
-  "Er is genoeg voedsel verzameld om Holenrots te laten groeien naar middel. Open het stadsmenu door op de stad te klikken, en start de groei daar. Het kost hout en steen, en een paar beurten rijptijd. Let op: een grotere stad heeft ook meer mondjes te voeden — zorg dat de voedselproductie meegroeit.";
+  "Er is genoeg voedsel verzameld om de stad te laten groeien naar middelgroot. Open het stadsmenu door op de stad te klikken, en start de groei daar. Het kost hout en steen, en een paar beurten rijptijd. Let op: een grotere stad biedt meer bouwmogelijkheden in de stad zelf, maar neemt iedere beurt meer voedsel.";
 
 // Ineenstortingsscherm, getoond zodra de stad instort (M6, hoofdstuk 4: hard
 // verval). In de MVP (één stad, geen frontier-verplaatsing, hoofdstuk 13)
@@ -349,7 +349,13 @@ export const INEENSTORTING_FLAVOR_TEKST =
 // een ontgrendelde streek binnendringt (niet meer alleen de frontier-streek).
 // Zelfde stijlgids als de rest van dit bestand — kort, concreet, geen moreel
 // oordeel.
-export const INDRINGERS_STAMMEN = ["de stam van de Halve Maan", "de stam van de Bloedhoeven"];
+export const INDRINGERS_STAMMEN = [
+  "de stam van de Halve Maan",
+  "de stam van de Bloedhoeven",
+  "de stam van de Bottenkrakers",
+  "de stam van de Platneuzen",
+  "de stam van de Appelplukkers",
+];
 
 export const INDRINGERS_TITEL = "Indringers bij de grens";
 
@@ -393,7 +399,7 @@ export const ROOFDIER_AANVAL_TEKST =
 // hierboven.
 export const AMBER_ONTDEKKING_TITEL = "Amber gevonden";
 export const AMBER_ONTDEKKING_TEKST =
-  "Onze verkenners vonden een fantastisch glimmend materiaal: Amber. We gaan een mijn bouwen om al het Amber tot het laatste brokje uit de grond te krijgen.";
+  "Onze verkenners hoorden verhalen over een fantastisch glimmend materiaal: Amber. We weten alleen niet precies waar we de mijn moeten bouwen. Als we maar niet per ongeluk een ander gebouw neer zetten op de amberader, dat zou zonde zijn.";
 
 // Tweede Amberader-ontdekkingsmelding (hoofdstuk 3/11/14, issue: "Amberader
 // sowieso op streek 12"): getoond zodra `verwerkStreekOntgrendeling` (economie.ts)
