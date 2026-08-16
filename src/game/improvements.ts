@@ -56,6 +56,58 @@ export const RESOURCE_LABELS: Record<ResourceType, string> = {
   wetenschap: "Wetenschap",
 };
 
+// Leesbare beschrijving van wat `improvement` oplevert/doet (issue: "teksten
+// bij city gebouwen" — ontbrak bij Markt/Bibliotheek en de overige
+// stadsverbeteringen in StadsverbeteringenPaneel.tsx, en bij land
+// improvements in de bouw-pop-up, BouwPopup.tsx). Gedeeld met tileInfo.ts,
+// die er voor een reeds gebouwde tile nog een frontier-halvering (`opFrontier`,
+// alleen relevant voor cultuurproductie, hoofdstuk 6) overheen legt — zie
+// `verwerkProductie` in economie.ts voor dezelfde regel. City improvements
+// (Bibliotheek/Markt/Barakken/Tempel/Grote Tempel) kennen geen frontier-
+// halvering (ze staan niet op een streek), dus `opFrontier` blijft daar op
+// zijn default `true`.
+export function effectBeschrijving(improvement: Improvement, opFrontier = true): string {
+  const { effect } = improvement;
+  if (effect.type === "productie" && effect.resource && effect.waarde) {
+    if (effect.resource === "cultuur" && !opFrontier) {
+      return `Levert +${effect.waarde / 2} cultuur per beurt (halve opbrengst — niet op de frontier-streek).`;
+    }
+    return `Levert +${effect.waarde} ${RESOURCE_LABELS[effect.resource].toLowerCase()} per beurt.`;
+  }
+  if (effect.type === "verdediging" && effect.waarde) {
+    return `Geeft +${effect.waarde} verdediging bij een militaire confrontatie, en beschermt deze streek én de streek eronder tegen indringers-tribuut.`;
+  }
+  if (effect.type === "opslag" && effect.waarde) {
+    return `Verhoogt de opslag-cap met +${effect.waarde}, direct bij voltooiing.`;
+  }
+  if (effect.type === "stad-legerwaarde" && effect.waarde) {
+    return `Geeft de hele stad +${effect.waarde} legerwaarde bij een militaire confrontatie, zonder dat hier bemanning voor nodig is.`;
+  }
+  if (effect.type === "stad") {
+    return "Het centrum van je nederzetting.";
+  }
+  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
+  // verkenner", Deel 1/4/5) — vijandelijke tile-varianten en het cosmetische
+  // huisje hebben geen productie-/verdedigingseffect, maar wel een eigen
+  // korte omschrijving.
+  if (effect.type === "dreiging") {
+    return "Een vijandelijke Wachttoren. Vereist een eigen, bemande Wachttoren op de streek eronder om een Confrontatie aan te gaan.";
+  }
+  if (effect.type === "belegeringsdoel") {
+    return "Een vijandelijk Heiligdom. Belegeringsdoel zolang je minstens één Missionaris hebt.";
+  }
+  if (effect.type === "legerkamp") {
+    return "Elke hieraan toegewezen Soldaat telt mee als legerwaarde bij een Confrontatie tegen een Bezette Streek, ongeacht op welke streek dit Legerkamp staat.";
+  }
+  if (effect.type === "ontgrendelt-missionaris") {
+    return "Ontgrendelt de Missionaris als trainbare eenheid.";
+  }
+  if (effect.type === "decoratief") {
+    return "Een verlaten huisje. Geen functie, niet interactief.";
+  }
+  return "";
+}
+
 // Of `improvement` op een vakje met dit terrein geplaatst mag worden (issue:
 // "houtkap alleen op bos", "mijn alleen op heuvel/berg", "boerderij alleen op
 // vlakke grond"). Geen `terreinEisen` = geen beperking.

@@ -1,6 +1,6 @@
 "use client";
 
-import { CAPPED_CITY_IMPROVEMENTS, cityImprovementCap } from "@/game/improvements";
+import { CAPPED_CITY_IMPROVEMENTS, cityImprovementCap, effectBeschrijving } from "@/game/improvements";
 import { GameState, Improvement } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
@@ -67,6 +67,9 @@ export default function StadsverbeteringenPaneel({
             return (
               <span key={improvement.id} className="fc-knop" style={{ opacity: 0.7 }}>
                 {improvement.naam} (gebouwd)
+                <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                  {effectBeschrijving(improvement)}
+                </span>
               </span>
             );
           }
@@ -85,6 +88,9 @@ export default function StadsverbeteringenPaneel({
               onClick={() => onStartCityVerbetering(improvement)}
             >
               {improvement.naam} (<KostenIcons kosten={improvement.kosten} />, {improvement.bouwtijdBeurten} beurten)
+              <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                {effectBeschrijving(improvement)}
+              </span>
               {improvement.stadsgrootteEis && (
                 <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
                   Vereist stadsgrootte: {improvement.stadsgrootteEis}
