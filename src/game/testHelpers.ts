@@ -13,6 +13,7 @@ import {
 } from "./improvements";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek } from "./world";
+import { metActieveStad } from "./stad";
 
 export const HOUTKAP = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "houtkap")!;
 export const STEENGROEVE = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "steengroeve")!;
@@ -109,7 +110,7 @@ export function metBezetteStreekInBeeld(): GameState {
 
 export function metBezetteStreekEnVerkenner(): GameState {
   const state = metBezetteStreekInBeeld();
-  return { ...state, wetenschap: 100, stad: { ...state.stad, verkenners: [{ id: "verkenner-0" }] } };
+  return { ...metActieveStad(state, { ...state.stad, verkenners: [{ id: "verkenner-0" }] }), wetenschap: 100 };
 }
 
 // Zet een actieve, wegverbonden Heiligdom op streek 1 (positie 2, met een
@@ -153,8 +154,7 @@ export function metWegCorridorNaarStreek(state: GameState, totHoogte: number): G
 export function metBeschermendeWachttorenOpStreek12(state: GameState): GameState {
   let s = metWegCorridorNaarStreek(state, 12);
   s = {
-    ...s,
-    stad: { ...s.stad, strijders: [{ id: "strijder-wachter", wachttoren: { hoogte: 12, positieInStreek: 4 } }] },
+    ...metActieveStad(s, { ...s.stad, strijders: [{ id: "strijder-wachter", wachttoren: { hoogte: 12, positieInStreek: 4 } }] }),
     streken: s.streken.map((streek) =>
       streek.hoogte !== 12
         ? streek

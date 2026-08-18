@@ -20,6 +20,7 @@ import { hoogsteOntgrendeldeStreek } from "./world";
 import { isTileVerbondenMetStad } from "./wegen";
 import { berekenVoedselNetto } from "./productie";
 import { maakInitieleSpelStatus } from "./initieleSpelStatus";
+import { metActieveStad } from "./stad";
 
 // Voedseltekort-tuning (M6, hoofdstuk 4/14; issue: "stad instort of verlaten
 // alleen als er te weinig voedsel is"): bewuste MVP-placeholder, net als de
@@ -115,7 +116,7 @@ export function verwerkVerval(state: GameState): GameState {
       laatsteIneenstorting: true,
       laatsteRunStatistieken: {
         beurten: state.beurt,
-        stedenGebouwd: 1, // MVP: precies 1 stad per run (hoofdstuk 13, geen frontier-verplaatsing)
+        stedenGebouwd: state.steden.length,
         hoogsteStreek: hoogsteOntgrendeldeStreek(state.streken),
       },
     };
@@ -127,16 +128,10 @@ export function verwerkVerval(state: GameState): GameState {
 
   if (!isDreiging) {
     if (state.stad.vervalStatus === "gezond") return state;
-    return {
-      ...state,
-      stad: { ...state.stad, vervalStatus: "gezond", vervalBeurtenResterend: undefined },
-    };
+    return metActieveStad(state, { ...state.stad, vervalStatus: "gezond", vervalBeurtenResterend: undefined });
   }
 
-  return {
-    ...state,
-    stad: { ...state.stad, vervalStatus: "kritiek", vervalBeurtenResterend: beurtenTotTekort },
-  };
+  return metActieveStad(state, { ...state.stad, vervalStatus: "kritiek", vervalBeurtenResterend: beurtenTotTekort });
 }
 
 // Sluit het ineenstortingsscherm (issue: "intro en game over scherm"). Puur

@@ -289,6 +289,15 @@ export interface City {
   relics: Relic[];
   vervalStatus: "gezond" | "kritiek";
   vervalBeurtenResterend?: number;
+  // Streek-hoogte waarop deze stad gesticht is (0 voor de allereerste stad
+  // van een run, die "vóór streek 1" ligt) — hoofdstuk 9/14, issue: "Eerste
+  // bouwsteen van de Amerikaanse frontier-campagne". Ligt na stichting vast;
+  // samen met de hoogst ontgrendelde streek de basis voor de afstand tot de
+  // frontier (zie `frontierAfstand` in stad.ts), die alleen kan groeien
+  // omdat de frontier alleen vooruit beweegt. Nog geen gebruik van het
+  // bijbehorende effectiviteitsverval op city-improvement-productie (dat is
+  // M17) — hier ligt alleen de meetwaarde vast.
+  streekHoogte: number;
   // Lopende civiele stads-bouw (M6, hoofdstuk 4/16: "kost een civiel
   // improvement + rijptijd"). Net als een tile-in-aanbouw (M3) een per-beurt
   // investering van bouwmateriaal, maar los van de tegel-band omdat dit de
@@ -509,6 +518,18 @@ export interface RoofdierEvent {
 // Volledige spelstatus voor de MVP (één actieve stad, één band van 9 vakjes,
 // meerdere streken). Zie hoofdstuk 13 voor de scope-afbakening.
 export interface GameState {
+  // Brontabel van alle gestichte steden van deze run, in stichtingsvolgorde
+  // (hoofdstuk 9/13, issue: "Eerste bouwsteen van de Amerikaanse
+  // frontier-campagne", Meerdere-steden-fundering). Buiten `stad.ts` niet
+  // rechtstreeks muteren — gebruik `metActieveStad` zodat deze array en
+  // `stad` hieronder altijd in lockstap blijven.
+  steden: City[];
+  // De actieve/laatst-gestichte stad — altijd gelijk aan
+  // `steden[steden.length - 1]`. Blijft (nog) het veld waar vrijwel de hele
+  // bestaande MVP-code doorheen leest, omdat er tot en met M17/M18 nooit
+  // meer dan één stad tegelijk "actief" is (settler, bouwwachtrijen, UI).
+  // Gebruik `actieveStad(state)`/`metActieveStad` (stad.ts) in nieuwe code
+  // in plaats van dit veld rechtstreeks te muteren.
   stad: City;
   streken: Streek[];
   voorraad: Record<MateriaalType, number>;
