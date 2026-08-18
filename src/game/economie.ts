@@ -49,7 +49,13 @@ import {
   verwerkRecrutering,
   verwerkVerkennerRecrutering,
 } from "./groeiEnRekrutering";
-import { verwerkEersteKudde, verwerkIndringers, verwerkKuddes, verwerkRoofdieren } from "./indringersEnDieren";
+import {
+  verwerkConfrontatieKuddes,
+  verwerkEersteKudde,
+  verwerkIndringers,
+  verwerkKuddes,
+  verwerkRoofdieren,
+} from "./indringersEnDieren";
 
 // Opslag-cap, startstatus en de city-improvement-cap staan inhoudelijk in
 // eigen modules (initieleSpelStatus.ts resp. improvements.ts) in plaats van
@@ -126,7 +132,11 @@ export function volgendeBeurt(state: GameState): GameState {
   const naMissionarisRecrutering = verwerkMissionarisRecrutering(naVerkennerRecrutering);
   const naIndringers = verwerkIndringers(naMissionarisRecrutering);
   const naKuddes = verwerkKuddes(naIndringers);
-  const naRoofdieren = verwerkRoofdieren(naKuddes);
+  // Gegarandeerde kuddes tijdens de Confrontatie (issue: "kuddes op de laatste
+  // laag"): direct ná de gewone kans-gebaseerde spawn hierboven, zie
+  // `verwerkConfrontatieKuddes` in indringersEnDieren.ts.
+  const naConfrontatieKuddes = verwerkConfrontatieKuddes(naKuddes);
+  const naRoofdieren = verwerkRoofdieren(naConfrontatieKuddes);
   const nieuweBeurt = naRoofdieren.beurt + 1;
 
   // De settler verschijnt bij de stad zodra beurt 2 begint (hoofdstuk 16) —
