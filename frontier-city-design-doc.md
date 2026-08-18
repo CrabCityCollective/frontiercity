@@ -23,7 +23,7 @@ Een rogue-like Civilization voor mobiel, waarbij je niet horizontaal een kaart o
 - Je speelt met **1 actieve frontier-stad** tegelijk. Sticht je een nieuwe stad (op een geschikte locatie, verderop), dan schuift het scherm op — je nieuwe stad begint onderaan, als nieuwe frontier.
 - **Geschikte stichtingslocatie**: een nieuwe stad kan alleen gesticht worden op een vakje dat aan **vers water** ligt — een rivier of een meer. Dit is een los, vast vakje-kenmerk (net als het terrein-subtype uit hoofdstuk 3/11), zichtbaar op de kaart zodra de streek ontgrendeld is, zodat een speler er naartoe kan plannen. Voor de tutorial ligt dit vakje uitsluitend op de allerlaatste streek — de oceaan aan de overkant, zie hoofdstuk 10/13 — de enige plek in de hele tutorial met vers water, zodat het stichten van de laatste stad een bewuste, unieke bestemming aan het eind van de tocht is.
 - Niet-volledig bebouwde streken **sluiten permanent** zodra je een nieuwe stad start.
-- Oudere, achtergelaten steden leveren **geen** lopende resource-inkomsten meer (bewust, voor het frontier-gevoel) — hun waarde zit in de specialisatie-relics die ze hebben opgeleverd voor je vertrok.
+- Oudere, achtergelaten steden leveren geen city-improvement-inkomsten meer op **zodra ze ver genoeg achterblijven** — vanaf de Amerikaanse campagne (meerdere steden, hoofdstuk 9) geldt hiervoor een geleidelijk, afstandsafhankelijk verval in plaats van een harde knip (hoofdstuk 9/11/14); hun blijvende waarde zit hoe dan ook in de specialisatie-relics die ze hebben opgeleverd voor je vertrok.
 
 ---
 
@@ -196,6 +196,41 @@ Gedeelde flavor-kern, uitkomst (winnen) gelijk voor iedereen, maar elk pad krijg
 - **Na Terugvechten**: lange, uitputtende tocht over meerdere half-uitgeputte streken (uithoudingstest, geen piekmoment).
 - **Na Tribuut**: moreel/strategisch dilemma — permanent relic-verlies voor gegarandeerde doorgang, óf onvoorbereid gevecht.
 
+### Afstandsverval & het herhalende drie-stichtingsmomenten-patroon
+
+Vervangt/verfijnt de eerdere, absolute regel uit hoofdstuk 2/11 ("geen resource-inkomsten van achtergelaten steden") door een geleidelijk, afstandsafhankelijk verval. Die oude regel gold tot nu toe eigenlijk nooit: er bestond tot deze bouwsteen nooit meer dan één stad tegelijk, dus nooit een "achtergelaten stad" om hem op toe te passen. Zodra meerdere steden bestaan (vanaf deze campagne), geldt onderstaand systeem in plaats daarvan.
+
+**Deel 1 — Afstandsverval van city improvements**
+
+Voor elke gestichte stad wordt de **afstand** bijgehouden: het aantal streken tussen die stad en de huidige frontier-streek. De frontier beweegt alleen vooruit, dus deze afstand kan alleen groeien. De doorlopende productie van de city improvements van die stad (Bibliotheek, Markt, Barakken, Tempel, Grote Tempel — hoofdstuk 3/13/14) wordt vermenigvuldigd met een effectiviteitspercentage dat van die afstand afhangt, in vier zones:
+
+| Afstand tot de stad | Effectiviteit |
+|---|---|
+| 0-4 streken | 100% ("gezond") |
+| 5-8 streken | 65% (begint te verminderen) |
+| 9-12 streken | 30% (flink verminderd) |
+| 13+ streken ("de grens") | 0% — werkt niet meer, stad is volledig uitgeput qua city-improvement-nut |
+
+MVP-richtwaarden, tunebaar (hoofdstuk 14) — doorgerekend tegen de campagne-continentlengte van 30-60 streken (hoofdstuk 14).
+
+Dit verval raakt uitsluitend de stad-brede city-improvement-productie. **Niet aangeraakt**: land improvements (mijn, boerderij, Sterrencirkel, Amberader, etc.) blijven gewoon normaal produceren zolang ze wegverbonden zijn (hoofdstuk 16), ongeacht afstand. Ook het stadsverval/permadeath-risico (hoofdstuk 4) blijft ongewijzigd — een stad op 0% city-improvement-effectiviteit kan nog gewoon blijven bestaan, ze levert alleen niets meer op via haar gebouwen. Bij meerdere gelijktijdig actieve steden wordt dit per stad apart berekend.
+
+**Deel 2 — Drie gegarandeerde stichtingskansen per stad, herhalend**
+
+Geen eenmalige, vaste telling van 3 stichtingen over de hele run, maar een **patroon dat zich herhaalt voor elke actieve stad**. Zodra een stad gesticht is, garandeert de worldgen drie momenten waarop de speler een nieuwe stad **kán** stichten, gekoppeld aan de afstandszones hierboven — telkens een gegarandeerd vers-water-vakje (hoofdstuk 2):
+
+1. **Vóór de stad begint te verminderen**: een gegarandeerd vers-water-vakje ergens binnen afstand 0-4 van de huidige stad (de "gezonde" zone). Vroeg stichten, met een gezonde buffer.
+2. **Terwijl de stad al aan het verminderen is**: een gegarandeerd vers-water-vakje ergens binnen afstand 5-12 (één van beide verval-zones). Stichten met minder buffer, maar nog niet acuut.
+3. **Zodra de stad volledig is uitgeput**: een gegarandeerd vers-water-vakje zodra afstand 13+ bereikt wordt (de 0%-zone). De oude stad levert dan al niets meer op via city improvements — de speler voelt de noodzaak, maar wordt niet hard geblokkeerd (hij kan in theorie nog verder trekken zonder te stichten, alleen zonder city-improvement-voordeel).
+
+Of de speler bij kans 1, 2 of 3 daadwerkelijk sticht, is aan hem — dat hangt af van hoeveel voorraad hij nog heeft en hoeveel risico hij wil nemen door langer te wachten. Zodra hij sticht, begint dit hele patroon (Deel 1 + Deel 2) opnieuw voor de nieuwe stad.
+
+Bij een campagnelengte van 30-40 streken (Normaal, hoofdstuk 14) herhaalt dit patroon zich met deze afstandszones typisch ongeveer 3 keer over een hele run — vandaar het "verhaal in 3 delen"-gevoel — maar dit is een natuurlijk gevolg van de gekozen getallen, geen harde limiet. Bij een lange "Moeilijk"-campagne (45-60 streken) kan het vaker gebeuren. Het is dus een herhalend mechanisme, geen geharde "maximaal/precies 3 keer"-teller.
+
+Stad stichten blijft een **settler-actie** (hoofdstuk 6/13, inclusief de bestaande "maximaal één settler per gestichte stad"-regel), mogelijk op **elke** al ontgrendelde streek — een uitzondering op de frontier-only-bouwregel, zoals Wachttoren/Legerkamp al hebben (hoofdstuk 6/11) — mits er vers water direct naast ligt (hoofdstuk 2) en de settler er fysiek naartoe reist. De allerlaatste, verplichte stichting blijft bij de oceaan aan het einde van de campagne (bestaande win-conditie, hoofdstuk 1) — die telt gewoon mee als een van deze cykli, in de 0%-zone van de laatst gestichte stad als de speler tot dan toe heeft doorgetrokken.
+
+Hoe dit precies samenvalt met de bestaande Anker-verhalen hierboven (rond streek 8-10/16-18/eindspel) moet nog op elkaar afgestemd worden in een latere opdracht — dit mechanisme is hier op zichzelf staand uitgewerkt.
+
 ### Flavor-tekststijlgids
 1. Korte, vaak enkelvoudige zinnen — kracht in understatement.
 2. Geen emotie-bijvoeglijke naamwoorden ("verschrikkelijk", "triomfantelijk").
@@ -255,8 +290,8 @@ Een letterlijke verticale stapel van alle improvements door elkaar zou visueel r
 **Land improvements: categorie kiezen, dán alle geldige concrete opties zien (niet een willekeurige subset)**
 Dit geldt specifiek voor **land improvements** — city improvements en units lopen niet via dit mechanisme (zie hoofdstuk 1). Eén keuzemoment (direct een specifieke improvement kiezen) zou minder diepte geven dan twee gelaagde momenten: eerst een richting (categorie) bepalen, dan een concrete keuze binnen die richting maken. Een eerdere versie toonde daarna een willekeurige subset van 2-3 opties uit de categorie-pool, maar dat kon ertoe leiden dat de speler precies de land improvement niet aangeboden kreeg die zijn economie op dat moment nodig had (bijvoorbeeld een tekort aan erts terwijl er geen mijn in de aanbieding zat) — dat voelde niet als een interessante keuze, maar als een gemiste kans. Door in plaats daarvan alle geldige land improvements binnen een categorie te tonen (gefilterd op vervulde voorwaarden zoals terreineisen, maar niet meer willekeurig beperkt), wordt resource-planning een echte, uitvoerbare vaardigheid: met 4-6 land improvement-types per categorie (hoofdstuk 3) blijft de lijst vanzelf behapbaar voor een mobiel scherm. De onvoorspelbaarheid van het spel blijft intact via andere systemen: verborgen zeldzaamheid, procedurele worldgen, de vertakkende Anker-verhalen, en de indringers-trekking (hoofdstuk 6/9/14).
 
-**Geen resource-inkomsten en geen veiligheidsnet van achtergelaten steden**
-Dit is een bewuste keuze om het "frontier"-gevoel scherp te houden: als oude steden gewoon door bleven produceren, zou er een veilige, passieve thuisbasis ontstaan en verdwijnt de noodzaak om steeds verder te trekken. Door specialisatie-relics wél permanent te maken (als beloning), maar lopende inkomsten niet, blijft vooruitgang komen uit wat je hebt veroverd, niet uit wat je passief bezit.
+**Geleidelijk, afstandsafhankelijk verval i.p.v. een harde "geen inkomsten"-regel (hoofdstuk 9, Amerikaanse campagne)**
+Dit hoofdstuk stelde eerder dat achtergelaten steden helemaal geen lopende resource-inkomsten meer leverden — een bewuste keuze om het "frontier"-gevoel scherp te houden: als oude steden gewoon door bleven produceren, zou er een veilige, passieve thuisbasis ontstaan en verdwijnt de noodzaak om steeds verder te trekken. Die regel gold in de praktijk echter nooit écht: tot de Amerikaanse-campagne-bouwsteen bestond er nooit meer dan één stad tegelijk, dus nooit een "achtergelaten stad" om hem op toe te passen. Zodra meerdere steden wél bestaan, vervangt een geleidelijk, afstandsafhankelijk verval van de city-improvement-productie (hoofdstuk 9/14: 100% tot afstand 4, aflopend naar 0% vanaf afstand 13) deze absolute regel. De onderliggende reden blijft hetzelfde — een oude stad mag geen veilige, passieve thuisbasis worden die de noodzaak om verder te trekken wegneemt — maar een geleidelijke curve geeft de speler een voelbaar, voorspelbaar signaal (vergelijkbaar met het waarschuwingssignaal bij stadsverval, hieronder) in plaats van een abrupte knip, en beloont nog een tijd verder bouwen op een oudere stad in plaats van hem meteen nutteloos te maken. Specialisatie-relics blijven, net als voorheen, wél permanent (als beloning); alleen de stad-brede city-improvement-productie zakt weg, land improvements blijven normaal produceren zolang wegverbonden (hoofdstuk 9/16).
 
 **Hard verval (permadeath van relics) i.p.v. zachte aftakeling**
 Zachte aftakeling (een stad die langzaam minder oplevert tot je vertrekt) is altijd veilig zolang je op tijd weggaat — er is dan geen echt risico. Hard verval, waarbij ook al verdiende relics verloren kunnen gaan bij een misrekening, geeft een echt risk/reward-moment: doorgroeien voor een extra relic-slot is een bewuste gok, geen gratis extra beloning. Het zichtbare waarschuwingssignaal zorgt ervoor dat dit risico eerlijk aanvoelt (voorspelbaar te vermijden) in plaats van willekeurig.
@@ -448,7 +483,7 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 - **Technologie-boom** (hoofdstuk 3/9/11/14, issue: "tech tree toevoegen"): 3 drempels van elk 2 keuzes, permanent vertakkend zoals de Anker-verhalen — zie techTree.ts voor de volledige boom en effecten.
 
 **Nog niet in de MVP** (bewust uitgesteld tot de kernloop staat):
-- Meerdere steden/frontier-verplaatsing
+- Meerdere steden/frontier-verplaatsing, inclusief het bijbehorende afstandsverval van city improvements en het herhalende drie-stichtingsmomenten-patroon (hoofdstuk 9/11/14, Amerikaanse campagne) — dat mechanisme is inmiddels wel uitgewerkt/gedocumenteerd, maar bouwt voort op meerdere-steden-support die er nog niet is, dus blijft dit voorlopig ontwerp, geen implementatie-taak
 - Permanent vooruitkijk-bereik verder dan 1 streek (de wetenschap-relic uit hoofdstuk 3) en de bijbehorende relic-functie van de Verkenner — de Verkenner-unit zelf is sinds "De Bezette Streek" wél in de MVP, met een andere, kleinere functie (Verkenning, hoofdstuk 6)
 - Culturele pushback-diplomatie (hoofdstuk 6, de oplopende-cultuurkostprijs-variant) — de Missionaris-unit zelf is sinds "De Bezette Streek" wél in de MVP, met een andere, kleinere functie (belegeringsmeter, hoofdstuk 6)
 - Zeldzaamheid (rijk/legendarisch) en het oogst-tijdvenster
@@ -676,6 +711,12 @@ Alle kosten/effecten hierboven zijn MVP-richtwaarden, expliciet tunebaar (issue:
 - Geen nieuwe stad te stichten binnen deze reeks.
 - Zichtbare voorraadmeter (materiaal tegenover resterende streken) i.p.v. een harde timer.
 - Bij te weinig voorraad aan het einde: geen instant game-over, maar een verzwakte aankomst (kleinere stad-status bij de oceaan, beïnvloedt slotscène/flavor) — consistent met "hard maar eerlijk" bij nederlagen.
+
+**Afstandsverval & herhalend stichtingspatroon (hoofdstuk 9/11, Amerikaanse campagne)**
+
+*Afstandszones en effectiviteit* (volledige uitleg in hoofdstuk 9): 0-4 streken = 100%, 5-8 = 65%, 9-12 = 30%, 13+ = 0%. MVP-richtwaarden, tunebaar.
+
+*Doorrekening tegen de campagnelengte*: een speler die telkens pas bij kans 3 (afstand 13+) sticht, legt tussen twee stichtingen ten minste 13 streken frontier-voortgang af — bij Normaal (30-40 streken) past dat ruwweg **3 cycli** (3 × 13 ≈ 39, aan de bovenkant van de range), bij Moeilijk (45-60 streken) **3-4 cycli**, bij Makkelijk (20-25 streken) **1-2 cycli**. Een speler die eerder sticht (kans 1 of 2) start een nieuwe cyclus sneller, dus dit is een ondergrens-schatting van het aantal cycli, geen exacte voorspelling — vandaar "typisch ~3 keer" in hoofdstuk 9, niet een harde teller. De daadwerkelijke worldgen-plaatsing van de drie gegarandeerde vers-water-vakjes per cyclus (hoofdstuk 2/9) bepaalt de precieze cadans binnen een run.
 
 **Volgorde/unlock-logica overige campagnes**
 Na het voltooien van de Amerikaanse frontier-campagne worden alle overige campagnes **in één keer ontgrendeld** — geen verdere gedwongen volgorde, omdat er geen inhoudelijke leercurve-afhankelijkheid tussen de latere campagnes bestaat (in tegenstelling tot tutorial → Amerika). **Besloten: geen cross-campagne relic-bonussen of ander meta-progressiesysteem tussen campagnes** — elke campagne staat op zichzelf, om de rogue-like puurheid (elke run is een eigen uitdaging, zonder consolatieprijzen of stapelende voordelen) niet te verwateren.
