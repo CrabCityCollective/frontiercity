@@ -26,6 +26,10 @@ interface HoofdMenuProps {
   // toevoegen aan het menu, ipv dat het een zelfstandige button is"):
   // vervangt het losse spel-icoontje dat hiervoor bestond (SpelActiesMenu).
   onToonHistorie: () => void;
+  // Techboom-knop (issue: "tech tree inzien" — "kun je in het menu een item
+  // erbij maken om de tech tree in te zien"): zelfde plek/patroon als
+  // "Historie" hierboven.
+  onToonTechboom: () => void;
 }
 
 // Zwevend menu-icoontje rechtsboven (issue: "niet automatisch opslaan, maar
@@ -42,6 +46,7 @@ export default function HoofdMenu({
   stijl,
   onToggleStijl,
   onToonHistorie,
+  onToonTechboom,
 }: HoofdMenuProps) {
   const [open, setOpen] = useState(false);
   const [toonInstellingen, setToonInstellingen] = useState(false);
@@ -101,6 +106,16 @@ export default function HoofdMenu({
             style={{ padding: "0.35rem 0.75rem" }}
           >
             Historie
+          </button>
+          <button
+            className="fc-knop"
+            onClick={() => {
+              onToonTechboom();
+              setOpen(false);
+            }}
+            style={{ padding: "0.35rem 0.75rem" }}
+          >
+            Techboom
           </button>
           <button
             className="fc-knop"

@@ -26,6 +26,7 @@ import StadMenuPopup from "@/components/StadMenuPopup";
 import StadUpgradeUitlegPopup from "@/components/StadUpgradeUitlegPopup";
 import StichtStadPopup from "@/components/StichtStadPopup";
 import StrijdersOpleidenPopup from "@/components/StrijdersOpleidenPopup";
+import TechboomPaneel from "@/components/TechboomPaneel";
 import TechKeuzePopup from "@/components/TechKeuzePopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
@@ -139,6 +140,12 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // historie van de run toevoegen aan het menu, ipv dat het een
   // zelfstandige button is"), niet meer via een los spel-icoontje.
   const [toonHistorie, setToonHistorie] = useState(false);
+
+  // Techboom-overzicht (issue: "tech tree inzien" — "kun je in het menu een
+  // item erbij maken om de tech tree in te zien"): zelfde soort losse,
+  // volledig-schermige pop-up als het historiescherm hierboven, bereikbaar
+  // via hetzelfde hoofdmenu.
+  const [toonTechboom, setToonTechboom] = useState(false);
 
   // Grafische stijl (issue: "Settings uitbreiden" — "on the fly kunnen
   // wisselen tussen pixel art en vector art"): als losse state hier i.p.v.
@@ -1120,6 +1127,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         stijl={stijl}
         onToggleStijl={toggleStijl}
         onToonHistorie={() => setToonHistorie((open) => !open)}
+        onToonTechboom={() => setToonTechboom((open) => !open)}
       />
       <div className="game-scroll-area" ref={scrollRef}>
         <GameCanvas
@@ -1404,6 +1412,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             streken={state.streken}
             statistieken={berekenHistorieStatistieken(state)}
             onSluiten={() => setToonHistorie(false)}
+          />
+        )}
+        {toonTechboom && (
+          <TechboomPaneel
+            technologieen={state.technologieen}
+            techKeuzeEvent={state.techKeuzeEvent}
+            onSluiten={() => setToonTechboom(false)}
           />
         )}
       </div>
