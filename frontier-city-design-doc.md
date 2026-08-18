@@ -240,6 +240,46 @@ Hoe dit precies samenvalt met de bestaande Anker-verhalen hierboven (rond streek
 6. Historische namen/volken mogen gebruikt worden, functioneel beschreven — geen karikatuur.
 7. Stiltes toegestaan — een flavor-tekst hoeft niet samen te vatten wat er net gebeurde.
 
+### Weergavenamen (functionele sleutel ongewijzigd)
+
+Zelfde herbruikbaarheidspatroon als de technologie-boom en de tegel-sets uit hoofdstuk 13 (`CampaignConfig.techNamen`/`improvementNamen`, types.ts): de functionele sleutel (`Improvement.id`/`TechId`) en alle bijbehorende kosten/effecten/gating blijven ongewijzigd — alleen de naam die de speler te zien krijgt, verandert per campagne (`improvementNaam()`/`techNaam()`). Ontbreekt een sleutel (of heeft de campagne geen override), dan valt de weergave terug op de tutorial-naam. Er bestaat nog geen daadwerkelijke `CampaignConfig`-instantie voor deze campagne in de code (hoofdstuk 13: de Amerikaanse campagne zelf is bewust nog niet in scope van de huidige MVP) — onderstaande tabel legt de namen alvast vast zodat de implementatie er direct mee kan starten.
+
+**Land improvements**
+
+| Functionele sleutel (tutorial-naam) | Amerikaanse weergavenaam |
+|---|---|
+| Sterrencirkel | Observatorium |
+| Amberader/goudmijn | Goudmijn |
+| Wachttoren | Blokhuis |
+| Legerkamp | Fort |
+| Heiligdom | Kapel |
+| Offer Altaar | Opwekkingstent |
+
+Boerderij, Mijn, Houtkap, Steengroeve en Voorraadkuil krijgen geen aparte Amerikaanse naam — generiek genoeg voor beide settings, blijven de tutorial-naam tonen via de bestaande fallback.
+
+**City improvements**
+
+| Functionele sleutel (tutorial-naam) | Amerikaanse weergavenaam |
+|---|---|
+| Markt | Handelspost |
+| Opslagplaats | Pakhuis |
+| Bibliotheek | Schoolhuis |
+| Barakken | Garnizoen |
+| Tempel | Kerk |
+| Grote Tempel | Kathedraal |
+| Woonwijk (klein → middel) | Hoofdstraat |
+| Grote Woonwijk (middel → groot) | Spoorwegstation |
+
+**Units**
+
+| Functionele sleutel (tutorial-naam) | Amerikaanse weergavenaam |
+|---|---|
+| Verkenner | Spoorzoeker |
+| Missionaris | Prediker |
+| Karavaan (post-MVP, meerdere steden — zie hoofdstuk 13) | Handelswagen |
+
+De Huifkar (settler) krijgt geen aparte naam — al generiek/thematisch passend, blijft ongewijzigd.
+
 ---
 
 ## 10. Tutorial — "De Eerste Vuren" (Het Hertenpad-volk)
