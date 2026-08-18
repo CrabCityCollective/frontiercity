@@ -396,6 +396,59 @@ export function verwerkKuddes(state: GameState): GameState {
   return { ...state, streken, kuddeEvent };
 }
 
+// Minimum aantal gelijktijdig actieve kuddes zolang de Bezette Streek-
+// confrontatie loopt, zie `verwerkConfrontatieKuddes` hieronder.
+const CONFRONTATIE_KUDDE_MINIMUM = 2;
+
+// Gegarandeerde kuddes tijdens de Confrontatie (hoofdstuk 6/14/17, issue:
+// "kuddes op de laatste laag" — tijdens de confrontatie op de Bezette Streek
+// (streek 13, `Streek.bezet`) werd voedsel een te groot probleem). De Bezette
+// Streek zelf telt niet mee in de gewone `verwerkKuddes`-trekking hierboven
+// (die loopt alleen over al *ontgrendelde* streken, en deze streek ontgrendelt
+// pas zodra de confrontatie voorbij is), dus zonder deze garantie hangt
+// voedsel tijdens de zwaarste fase van de tutorial volledig af van de kansen
+// op eerder ontgrendelde streken. Zelfde garantie-patroon als
+// `verwerkEersteKudde`: bovenop de gewone kans-gebaseerde spawn, niet in
+// plaats daarvan, en hoogstens één kudde per beurt bijgeplaatst — zo blijft er
+// altijd 1 of 2 kuddes tegelijk aanwezig in plaats van precies op dit moment
+// eventueel nul.
+export function verwerkConfrontatieKuddes(state: GameState): GameState {
+  if (!state.streken.some((streek) => streek.bezet)) return state;
+
+  const actieveKuddes = state.streken.reduce(
+    (totaal, streek) => totaal + streek.tiles.filter((tile) => tile.kudde).length,
+    0
+  );
+  if (actieveKuddes >= CONFRONTATIE_KUDDE_MINIMUM) return state;
+
+  const kandidaten: { hoogte: number; positieInStreek: number }[] = [];
+  for (const streek of state.streken) {
+    if (!streek.ontgrendeld) continue;
+    for (const tile of streek.tiles) {
+      if (tile.status === "leeg" && !tile.kudde) {
+        kandidaten.push({ hoogte: streek.hoogte, positieInStreek: tile.positieInStreek });
+      }
+    }
+  }
+  if (kandidaten.length === 0) return state;
+
+  const doel = kandidaten[Math.floor(Math.random() * kandidaten.length)];
+  const streken = state.streken.map((streek) => {
+    if (streek.hoogte !== doel.hoogte) return streek;
+    const tiles = streek.tiles.map((tile, index) =>
+      index === doel.positieInStreek ? { ...tile, kudde: { beurtenResterend: KUDDE_JACHT_BEURTEN } } : tile
+    );
+    return { ...streek, tiles };
+  });
+
+  // Geen nieuwe melding als deze beurt al een kuddeEvent gemeld werd (bv. door
+  // `verwerkKuddes` hierboven) — puur de state-mutatie hoeft niet twee keer
+  // achter elkaar dezelfde soort pop-up te tonen.
+  const kuddeEvent: KuddeEvent = state.kuddeEvent ?? { hoogte: doel.hoogte, positieInStreek: doel.positieInStreek };
+
+  return { ...state, streken, kuddeEvent };
+}
+
 // Gegarandeerde eerste kudde op streek 1 (issue: "genoeg hout om ook
 // boerderij te bouwen" — vervangt de eerdere direct-bij-de-start-garantie uit
 // issue "Eerste streek gegarandeerd een kudde"): zodra de Steengroeve op

@@ -13,7 +13,14 @@ import {
 import { startBouw } from "./infrastructuurEnBouw";
 import { AMBERADER } from "./improvements";
 import { GameState } from "./types";
-import { metSettlerOpKuddeVakje, metRandomReeks, metVasteRandom, STEENGROEVE, WACHTTOREN } from "./testHelpers";
+import {
+  metBezetteStreekInBeeld,
+  metSettlerOpKuddeVakje,
+  metRandomReeks,
+  metVasteRandom,
+  STEENGROEVE,
+  WACHTTOREN,
+} from "./testHelpers";
 
 test("een roofdier valt pas de beurt ná verschijnen aan, en doodt de settler als die er dan nog op staat", () => {
   let state = metSettlerOpKuddeVakje(5);
@@ -113,6 +120,32 @@ test("de startkudde op streek 1 verschijnt pas zodra de Steengroeve voltooid is,
   assert.notEqual(kuddeTiles[0].status, "actief", "de startkudde staat niet op het stad-vakje");
   assert.deepEqual(state.kuddeEvent, { hoogte: 1, positieInStreek: 5 });
   assert.equal(state.eersteKuddeVerschenen, true);
+});
+
+// Issue: "kuddes op de laatste laag" — voedsel werd een te groot probleem
+// tijdens de confrontatie op de Bezette Streek (streek 13), omdat die streek
+// zelf niet meetelt in de gewone `verwerkKuddes`-trekking zolang de
+// confrontatie loopt (de streek is dan nog niet `ontgrendeld`). Vaste random
+// 0.5 (ruim boven zowel INDRINGERS_KANS als KUDDE_KANS, dus geen enkele van
+// die twee toevalstrekkingen vuurt) zodat alleen de garantie hier kuddes
+// neerzet.
+test("zolang de confrontatie op de Bezette Streek loopt, garandeert het spel elke beurt (tot een minimum) een extra kudde", () => {
+  let state = metVasteRandom(0.5, () => metBezetteStreekInBeeld());
+
+  const bezetteStreek = state.streken.find((l) => l.hoogte === 13)!;
+  assert.equal(bezetteStreek.bezet, true, "de confrontatie moet nu actief zijn");
+
+  const telActieveKuddes = (s: typeof state) =>
+    s.streken.reduce((totaal, streek) => totaal + streek.tiles.filter((tile) => tile.kudde).length, 0);
+
+  assert.equal(telActieveKuddes(state), 1, "de eerste beurt van de confrontatie garandeert al één kudde");
+  assert.notEqual(state.kuddeEvent, undefined, "de gegarandeerde kudde wordt ook gemeld");
+
+  state = metVasteRandom(0.5, () => volgendeBeurt(state));
+  assert.equal(telActieveKuddes(state), 2, "een tweede beurt vult aan tot het gegarandeerde minimum van 2");
+
+  state = metVasteRandom(0.5, () => volgendeBeurt(state));
+  assert.equal(telActieveKuddes(state), 2, "voorbij het minimum plaatst de garantie geen extra kuddes meer");
 });
 
 test("een werkende Wachttoren beschermt ook de streek eronder, niet alleen zijn eigen streek (issue: wachttoren beschermt 2 streken)", () => {
