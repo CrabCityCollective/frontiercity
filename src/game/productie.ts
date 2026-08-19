@@ -14,11 +14,12 @@ import {
   steenOpbrengstFactor,
   voedselVerbruikVermindering,
 } from "./techTree";
-import { City, GameState, Improvement, ResourceType, TechId } from "./types";
+import { City, GameState, ResourceType, TechId } from "./types";
 import { hoogsteOntgrendeldeStreek } from "./world";
 import { isTileVerbondenMetStad } from "./wegen";
 import { isMateriaalType } from "./materiaal";
 import { telBemandeWachttorens } from "./militair";
+import { stadEffectiviteit } from "./stad";
 
 // Voedseltekort-tuning (M6, hoofdstuk 4/14; issue: "stad instort of verlaten
 // alleen als er te weinig voedsel is"): bewuste MVP-placeholders, net als de
@@ -158,26 +159,30 @@ export function berekenCultuurProductieDitBeurt(state: GameState): number {
   // Tempel/Grote Tempel (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
   // 3): een city improvement staat niet op een specifieke streek, dus geen
   // frontier-halvering — altijd de volle opbrengst, net als Opslagplaats
-  // geen wegverbinding nodig heeft.
-  productie += cityImprovementProductie(state.stad.cityImprovements, "cultuur");
+  // geen wegverbinding nodig heeft. Wél onderhevig aan het afstandsverval
+  // hieronder (hoofdstuk 9/11/14, Deel 1).
+  productie += cityImprovementProductie(state, "cultuur");
 
   return productie;
 }
 
-// Opgetelde productie van alle gebouwde city improvements (hoofdstuk 3/4/11/
-// 14, issue: "city improvements" Deel 3) voor één specifieke resource —
-// Bibliotheek (wetenschap), Markt (goud), Tempel/Grote Tempel (cultuur).
-// Gedeeld tussen `berekenCultuurProductieDitBeurt`/`verwerkProductie`
-// hieronder, net als `berekenVoedselProductie` voor land-tiles.
-function cityImprovementProductie(cityImprovements: Improvement[], resource: ResourceType): number {
+// Opgetelde productie van alle gebouwde city improvements van de actieve
+// stad (hoofdstuk 3/4/11/14, issue: "city improvements" Deel 3) voor één
+// specifieke resource — Bibliotheek (wetenschap), Markt (goud), Tempel/Grote
+// Tempel (cultuur) — vermenigvuldigd met het afstandsverval-percentage van
+// die stad (hoofdstuk 9/11/14, issue: "Eerste bouwsteen van de Amerikaanse
+// frontier-campagne" Deel 1, `stadEffectiviteit` in stad.ts). Gebruikt door
+// `berekenCultuurProductieDitBeurt` hierboven; `verwerkProductie` hieronder
+// herhaalt dezelfde effectiviteit voor de overige resource-types.
+function cityImprovementProductie(state: GameState, resource: ResourceType): number {
   let productie = 0;
-  for (const improvement of cityImprovements) {
+  for (const improvement of state.stad.cityImprovements) {
     const effect = improvement.effect;
     if (effect.type === "productie" && effect.resource === resource && effect.waarde) {
       productie += effect.waarde;
     }
   }
-  return productie;
+  return productie * stadEffectiviteit(state, state.stad);
 }
 
 export function verwerkProductie(state: GameState): GameState {
@@ -235,16 +240,26 @@ export function verwerkProductie(state: GameState): GameState {
   // Opslagplaats, zonder wegverbinding en zonder frontier-halvering — een
   // city improvement staat niet op een land-vakje. De Bezette-Streek-
   // cultuurbevriezing hierboven geldt onverkort ook voor Tempel/Grote Tempel.
+  // `effectiviteit` is het afstandsverval van de actieve stad (hoofdstuk
+  // 9/11/14, Deel 1, `stadEffectiviteit` in stad.ts) — 100% zolang deze run
+  // nog nooit meer dan 1 stad heeft gehad (dus altijd tijdens de tutorial).
+  // `Math.floor` op bouwmateriaal/goud houdt de voorraad geheeltallig, net
+  // als overal elders in deze module; cultuur/wetenschap blijven fractioneel
+  // toegestaan, net als de frontier-halvering hierboven.
+  const effectiviteit = stadEffectiviteit(state, state.stad);
   for (const improvement of state.stad.cityImprovements) {
     const effect = improvement.effect;
     if (effect.type !== "productie" || !effect.resource || !effect.waarde) continue;
 
     if (effect.resource === "cultuur") {
-      if (!bezetteStreek) cultuur += effect.waarde;
+      if (!bezetteStreek) cultuur += effect.waarde * effectiviteit;
     } else if (effect.resource === "wetenschap") {
-      wetenschap += effect.waarde;
+      wetenschap += effect.waarde * effectiviteit;
     } else if (isMateriaalType(effect.resource)) {
-      voorraad[effect.resource] = Math.min(state.opslagCap, voorraad[effect.resource] + effect.waarde);
+      voorraad[effect.resource] = Math.min(
+        state.opslagCap,
+        voorraad[effect.resource] + Math.floor(effect.waarde * effectiviteit)
+      );
     }
   }
 

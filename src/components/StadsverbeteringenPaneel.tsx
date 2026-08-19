@@ -1,6 +1,7 @@
 "use client";
 
 import { CAPPED_CITY_IMPROVEMENTS, cityImprovementCap, effectBeschrijving } from "@/game/improvements";
+import { frontierAfstand, stadEffectiviteit, stadVervalZone, StadVervalZone } from "@/game/stad";
 import { GameState, Improvement } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
@@ -12,6 +13,19 @@ interface StadsverbeteringenPaneelProps {
 }
 
 const STAD_GROOTTE_VOLGORDE: Record<GameState["stad"]["grootte"], number> = { klein: 0, middel: 1, groot: 2 };
+
+// Labels voor het afstandsverval (hoofdstuk 9/11/14, issue: "Eerste
+// bouwsteen van de Amerikaanse frontier-campagne" Deel 1) — zichtbaar zodra
+// een run ooit meer dan 1 stad heeft gehad (`stadEffectiviteit` in stad.ts);
+// blijft in de tutorial (altijd precies 1 stad, M18 nog niet gebouwd) dus
+// altijd verborgen, klaar voor zodra het herhalende stichtingspatroon (M18)
+// een tweede stad mogelijk maakt.
+const ZONE_LABEL: Record<StadVervalZone, string> = {
+  gezond: "gezond",
+  verminderd: "begint te verminderen",
+  "flink-verminderd": "flink verminderd",
+  uitgeput: "volledig uitgeput",
+};
 
 // Stadsverbeteringen (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
 // 1/3): Bibliotheek, Markt, Barakken, Tempel en Grote Tempel — samen
@@ -28,6 +42,9 @@ export default function StadsverbeteringenPaneel({
   const { stad } = state;
   const cap = cityImprovementCap(stad.grootte);
   const inAanbouw = stad.cityVerbeteringInAanbouw;
+  const effectiviteit = stadEffectiviteit(state, stad);
+  const afstand = frontierAfstand(state, stad);
+  const zone = stadVervalZone(afstand);
 
   return (
     <div
@@ -47,6 +64,12 @@ export default function StadsverbeteringenPaneel({
       <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
         {stad.cityImprovements.length} / {cap} sloten gebruikt (grootte: {stad.grootte})
       </span>
+
+      {effectiviteit < 1 && (
+        <span style={{ color: "var(--kleur-gevaar)", fontSize: "0.8rem" }}>
+          Afstand tot de frontier: {afstand} streken — {ZONE_LABEL[zone]}, productie op {Math.round(effectiviteit * 100)}%
+        </span>
+      )}
 
       {inAanbouw && (
         <>

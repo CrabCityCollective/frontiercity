@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { maakInitieleSpelStatus, OPSLAG_CAP, volgendeBeurt } from "./economie";
-import { ECONOMISCH_LAND_IMPROVEMENTS, STERRENCIRKEL } from "./improvements";
+import { BIBLIOTHEEK, ECONOMISCH_LAND_IMPROVEMENTS, MARKT, STERRENCIRKEL } from "./improvements";
+import { metActieveStad } from "./stad";
 import { metWerkendeSterrencirkel, MIJN } from "./testHelpers";
 
 test("de opslag-cap geldt per grondstof, niet als gezamenlijke som (basis van de STICHTING_KOSTEN-doorrekening)", () => {
@@ -83,4 +84,57 @@ test('"vuur-temmen" verhoogt de boerderij-opbrengst met 20%', () => {
   const voedselMetTech = metTech.voedsel - state.voedsel;
 
   assert.ok(voedselMetTech > voedselZonderTech, "de boerderij-opbrengst met 'vuur-temmen' moet hoger liggen");
+});
+
+test("city-improvement-productie blijft onaangetast zolang een run maar 1 stad heeft, ook ver voorbij afstand 13 (hoofdstuk 9/11/14, M17: geen 'achtergelaten stad' zonder een tweede stad)", () => {
+  let state = maakInitieleSpelStatus();
+  state = metActieveStad(state, { ...state.stad, cityImprovements: [BIBLIOTHEEK, MARKT] });
+  // Ontgrendel tot ver voorbij de 0%-zone (13+) — zonder een tweede stad
+  // (M18 nog niet gebouwd) verandert dat niets aan de productie.
+  state = { ...state, streken: state.streken.map((streek) => (streek.hoogte <= 13 ? { ...streek, ontgrendeld: true } : streek)) };
+
+  state = volgendeBeurt(state);
+
+  assert.equal(state.wetenschap, BIBLIOTHEEK.effect.waarde, "Bibliotheek produceert nog voluit");
+  assert.equal(state.voorraad.goud, MARKT.effect.waarde, "Markt produceert nog voluit");
+});
+
+test("city-improvement-productie van de actieve stad vervalt met het afstandspercentage zodra een run meer dan 1 stad heeft (hoofdstuk 9/11/14, M17 Deel 1)", () => {
+  let state = maakInitieleSpelStatus();
+  const eersteStad = { ...state.stad, streekHoogte: 0 };
+  const actieveStad = { ...state.stad, naam: "Nieuwe stad", cityImprovements: [BIBLIOTHEEK, MARKT], streekHoogte: 6 };
+  state = {
+    ...state,
+    steden: [eersteStad, actieveStad],
+    stad: actieveStad,
+    // Frontier op 14: actieveStad (gesticht op streekHoogte 6) zit op afstand
+    // 8 → 65%-zone ("verminderd").
+    streken: state.streken.map((streek) => (streek.hoogte <= 14 ? { ...streek, ontgrendeld: true } : streek)),
+  };
+
+  state = volgendeBeurt(state);
+
+  assert.equal(state.wetenschap, (BIBLIOTHEEK.effect.waarde ?? 0) * 0.65, "afstand 8 → 65% effectiviteit");
+  assert.equal(
+    state.voorraad.goud,
+    Math.floor((MARKT.effect.waarde ?? 0) * 0.65),
+    "materiaal-productie wordt naar beneden afgerond na het afstandsverval"
+  );
+});
+
+test("city-improvement-productie van de actieve stad valt volledig weg vanaf afstand 13 (0%-zone, 'volledig uitgeput')", () => {
+  let state = maakInitieleSpelStatus();
+  const eersteStad = { ...state.stad, streekHoogte: 0 };
+  const actieveStad = { ...state.stad, naam: "Nieuwe stad", cityImprovements: [BIBLIOTHEEK, MARKT], streekHoogte: 0 };
+  state = {
+    ...state,
+    steden: [eersteStad, actieveStad],
+    stad: actieveStad,
+    streken: state.streken.map((streek) => (streek.hoogte <= 13 ? { ...streek, ontgrendeld: true } : streek)),
+  };
+
+  state = volgendeBeurt(state);
+
+  assert.equal(state.wetenschap, 0, "afstand 13 → 0% effectiviteit: geen wetenschap");
+  assert.equal(state.voorraad.goud, 0, "afstand 13 → 0% effectiviteit: geen goud");
 });
