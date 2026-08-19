@@ -19,6 +19,7 @@ import { hoogsteOntgrendeldeStreek, KUDDE_JACHT_BEURTEN, STARTKUDDE_POSITIE } fr
 import { kuddeKansFactor } from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
 import { isTileVerbondenMetStad } from "./wegen";
+import { metActieveStad } from "./stad";
 
 // Kans per beurt dat er ergens een indringers-incident plaatsvindt
 // (hoofdstuk 6/14) — één trekking voor de hele stad, niet meer per streek.
@@ -238,7 +239,7 @@ function verwerkWachttorenOverrompeling(
         }
   );
 
-  return { ...state, streken, stad: { ...state.stad, strijders } };
+  return { ...metActieveStad(state, { ...state.stad, strijders }), streken };
 }
 
 // Indringers & tribuut (hoofdstuk 6): elke beurt is er, zodra streek

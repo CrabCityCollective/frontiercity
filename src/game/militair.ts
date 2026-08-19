@@ -15,6 +15,7 @@ import { legerwaardeBonusPerStrijder } from "./techTree";
 import { ConfrontatieResultaat, GameState, Settler, Strijder } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
 import { heeftWerkendeWachttorenOpStreek, isWachttorenBemand } from "./indringersEnDieren";
+import { metActieveStad } from "./stad";
 
 // Militair-tuning (M7, hoofdstuk 6/14): net als de verval-tuning bewuste
 // MVP-placeholders. `WINKANS_MIN`/`WINKANS_MAX` zorgen dat een confrontatie
@@ -161,7 +162,7 @@ export function bemanLegerkamp(state: GameState, strijderId: string, hoogte: num
     s.id === strijderId ? { ...s, legerkamp: { hoogte, positieInStreek } } : s
   );
 
-  return { ...state, stad: { ...state.stad, strijders } };
+  return metActieveStad(state, { ...state.stad, strijders });
 }
 
 // Opgetelde legerwaarde van alle Legerkamp-toegewezen Soldaten (Deel 5) —
@@ -272,7 +273,7 @@ export function confrontatieBezetteStreek(state: GameState, positieInStreek: num
   );
   const strijders = bemanner ? state.stad.strijders.filter((s) => s.id !== bemanner.id) : state.stad.strijders;
 
-  return { ...state, stad: { ...state.stad, strijders }, laatsteConfrontatieBezetteStreek };
+  return { ...metActieveStad(state, { ...state.stad, strijders }), laatsteConfrontatieBezetteStreek };
 }
 
 // Bemant een Wachttoren met een specifieke strijder (nieuwe Wachttoren-functie,
@@ -302,7 +303,7 @@ export function bemanWachttoren(
     s.id === strijderId ? { ...s, wachttoren: { hoogte, positieInStreek } } : s
   );
 
-  return { ...state, stad: { ...state.stad, strijders } };
+  return metActieveStad(state, { ...state.stad, strijders });
 }
 
 // Haalt een bemande strijder terug van zijn Wachttoren (hoofdstuk 6/11, issue:
@@ -327,5 +328,5 @@ export function haalStrijderTerug(state: GameState, strijderId: string): GameSta
     s.id === strijderId ? { ...s, wachttoren: undefined, legerkamp: undefined } : s
   );
 
-  return { ...state, stad: { ...state.stad, strijders } };
+  return metActieveStad(state, { ...state.stad, strijders });
 }

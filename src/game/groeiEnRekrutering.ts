@@ -24,6 +24,7 @@ import { City, GameState, Improvement, Strijder } from "./types";
 import { STAD_POSITIE, VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
 import { investeerInBouwkosten, pasVersnellingToe } from "./bouwwachtrij";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
+import { metActieveStad } from "./stad";
 
 // Betaalt de bouwkosten van een lopende civiele stadsbouw (M6, hoofdstuk
 // 11/16): één gedeelde wachtrij voor de groei-tier (WOONWIJK) én een nieuwe
@@ -52,24 +53,15 @@ export function verwerkCivielInAanbouw(state: GameState): GameState {
     // hardgecodeerde "middel" die de tweede groei-stap niet kon uitdrukken.
     const grootte = effect.type === "groei" ? (effect.naarGrootte as City["grootte"]) : state.stad.grootte;
     return {
-      ...state,
+      ...metActieveStad(state, { ...state.stad, grootte, civielInAanbouw: undefined }),
       voorraad,
-      stad: {
-        ...state.stad,
-        grootte,
-        civielInAanbouw: undefined,
-      },
       settler: isSettler ? { hoogte: 1, positieInStreek: STAD_POSITIE } : state.settler,
     };
   }
 
   return {
-    ...state,
+    ...metActieveStad(state, { ...state.stad, civielInAanbouw: { ...civielInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
-    stad: {
-      ...state.stad,
-      civielInAanbouw: { ...civielInAanbouw, voortgang: resultaat.nieuweVoortgang },
-    },
   };
 }
 
@@ -91,19 +83,14 @@ export function versnelCivielMetGoud(state: GameState): GameState {
     const effect = civielInAanbouw.improvement.effect;
     const grootte = effect.type === "groei" ? (effect.naarGrootte as City["grootte"]) : state.stad.grootte;
     return {
-      ...state,
+      ...metActieveStad(state, { ...state.stad, grootte, civielInAanbouw: undefined }),
       voorraad,
-      stad: { ...state.stad, grootte, civielInAanbouw: undefined },
     };
   }
 
   return {
-    ...state,
+    ...metActieveStad(state, { ...state.stad, civielInAanbouw: { ...civielInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
-    stad: {
-      ...state.stad,
-      civielInAanbouw: { ...civielInAanbouw, voortgang: resultaat.nieuweVoortgang },
-    },
   };
 }
 
@@ -121,20 +108,15 @@ export function verwerkOpslagplaats(state: GameState): GameState {
 
   if (resultaat.voltooid) {
     return {
-      ...state,
+      ...metActieveStad(state, { ...state.stad, opslagplaatsInAanbouw: undefined }),
       voorraad,
       opslagCap: state.opslagCap + (OPSLAGPLAATS.effect.waarde ?? 0),
-      stad: { ...state.stad, opslagplaatsInAanbouw: undefined },
     };
   }
 
   return {
-    ...state,
+    ...metActieveStad(state, { ...state.stad, opslagplaatsInAanbouw: { ...opslagplaatsInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
-    stad: {
-      ...state.stad,
-      opslagplaatsInAanbouw: { ...opslagplaatsInAanbouw, voortgang: resultaat.nieuweVoortgang },
-    },
   };
 }
 
@@ -157,20 +139,15 @@ export function versnelOpslagplaatsMetGoud(state: GameState): GameState {
 
   if (resultaat.voltooid) {
     return {
-      ...state,
+      ...metActieveStad(state, { ...state.stad, opslagplaatsInAanbouw: undefined }),
       voorraad,
       opslagCap: state.opslagCap + (OPSLAGPLAATS.effect.waarde ?? 0),
-      stad: { ...state.stad, opslagplaatsInAanbouw: undefined },
     };
   }
 
   return {
-    ...state,
+    ...metActieveStad(state, { ...state.stad, opslagplaatsInAanbouw: { ...opslagplaatsInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
-    stad: {
-      ...state.stad,
-      opslagplaatsInAanbouw: { ...opslagplaatsInAanbouw, voortgang: resultaat.nieuweVoortgang },
-    },
   };
 }
 
@@ -207,13 +184,10 @@ export function kanCityVerbeteringBouwen(state: GameState, improvement: Improvem
 export function startCityVerbetering(state: GameState, improvement: Improvement): GameState {
   if (!kanCityVerbeteringBouwen(state, improvement)) return state;
 
-  return {
-    ...state,
-    stad: {
-      ...state.stad,
-      cityVerbeteringInAanbouw: { improvement, voortgang: { ...improvement.kosten } },
-    },
-  };
+  return metActieveStad(state, {
+    ...state.stad,
+    cityVerbeteringInAanbouw: { improvement, voortgang: { ...improvement.kosten } },
+  });
 }
 
 // Betaalt de bouwkosten van een lopende stadsverbetering (hoofdstuk 3/4/11/
@@ -233,20 +207,18 @@ export function verwerkCityVerbetering(state: GameState): GameState {
 
   if (resultaat.voltooid) {
     return {
-      ...state,
-      voorraad,
-      stad: {
+      ...metActieveStad(state, {
         ...state.stad,
         cityImprovements: [...state.stad.cityImprovements, inAanbouw.improvement],
         cityVerbeteringInAanbouw: undefined,
-      },
+      }),
+      voorraad,
     };
   }
 
   return {
-    ...state,
+    ...metActieveStad(state, { ...state.stad, cityVerbeteringInAanbouw: { ...inAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
-    stad: { ...state.stad, cityVerbeteringInAanbouw: { ...inAanbouw, voortgang: resultaat.nieuweVoortgang } },
   };
 }
 
@@ -265,20 +237,18 @@ export function versnelCityVerbeteringMetGoud(state: GameState): GameState {
 
   if (resultaat.voltooid) {
     return {
-      ...state,
-      voorraad,
-      stad: {
+      ...metActieveStad(state, {
         ...state.stad,
         cityImprovements: [...state.stad.cityImprovements, inAanbouw.improvement],
         cityVerbeteringInAanbouw: undefined,
-      },
+      }),
+      voorraad,
     };
   }
 
   return {
-    ...state,
+    ...metActieveStad(state, { ...state.stad, cityVerbeteringInAanbouw: { ...inAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
-    stad: { ...state.stad, cityVerbeteringInAanbouw: { ...inAanbouw, voortgang: resultaat.nieuweVoortgang } },
   };
 }
 
@@ -301,23 +271,14 @@ export function verwerkRecrutering(state: GameState): GameState {
     // `strijders` groeit alleen (nooit verwijderd, zie `bemanWachttoren`).
     const nieuweStrijder: Strijder = { id: `strijder-${state.stad.strijders.length}` };
     return {
-      ...state,
+      ...metActieveStad(state, { ...state.stad, strijders: [...state.stad.strijders, nieuweStrijder], legerInAanbouw: undefined }),
       voorraad,
-      stad: {
-        ...state.stad,
-        strijders: [...state.stad.strijders, nieuweStrijder],
-        legerInAanbouw: undefined,
-      },
     };
   }
 
   return {
-    ...state,
+    ...metActieveStad(state, { ...state.stad, legerInAanbouw: { ...legerInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
-    stad: {
-      ...state.stad,
-      legerInAanbouw: { ...legerInAanbouw, voortgang: resultaat.nieuweVoortgang },
-    },
   };
 }
 
@@ -335,20 +296,18 @@ export function verwerkVerkennerRecrutering(state: GameState): GameState {
 
   if (resultaat.voltooid) {
     return {
-      ...state,
-      voorraad,
-      stad: {
+      ...metActieveStad(state, {
         ...state.stad,
         verkenners: [...state.stad.verkenners, { id: `verkenner-${state.stad.verkenners.length}` }],
         verkennerInAanbouw: undefined,
-      },
+      }),
+      voorraad,
     };
   }
 
   return {
-    ...state,
+    ...metActieveStad(state, { ...state.stad, verkennerInAanbouw: { ...verkennerInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
-    stad: { ...state.stad, verkennerInAanbouw: { ...verkennerInAanbouw, voortgang: resultaat.nieuweVoortgang } },
   };
 }
 
@@ -364,20 +323,18 @@ export function verwerkMissionarisRecrutering(state: GameState): GameState {
 
   if (resultaat.voltooid) {
     return {
-      ...state,
-      voorraad,
-      stad: {
+      ...metActieveStad(state, {
         ...state.stad,
         missionarissen: [...state.stad.missionarissen, { id: `missionaris-${state.stad.missionarissen.length}` }],
         missionarisInAanbouw: undefined,
-      },
+      }),
+      voorraad,
     };
   }
 
   return {
-    ...state,
+    ...metActieveStad(state, { ...state.stad, missionarisInAanbouw: { ...missionarisInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
-    stad: { ...state.stad, missionarisInAanbouw: { ...missionarisInAanbouw, voortgang: resultaat.nieuweVoortgang } },
   };
 }
 
@@ -407,20 +364,11 @@ export function startGroei(state: GameState): GameState {
     return state;
   }
 
-  return {
-    ...state,
-    stad: {
-      ...state.stad,
-      civielInAanbouw: { improvement, voortgang: { ...improvement.kosten } },
-    },
-  };
+  return metActieveStad(state, {
+    ...state.stad,
+    civielInAanbouw: { improvement, voortgang: { ...improvement.kosten } },
+  });
 }
-
-// MVP: precies 1 stad per run (hoofdstuk 13, geen frontier-verplaatsing) —
-// zelfde constante als `berekenHistorieStatistieken` (uitputtingEnVerval.ts)
-// gebruikt. Zodra meerdere steden bestaan (post-MVP), wordt dit een echte
-// telling.
-const AANTAL_STEDEN_MVP = 1;
 
 function aantalSettlers(state: GameState): number {
   return state.settler ? 1 : 0;
@@ -433,20 +381,19 @@ function aantalSettlers(state: GameState): number {
 // aantal settlers lager is dan het aantal steden — de speler begint met één
 // settler, en pas een gestichte stad kan er weer één uitrusten (hoofdstuk
 // 11: "maximaal één settler per gestichte stad" als natuurlijke rem op
-// expansie). In de MVP (één stad) is dat dus alleen mogelijk vóórdat de
-// eerste settler bestaat (vóór beurt 2, zie `volgendeBeurt`).
+// expansie). `state.steden.length` is in de MVP altijd 1 (geen frontier-
+// verplaatsing/tweede stad, zie hoofdstuk 13), dus dat is in de praktijk nog
+// steeds alleen mogelijk vóórdat de eerste settler bestaat (vóór beurt 2,
+// zie `volgendeBeurt`) — maar leest voortaan al de echte telling.
 export function startNieuweSettler(state: GameState): GameState {
-  if (state.stad.civielInAanbouw || aantalSettlers(state) >= AANTAL_STEDEN_MVP) {
+  if (state.stad.civielInAanbouw || aantalSettlers(state) >= state.steden.length) {
     return state;
   }
 
-  return {
-    ...state,
-    stad: {
-      ...state.stad,
-      civielInAanbouw: { improvement: NIEUWE_SETTLER, voortgang: { ...NIEUWE_SETTLER.kosten } },
-    },
-  };
+  return metActieveStad(state, {
+    ...state.stad,
+    civielInAanbouw: { improvement: NIEUWE_SETTLER, voortgang: { ...NIEUWE_SETTLER.kosten } },
+  });
 }
 
 // Start het bouwen van een Opslagplaats (hoofdstuk 3/5/13/14, issue: "stad
@@ -456,13 +403,10 @@ export function startNieuweSettler(state: GameState): GameState {
 export function startOpslagplaats(state: GameState): GameState {
   if (state.stad.opslagplaatsInAanbouw) return state;
 
-  return {
-    ...state,
-    stad: {
-      ...state.stad,
-      opslagplaatsInAanbouw: { improvement: OPSLAGPLAATS, voortgang: { ...OPSLAGPLAATS.kosten } },
-    },
-  };
+  return metActieveStad(state, {
+    ...state.stad,
+    opslagplaatsInAanbouw: { improvement: OPSLAGPLAATS, voortgang: { ...OPSLAGPLAATS.kosten } },
+  });
 }
 
 // Start het rekruteren van een Soldaat (M7), als er niet al een rekrutering
@@ -474,13 +418,10 @@ export function startOpslagplaats(state: GameState): GameState {
 export function startRecrutering(state: GameState): GameState {
   if (state.stad.legerInAanbouw) return state;
 
-  return {
-    ...state,
-    stad: {
-      ...state.stad,
-      legerInAanbouw: { improvement: SOLDAAT, voortgang: { ...SOLDAAT.kosten } },
-    },
-  };
+  return metActieveStad(state, {
+    ...state.stad,
+    legerInAanbouw: { improvement: SOLDAAT, voortgang: { ...SOLDAAT.kosten } },
+  });
 }
 
 // Start het rekruteren van een Verkenner (hoofdstuk 6, issue: "De Bezette
@@ -490,10 +431,7 @@ export function startRecrutering(state: GameState): GameState {
 export function startVerkennerRecrutering(state: GameState): GameState {
   if (state.stad.verkennerInAanbouw) return state;
 
-  return {
-    ...state,
-    stad: { ...state.stad, verkennerInAanbouw: { improvement: VERKENNER, voortgang: { ...VERKENNER.kosten } } },
-  };
+  return metActieveStad(state, { ...state.stad, verkennerInAanbouw: { improvement: VERKENNER, voortgang: { ...VERKENNER.kosten } } });
 }
 
 // Start het rekruteren van een Missionaris (Deel 4) — alleen mogelijk zodra
@@ -503,8 +441,5 @@ export function startVerkennerRecrutering(state: GameState): GameState {
 export function startMissionarisRecrutering(state: GameState): GameState {
   if (state.stad.missionarisInAanbouw || !heeftOfferAltaar(state)) return state;
 
-  return {
-    ...state,
-    stad: { ...state.stad, missionarisInAanbouw: { improvement: MISSIONARIS, voortgang: { ...MISSIONARIS.kosten } } },
-  };
+  return metActieveStad(state, { ...state.stad, missionarisInAanbouw: { improvement: MISSIONARIS, voortgang: { ...MISSIONARIS.kosten } } });
 }

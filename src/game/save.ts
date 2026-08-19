@@ -26,10 +26,21 @@ export function laadSpel(): GameState | null {
   try {
     const ruw = window.localStorage.getItem(SAVE_KEY);
     if (!ruw) return null;
-    return JSON.parse(ruw) as GameState;
+    return metGemigreerdeSteden(JSON.parse(ruw) as GameState);
   } catch {
     return null;
   }
+}
+
+// Migratie voor saves van vóór de meerdere-steden-fundering (hoofdstuk 9/13,
+// issue: "Eerste bouwsteen van de Amerikaanse frontier-campagne"): oudere
+// saves kennen `GameState.steden`/`City.streekHoogte` nog niet. Leidt beide
+// af van de bestaande `stad` — de MVP kende tot nu toe nooit een andere
+// stad, dus die stond altijd op streekHoogte 0.
+function metGemigreerdeSteden(state: GameState): GameState {
+  if (Array.isArray(state.steden) && state.steden.length > 0) return state;
+  const stad = { ...state.stad, streekHoogte: state.stad.streekHoogte ?? 0 };
+  return { ...state, stad, steden: [stad] };
 }
 
 // Of er iets te laden valt (issue: "menu-icoontje ... opslaan en oudere

@@ -42,17 +42,21 @@ const STARTVOORRAAD: Record<MateriaalType, number> = {
 const VOEDSEL_START = 20;
 
 export function maakInitieleSpelStatus(): GameState {
+  const stad: GameState["stad"] = {
+    naam: "Holenrots",
+    grootte: "klein",
+    relics: [],
+    vervalStatus: "gezond",
+    streekHoogte: 0,
+    strijders: [],
+    verkenners: [],
+    missionarissen: [],
+    cityImprovements: [],
+  };
+
   return {
-    stad: {
-      naam: "Holenrots",
-      grootte: "klein",
-      relics: [],
-      vervalStatus: "gezond",
-      strijders: [],
-      verkenners: [],
-      missionarissen: [],
-      cityImprovements: [],
-    },
+    stad,
+    steden: [stad],
     streken: maakInitieleWereld(),
     voorraad: { ...STARTVOORRAAD },
     opslagCap: OPSLAG_CAP,
