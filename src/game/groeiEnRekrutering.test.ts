@@ -10,14 +10,15 @@ import {
   startMissionarisRecrutering,
   startNieuweSettler,
   startOpslagplaats,
+  startRecrutering,
   startTweedeSettler,
   startVerkennerRecrutering,
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
 } from "./groeiEnRekrutering";
 import { heeftOfferAltaar, verken } from "./streekOntgrendeling";
-import { berekenLegerwaarde, confrontatieBezetteStreek } from "./militair";
-import { BARAKKEN, BIBLIOTHEEK, GROTE_TEMPEL, GROTE_WOONWIJK, MARKT, TEMPEL } from "./improvements";
+import { bemanWachttoren, berekenLegerwaarde, confrontatieBezetteStreek } from "./militair";
+import { BARAKKEN, BIBLIOTHEEK, GROTE_TEMPEL, GROTE_WOONWIJK, MARKT, SOLDAAT, TEMPEL } from "./improvements";
 import { GameState } from "./types";
 import { STAD_POSITIE, VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
 import {
@@ -107,6 +108,54 @@ test("Verkenner is direct trainbaar (geen vereiste), en levert na de bouwtijd ee
   }
   assert.equal(state.stad.verkennerInAanbouw, undefined);
   assert.equal(state.stad.verkenners.length, 1);
+});
+
+test("een nieuw opgeleide strijder krijgt nooit een id dat al in gebruik is door een nog bemande strijder, ook niet nadat een eerdere strijder verloren is gegaan (issue #242: 'soms lukt wachttoren bemannen niet meer')", () => {
+  let state = maakInitieleSpelStatus();
+  // Simuleert de situatie ná het verlies van "strijder-1" (bv. via een
+  // verloren Confrontatie tegen een Bezette Streek of een indringers-
+  // overrompeling, zie militair.ts/indringersEnDieren.ts): de lijst heeft nu
+  // een gat, met "strijder-2" nog aanwezig én bemand. Vóór deze fix baseerde
+  // de volgende rekrutering haar id op `strijders.length` (hier: 2), wat
+  // opnieuw "strijder-2" opleverde — hetzelfde id als de al-bemande strijder.
+  state = {
+    ...state,
+    stad: {
+      ...state.stad,
+      strijders: [{ id: "strijder-0" }, { id: "strijder-2", wachttoren: { hoogte: 1, positieInStreek: 8 } }],
+    },
+    voorraad: { hout: 99, steen: 99, erts: 99, goud: 99 },
+  };
+  state = startRecrutering(state);
+  for (let i = 0; i < SOLDAAT.bouwtijdBeurten; i += 1) {
+    state = volgendeBeurt({ ...state, voorraad: { hout: 99, steen: 99, erts: 99, goud: 99 } });
+  }
+
+  assert.equal(state.stad.strijders.length, 3);
+  const nieuweStrijder = state.stad.strijders[2];
+  assert.notEqual(nieuweStrijder.id, "strijder-2", "mag niet botsen met de al-bemande strijder");
+  assert.equal(nieuweStrijder.wachttoren, undefined, "de nieuwe strijder mag niet 'per ongeluk' al bemand lijken");
+
+  // De nieuwe strijder moet ook daadwerkelijk (een andere) Wachttoren kunnen
+  // bemannen — vóór deze fix weigerde `bemanWachttoren` stilzwijgend omdat de
+  // `.find` op het gebotste id de al-bemande strijder terugvond.
+  state = {
+    ...state,
+    streken: state.streken.map((streek, idx) =>
+      idx !== 0
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 7
+                ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
+                : tile
+            ),
+          }
+    ),
+  };
+  state = bemanWachttoren(state, nieuweStrijder.id, 1, 7);
+  assert.deepEqual(state.stad.strijders[2].wachttoren, { hoogte: 1, positieInStreek: 7 });
 });
 
 test("kanCityVerbeteringBouwen respecteert de city-improvement-cap per stadsgrootte (Deel 1)", () => {
