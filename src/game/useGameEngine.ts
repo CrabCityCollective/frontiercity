@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import {
+  SettlerSlot,
   hakHout as hakHoutActie,
   jaag as jaagActie,
   legWegAan as legWegAanActie,
@@ -22,6 +23,7 @@ import {
   startNieuweSettler as startNieuweSettlerActie,
   startOpslagplaats as startOpslagplaatsActie,
   startRecrutering as startRecruteringActie,
+  startTweedeSettler as startTweedeSettlerActie,
   startVerkennerRecrutering as startVerkennerRecruteringActie,
   versnelCityVerbeteringMetGoud as versnelCityVerbeteringMetGoudActie,
   versnelCivielMetGoud as versnelCivielMetGoudActie,
@@ -111,6 +113,12 @@ export function useGameEngine() {
     setState((huidig) => startNieuweSettlerActie(huidig));
   }, []);
 
+  // Tweede settler (issue: "Altijd 2e settler" #236) — zelfde dunne
+  // wrapper-conventie als `startNieuweSettler` hierboven, eigen wachtrij.
+  const startTweedeSettler = useCallback(() => {
+    setState((huidig) => startTweedeSettlerActie(huidig));
+  }, []);
+
   const startOpslagplaats = useCallback(() => {
     setState((huidig) => startOpslagplaatsActie(huidig));
   }, []);
@@ -125,8 +133,8 @@ export function useGameEngine() {
     setState((huidig) => versnelCityVerbeteringMetGoudActie(huidig));
   }, []);
 
-  const stichtStad = useCallback(() => {
-    setState((huidig) => stichtStadActie(huidig));
+  const stichtStad = useCallback((slot: SettlerSlot = "primair") => {
+    setState((huidig) => stichtStadActie(huidig, slot));
   }, []);
 
   const startRecrutering = useCallback(() => {
@@ -141,20 +149,26 @@ export function useGameEngine() {
     setState((huidig) => bevestigIneenstortingActie(huidig));
   }, []);
 
-  const verplaatsSettlerNaar = useCallback((hoogte: number, positieInStreek: number) => {
-    setState((huidig) => metAutomatischeVolgendeBeurt(verplaatsSettlerNaarActie(huidig, hoogte, positieInStreek)));
+  // Tweede settler (issue #236): elke settler-actiewrapper krijgt een
+  // `slot`-parameter (default "primair") die hij ongewijzigd doorgeeft aan de
+  // gelijknamige functie in acties.ts.
+  const verplaatsSettlerNaar = useCallback(
+    (hoogte: number, positieInStreek: number, slot: SettlerSlot = "primair") => {
+      setState((huidig) => metAutomatischeVolgendeBeurt(verplaatsSettlerNaarActie(huidig, hoogte, positieInStreek, slot)));
+    },
+    []
+  );
+
+  const legWegAan = useCallback((slot: SettlerSlot = "primair") => {
+    setState((huidig) => metAutomatischeVolgendeBeurt(legWegAanActie(huidig, slot)));
   }, []);
 
-  const legWegAan = useCallback(() => {
-    setState((huidig) => metAutomatischeVolgendeBeurt(legWegAanActie(huidig)));
+  const jaag = useCallback((slot: SettlerSlot = "primair") => {
+    setState((huidig) => metAutomatischeVolgendeBeurt(jaagActie(huidig, slot)));
   }, []);
 
-  const jaag = useCallback(() => {
-    setState((huidig) => metAutomatischeVolgendeBeurt(jaagActie(huidig)));
-  }, []);
-
-  const hakHout = useCallback(() => {
-    setState((huidig) => metAutomatischeVolgendeBeurt(hakHoutActie(huidig)));
+  const hakHout = useCallback((slot: SettlerSlot = "primair") => {
+    setState((huidig) => metAutomatischeVolgendeBeurt(hakHoutActie(huidig, slot)));
   }, []);
 
   const sluitIndringersMelding = useCallback(() => {
@@ -263,6 +277,7 @@ export function useGameEngine() {
     sluitBouwKeuze,
     startGroei,
     startNieuweSettler,
+    startTweedeSettler,
     startOpslagplaats,
     startCityVerbetering,
     versnelCityVerbeteringMetGoud,

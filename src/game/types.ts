@@ -331,6 +331,19 @@ export interface City {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
+  // Lopende tweede-settler-bouw (hoofdstuk 11/13/16, issue: "Altijd 2e
+  // settler" #236): eigen wachtrij, los van `civielInAanbouw` — zo kan de
+  // speler tegelijk in de stad investeren (groei of de eerste settler) én de
+  // tweede settler herbouwen, in plaats van steeds te moeten kiezen. Zelfde
+  // kosten/bouwtijd als de eerste settler (`NIEUWE_SETTLER`,
+  // groeiEnRekrutering.ts). Pas te starten vanaf streek 7
+  // (`kanTweedeSettlerBouwen`) en, anders dan de eerste settler, permanent
+  // herbouwbaar: verlies je 'm (roofdier) of verbruik je 'm (stad stichten),
+  // dan kan deze wachtrij meteen weer gestart worden.
+  tweedeSettlerInAanbouw?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+  };
   // Verkenner-eenheden (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 3) — wetenschappelijke units, trainbaar via hetzelfde
   // wachtrij-patroon als Soldaat (`verkennerInAanbouw`/`strijders`
@@ -596,6 +609,19 @@ export interface GameState {
   // óf een weg aanleggen) per beurt, teruggezet door `volgendeBeurt`.
   settler?: Settler;
   settlerActieGedaanDitBeurt: boolean;
+  // Tweede settler (hoofdstuk 11/13/16, issue: "Altijd 2e settler" #236): op
+  // uitdrukkelijk verzoek een bewuste versoepeling van de "maximaal één
+  // settler"-rem hierboven, pas beschikbaar vanaf streek 7
+  // (`kanTweedeSettlerBouwen` in groeiEnRekrutering.ts) — zodat jagen/
+  // wachttoren-herbouw op eerdere streken niet steeds heen-en-weer-lopen met
+  // dezelfde settler vereist. Verschijnt nooit gratis (geen val-terug-regel
+  // zoals `settler` hierboven bij beurt 2) — alleen via
+  // `City.tweedeSettlerInAanbouw`, en dat permanent herhaalbaar zodra hij
+  // leeg/verloren is. Eigen actie-per-beurt-vlag, los van
+  // `settlerActieGedaanDitBeurt`, zodat beide settlers onafhankelijk van
+  // elkaar kunnen handelen.
+  tweedeSettler?: Settler;
+  tweedeSettlerActieGedaanDitBeurt: boolean;
   // Eerstvolgende beurt waarop weer een nieuw bouwproject gestart mag worden
   // (hoofdstuk 16: bouw-ritme, "om de 3 beurten"). Begint op 1 zodat de
   // allereerste bouw-pop-up gewoon blijft verschijnen.

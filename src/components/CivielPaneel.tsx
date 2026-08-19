@@ -1,5 +1,6 @@
 "use client";
 
+import { kanTweedeSettlerBouwen } from "@/game/groeiEnRekrutering";
 import { GROTE_WOONWIJK, NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
 import { City, GameState } from "@/game/types";
 import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "@/game/world";
@@ -21,6 +22,7 @@ interface CivielPaneelProps {
   state: GameState;
   onStartGroei: () => void;
   onStartNieuweSettler: () => void;
+  onStartTweedeSettler: () => void;
   onVersnelCiviel: () => void;
 }
 
@@ -33,7 +35,13 @@ interface CivielPaneelProps {
 // waar je staat, of rust je een expeditie uit om verder te trekken?") in
 // plaats van een stille state-flip. Puur placeholder-styling — geen
 // definitieve UI.
-export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler, onVersnelCiviel }: CivielPaneelProps) {
+export default function CivielPaneel({
+  state,
+  onStartGroei,
+  onStartNieuweSettler,
+  onStartTweedeSettler,
+  onVersnelCiviel,
+}: CivielPaneelProps) {
   const { stad, voedsel, settler } = state;
 
   const groeiTier = groeiTierVoorGrootte(stad.grootte);
@@ -43,8 +51,13 @@ export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler
   // MVP (hoofdstuk 13: precies 1 stad) is dat alleen zolang er nog geen
   // settler bestaat (vóór beurt 2, zie economie.ts `volgendeBeurt`).
   const kanNieuweSettler = !settler;
+  // Tweede settler (issue: "Altijd 2e settler" #236): eigen wachtrij, los
+  // van `civielInAanbouw` hierboven — zie `kanTweedeSettlerBouwen`
+  // (groeiEnRekrutering.ts) voor de precieze voorwaarden (streek 7,
+  // permanent herbouwbaar).
+  const kanTweedeSettler = kanTweedeSettlerBouwen(state);
 
-  if (!kanGroeien && !kanNieuweSettler && !stad.civielInAanbouw) {
+  if (!kanGroeien && !kanNieuweSettler && !stad.civielInAanbouw && !kanTweedeSettler && !stad.tweedeSettlerInAanbouw) {
     return null;
   }
 
@@ -113,6 +126,23 @@ export default function CivielPaneel({ state, onStartGroei, onStartNieuweSettler
           style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
         >
           Rust een nieuwe settler uit (<KostenIcons kosten={NIEUWE_SETTLER.kosten} />,{" "}
+          {NIEUWE_SETTLER.bouwtijdBeurten} beurten)
+        </button>
+      )}
+
+      {/* Tweede settler (issue: "Altijd 2e settler" #236): eigen wachtrij,
+          los van `civielInAanbouw` hierboven — daarom hier zonder de
+          `!stad.civielInAanbouw`-voorwaarde, groei/eerste-settler en de
+          tweede settler lopen bewust onafhankelijk van elkaar. */}
+      {stad.tweedeSettlerInAanbouw && <p style={{ margin: 0 }}>Tweede settler wordt uitgerust…</p>}
+
+      {!stad.tweedeSettlerInAanbouw && kanTweedeSettler && (
+        <button
+          className="fc-knop"
+          onClick={onStartTweedeSettler}
+          style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+        >
+          Rust een tweede settler uit (<KostenIcons kosten={NIEUWE_SETTLER.kosten} />,{" "}
           {NIEUWE_SETTLER.bouwtijdBeurten} beurten)
         </button>
       )}

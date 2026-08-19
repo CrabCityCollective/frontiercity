@@ -255,21 +255,28 @@ function tekenWachttorenPixel(ctx: CanvasRenderingContext2D, bemand: boolean): v
   }
 }
 
-function tekenSettlerPixel(ctx: CanvasRenderingContext2D): void {
+// Tweede settler (issue: "Altijd 2e settler" #236): `variant` geeft dezelfde
+// koelere, blauwige tint als de vector-variant (`tekenSettler` in canvas.ts)
+// zodat de twee settlers ook in pixel-art-stijl te onderscheiden zijn.
+function tekenSettlerPixel(ctx: CanvasRenderingContext2D, variant: "primair" | "tweede" = "primair"): void {
   const baseY = 13;
   schaduw(ctx, 8, baseY + 1, 9);
+
+  const wielKleur = variant === "primair" ? "#3a2a18" : "#1c2e3a";
+  const naafKleur = variant === "primair" ? "#8a6a3a" : "#4a7a8a";
+  const bakKleur = variant === "primair" ? "#6b4a2c" : "#2c4a6b";
 
   for (const wx of [5, 11]) {
     for (let i = 0; i < 3; i++) {
       const half = cirkelHalf(1.5, i, 3);
-      blokrij(ctx, wx, baseY - 1 + i, half, "#3a2a18");
+      blokrij(ctx, wx, baseY - 1 + i, half, wielKleur);
     }
-    p(ctx, wx, baseY, "#8a6a3a");
+    p(ctx, wx, baseY, naafKleur);
   }
 
-  hlijn(ctx, 4, 12, baseY - 4, "#6b4a2c");
-  hlijn(ctx, 4, 12, baseY - 5, "#6b4a2c");
-  ctx.strokeStyle = "#3a2a18";
+  hlijn(ctx, 4, 12, baseY - 4, bakKleur);
+  hlijn(ctx, 4, 12, baseY - 5, bakKleur);
+  ctx.strokeStyle = wielKleur;
   ctx.strokeRect(4, baseY - 5, 8, 2);
 
   const rijen = 5;
@@ -888,7 +895,10 @@ export function tekenWereldPixelArt(
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
   legerkampBereikbarePosities?: Settler[],
-  verkenningBereikbarePosities?: Settler[]
+  verkenningBereikbarePosities?: Settler[],
+  // Tweede settler (issue: "Altijd 2e settler" #236) — zelfde toevoeging als
+  // in `tekenWereld` (canvas.ts).
+  tweedeSettler?: Settler
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
@@ -967,8 +977,16 @@ export function tekenWereldPixelArt(
     const rijIndex = totaalStreken - settler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
       tileCtx.clearRect(0, 0, PIX, PIX);
-      tekenSettlerPixel(tileCtx);
+      tekenSettlerPixel(tileCtx, "primair");
       blit(ctx, tileCanvas, settler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize);
+    }
+  }
+  if (tweedeSettler) {
+    const rijIndex = totaalStreken - tweedeSettler.hoogte;
+    if (rijIndex >= 0 && rijIndex < totaalStreken) {
+      tileCtx.clearRect(0, 0, PIX, PIX);
+      tekenSettlerPixel(tileCtx, "tweede");
+      blit(ctx, tileCanvas, tweedeSettler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize);
     }
   }
 

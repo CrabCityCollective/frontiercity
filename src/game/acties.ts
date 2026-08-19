@@ -1,8 +1,16 @@
-// Settler-acties (hoofdstuk 16/17): de losse settler-eenheid kan per beurt
+// Settler-acties (hoofdstuk 16/17): elke settler-eenheid kan per beurt
 // hoogstens één actie doen — bewegen, een weg aanleggen, jagen op een kudde,
 // of hout hakken — plus, als eindpunt van de tutorial, een nieuwe stad
 // stichten (hoofdstuk 2/10/16, issue: "stad stichten op de frontier").
-
+//
+// Tweede settler (issue: "Altijd 2e settler" #236): elke functie hieronder
+// neemt een `slot` parameter (default "primair", dus alle bestaande
+// aanroepen blijven ongewijzigd werken) zodat dezelfde actielogica ook op
+// `state.tweedeSettler` kan werken — de twee settlers handelen volledig
+// onafhankelijk van elkaar (eigen positie, eigen `...ActieGedaanDitBeurt`-
+// vlag), maar delen verder exact dezelfde regels/opbrengsten/risico's. Zie
+// `leesSettler`/`leesActieGedaan`/`metSettlerUpdate` hieronder voor de
+// gedeelde lees/schrijf-indirectie.
 import { bereikbarePosities } from "./wegen";
 import {
   jachtVoedselBonus,
@@ -10,8 +18,42 @@ import {
   settlerBeweegtGratis,
   settlerWegaanlegGratis,
 } from "./techTree";
-import { GameState, RoofdierEvent } from "./types";
+import { GameState, RoofdierEvent, Settler } from "./types";
 import { isGeschiktVoorStichten } from "./world";
+
+export type SettlerSlot = "primair" | "tweede";
+
+function leesSettler(state: GameState, slot: SettlerSlot): Settler | undefined {
+  return slot === "primair" ? state.settler : state.tweedeSettler;
+}
+
+function leesActieGedaan(state: GameState, slot: SettlerSlot): boolean {
+  return slot === "primair" ? state.settlerActieGedaanDitBeurt : state.tweedeSettlerActieGedaanDitBeurt;
+}
+
+// Bouwt het settler-/actie-vlag-deel van een state-update voor `slot`, zonder
+// de andere settler-slot aan te raken — elke actiefunctie hieronder spreidt
+// dit in zijn return-object.
+function metSettlerUpdate(
+  state: GameState,
+  slot: SettlerSlot,
+  settler: Settler | undefined,
+  actieGedaan: boolean
+): Pick<GameState, "settler" | "tweedeSettler" | "settlerActieGedaanDitBeurt" | "tweedeSettlerActieGedaanDitBeurt"> {
+  return slot === "primair"
+    ? {
+        settler,
+        tweedeSettler: state.tweedeSettler,
+        settlerActieGedaanDitBeurt: actieGedaan,
+        tweedeSettlerActieGedaanDitBeurt: state.tweedeSettlerActieGedaanDitBeurt,
+      }
+    : {
+        settler: state.settler,
+        tweedeSettler: settler,
+        settlerActieGedaanDitBeurt: state.settlerActieGedaanDitBeurt,
+        tweedeSettlerActieGedaanDitBeurt: actieGedaan,
+      };
+}
 
 // Kuddes & settler-jacht (hoofdstuk 16/17; issue: "kuddes met dieren waar je
 // op kunt jagen voor voedsel"): een losse settler-actie naast bewegen/weg
@@ -44,10 +86,16 @@ const ROOFDIER_KANS = 0.15;
 // ongeldige zet — de canvas (GameRoot) markeert alleen de bereikbare vakjes
 // als klikbaar, dit is een tweede, veilige check (zelfde patroon als
 // `startBouw`/terrein-eisen).
-export function verplaatsSettlerNaar(state: GameState, hoogte: number, positieInStreek: number): GameState {
-  if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
+export function verplaatsSettlerNaar(
+  state: GameState,
+  hoogte: number,
+  positieInStreek: number,
+  slot: SettlerSlot = "primair"
+): GameState {
+  const settler = leesSettler(state, slot);
+  if (!settler || leesActieGedaan(state, slot)) return state;
 
-  const magErheen = bereikbarePosities(state.streken, state.settler).some(
+  const magErheen = bereikbarePosities(state.streken, settler).some(
     (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
   );
   if (!magErheen) return state;
@@ -58,18 +106,18 @@ export function verplaatsSettlerNaar(state: GameState, hoogte: number, positieIn
   const kostGeenActie = settlerBeweegtGratis(state.technologieen);
   return {
     ...state,
-    settler: { hoogte, positieInStreek },
-    settlerActieGedaanDitBeurt: kostGeenActie ? state.settlerActieGedaanDitBeurt : true,
+    ...metSettlerUpdate(state, slot, { hoogte, positieInStreek }, kostGeenActie ? leesActieGedaan(state, slot) : true),
   };
 }
 
 // Legt een weg aan op het vakje waar de settler nu staat (hoofdstuk 16): geen
 // grondstoffen, alleen de settler-actie van deze beurt. Geen effect als er
 // al een weg ligt of de settler deze beurt al gehandeld heeft.
-export function legWegAan(state: GameState): GameState {
-  if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
+export function legWegAan(state: GameState, slot: SettlerSlot = "primair"): GameState {
+  const settler = leesSettler(state, slot);
+  if (!settler || leesActieGedaan(state, slot)) return state;
 
-  const { hoogte, positieInStreek } = state.settler;
+  const { hoogte, positieInStreek } = settler;
   const streek = state.streken.find((l) => l.hoogte === hoogte);
   if (!streek || streek.tiles[positieInStreek]?.heeftWeg) return state;
 
@@ -82,7 +130,11 @@ export function legWegAan(state: GameState): GameState {
   // "B1. Het wiel" (hoofdstuk 3/9, techTree.ts): wegaanleg kost dan geen
   // aparte settler-actie meer.
   const kostGeenActie = settlerWegaanlegGratis(state.technologieen);
-  return { ...state, streken, settlerActieGedaanDitBeurt: kostGeenActie ? state.settlerActieGedaanDitBeurt : true };
+  return {
+    ...state,
+    streken,
+    ...metSettlerUpdate(state, slot, settler, kostGeenActie ? leesActieGedaan(state, slot) : true),
+  };
 }
 
 // Jaagt op de kudde waar de settler nu op staat (hoofdstuk 16/17, issue:
@@ -98,10 +150,11 @@ export function legWegAan(state: GameState): GameState {
 // roepen, op hetzelfde vakje. Meldt dit meteen (`roofdierEvent`,
 // fase "verschenen") — de daadwerkelijke aanval volgt pas een beurt later,
 // zie `verwerkRoofdieren` (indringersEnDieren.ts) in `volgendeBeurt`.
-export function jaag(state: GameState): GameState {
-  if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
+export function jaag(state: GameState, slot: SettlerSlot = "primair"): GameState {
+  const settler = leesSettler(state, slot);
+  if (!settler || leesActieGedaan(state, slot)) return state;
 
-  const { hoogte, positieInStreek } = state.settler;
+  const { hoogte, positieInStreek } = settler;
   const streek = state.streken.find((l) => l.hoogte === hoogte);
   const tile = streek?.tiles[positieInStreek];
   if (!streek || !tile?.kudde) return state;
@@ -135,8 +188,8 @@ export function jaag(state: GameState): GameState {
     ...state,
     streken,
     voedsel: state.voedsel + KUDDE_VOEDSEL_PER_BEURT + jachtVoedselBonus(state.technologieen),
-    settlerActieGedaanDitBeurt: true,
     roofdierEvent,
+    ...metSettlerUpdate(state, slot, settler, true),
   };
 }
 
@@ -150,10 +203,11 @@ export function jaag(state: GameState): GameState {
 // blijft "bos" (zie types.ts), maar het bos zelf is daar al leeggekapt. Zonder
 // deze check kon de settler zo'n vakje voor onbeperkt gratis hout blijven
 // gebruiken, wat de uitputtings-mechaniek (hoofdstuk 4) omzeilt.
-export function hakHout(state: GameState): GameState {
-  if (!state.settler || state.settlerActieGedaanDitBeurt) return state;
+export function hakHout(state: GameState, slot: SettlerSlot = "primair"): GameState {
+  const settler = leesSettler(state, slot);
+  if (!settler || leesActieGedaan(state, slot)) return state;
 
-  const { hoogte, positieInStreek } = state.settler;
+  const { hoogte, positieInStreek } = settler;
   const streek = state.streken.find((l) => l.hoogte === hoogte);
   const tile = streek?.tiles[positieInStreek];
   if (!streek || !tile || tile.terrein !== "bos" || tile.status === "ghost_town") return state;
@@ -163,7 +217,7 @@ export function hakHout(state: GameState): GameState {
     hout: Math.min(state.opslagCap, state.voorraad.hout + HOUTHAKKEN_HOUT_PER_BEURT),
   };
 
-  return { ...state, voorraad, settlerActieGedaanDitBeurt: true };
+  return { ...state, voorraad, ...metSettlerUpdate(state, slot, settler, true) };
 }
 
 // Stichtingskosten (hoofdstuk 2/14, issue: "stad stichten op de frontier"
@@ -196,8 +250,8 @@ export const GESTICHTE_STAD_NAAM = "Vuurbron";
 // tussen `stichtStad` hieronder en de UI (SettlerPaneel/GameRoot), zodat de
 // "Stad stichten"-knop alleen verschijnt wanneer de actie ook echt zou
 // slagen.
-export function kanStichten(state: GameState): boolean {
-  const settler = state.settler;
+export function kanStichten(state: GameState, slot: SettlerSlot = "primair"): boolean {
+  const settler = leesSettler(state, slot);
   if (!settler) return false;
   const streek = state.streken.find((l) => l.hoogte === settler.hoogte);
   const tile = streek?.tiles[settler.positieInStreek];
@@ -228,10 +282,10 @@ export function heeftGenoegVoorStichten(state: GameState): boolean {
 // toont daarop de afsluitende tutorial-scène) en verbruikt geen aparte
 // settler-actie-vlag: dit is de laatste, beslissende zet, geen herhaalbare
 // per-beurt-actie zoals bewegen/jagen/hakken.
-export function stichtStad(state: GameState): GameState {
-  if (!kanStichten(state) || !heeftGenoegVoorStichten(state)) return state;
+export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): GameState {
+  if (!kanStichten(state, slot) || !heeftGenoegVoorStichten(state)) return state;
 
-  const { hoogte, positieInStreek } = state.settler!;
+  const { hoogte, positieInStreek } = leesSettler(state, slot)!;
   const streken = state.streken.map((streek) => {
     if (streek.hoogte !== hoogte) return streek;
     const tiles = streek.tiles.map((tile, index) => {
@@ -263,7 +317,7 @@ export function stichtStad(state: GameState): GameState {
       erts: state.voorraad.erts - STICHTING_KOSTEN.erts,
     },
     voedsel: state.voedsel - STICHTING_KOSTEN.voedsel,
-    settler: undefined,
+    ...metSettlerUpdate(state, slot, undefined, leesActieGedaan(state, slot)),
     stadGesticht: true,
   };
 }

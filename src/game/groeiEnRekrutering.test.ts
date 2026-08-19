@@ -4,11 +4,13 @@ import { rushKostenGoud } from "./bouwwachtrij";
 import { CITY_IMPROVEMENT_CAP, cityImprovementCap, maakInitieleSpelStatus, OPSLAG_CAP, volgendeBeurt } from "./economie";
 import {
   kanCityVerbeteringBouwen,
+  kanTweedeSettlerBouwen,
   startCityVerbetering,
   startGroei,
   startMissionarisRecrutering,
   startNieuweSettler,
   startOpslagplaats,
+  startTweedeSettler,
   startVerkennerRecrutering,
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
@@ -17,7 +19,7 @@ import { heeftOfferAltaar, verken } from "./streekOntgrendeling";
 import { berekenLegerwaarde, confrontatieBezetteStreek } from "./militair";
 import { BARAKKEN, BIBLIOTHEEK, GROTE_TEMPEL, GROTE_WOONWIJK, MARKT, TEMPEL } from "./improvements";
 import { GameState } from "./types";
-import { VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
+import { STAD_POSITIE, VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
 import {
   HEILIGDOM,
   metBeschermendeWachttorenOpStreek12,
@@ -202,6 +204,56 @@ test("Barakken levert een vaste, stad-brede legerwaarde-bonus die meetelt bij zo
     resultaat.laatsteConfrontatieBezetteStreek?.eigenLegerwaarde,
     (WACHTTOREN.effect.waarde ?? 0) + (BARAKKEN.effect.waarde ?? 0)
   );
+});
+
+// Ontgrendelt streek `hoogte` (en alle streken eronder, zoals de echte
+// cultuur-ontgrendeling ook altijd doet) — gedeelde opzet voor de
+// tweede-settler-tests hieronder, die pas vanaf streek 7 beschikbaar is.
+function metOntgrendeldeStreek(state: GameState, hoogte: number): GameState {
+  return {
+    ...state,
+    streken: state.streken.map((streek) => (streek.hoogte <= hoogte ? { ...streek, ontgrendeld: true } : streek)),
+  };
+}
+
+test("kanTweedeSettlerBouwen is false vóór streek 7, ook mét een bestaande eerste settler (issue: 'Altijd 2e settler' #236)", () => {
+  let state = maakInitieleSpelStatus();
+  state = metOntgrendeldeStreek(state, 6);
+  state = { ...state, settler: { hoogte: 1, positieInStreek: 4 } };
+  assert.equal(kanTweedeSettlerBouwen(state), false);
+  assert.equal(startTweedeSettler(state), state, "geen effect vóór streek 7");
+});
+
+test("de tweede-settler-wachtrij is beschikbaar vanaf streek 7, permanent herbouwbaar, en onafhankelijk van civielInAanbouw (issue #236)", () => {
+  let state = maakInitieleSpelStatus();
+  state = metOntgrendeldeStreek(state, 7);
+  assert.equal(kanTweedeSettlerBouwen(state), true);
+
+  // Onafhankelijk van de gedeelde civiele wachtrij (groei/eerste settler):
+  // beide lopen tegelijk zonder elkaar te blokkeren.
+  state = startNieuweSettler(state);
+  assert.equal(state.stad.civielInAanbouw?.improvement.id, "nieuwe-settler");
+  assert.equal(kanTweedeSettlerBouwen(state), true, "tweede-settler-wachtrij blokkeert niet door civielInAanbouw");
+
+  state = startTweedeSettler(state);
+  assert.equal(state.stad.tweedeSettlerInAanbouw?.improvement.id, "nieuwe-settler");
+  assert.equal(kanTweedeSettlerBouwen(state), false, "al één in aanbouw");
+  assert.equal(startTweedeSettler(state), state, "geen tweede aanroep terwijl er al één in aanbouw is");
+
+  const bouwtijd = state.stad.tweedeSettlerInAanbouw!.improvement.bouwtijdBeurten;
+  for (let i = 0; i < bouwtijd; i += 1) {
+    state = volgendeBeurt({ ...state, voorraad: { hout: 99, steen: 99, erts: 99, goud: 99 } });
+  }
+  assert.equal(state.stad.tweedeSettlerInAanbouw, undefined);
+  assert.deepEqual(state.tweedeSettler, { hoogte: 1, positieInStreek: STAD_POSITIE });
+  // De eerste settler bestaat intussen ook al (los van de tweede) — beide
+  // tegelijk actief, zoals bedoeld.
+  assert.notEqual(state.settler, undefined);
+
+  // Permanent herbouwbaar (niet eenmalig): zodra de tweede settler verloren
+  // gaat, kan de wachtrij meteen weer gestart worden.
+  state = { ...state, tweedeSettler: undefined };
+  assert.equal(kanTweedeSettlerBouwen(state), true, "de tweede-settler-wachtrij is opnieuw beschikbaar na verlies");
 });
 
 test("startGroei kiest Grote Woonwijk (middel→groot) met de hogere voedseldrempel zodra de stad al middel is (Deel 2)", () => {

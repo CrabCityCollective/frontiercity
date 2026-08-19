@@ -5,8 +5,10 @@ import {
   heeftGenoegVoorStichten,
   jaag,
   kanStichten,
+  legWegAan,
   STICHTING_KOSTEN,
   stichtStad,
+  verplaatsSettlerNaar,
 } from "./acties";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { GameState } from "./types";
@@ -105,6 +107,40 @@ test("hakHout levert 1 hout op als de settler op een leeg bos-vakje staat", () =
 
   assert.equal(naHakken.voorraad.hout, state.voorraad.hout + 1);
   assert.equal(naHakken.settlerActieGedaanDitBeurt, true);
+});
+
+// Tweede settler (issue: "Altijd 2e settler" #236): elke actie neemt een
+// `slot`-parameter (default "primair") zodat de twee settlers volledig
+// onafhankelijk van elkaar kunnen handelen — dit is de kern van wat #236
+// vroeg ("nog een beetje jagen op kuddes en wachttorens herbouwen").
+test("een actie op slot 'tweede' raakt alleen de tweede settler, en omgekeerd (issue #236)", () => {
+  let state: GameState = {
+    ...maakInitieleSpelStatus(),
+    settler: { hoogte: 1, positieInStreek: 2 },
+    tweedeSettler: { hoogte: 1, positieInStreek: 0 },
+  };
+
+  const naWeg = legWegAan(state, "tweede");
+  assert.equal(naWeg.tweedeSettlerActieGedaanDitBeurt, true, "de tweede settler heeft zijn actie gebruikt");
+  assert.equal(naWeg.settlerActieGedaanDitBeurt, false, "de eerste settler is nog niet geraakt");
+  assert.equal(naWeg.streken.find((l) => l.hoogte === 1)!.tiles[0].heeftWeg, true, "de weg ligt op de tweede settler zijn vakje");
+  assert.equal(naWeg.streken.find((l) => l.hoogte === 1)!.tiles[2].heeftWeg, undefined, "niet op het vakje van de eerste settler");
+
+  // De eerste settler kan deze beurt nog gewoon zelf een actie doen — de twee
+  // acties concurreren niet met elkaar.
+  const naHakken = hakHout(naWeg);
+  assert.equal(naHakken.settlerActieGedaanDitBeurt, true);
+  assert.equal(naHakken.tweedeSettlerActieGedaanDitBeurt, true, "blijft ongewijzigd van de vorige actie");
+
+  // Verplaatsen op slot "tweede" raakt alleen `tweedeSettler`.
+  const state2: GameState = {
+    ...maakInitieleSpelStatus(),
+    settler: { hoogte: 1, positieInStreek: 4 },
+    tweedeSettler: { hoogte: 1, positieInStreek: 4 },
+  };
+  const naVerplaatsing = verplaatsSettlerNaar(state2, 1, 3, "tweede");
+  assert.deepEqual(naVerplaatsing.tweedeSettler, { hoogte: 1, positieInStreek: 3 });
+  assert.deepEqual(naVerplaatsing.settler, { hoogte: 1, positieInStreek: 4 }, "de eerste settler bleef staan");
 });
 
 test("hakHout doet niets op een uitgeputte (ghost_town) Houtkap-tile, ook al blijft het terrein bos", () => {

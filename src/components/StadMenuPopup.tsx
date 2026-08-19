@@ -13,6 +13,7 @@ interface StadMenuPopupProps {
   tegenstanderSterkte: number;
   onStartGroei: () => void;
   onStartNieuweSettler: () => void;
+  onStartTweedeSettler: () => void;
   onStartOpslagplaats: () => void;
   onStartCityVerbetering: (improvement: Improvement) => void;
   onVersnelCityVerbetering: () => void;
@@ -43,6 +44,7 @@ export default function StadMenuPopup({
   tegenstanderSterkte,
   onStartGroei,
   onStartNieuweSettler,
+  onStartTweedeSettler,
   onStartOpslagplaats,
   onStartCityVerbetering,
   onVersnelCityVerbetering,
@@ -96,6 +98,7 @@ export default function StadMenuPopup({
           state={state}
           onStartGroei={onStartGroei}
           onStartNieuweSettler={onStartNieuweSettler}
+          onStartTweedeSettler={onStartTweedeSettler}
           onVersnelCiviel={onVersnelCiviel}
         />
         <OpslagplaatsPaneel
