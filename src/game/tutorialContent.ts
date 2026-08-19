@@ -257,8 +257,8 @@ export const TUTORIAL_VOLTOOID_INTRO =
 // Introscherm (issue: "intro en game over scherm", tekst bijgewerkt in issue
 // "tutorial popups wijzigen"), getoond vóór streek 1 — zet de tutorial-sfeer
 // neer voordat er iets van de mechaniek in beeld komt.
-export const INTRO_TITEL = "De Eerste Vuren";
-export const INTRO_SUBTITEL = "Het Hertenpad-volk";
+export const INTRO_TITEL = "To the Elusive Coast";
+export const INTRO_SUBTITEL = "tutorial";
 export const INTRO_FLAVOR_TEKST =
   "Onze voorouders hebben aons lang op deze kust gewoond, maar de tijd is aangebroken om het binnenland in te trekken, op zoek naar nieuw land. (let op, deze tutorial is niet makkelijk)";
 
