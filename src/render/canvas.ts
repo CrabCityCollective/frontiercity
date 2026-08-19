@@ -260,24 +260,38 @@ function tekenNietVerbondenIndicator(ctx: CanvasRenderingContext2D, x: number, y
 // MVP-plaatshouderstijl (hoofdstuk 13: "grove/simpele placeholders zijn
 // prima") — geen los afbeeldingsbestand, zelfde vector-aanpak als de rest van
 // deze tekenpijplijn.
-export function tekenSettler(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+//
+// Tweede settler (issue: "Altijd 2e settler" #236): `variant` geeft de
+// tweede settler een koelere, blauwige huifkar-kleur zodat de twee op de
+// kaart uit elkaar te houden zijn — verder identieke vorm/placeholder-stijl.
+export function tekenSettler(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  variant: "primair" | "tweede" = "primair"
+): void {
   const baseY = y + size * 0.86;
   tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.6);
 
-  ctx.fillStyle = "#3a2a18";
+  const wielKleur = variant === "primair" ? "#3a2a18" : "#1c2e3a";
+  const naafKleur = variant === "primair" ? "#8a6a3a" : "#4a7a8a";
+  const bakKleur = variant === "primair" ? "#6b4a2c" : "#2c4a6b";
+
+  ctx.fillStyle = wielKleur;
   ctx.beginPath();
   ctx.arc(x + size * 0.35, baseY - size * 0.05, size * 0.09, 0, Math.PI * 2);
   ctx.arc(x + size * 0.65, baseY - size * 0.05, size * 0.09, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#8a6a3a";
+  ctx.fillStyle = naafKleur;
   ctx.beginPath();
   ctx.arc(x + size * 0.35, baseY - size * 0.05, size * 0.03, 0, Math.PI * 2);
   ctx.arc(x + size * 0.65, baseY - size * 0.05, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#6b4a2c";
+  ctx.fillStyle = bakKleur;
   ctx.fillRect(x + size * 0.27, baseY - size * 0.3, size * 0.46, size * 0.2);
-  ctx.strokeStyle = "#3a2a18";
+  ctx.strokeStyle = wielKleur;
   ctx.lineWidth = 1;
   ctx.strokeRect(x + size * 0.27, baseY - size * 0.3, size * 0.46, size * 0.2);
 
@@ -1531,7 +1545,10 @@ export function tekenWereld(
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
   legerkampBereikbarePosities?: Settler[],
-  verkenningBereikbarePosities?: Settler[]
+  verkenningBereikbarePosities?: Settler[],
+  // Tweede settler (issue: "Altijd 2e settler" #236) — apart van `settler`
+  // hierboven, altijd los getekend zodat beide tegelijk zichtbaar zijn.
+  tweedeSettler?: Settler
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
@@ -1611,7 +1628,13 @@ export function tekenWereld(
   if (settler) {
     const rijIndex = totaalStreken - settler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
-      tekenSettler(ctx, settler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize);
+      tekenSettler(ctx, settler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize, "primair");
+    }
+  }
+  if (tweedeSettler) {
+    const rijIndex = totaalStreken - tweedeSettler.hoogte;
+    if (rijIndex >= 0 && rijIndex < totaalStreken) {
+      tekenSettler(ctx, tweedeSettler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize, "tweede");
     }
   }
 

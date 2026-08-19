@@ -503,8 +503,16 @@ export function sluitKuddeMelding(state: GameState): GameState {
 // ontsnapping verdwijnt het roofdier-veld daarna — één aanvalspoging per
 // verschijning (hoofdstuk 17 kent geen mechanisme om een roofdier af te
 // weren, alleen om het te ontwijken).
+//
+// Tweede settler (issue: "Altijd 2e settler" #236): een roofdier-aanval kan
+// in principe elke settler treffen die op het aangevallen vakje staat, dus
+// beide slots worden onafhankelijk gecheckt (`settlerVerlorenAanRoofdier`
+// blijft alleen van toepassing op de eerste/primaire settler — dat vlag
+// bestaat puur om te voorkomen dat hij gratis terugkomt op beurt 2, wat voor
+// de tweede settler toch al nooit gebeurt, zie `volgendeBeurt`).
 export function verwerkRoofdieren(state: GameState): GameState {
   let settler = state.settler;
+  let tweedeSettler = state.tweedeSettler;
   let settlerVerlorenAanRoofdier = state.settlerVerlorenAanRoofdier;
   let roofdierEvent = state.roofdierEvent;
 
@@ -516,11 +524,20 @@ export function verwerkRoofdieren(state: GameState): GameState {
         return { ...tile, roofdier: { beurtenTotAanval: tile.roofdier.beurtenTotAanval - 1 } };
       }
 
-      const settlerOpPlek =
-        state.settler?.hoogte === streek.hoogte && state.settler?.positieInStreek === tile.positieInStreek;
-      if (settlerOpPlek) {
+      const opPlek = (positie?: { hoogte: number; positieInStreek: number }) =>
+        positie?.hoogte === streek.hoogte && positie?.positieInStreek === tile.positieInStreek;
+
+      let geraakt = false;
+      if (opPlek(state.settler)) {
         settler = undefined;
         settlerVerlorenAanRoofdier = true;
+        geraakt = true;
+      }
+      if (opPlek(state.tweedeSettler)) {
+        tweedeSettler = undefined;
+        geraakt = true;
+      }
+      if (geraakt) {
         roofdierEvent = { hoogte: streek.hoogte, positieInStreek: tile.positieInStreek, fase: "aanval" };
       }
       return { ...tile, roofdier: undefined };
@@ -528,7 +545,7 @@ export function verwerkRoofdieren(state: GameState): GameState {
     return { ...streek, tiles };
   });
 
-  return { ...state, streken, settler, settlerVerlorenAanRoofdier, roofdierEvent };
+  return { ...state, streken, settler, tweedeSettler, settlerVerlorenAanRoofdier, roofdierEvent };
 }
 
 // Sluit een roofdier-melding (hoofdstuk 14/17) — puur een UI-bevestiging,

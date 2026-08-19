@@ -47,6 +47,7 @@ import {
   verwerkMissionarisRecrutering,
   verwerkOpslagplaats,
   verwerkRecrutering,
+  verwerkTweedeSettlerInAanbouw,
   verwerkVerkennerRecrutering,
 } from "./groeiEnRekrutering";
 import {
@@ -92,10 +93,11 @@ export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
 // (issue: "eerst de grondstoffen binnenkomen, en daarna wordt gecheckt of je
 // afgaat" — een tile/weg die deze beurt klaarkomt telt zo al mee vóór de
 // instort-check), dan de civiele stadsbouwwachtrij (M6/hoofdstuk 16: groei óf
-// een nieuwe settler), de Opslagplaats-wachtrij (hoofdstuk 14), de
-// stadsverbeteringen-wachtrij (Bibliotheek/Markt/Barakken/Tempel/Grote
-// Tempel, hoofdstuk 3/4/11/14) en de Soldaat-rekruteringswachtrij (M7), dan
-// de indringers-kans (hoofdstuk 6) en
+// een nieuwe settler), de tweede-settler-wachtrij (issue: "Altijd 2e
+// settler" #236 — eigen, onafhankelijke wachtrij), de Opslagplaats-wachtrij
+// (hoofdstuk 14), de stadsverbeteringen-wachtrij (Bibliotheek/Markt/Barakken/
+// Tempel/Grote Tempel, hoofdstuk 3/4/11/14) en de Soldaat-rekruteringswachtrij
+// (M7), dan de indringers-kans (hoofdstuk 6) en
 // de kuddes-kans (hoofdstuk 16/17), dan de beurtteller ophogen. Zet ook de
 // bouwkeuze-vlag (hoofdstuk 11) weer terug, zodat de bouw-pop-up bij het
 // begin van de nieuwe beurt weer verschijnt.
@@ -123,7 +125,12 @@ export function volgendeBeurt(state: GameState): GameState {
   if (naVerval.laatsteIneenstorting) return naVerval;
 
   const naCiviel = verwerkCivielInAanbouw(naVerval);
-  const naOpslagplaats = verwerkOpslagplaats(naCiviel);
+  // Tweede-settler-wachtrij (hoofdstuk 11/13/16, issue: "Altijd 2e settler"
+  // #236): eigen, onafhankelijke wachtrij, dus los van `naCiviel` hierboven
+  // verwerkt — de speler kan groei/de eerste settler én de tweede settler
+  // tegelijk laten lopen.
+  const naTweedeSettler = verwerkTweedeSettlerInAanbouw(naCiviel);
+  const naOpslagplaats = verwerkOpslagplaats(naTweedeSettler);
   // Stadsverbeteringen (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
   // 1/3): eigen wachtrij, los van civiel/opslagplaats hierboven.
   const naCityVerbetering = verwerkCityVerbetering(naOpslagplaats);
@@ -160,6 +167,10 @@ export function volgendeBeurt(state: GameState): GameState {
     beurt: nieuweBeurt,
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,
+    // Tweede settler (issue #236): geen val-terug-verschijning zoals
+    // `settler` hierboven — hij bestaat alleen via `tweedeSettler` op
+    // `naRoofdieren`, hier wordt alleen zijn actie-vlag weer teruggezet.
+    tweedeSettlerActieGedaanDitBeurt: false,
     verkenningGedaanDitBeurt: false,
     settler,
   };
@@ -178,7 +189,11 @@ export function volgendeBeurt(state: GameState): GameState {
 // settler-actie en na elke bouwkeuze.
 export function beurtMagAutomatischDoorgaan(state: GameState): boolean {
   const settlerHeeftNogActie = Boolean(state.settler) && !state.settlerActieGedaanDitBeurt;
+  // Tweede settler (issue #236): telt onafhankelijk mee — beide settlers
+  // moeten hun actie voor deze beurt gebruikt (of niet meer beschikbaar)
+  // hebben voordat de beurt vanzelf doorgaat.
+  const tweedeSettlerHeeftNogActie = Boolean(state.tweedeSettler) && !state.tweedeSettlerActieGedaanDitBeurt;
   const kanBouwen = state.beurt >= (state.volgendeBouwBeurt ?? 1);
   const magNogBouwen = kanBouwen && !state.bouwKeuzeGedaanDitBeurt;
-  return !settlerHeeftNogActie && !magNogBouwen;
+  return !settlerHeeftNogActie && !tweedeSettlerHeeftNogActie && !magNogBouwen;
 }

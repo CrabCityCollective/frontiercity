@@ -37,6 +37,7 @@ import VoedselBalansUitlegPopup from "@/components/VoedselBalansUitlegPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
+import { SettlerSlot } from "@/game/acties";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { verhuldeBezetteStreekPosities } from "@/game/streekOntgrendeling";
 import {
@@ -97,6 +98,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     sluitBouwKeuze,
     startGroei,
     startNieuweSettler,
+    startTweedeSettler,
     startOpslagplaats,
     startCityVerbetering,
     versnelCityVerbeteringMetGoud,
@@ -288,8 +290,18 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   const [verkenningsModusActief, setVerkenningsModusActief] = useState(false);
   // Stichtings-bevestiging (hoofdstuk 2/10/16, issue: "stad stichten op de
   // frontier" deel 4): geopend via de "Stad stichten"-knop in SettlerPaneel,
-  // bevestigd/geannuleerd via StichtStadPopup.
+  // bevestigd/geannuleerd via StichtStadPopup. `stichtStadSlot` onthoudt met
+  // welke settler-kaart de knop is ingedrukt (issue: "Altijd 2e settler"
+  // #236 — er kunnen nu twee settlers tegelijk bestaan), zodat de bevestiging
+  // de juiste settler verbruikt.
   const [toonStichtStadPopup, setToonStichtStadPopup] = useState(false);
+  const [stichtStadSlot, setStichtStadSlot] = useState<SettlerSlot>("primair");
+  // Welke settler op dit moment via de kaart op canvas-klikken reageert
+  // (issue #236): met twee settlers tegelijk moet de speler kunnen kiezen
+  // welke er beweegt — zie de kies-knop per kaart in SettlerPaneel. Blijft
+  // "primair" zolang er geen tweede settler is, en negeert simpelweg elke
+  // canvas-klik als de geselecteerde settler net niet (meer) bestaat.
+  const [settlerSelectie, setSettlerSelectie] = useState<SettlerSlot>("primair");
   // Tutorial-voltooid-pop-up (issue: "pop-up met summary wat je geleerd
   // hebt"): sinds het stichten het tutorial-einddoel is (vervangt "bereik
   // streek 12"), gaat `state.stadGesticht` maar één keer van false naar true —
@@ -439,13 +451,21 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // zweven. De bereikbare vakjes lichten op via GameCanvas/canvas.ts; een
   // klik erop verplaatst de settler meteen in plaats van de tile-info-popup
   // te openen (zie `handleTileClick` hieronder).
+  // Tweede settler (issue: "Altijd 2e settler" #236): een klik op de canvas
+  // beweegt altijd de op dat moment geselecteerde settler (`settlerSelectie`,
+  // via de kies-knop per kaart in SettlerPaneel) — niet automatisch "beide",
+  // want elke settler doet hoogstens 1 actie per beurt, onafhankelijk van de
+  // ander.
+  const geselecteerdeSettler = settlerSelectie === "primair" ? state.settler : state.tweedeSettler;
+  const geselecteerdeSettlerActieGedaan =
+    settlerSelectie === "primair" ? state.settlerActieGedaanDitBeurt : state.tweedeSettlerActieGedaanDitBeurt;
   const settlerKanBewegen =
-    Boolean(state.settler) &&
-    !state.settlerActieGedaanDitBeurt &&
+    Boolean(geselecteerdeSettler) &&
+    !geselecteerdeSettlerActieGedaan &&
     !plaatsingsImprovement &&
     !legerkampKiesModusStrijderId &&
     !verkenningsModusActief;
-  const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.streken, state.settler!) : [];
+  const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.streken, geselecteerdeSettler!) : [];
 
   // Actieve, nog onbemande Legerkamp-tiles tijdens het bemannen (hoofdstuk 6,
   // issue: "De Bezette Streek, missionaris en verkenner", Deel 5) — zelfde
@@ -489,7 +509,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
       (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
     );
     if (settlerKanBewegen && isSettlerDoel) {
-      verplaatsSettlerNaar(hoogte, positieInStreek);
+      verplaatsSettlerNaar(hoogte, positieInStreek, settlerSelectie);
       return;
     }
 
@@ -1135,6 +1155,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           stad={state.stad}
           plaatsingsStreekHoogte={plaatsingsImprovement ? actieveStreek.hoogte : undefined}
           settler={state.settler}
+          tweedeSettler={state.tweedeSettler}
           settlerBereikbarePosities={settlerBereikbarePosities}
           legerkampBereikbarePosities={legerkampBereikbarePosities}
           verkenningBereikbarePosities={verkenningBereikbarePosities}
@@ -1143,10 +1164,15 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         />
         <SettlerPaneel
           state={state}
+          settlerSelectie={settlerSelectie}
+          onKiesSettler={setSettlerSelectie}
           onLegWegAan={legWegAan}
           onJaag={jaag}
           onHakHout={hakHout}
-          onOpenStichtStad={() => setToonStichtStadPopup(true)}
+          onOpenStichtStad={(slot) => {
+            setStichtStadSlot(slot);
+            setToonStichtStadPopup(true);
+          }}
         />
         <StreekIntroPaneel streken={state.streken} />
         {toonStadMenuPopup && (
@@ -1156,6 +1182,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             tegenstanderSterkte={actieveStreek.dreigingsniveau ?? 0}
             onStartGroei={startGroei}
             onStartNieuweSettler={startNieuweSettler}
+            onStartTweedeSettler={startTweedeSettler}
             onStartOpslagplaats={startOpslagplaats}
             onStartCityVerbetering={startCityVerbetering}
             onVersnelCityVerbetering={versnelCityVerbeteringMetGoud}
@@ -1291,7 +1318,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonStichtStadPopup && (
           <StichtStadPopup
             onBevestig={() => {
-              stichtStad();
+              stichtStad(stichtStadSlot);
               setToonStichtStadPopup(false);
             }}
             onAnnuleren={() => setToonStichtStadPopup(false)}

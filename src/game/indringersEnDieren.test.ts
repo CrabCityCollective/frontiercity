@@ -40,6 +40,29 @@ test("een roofdier valt pas de beurt ná verschijnen aan, en doodt de settler al
   assert.equal(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, undefined);
 });
 
+// Tweede settler (issue: "Altijd 2e settler" #236): een roofdier kan ook de
+// tweede settler treffen, onafhankelijk van de eerste — en dat verlies
+// verandert `settlerVerlorenAanRoofdier` niet, want dat vlag bestaat alleen
+// om te voorkomen dat de éérste settler gratis terugkomt op beurt 2 (wat
+// voor de tweede settler toch al nooit gebeurt).
+test("een roofdier kan de tweede settler doden zonder de eerste te raken (issue #236)", () => {
+  let state: GameState = {
+    ...metSettlerOpKuddeVakje(5),
+    settler: undefined,
+    tweedeSettler: { hoogte: 5, positieInStreek: 0 },
+  };
+  state = metVasteRandom(0, () => jaag(state, "tweede"));
+  assert.deepEqual(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 1 });
+
+  state = volgendeBeurt(state); // reactietijd
+  assert.notEqual(state.tweedeSettler, undefined, "overleeft de reactietijd");
+
+  state = volgendeBeurt(state); // de aanval
+  assert.equal(state.tweedeSettler, undefined, "de tweede settler sterft als hij bleef staan");
+  assert.equal(state.settlerVerlorenAanRoofdier, undefined, "dit vlag geldt alleen voor de eerste settler");
+  assert.deepEqual(state.roofdierEvent, { hoogte: 5, positieInStreek: 0, fase: "aanval" });
+});
+
 test("de settler overleeft een roofdier als hij op tijd wegbeweegt", () => {
   let state = metSettlerOpKuddeVakje(5);
   state = metVasteRandom(0, () => jaag(state));

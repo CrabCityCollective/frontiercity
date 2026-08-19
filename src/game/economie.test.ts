@@ -34,6 +34,25 @@ test("beurtMagAutomatischDoorgaan: vanaf beurt 2 gaat de beurt pas automatisch d
   assert.equal(beurtMagAutomatischDoorgaan(naVerplaatsing), true);
 });
 
+// Tweede settler (issue: "Altijd 2e settler" #236): telt onafhankelijk mee
+// naast de eerste settler — beide moeten hun actie gebruikt hebben.
+test("beurtMagAutomatischDoorgaan: een onbenutte actie van de tweede settler houdt de beurt ook tegen", () => {
+  let state = maakInitieleSpelStatus();
+  state = sluitBouwKeuze(state);
+  state = volgendeBeurt(state);
+  state = { ...state, tweedeSettler: { hoogte: 1, positieInStreek: 0 } };
+
+  const naEersteSettlerActie = verplaatsSettlerNaar(state, state.settler!.hoogte, state.settler!.positieInStreek + 1);
+  assert.equal(
+    beurtMagAutomatischDoorgaan(naEersteSettlerActie),
+    false,
+    "de tweede settler heeft deze beurt nog niets gedaan"
+  );
+
+  const naBeide = { ...naEersteSettlerActie, tweedeSettlerActieGedaanDitBeurt: true };
+  assert.equal(beurtMagAutomatischDoorgaan(naBeide), true);
+});
+
 test("beurtMagAutomatischDoorgaan: op een bouwmoment moet zowel de settler-actie als de bouwkeuze gebruikt zijn", () => {
   let state = maakInitieleSpelStatus();
   state = volgendeBeurt(state);

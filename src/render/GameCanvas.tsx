@@ -22,6 +22,10 @@ interface GameCanvasProps {
   // Positie van de settler-eenheid (M10, hoofdstuk 16) — `undefined` tot
   // beurt 2, zie economie.ts `volgendeBeurt`.
   settler?: Settler;
+  // Tweede settler (issue: "Altijd 2e settler" #236) — pas te krijgen vanaf
+  // streek 7 (zie `kanTweedeSettlerBouwen`, groeiEnRekrutering.ts), verder
+  // los van `settler` hierboven getekend/geklikt.
+  tweedeSettler?: Settler;
   // Vakjes waar de settler deze beurt direct naartoe kan (issue: "de tegels
   // waar je heen kunt lichten op") — zolang dit gezet is markeert de canvas
   // die vakjes en stuurt een klik erop naar `onTileClick` als verplaatsing
@@ -97,6 +101,7 @@ export default function GameCanvas({
   stad,
   plaatsingsStreekHoogte,
   settler,
+  tweedeSettler,
   settlerBereikbarePosities,
   legerkampBereikbarePosities,
   verkenningBereikbarePosities,
@@ -128,13 +133,15 @@ export default function GameCanvas({
       settler,
       settlerBereikbarePosities,
       legerkampBereikbarePosities,
-      verkenningBereikbarePosities
+      verkenningBereikbarePosities,
+      tweedeSettler
     );
   }, [
     streken,
     stad,
     plaatsingsStreekHoogte,
     settler,
+    tweedeSettler,
     settlerBereikbarePosities,
     legerkampBereikbarePosities,
     verkenningBereikbarePosities,

@@ -5,9 +5,10 @@
 // civiele wachtrij (`civielInAanbouw`) dient ook een nieuwe settler
 // (hoofdstuk 3/11/13/16) — hoogstens één van de twee tegelijk. Opslagplaats
 // (hoofdstuk 3/5/13/14), de vijf gecapte city improvements (Bibliotheek/
-// Markt/Barakken/Tempel/Grote Tempel, hoofdstuk 3/4/11/14) en de Soldaat-/
-// Verkenner-/Missionaris-rekrutering (M7, hoofdstuk 6) volgen elk hun eigen,
-// verder losstaande wachtrij, maar hergebruiken dezelfde
+// Markt/Barakken/Tempel/Grote Tempel, hoofdstuk 3/4/11/14), de Soldaat-/
+// Verkenner-/Missionaris-rekrutering (M7, hoofdstuk 6) en de tweede-settler-
+// wachtrij (issue: "Altijd 2e settler" #236) volgen elk hun eigen, verder
+// losstaande wachtrij, maar hergebruiken dezelfde
 // `investeerInBouwkosten`/`pasVersnellingToe`-machinerie uit bouwwachtrij.ts.
 
 import {
@@ -21,7 +22,12 @@ import {
   WOONWIJK,
 } from "./improvements";
 import { City, GameState, Improvement, Strijder } from "./types";
-import { STAD_POSITIE, VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
+import {
+  STAD_POSITIE,
+  VOEDSEL_DREMPEL_GROEI,
+  VOEDSEL_DREMPEL_GROEI_GROOT,
+  hoogsteOntgrendeldeStreek,
+} from "./world";
 import { investeerInBouwkosten, pasVersnellingToe } from "./bouwwachtrij";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
 import { metActieveStad } from "./stad";
@@ -394,6 +400,70 @@ export function startNieuweSettler(state: GameState): GameState {
     ...state.stad,
     civielInAanbouw: { improvement: NIEUWE_SETTLER, voortgang: { ...NIEUWE_SETTLER.kosten } },
   });
+}
+
+// Vanaf welke streek de tweede settler beschikbaar komt (issue: "Altijd 2e
+// settler" #236, GitHub-issue 236) — pas gekozen nadat "gewoon permanent
+// vanaf het begin" te makkelijk bleek: de ontwerper wilde dat heen-en-weer-
+// lopen voor jacht/wachttoren-herbouw op eerdere streken eerst écht
+// irritant wordt voordat de tweede settler die last wegneemt.
+const TWEEDE_SETTLER_MIN_STREEK = 7;
+
+// Of de tweede-settler-wachtrij nu gestart mag worden (hoofdstuk 11/13/16,
+// issue #236): pas vanaf `TWEEDE_SETTLER_MIN_STREEK`, niet terwijl er al een
+// tweede settler bestaat of er al één in aanbouw is. Bewust los van
+// `state.stad.civielInAanbouw`/`aantalSettlers` hierboven — dit is, anders
+// dan de eerste settler, een eigen wachtrij die onbeperkt herhaalbaar is
+// zodra de vorige tweede settler verbruikt (stad stichten) of verloren
+// (roofdier) is.
+export function kanTweedeSettlerBouwen(state: GameState): boolean {
+  return (
+    !state.stad.tweedeSettlerInAanbouw &&
+    !state.tweedeSettler &&
+    hoogsteOntgrendeldeStreek(state.streken) >= TWEEDE_SETTLER_MIN_STREEK
+  );
+}
+
+// Start de tweede-settler-wachtrij (issue #236) — zelfde kosten/bouwtijd als
+// de eerste settler (`NIEUWE_SETTLER`), maar in `City.tweedeSettlerInAanbouw`
+// in plaats van de gedeelde `civielInAanbouw`-wachtrij, dus onafhankelijk van
+// groei/de eerste settler te starten.
+export function startTweedeSettler(state: GameState): GameState {
+  if (!kanTweedeSettlerBouwen(state)) return state;
+
+  return metActieveStad(state, {
+    ...state.stad,
+    tweedeSettlerInAanbouw: { improvement: NIEUWE_SETTLER, voortgang: { ...NIEUWE_SETTLER.kosten } },
+  });
+}
+
+// Betaalt de bouwkosten van een lopende tweede-settler-bouw (issue #236) —
+// zelfde wachtrij-patroon als `verwerkCivielInAanbouw` hierboven, maar
+// levert altijd een settler op (nooit groei) en schrijft naar
+// `state.tweedeSettler` in plaats van `state.settler`.
+export function verwerkTweedeSettlerInAanbouw(state: GameState): GameState {
+  const tweedeSettlerInAanbouw = state.stad.tweedeSettlerInAanbouw;
+  if (!tweedeSettlerInAanbouw) return state;
+
+  const voorraad = { ...state.voorraad };
+  const resultaat = investeerInBouwkosten(tweedeSettlerInAanbouw.improvement, tweedeSettlerInAanbouw.voortgang, voorraad);
+  if (!resultaat) return state;
+
+  if (resultaat.voltooid) {
+    return {
+      ...metActieveStad(state, { ...state.stad, tweedeSettlerInAanbouw: undefined }),
+      voorraad,
+      tweedeSettler: { hoogte: 1, positieInStreek: STAD_POSITIE },
+    };
+  }
+
+  return {
+    ...metActieveStad(state, {
+      ...state.stad,
+      tweedeSettlerInAanbouw: { ...tweedeSettlerInAanbouw, voortgang: resultaat.nieuweVoortgang },
+    }),
+    voorraad,
+  };
 }
 
 // Start het bouwen van een Opslagplaats (hoofdstuk 3/5/13/14, issue: "stad
