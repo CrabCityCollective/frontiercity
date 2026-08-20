@@ -318,9 +318,9 @@ export interface City {
   // bouwsteen van de Amerikaanse frontier-campagne". Ligt na stichting vast;
   // samen met de hoogst ontgrendelde streek de basis voor de afstand tot de
   // frontier (zie `frontierAfstand` in stad.ts), die alleen kan groeien
-  // omdat de frontier alleen vooruit beweegt. Nog geen gebruik van het
-  // bijbehorende effectiviteitsverval op city-improvement-productie (dat is
-  // M17) — hier ligt alleen de meetwaarde vast.
+  // omdat de frontier alleen vooruit beweegt. Bepaalt via `stadEffectiviteit`
+  // (M17) het effectiviteitsverval op city-improvement-productie zodra een
+  // run meer dan één stad heeft (M18, `stichtStad` in acties.ts).
   streekHoogte: number;
   // Lopende civiele stads-bouw (M6, hoofdstuk 4/16: "kost een civiel
   // improvement + rijptijd"). Net als een tile-in-aanbouw (M3) een per-beurt
@@ -554,9 +554,12 @@ export interface GameState {
   steden: City[];
   // De actieve/laatst-gestichte stad — altijd gelijk aan
   // `steden[steden.length - 1]`. Blijft (nog) het veld waar vrijwel de hele
-  // bestaande MVP-code doorheen leest, omdat er tot en met M17/M18 nooit
-  // meer dan één stad tegelijk "actief" is (settler, bouwwachtrijen, UI).
-  // Gebruik `actieveStad(state)`/`metActieveStad` (stad.ts) in nieuwe code
+  // bestaande MVP-code doorheen leest, omdat er ook ná M18 (herhalend
+  // stichtingspatroon) nooit meer dan één stad tegelijk "actief" is —
+  // eerder gestichte steden blijven gewoon in `steden` staan, alleen niet
+  // meer bestuurbaar (settler, bouwwachtrijen, UI werken altijd op de
+  // laatst-gestichte stad). Gebruik `actieveStad(state)`/`metActieveStad`
+  // (stad.ts) in nieuwe code
   // in plaats van dit veld rechtstreeks te muteren.
   stad: City;
   streken: Streek[];
@@ -646,13 +649,18 @@ export interface GameState {
   // `undefined` zolang er geen (onopgeloste) melding is — de UI blokkeert
   // dan geen andere pop-ups.
   indringersEvent?: IndringersEvent;
-  // Gezet zodra de speler een nieuwe stad heeft gesticht (hoofdstuk 2/10/16,
-  // issue: "stad stichten op de frontier" — vervangt "bereik streek 12" als
-  // tutorial-einddoel). De settler is dan al verdwenen (`settler` teruggezet
-  // naar `undefined` door `stichtStad` in economie.ts) en dit vlag triggert
-  // de afsluitende tutorial-scène/samenvatting (zie GameRoot), net als
-  // `laatsteIneenstorting` hierboven het game-over-scherm triggert — maar dan
-  // de winnende afsluiting in plaats van de verliezende.
+  // Gezet zodra de speler op de allerlaatste streek van de wereld sticht
+  // (hoofdstuk 1/2/9/10/16, issue: "stad stichten op de frontier" —
+  // vervangt "bereik streek 12" als tutorial-einddoel; hoofdstuk 9 Deel 2/
+  // M18: "de allerlaatste, verplichte stichting blijft bij de oceaan aan
+  // het einde van de campagne"). Een tussentijdse stichting uit het
+  // herhalende stichtingspatroon (elders dan de laatste streek, `stichtStad`
+  // in acties.ts) zet dit vlag dus expliciet niet — de run loopt gewoon
+  // door. De settler is dan al verdwenen (`settler` teruggezet naar
+  // `undefined` door `stichtStad`) en dit vlag triggert de afsluitende
+  // scène/samenvatting (zie GameRoot), net als `laatsteIneenstorting`
+  // hierboven het game-over-scherm triggert — maar dan de winnende
+  // afsluiting in plaats van de verliezende.
   stadGesticht?: boolean;
   // Kudde- & roofdier-meldingen (hoofdstuk 14/17): zie `KuddeEvent`/
   // `RoofdierEvent` hierboven. `undefined` zolang er geen (onopgeloste)

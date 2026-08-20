@@ -1,7 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { maakInitieleSpelStatus } from "./economie";
-import { cityImprovementEffectiviteit, frontierAfstand, stadEffectiviteit, stadVervalZone } from "./stad";
+import {
+  cityImprovementEffectiviteit,
+  frontierAfstand,
+  gegarandeerdeStichtingskansHoogten,
+  stadEffectiviteit,
+  stadVervalZone,
+} from "./stad";
 
 // Ontgrendelt alle streken t/m `hoogte`, zodat `hoogsteOntgrendeldeStreek`
 // (en dus `frontierAfstand`) een gekozen waarde aanneemt — zelfde patroon als
@@ -54,4 +60,22 @@ test("stadEffectiviteit volgt cityImprovementEffectiviteit zodra een run meer da
 
   assert.equal(frontierAfstand(state, tweedeStad), 5);
   assert.equal(stadEffectiviteit(state, tweedeStad), 0.65, "5 streken van de frontier: begint te verminderen");
+});
+
+test("gegarandeerdeStichtingskansHoogten geeft één kans-hoogte per zone-venster uit hoofdstuk 9/14 Deel 2, relatief t.o.v. de streekHoogte van de stad", () => {
+  const vanafHolenrots = gegarandeerdeStichtingskansHoogten(0);
+  assert.equal(stadVervalZone(vanafHolenrots.kans1), "gezond", "kans 1 ligt vóór de stad begint te verminderen");
+  assert.equal(
+    ["verminderd", "flink-verminderd"].includes(stadVervalZone(vanafHolenrots.kans2)),
+    true,
+    "kans 2 ligt in één van beide verval-zones"
+  );
+  assert.equal(stadVervalZone(vanafHolenrots.kans3), "uitgeput", "kans 3 valt op het moment dat de stad volledig uitgeput raakt");
+  assert.deepEqual(vanafHolenrots, { kans1: 3, kans2: 8, kans3: 13 });
+
+  // Blijft relatief t.o.v. de streekHoogte van de stichtende stad, niet
+  // absoluut — elke nieuwe cyclus (hoofdstuk 9 Deel 2) herhaalt hetzelfde
+  // patroon vanaf de nieuwe stad.
+  const vanafLatereStad = gegarandeerdeStichtingskansHoogten(20);
+  assert.deepEqual(vanafLatereStad, { kans1: 23, kans2: 28, kans3: 33 });
 });

@@ -18,7 +18,7 @@ import {
   settlerBeweegtGratis,
   settlerWegaanlegGratis,
 } from "./techTree";
-import { GameState, RoofdierEvent, Settler } from "./types";
+import { City, GameState, RoofdierEvent, Settler } from "./types";
 import { isGeschiktVoorStichten } from "./world";
 
 export type SettlerSlot = "primair" | "tweede";
@@ -238,12 +238,21 @@ export const STICHTING_KOSTEN: { hout: number; steen: number; erts: number; voed
   voedsel: 8,
 };
 
-// Naam van de nieuw te stichten stad (hoofdstuk 10: prehistorisch klinkende
-// stadsnamen naast Holenrots — "Vuurbron", "Asvallei"). Puur cosmetisch: de
-// MVP bouwt geen tweede, speelbare stad (hoofdstuk 13/16 — het stichten is
-// hier het eindpunt van de tutorial), dus dit is alleen de naam die op de
-// nieuwe stad-tile en in de afsluitende scène verschijnt.
-export const GESTICHTE_STAD_NAAM = "Vuurbron";
+// Namen van nieuw te stichten steden, in stichtingsvolgorde (hoofdstuk 10:
+// prehistorisch klinkende stadsnamen naast Holenrots). Geïndexeerd op
+// `state.steden.length - 1` van vóór de stichting (0 voor de eerste stad die
+// ná Holenrots gesticht wordt, enzovoort) — in de tutorial is dat altijd
+// index 0 ("Vuurbron", zie ook de afsluitende flavor-tekst in
+// tutorialContent.ts die deze naam letterlijk noemt), maar het herhalende
+// stichtingspatroon (hoofdstuk 9, Deel 2/M18) kan in een langere campagne
+// meerdere steden na elkaar stichten. Valt terug op een generieke naam zodra
+// de lijst op is — een campagne-specifieke naamlijst hoort net als de
+// weergavenamen (hoofdstuk 9/13) bij de nog te bouwen `CampaignConfig`.
+export const GESTICHTE_STAD_NAMEN = ["Vuurbron", "Asvallei"];
+
+function nieuweStadNaam(aantalStedenVoorStichting: number): string {
+  return GESTICHTE_STAD_NAMEN[aantalStedenVoorStichting - 1] ?? `Nieuwe stad ${aantalStedenVoorStichting}`;
+}
 
 // Of de settler nu op een geldig stichtingsdoel staat (hoofdstuk 2: aan
 // vers water, en nog onbebouwd — zie `isGeschiktVoorStichten`). Gedeeld
@@ -272,20 +281,34 @@ export function heeftGenoegVoorStichten(state: GameState): boolean {
 }
 
 // Sticht een nieuwe stad op het vakje waar de settler nu staat (hoofdstuk
-// 2/10/16, issue: "stad stichten op de frontier" deel 4 — vervangt "bereik
-// streek 12" als tutorial-einddoel). De settler zelf verdwijnt hierbij: "de
-// huifkar wordt de stad" (de UI waarschuwt hier vóóraf duidelijk voor, zie
-// StichtStadPopup — deze functie voert de al-bevestigde actie alleen nog
-// uit). Geen effect bij een ongeldige aanroep (verkeerde locatie of te
-// weinig grondstoffen) — dezelfde twee-staps-veilige-aanroep-conventie als
-// `startBouw`/`verplaatsSettlerNaar` hierboven. Zet `stadGesticht` (GameRoot
-// toont daarop de afsluitende tutorial-scène) en verbruikt geen aparte
-// settler-actie-vlag: dit is de laatste, beslissende zet, geen herhaalbare
+// 2/9/10/16, issue: "stad stichten op de frontier" deel 4, uitgebreid door
+// issue "Eerste bouwsteen van de Amerikaanse frontier-campagne" Deel 2/M18).
+// De settler zelf verdwijnt hierbij: "de huifkar wordt de stad" (de UI
+// waarschuwt hier vóóraf duidelijk voor, zie StichtStadPopup — deze functie
+// voert de al-bevestigde actie alleen nog uit). Geen effect bij een
+// ongeldige aanroep (verkeerde locatie of te weinig grondstoffen) — dezelfde
+// twee-staps-veilige-aanroep-conventie als `startBouw`/`verplaatsSettlerNaar`
+// hierboven.
+//
+// Voegt de nieuwe stad toe aan `state.steden` (in plaats van 'm te
+// vervangen) en maakt haar de actieve stad — het herhalende
+// stichtingspatroon (hoofdstuk 9, Deel 2) laat de run dus in principe
+// doorlopen na het stichten, in tegenstelling tot vóór M18, toen élke
+// stichting het (tutorial-)einddoel was. `stadGesticht` (GameRoot toont
+// daarop de afsluitende scène) wordt daarom alleen gezet als dit de
+// allerlaatste streek van de wereld is (hoofdstuk 9: "de allerlaatste,
+// verplichte stichting blijft bij de oceaan aan het einde van de campagne
+// ... die telt gewoon mee als een van deze cykli") — in de tutorial (14
+// streken, precies één vers-water-vakje, op de laatste streek) is dat nog
+// steeds elke keer het geval, dus dit blijft voor de tutorial exact hetzelfde
+// gedrag als vóór M18, bevestigd door de bestaande tests. Verbruikt geen
+// aparte settler-actie-vlag: dit is een beslissende zet, geen herhaalbare
 // per-beurt-actie zoals bewegen/jagen/hakken.
 export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): GameState {
   if (!kanStichten(state, slot) || !heeftGenoegVoorStichten(state)) return state;
 
   const { hoogte, positieInStreek } = leesSettler(state, slot)!;
+  const naam = nieuweStadNaam(state.steden.length);
   const streken = state.streken.map((streek) => {
     if (streek.hoogte !== hoogte) return streek;
     const tiles = streek.tiles.map((tile, index) => {
@@ -295,7 +318,7 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
         status: "actief" as const,
         improvement: {
           id: "gestichte-stad",
-          naam: GESTICHTE_STAD_NAAM,
+          naam,
           categorie: "civiel" as const,
           soort: "city" as const,
           kosten: {},
@@ -307,9 +330,26 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
     return { ...streek, tiles };
   });
 
+  const nieuweStad: City = {
+    naam,
+    grootte: "klein",
+    relics: [],
+    vervalStatus: "gezond",
+    streekHoogte: hoogte,
+    strijders: [],
+    missionarissen: [],
+    cityImprovements: [],
+  };
+  // Laatste streek van de wereld = de verplichte, campagne-afsluitende
+  // stichting (hoofdstuk 1/9) — elke andere stichting is een tussentijdse
+  // kans uit het herhalende patroon en laat de run doorlopen.
+  const isAfsluitendeStichting = hoogte === state.streken.length;
+
   return {
     ...state,
     streken,
+    steden: [...state.steden, nieuweStad],
+    stad: nieuweStad,
     voorraad: {
       ...state.voorraad,
       hout: state.voorraad.hout - STICHTING_KOSTEN.hout,
@@ -318,6 +358,6 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
     },
     voedsel: state.voedsel - STICHTING_KOSTEN.voedsel,
     ...metSettlerUpdate(state, slot, undefined, leesActieGedaan(state, slot)),
-    stadGesticht: true,
+    stadGesticht: isAfsluitendeStichting ? true : state.stadGesticht,
   };
 }

@@ -38,7 +38,7 @@ test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbr
 
   const naStichten = stichtStad(state);
   assert.equal(naStichten.settler, undefined, "de settler verdwijnt bij het stichten");
-  assert.equal(naStichten.stadGesticht, true);
+  assert.equal(naStichten.stadGesticht, true, "streek 14 is de laatste streek van de tutorial-wereld, dus dit is de afsluitende stichting");
   assert.equal(naStichten.voorraad.hout, 0);
   assert.equal(naStichten.voorraad.steen, 0);
   assert.equal(naStichten.voorraad.erts, 0);
@@ -48,10 +48,50 @@ test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbr
   assert.equal(gestichteTile.status, "actief");
   assert.equal(gestichteTile.improvement?.soort, "city");
 
+  // M18: de nieuwe stad komt er echt bij (i.p.v. de oude te vervangen) en
+  // wordt de actieve stad — Holenrots blijft als eerder gestichte stad staan.
+  assert.equal(naStichten.steden.length, 2);
+  assert.equal(naStichten.steden[0].naam, "Holenrots");
+  assert.equal(naStichten.steden[1].naam, "Vuurbron");
+  assert.equal(naStichten.steden[1].streekHoogte, 14);
+  assert.deepEqual(naStichten.stad, naStichten.steden[1]);
+
   // Geen automatische nieuwe settler meer via het bestaande "settler
   // verschijnt bij beurt 2"-vangnet, ook niet een aantal beurten later.
   const naVolgendeBeurt = volgendeBeurt(naStichten);
   assert.equal(naVolgendeBeurt.settler, undefined);
+});
+
+test("stichtStad op een streek die niet de laatste van de wereld is, laat de run doorlopen i.p.v. eindigen (hoofdstuk 9 Deel 2, M18)", () => {
+  let state = maakInitieleSpelStatus();
+  // De tutorial-wereld zelf heeft maar één vers-water-vakje (op de laatste
+  // streek) — dit test-scenario zet er handmatig eentje eerder neer om een
+  // tussentijdse stichting uit het herhalende patroon te simuleren (zoals
+  // een langere Amerikaanse-campagne-wereld die straks daadwerkelijk zou
+  // opleveren, hoofdstuk 9/14).
+  state = {
+    ...state,
+    settler: { hoogte: 8, positieInStreek: 5 },
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 8
+        ? {
+            ...streek,
+            ontgrendeld: true,
+            tiles: streek.tiles.map((tile) => (tile.positieInStreek === 5 ? { ...tile, versWater: true } : tile)),
+          }
+        : streek
+    ),
+    voorraad: { ...state.voorraad, hout: STICHTING_KOSTEN.hout, steen: STICHTING_KOSTEN.steen, erts: STICHTING_KOSTEN.erts },
+    voedsel: STICHTING_KOSTEN.voedsel,
+  };
+  assert.equal(kanStichten(state), true);
+
+  const naStichten = stichtStad(state);
+  assert.equal(naStichten.stadGesticht, undefined, "streek 8 is niet de laatste streek van de wereld — de run eindigt niet");
+  assert.equal(naStichten.settler, undefined, "de settler verdwijnt nog steeds bij het stichten");
+  assert.equal(naStichten.steden.length, 2);
+  assert.equal(naStichten.steden[1].streekHoogte, 8);
+  assert.deepEqual(naStichten.stad, naStichten.steden[1], "de nieuwe stad wordt de actieve stad");
 });
 
 test("kanStichten is false op een vakje zonder vers water, of als het vakje al bebouwd is", () => {
