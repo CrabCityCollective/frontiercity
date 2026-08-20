@@ -1,11 +1,14 @@
 // Meerdere-steden-fundering (hoofdstuk 9/13, issue: "Eerste bouwsteen van de
 // Amerikaanse frontier-campagne"). `GameState.steden` is de brontabel van
 // alle gestichte steden van deze run; `GameState.stad` blijft de actieve/
-// laatst-gestichte stad (`steden[steden.length - 1]`) voor de bestaande
-// MVP-code, die tot en met M17/M18 altijd van precies één actieve stad
-// uitgaat. `metActieveStad` is de enige plek die beide velden muteert, zodat
-// ze nooit uit elkaar kunnen lopen — de honderden bestaande leesplekken
-// (`state.stad.x`) blijven daardoor ongewijzigd werken.
+// laatst-gestichte stad (`steden[steden.length - 1]`). `stichtStad`
+// (acties.ts, M18) hangt een nieuwe stad aan `steden` en maakt haar actief
+// zodra de speler daadwerkelijk sticht — vóór die stichting (en in de
+// tutorial, die nooit meer dan één stichting kent) blijft er dus precies één
+// stad. `metActieveStad` is de enige plek die een bestaande stad muteert
+// (niet: toevoegt) in zowel `steden` als `stad` tegelijk, zodat ze nooit uit
+// elkaar kunnen lopen — de honderden bestaande leesplekken (`state.stad.x`)
+// blijven daardoor ongewijzigd werken.
 //
 // Nieuwe code die van meerdere steden bewust is (M17: afstandsverval, M18:
 // herhalend stichtingspatroon) gebruikt `actieveStad`/`frontierAfstand`
@@ -77,11 +80,44 @@ export function cityImprovementEffectiviteit(afstand: number): number {
 // écht, want er bestond nooit meer dan één stad tegelijk — dus nooit een
 // "achtergelaten stad" om hem op toe te passen. Zodra een run nog nooit meer
 // dan één stad heeft gehad, is er dus nog niets om te vervallen: dit houdt de
-// tutorial (die altijd op precies 1 stad blijft, hoofdstuk 13, M18 nog niet
-// gebouwd) exact ongewijzigd, en de effectiviteit gaat pas echt meebewegen
-// met de afstand zodra het herhalende stichtingspatroon (Deel 2, M18) een
-// speler ooit een tweede stad laat stichten.
+// tutorial (die altijd bij precies 1 stad blijft, want er is maar één
+// vers-water-vakje) exact ongewijzigd. Sinds M18 (`stichtStad`, acties.ts)
+// een tweede stad daadwerkelijk kan aanmaken, gaat de effectiviteit voor
+// zo'n run vanaf dat moment echt meebewegen met de afstand.
 export function stadEffectiviteit(state: GameState, stad: City): number {
   if (state.steden.length <= 1) return 1;
   return cityImprovementEffectiviteit(frontierAfstand(state, stad));
+}
+
+// Drie gegarandeerde vers-water-stichtingskansen per stichtingscyclus
+// (hoofdstuk 9/14, Deel 2): worldgen garandeert, gemeten vanaf de
+// streek-hoogte waarop een stad gesticht is, telkens één vers-water-vakje
+// binnen elk van de drie kans-vensters die hieronder samen de vier
+// afstandszones (Deel 1) overspannen. Vaste, deterministische keuzes binnen
+// elk venster — geen willekeur, zelfde MVP-conventie als de vaste tutorial-
+// worldgen in world.ts (TUTORIAL_VERS_WATER e.d.):
+// - kans1 op +3 (binnen 0-4, de "gezonde" zone): vroeg genoeg voor een
+//   gezonde buffer, maar niet zo vroeg dat er geen ruimte meer over is om
+//   ook nog kans2 en kans3 te plaatsen.
+// - kans2 op +8 (binnen 5-12, het midden van beide verval-zones).
+// - kans3 op +13 (exact de drempel van "uitgeput"): "zodra afstand 13+
+//   bereikt wordt" (hoofdstuk 9) is per definitie de eerst mogelijke streek
+//   in die zone.
+// Puur de hoogte-berekening — de daadwerkelijke worldgen-plaatsing (welke
+// positie-in-streek, ingebed in een campagnelengte van 30-60 streken) hoort
+// bij de nog te bouwen Amerikaanse-campagne-wereld (hoofdstuk 13/15); de
+// tutorial-wereld is vast en te kort (14 streken) om deze drie kansen ooit
+// alle drie te tonen.
+export interface StichtingsKansHoogten {
+  kans1: number;
+  kans2: number;
+  kans3: number;
+}
+
+export function gegarandeerdeStichtingskansHoogten(streekHoogteStad: number): StichtingsKansHoogten {
+  return {
+    kans1: streekHoogteStad + 3,
+    kans2: streekHoogteStad + 8,
+    kans3: streekHoogteStad + 13,
+  };
 }

@@ -386,10 +386,12 @@ function aantalSettlers(state: GameState): number {
 // aantal settlers lager is dan het aantal steden — de speler begint met één
 // settler, en pas een gestichte stad kan er weer één uitrusten (hoofdstuk
 // 11: "maximaal één settler per gestichte stad" als natuurlijke rem op
-// expansie). `state.steden.length` is in de MVP altijd 1 (geen frontier-
-// verplaatsing/tweede stad, zie hoofdstuk 13), dus dat is in de praktijk nog
-// steeds alleen mogelijk vóórdat de eerste settler bestaat (vóór beurt 2,
-// zie `volgendeBeurt`) — maar leest voortaan al de echte telling.
+// expansie, over alle steden heen — geen aparte pool per stad). In de
+// tutorial is `state.steden.length` altijd 1 tot de allerlaatste,
+// campagne-afsluitende stichting (die de run meteen beëindigt, dus dan
+// wordt dit nooit meer relevant) — pas zodra een langere campagne (hoofdstuk
+// 9 Deel 2, M18) een tussentijdse tweede/derde stad laat bestaan, opent dit
+// een extra settler-slot.
 export function startNieuweSettler(state: GameState): GameState {
   if (state.stad.civielInAanbouw || aantalSettlers(state) >= state.steden.length) {
     return state;
