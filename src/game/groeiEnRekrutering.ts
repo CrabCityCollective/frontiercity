@@ -258,6 +258,29 @@ export function versnelCityVerbeteringMetGoud(state: GameState): GameState {
   };
 }
 
+// Volgend vrij Strijder-id (issue: "soms lukt wachttoren bemannen niet meer"):
+// `strijders` groeit ánders dan hierboven ooit aangenomen niet altijd alleen
+// maar — een verloren Confrontatie tegen een Bezette Streek en een
+// Wachttoren-overrompeling door indringers (zie militair.ts/
+// indringersEnDieren.ts) verwijderen allebei de bemannende strijder uit deze
+// lijst. Een id gebaseerd op `strijders.length` botst dan: na het verlies van
+// bv. `strijder-1` (lijst wordt `[strijder-0, strijder-2]`, lengte 2) kreeg de
+// eerstvolgende rekrutering weer id `strijder-2` — hetzelfde id als de
+// strijder die al een andere Wachttoren bemant. De `.find` in `bemanWachttoren`
+// vond dan die bestaande, al-bemande strijder eerst en weigerde stilzwijgend
+// (`strijder.wachttoren` was al gezet), ook al leek de net opgeleide strijder
+// in de UI nog vrij. Baseer het nieuwe id daarom op het hoogste al uitgegeven
+// nummer in de huidige lijst i.p.v. op de lijstlengte — dat botst nooit met
+// een nog aanwezige (en dus mogelijk bemande) strijder.
+function volgendeStrijderId(strijders: Strijder[]): string {
+  let hoogsteNummer = -1;
+  for (const strijder of strijders) {
+    const match = /^strijder-(\d+)$/.exec(strijder.id);
+    if (match) hoogsteNummer = Math.max(hoogsteNummer, Number(match[1]));
+  }
+  return `strijder-${hoogsteNummer + 1}`;
+}
+
 // Betaalt de bouwkosten van een lopende Soldaat-rekrutering (M7). Zelfde
 // wachtrij-patroon als verwerkGroei, los van de land-tile-bouwwachtrij omdat
 // een unit geen land-vakje inneemt.
@@ -273,9 +296,9 @@ export function verwerkRecrutering(state: GameState): GameState {
     // Elke voltooide rekrutering levert één individuele strijder op (nieuwe
     // Wachttoren-functie, hoofdstuk 6) in plaats van alleen een opgetelde
     // legerwaarde — de speler moet 'm straks kunnen kiezen om een specifieke
-    // Wachttoren te bemannen. Een oplopende teller volstaat als id, want
-    // `strijders` groeit alleen (nooit verwijderd, zie `bemanWachttoren`).
-    const nieuweStrijder: Strijder = { id: `strijder-${state.stad.strijders.length}` };
+    // Wachttoren te bemannen. Id via `volgendeStrijderId` hierboven, niet via
+    // de lijstlengte — die botst zodra een strijder onderweg verwijderd is.
+    const nieuweStrijder: Strijder = { id: volgendeStrijderId(state.stad.strijders) };
     return {
       ...metActieveStad(state, { ...state.stad, strijders: [...state.stad.strijders, nieuweStrijder], legerInAanbouw: undefined }),
       voorraad,
