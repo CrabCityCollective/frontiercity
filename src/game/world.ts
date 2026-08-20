@@ -213,12 +213,14 @@ function bezetteStreekInhoudVoorTile(hoogte: number, positieInStreek: number): B
 // Amberader-vondst op streek 8): zet `bezet: true` en verhult elk vakje
 // individueel (`Tile.verhuld`), los van de gewone streek-brede fog-of-war —
 // de streek zelf blijft `ontgrendeld: false` tot alle vijandelijke
-// Heiligdommen vernietigd zijn (zie `verwerkBelegering` in economie.ts).
+// Wachttorens/Heiligdommen opgeruimd zijn (zie `verwerkBelegering` in
+// streekOntgrendeling.ts). De wololo-voortgang zelf leeft per Heiligdom-tile
+// (`Tile.wololoVoortgang`, issue: "Bezette streek scherm"), geen streekbreed
+// veld meer nodig.
 export function initialiseerBezetteStreek(streek: Streek): Streek {
   return {
     ...streek,
     bezet: true,
-    belegeringsVoortgang: 0,
     tiles: streek.tiles.map((tile) => ({
       ...tile,
       verhuld: true,

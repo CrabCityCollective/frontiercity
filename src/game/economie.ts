@@ -39,7 +39,7 @@ import { STAD_POSITIE } from "./world";
 import { verwerkUitputting, verwerkVerval } from "./uitputtingEnVerval";
 import { verwerkBouwwachtrij } from "./bouwwachtrij";
 import { verwerkProductie } from "./productie";
-import { verwerkBelegering, verwerkStreekOntgrendeling } from "./streekOntgrendeling";
+import { verwerkBelegering, verwerkStreekOntgrendeling, verwerkVerkenningInGang } from "./streekOntgrendeling";
 import { verwerkTechDrempel } from "./tech";
 import {
   verwerkCityVerbetering,
@@ -48,7 +48,6 @@ import {
   verwerkOpslagplaats,
   verwerkRecrutering,
   verwerkTweedeSettlerInAanbouw,
-  verwerkVerkennerRecrutering,
 } from "./groeiEnRekrutering";
 import {
   verwerkConfrontatieKuddes,
@@ -116,10 +115,18 @@ export function volgendeBeurt(state: GameState): GameState {
   const naEersteKudde = verwerkEersteKudde(naBouw);
   const naProductie = verwerkProductie(naEersteKudde);
   const naOntgrendeling = verwerkStreekOntgrendeling(naProductie);
-  // Belegering (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
-  // verkenner", Deel 4): direct na de streek-ontgrendeling, op dezelfde
-  // cultuurproductie van deze beurt — zie `verwerkBelegering` hierboven.
-  const naBelegering = verwerkBelegering(naOntgrendeling);
+  // Verkenning-in-gang (issue: "Bezette streek scherm"): telt elk lopend
+  // verkennings-tellertje van een actieve Bezette Streek één beurt af, en
+  // onthult een vakje zodra het op 0 staat — vóór de wololo-verwerking
+  // hieronder, zodat een deze-beurt-onthuld vijandelijk Heiligdom nog
+  // dezelfde beurt kan meetellen als er al een Missionaris naartoe gestuurd
+  // stond te wachten (kan in de praktijk niet, want sturen vereist een al
+  // onthuld doel — puur een consistente volgorde).
+  const naVerkenningInGang = verwerkVerkenningInGang(naOntgrendeling);
+  // Wololo (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
+  // verkenner", Deel 4, herzien door "Bezette streek scherm"): direct na
+  // Verkenning-in-gang — zie `verwerkBelegering` hierboven.
+  const naBelegering = verwerkBelegering(naVerkenningInGang);
   const naTechDrempel = verwerkTechDrempel(naBelegering);
   const naVerval = verwerkVerval(naTechDrempel);
   if (naVerval.laatsteIneenstorting) return naVerval;
@@ -135,8 +142,7 @@ export function volgendeBeurt(state: GameState): GameState {
   // 1/3): eigen wachtrij, los van civiel/opslagplaats hierboven.
   const naCityVerbetering = verwerkCityVerbetering(naOpslagplaats);
   const naRecrutering = verwerkRecrutering(naCityVerbetering);
-  const naVerkennerRecrutering = verwerkVerkennerRecrutering(naRecrutering);
-  const naMissionarisRecrutering = verwerkMissionarisRecrutering(naVerkennerRecrutering);
+  const naMissionarisRecrutering = verwerkMissionarisRecrutering(naRecrutering);
   const naIndringers = verwerkIndringers(naMissionarisRecrutering);
   const naKuddes = verwerkKuddes(naIndringers);
   // Gegarandeerde kuddes tijdens de Confrontatie (issue: "kuddes op de laatste

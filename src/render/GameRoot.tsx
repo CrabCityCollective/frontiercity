@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import AmberOntdektPopup from "@/components/AmberOntdektPopup";
 import BeurtensysteemUitlegPopup from "@/components/BeurtensysteemUitlegPopup";
+import BezetteStreekPaneel from "@/components/BezetteStreekPaneel";
 import BezetteStreekPopup from "@/components/BezetteStreekPopup";
 import BoerderijKlaarUitlegPopup from "@/components/BoerderijKlaarUitlegPopup";
 import BouwPopup from "@/components/BouwPopup";
@@ -39,7 +40,13 @@ import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
 import { SettlerSlot } from "@/game/acties";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
-import { verhuldeBezetteStreekPosities } from "@/game/streekOntgrendeling";
+import {
+  BELEGERINGSDREMPEL,
+  beschikbareMissionarissen,
+  kanStuurMissionaris,
+  kanStuurVerkenner,
+  verhuldeBezetteStreekPosities,
+} from "@/game/streekOntgrendeling";
 import {
   AMBER_ONTDEKKING_TWEEDE_TEKST,
   AMBER_ONTDEKKING_TWEEDE_TITEL,
@@ -52,7 +59,7 @@ import {
   NIET_BOUWEN_UITLEG_TEKST,
   NIET_BOUWEN_UITLEG_TITEL,
 } from "@/game/tutorialContent";
-import { berekenLegerwaarde, onbemandeLegerkampPosities } from "@/game/militair";
+import { berekenLegerwaarde, kanConfrontatieBezetteStreek, onbemandeLegerkampPosities } from "@/game/militair";
 import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij } from "@/game/productie";
 import { grafischeStijl, heeftOpgeslagenSpel, markeerTutorialVoltooid, zetGrafischeStijl } from "@/game/save";
 import { beschrijfEindeOceaanTile, beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
@@ -125,14 +132,14 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     haalStrijderTerug,
     zetUitlegPopups,
     kiesTech,
-    verken,
-    startVerkennerRecrutering,
+    stuurVerkenner,
+    stuurMissionaris,
     startMissionarisRecrutering,
     bemanLegerkamp,
     confrontatieBezetteStreek,
     sluitBezetteStreekOntdektMelding,
     sluitVijandelijkHeiligdomOnthuldMelding,
-    sluitVijandelijkHeiligdomVernietigdMelding,
+    sluitVijandelijkHeiligdomVeroverdMelding,
     opslaan,
     laden,
   } = useGameEngine();
@@ -284,10 +291,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // missionaris en verkenner", Deel 5) — zelfde soort kies-modus als
   // hierboven, maar voor een Legerkamp-tile i.p.v. een Wachttoren-tile.
   const [legerkampKiesModusStrijderId, setLegerkampKiesModusStrijderId] = useState<string | null>(null);
-  // Verkenning-kies-modus (Deel 3): geactiveerd via de "Verkennen"-knop in
-  // BezetteStreekPaneel, waarna een klik op een verhuld vakje van de Bezette
-  // Streek (zie `handleTileClick` hieronder) dat vakje daadwerkelijk verkent.
-  const [verkenningsModusActief, setVerkenningsModusActief] = useState(false);
   // Stichtings-bevestiging (hoofdstuk 2/10/16, issue: "stad stichten op de
   // frontier" deel 4): geopend via de "Stad stichten"-knop in SettlerPaneel,
   // bevestigd/geannuleerd via StichtStadPopup. `stichtStadSlot` onthoudt met
@@ -337,7 +340,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     setGeselecteerdeTile(null);
     setToonWachttorenBemanningsKeuze(false);
     setLegerkampKiesModusStrijderId(null);
-    setVerkenningsModusActief(false);
     setToonStichtStadPopup(false);
     setToonStadMenuPopup(false);
   }, [state.beurt]);
@@ -373,6 +375,17 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             s.wachttoren?.positieInStreek === geselecteerdeTile.positieInStreek
         )
       : undefined;
+  // Bezette Streek — klikbare kaart i.p.v. stadsscherm (issue: "Bezette streek
+  // scherm"): een klik op een nog verhuld vakje, een onthulde vijandelijke
+  // Wachttoren of een onthuld vijandelijk Heiligdom geeft de tile-info-pop-up
+  // er een eigen actie bij (`verkenningVraag`/`confrontatieVraag`/
+  // `missionarisVraag` hieronder) — zelfde patroon als `wachttorenVraag`
+  // hierboven.
+  const geselecteerdeTileIsVerhuld = Boolean(geselecteerdeTileVoorRush?.verhuld);
+  const geselecteerdeTileIsVijandelijkeWachttoren =
+    geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "vijandelijke-wachttoren";
+  const geselecteerdeTileIsVijandelijkHeiligdom =
+    geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "vijandelijk-heiligdom";
   // Alleen de relevante streken op de canvas (issue: "onderkant altijd in
   // view" + "onontdekte tegels weg") — zie world.ts: `zichtbareStreken`.
   const zichtbareStrekenState = zichtbareStreken(state.streken);
@@ -463,8 +476,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     Boolean(geselecteerdeSettler) &&
     !geselecteerdeSettlerActieGedaan &&
     !plaatsingsImprovement &&
-    !legerkampKiesModusStrijderId &&
-    !verkenningsModusActief;
+    !legerkampKiesModusStrijderId;
   const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.streken, geselecteerdeSettler!) : [];
 
   // Actieve, nog onbemande Legerkamp-tiles tijdens het bemannen (hoofdstuk 6,
@@ -472,17 +484,18 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // alleen-tijdens-de-modus-berekenen-patroon als `settlerBereikbarePosities`
   // hierboven, en meteen ook de enige geldige klikdoelen in `handleTileClick`.
   const legerkampBereikbarePosities = legerkampKiesModusStrijderId ? onbemandeLegerkampPosities(state) : [];
-  // Nog verhulde vakjes van de actieve Bezette Streek tijdens Verkenning (Deel
-  // 3) — zelfde patroon.
-  const verkenningBereikbarePosities = verkenningsModusActief ? verhuldeBezetteStreekPosities(state) : [];
+  // Nog verhulde vakjes van de actieve Bezette Streek (issue: "Bezette streek
+  // scherm") — puur een highlight op de canvas, geen losse kies-modus meer:
+  // een klik op zo'n vakje opent gewoon de tile-info-pop-up met de
+  // `verkenningVraag`-actie erbij (zie `handleTileClick`/`TileInfoPopup`).
+  const verkenningBereikbarePosities = verhuldeBezetteStreekPosities(state);
 
   function handleTileClick(hoogte: number, positieInStreek: number) {
-    // Legerkamp-kies-modus en Verkenning (Bezette Streek hoofdstuk 6, issue:
-    // "De Bezette Streek, missionaris en verkenner") hebben voorrang op
-    // settler-verplaatsing/tile-selectie: een klik op een gehighlight, dus
-    // geldig, vakje voert de bijbehorende actie uit en sluit de modus af; een
-    // klik ernaast laat de modus openstaan zodat de speler opnieuw kan
-    // mikken.
+    // Legerkamp-kies-modus (hoofdstuk 6, issue: "De Bezette Streek,
+    // missionaris en verkenner") heeft voorrang op settler-verplaatsing/tile-
+    // selectie: een klik op een gehighlight, dus geldig, vakje voert de
+    // bijbehorende actie uit en sluit de modus af; een klik ernaast laat de
+    // modus openstaan zodat de speler opnieuw kan mikken.
     if (legerkampKiesModusStrijderId) {
       const isGeldigLegerkampDoel = legerkampBereikbarePosities.some(
         (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
@@ -490,17 +503,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
       if (isGeldigLegerkampDoel) {
         bemanLegerkamp(legerkampKiesModusStrijderId, hoogte, positieInStreek);
         setLegerkampKiesModusStrijderId(null);
-      }
-      return;
-    }
-
-    if (verkenningsModusActief) {
-      const isGeldigVerkenningsDoel = verkenningBereikbarePosities.some(
-        (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
-      );
-      if (isGeldigVerkenningsDoel) {
-        verken(positieInStreek);
-        setVerkenningsModusActief(false);
       }
       return;
     }
@@ -781,12 +783,12 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonAmberOntdektPopup &&
     !toonTweedeAmberOntdektPopup &&
     Boolean(state.techKeuzeEvent);
-  // Vijandelijk-Heiligdom-onthuld-/vernietigd-pop-ups (hoofdstuk 6, issue:
-  // "De Bezette Streek, missionaris en verkenner", Deel 4) — zelfde
-  // blokkerende vorm en prioriteit als de overige kerninhoud-meldingen
-  // hierboven. "Onthuld" gaat voor "vernietigd" (kan in theorie dezelfde
-  // beurt allebei gezet zijn — onthullen via Verkenning, vernietigen via de
-  // belegeringsmeter — de speler ziet dan eerst de onthulling).
+  // Vijandelijk-Heiligdom-onthuld-/veroverd-pop-ups (hoofdstuk 6, issue: "De
+  // Bezette Streek, missionaris en verkenner", Deel 4, herzien door "Bezette
+  // streek scherm") — zelfde blokkerende vorm en prioriteit als de overige
+  // kerninhoud-meldingen hierboven. "Onthuld" gaat voor "veroverd" (kan in
+  // theorie dezelfde beurt allebei gezet zijn — onthullen via Verkenning,
+  // veroveren via de wololo-meter — de speler ziet dan eerst de onthulling).
   const toonVijandelijkHeiligdomOnthuldPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
@@ -806,7 +808,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     Boolean(state.vijandelijkHeiligdomOnthuldEvent);
-  const toonVijandelijkHeiligdomVernietigdPopup =
+  const toonVijandelijkHeiligdomVeroverdPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
@@ -825,7 +827,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    Boolean(state.vijandelijkHeiligdomVernietigdEvent);
+    Boolean(state.vijandelijkHeiligdomVeroverdEvent);
   // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
   // van streek 2 naar 3 door "Tweede streek boerderij"): laagste prioriteit
   // van de uitleg-pop-ups, zodat hij nooit kerninhoud (indringers/kudde/
@@ -851,7 +853,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
     uitlegAan &&
     !wachttorenOveralUitlegBevestigd &&
     hoogsteOntgrendeldeStreek(state.streken) >= 3;
@@ -882,7 +884,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
     !toonWachttorenOveralUitlegPopup &&
     uitlegAan &&
     !voedselBalansUitlegBevestigd &&
@@ -911,7 +913,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
     !toonWachttorenOveralUitlegPopup &&
     !toonVoedselBalansUitlegPopup &&
     uitlegAan &&
@@ -941,7 +943,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
     !toonWachttorenOveralUitlegPopup &&
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
@@ -983,7 +985,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
     !toonWachttorenOveralUitlegPopup &&
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
@@ -1013,7 +1015,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
     !toonWachttorenOveralUitlegPopup &&
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
@@ -1044,7 +1046,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
     !toonWachttorenOveralUitlegPopup &&
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
@@ -1076,7 +1078,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
     !toonWachttorenOveralUitlegPopup &&
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
@@ -1109,7 +1111,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonTweedeAmberOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
-    !toonVijandelijkHeiligdomVernietigdPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
     !toonWachttorenOveralUitlegPopup &&
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
@@ -1175,6 +1177,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           }}
         />
         <StreekIntroPaneel streken={state.streken} />
+        <BezetteStreekPaneel state={state} />
         {toonStadMenuPopup && (
           <StadMenuPopup
             state={state}
@@ -1194,14 +1197,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             onHaalTerug={haalStrijderTerug}
             onVersnelCiviel={versnelCivielMetGoud}
             onVersnelOpslagplaats={versnelOpslagplaatsMetGoud}
-            onStartVerkennerRecrutering={startVerkennerRecrutering}
-            onActiveerVerkenningsModus={() => {
-              setVerkenningsModusActief(true);
-              setToonStadMenuPopup(false);
-            }}
-            verkenningsModusActief={verkenningsModusActief}
             onStartMissionarisRecrutering={startMissionarisRecrutering}
-            onConfrontatieBezetteStreek={confrontatieBezetteStreek}
             onSluiten={() => setToonStadMenuPopup(false)}
           />
         )}
@@ -1212,8 +1208,8 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonVijandelijkHeiligdomOnthuldPopup && (
           <VijandelijkHeiligdomPopup fase="onthuld" onSluiten={sluitVijandelijkHeiligdomOnthuldMelding} />
         )}
-        {toonVijandelijkHeiligdomVernietigdPopup && (
-          <VijandelijkHeiligdomPopup fase="vernietigd" onSluiten={sluitVijandelijkHeiligdomVernietigdMelding} />
+        {toonVijandelijkHeiligdomVeroverdPopup && (
+          <VijandelijkHeiligdomPopup fase="veroverd" onSluiten={sluitVijandelijkHeiligdomVeroverdMelding} />
         )}
         {toonOceaanUitlegPopup && <OceaanUitlegPopup onDoorgaan={() => setOceaanUitlegBevestigd(true)} />}
         {toonIndringersPopup && state.indringersEvent && (
@@ -1314,7 +1310,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {legerkampKiesModusStrijderId && (
           <WachttorenKiesBanner onAnnuleren={() => setLegerkampKiesModusStrijderId(null)} />
         )}
-        {verkenningsModusActief && <WachttorenKiesBanner onAnnuleren={() => setVerkenningsModusActief(false)} />}
         {toonStichtStadPopup && (
           <StichtStadPopup
             onBevestig={() => {
@@ -1361,7 +1356,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonTweedeAmberOntdektPopup &&
             !toonTechKeuzePopup &&
             !toonVijandelijkHeiligdomOnthuldPopup &&
-            !toonVijandelijkHeiligdomVernietigdPopup &&
+            !toonVijandelijkHeiligdomVeroverdPopup &&
             !toonWachttorenOveralUitlegPopup &&
             !toonVoedselBalansUitlegPopup &&
             !toonSettlerActiesUitlegPopup &&
@@ -1372,7 +1367,6 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonHoutkapStreekUitlegPopup &&
             !toonTutorialVoltooidPopup &&
             !legerkampKiesModusStrijderId &&
-            !verkenningsModusActief &&
             !toonStichtStadPopup &&
             !toonStadMenuPopup &&
             !state.bouwKeuzeGedaanDitBeurt &&
@@ -1420,6 +1414,37 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
                   onStuurNaarHuis: () => {
                     if (wachttorenBemanner) haalStrijderTerug(wachttorenBemanner.id);
                     setGeselecteerdeTile(null);
+                  },
+                }
+              : undefined
+          }
+          verkenningVraag={
+            geselecteerdeTileIsVerhuld && geselecteerdeTile
+              ? {
+                  kan: kanStuurVerkenner(state, geselecteerdeTile.positieInStreek),
+                  onderweg: geselecteerdeTileVoorRush?.verkenningInGang,
+                  onStuurVerkenner: () => stuurVerkenner(geselecteerdeTile.positieInStreek),
+                }
+              : undefined
+          }
+          confrontatieVraag={
+            geselecteerdeTileIsVijandelijkeWachttoren && geselecteerdeTile
+              ? {
+                  kan: kanConfrontatieBezetteStreek(state, geselecteerdeTile.positieInStreek),
+                  onConfrontatieAangaan: () => {
+                    confrontatieBezetteStreek(geselecteerdeTile.positieInStreek);
+                  },
+                }
+              : undefined
+          }
+          missionarisVraag={
+            geselecteerdeTileIsVijandelijkHeiligdom && geselecteerdeTile
+              ? {
+                  wololoVoortgang: geselecteerdeTileVoorRush?.wololoVoortgang ?? 0,
+                  wololoDrempel: BELEGERINGSDREMPEL,
+                  beschikbareMissionarissen: beschikbareMissionarissen(state),
+                  onStuurMissionaris: (missionarisId) => {
+                    stuurMissionaris(missionarisId, geselecteerdeTile.positieInStreek);
                   },
                 }
               : undefined

@@ -1,54 +1,31 @@
 "use client";
 
-import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "@/game/bouwwachtrij";
-import { BELEGERINGSDREMPEL, heeftOfferAltaar, kanVerkennen, VERKENNING_KOSTEN_WETENSCHAP } from "@/game/streekOntgrendeling";
-import { kanConfrontatieBezetteStreek } from "@/game/militair";
-import { MISSIONARIS, VERKENNER } from "@/game/improvements";
+import { BELEGERINGSDREMPEL, beschikbareMissionarissen } from "@/game/streekOntgrendeling";
 import { GameState } from "@/game/types";
-import { KostenIcons } from "./ResourceIcoon";
 
-interface BezetteStreekPaneelProps {
-  state: GameState;
-  onStartVerkennerRecrutering: () => void;
-  onActiveerVerkenningsModus: () => void;
-  verkenningsModusActief: boolean;
-  onStartMissionarisRecrutering: () => void;
-  onConfrontatieBezetteStreek: (positieInStreek: number) => void;
-}
-
-// Bezette Streek & Confrontatie (hoofdstuk 6, issue: "De Bezette Streek,
-// missionaris en verkenner"): bundelt Verkenner-rekrutering + Verkenning,
-// Missionaris-rekrutering + belegeringsmeter, en de lijst van mogelijke
-// Confrontatie-doelen — alleen zichtbaar zolang er een actieve Bezette Streek
-// is (anders `null`, zodat StadMenuPopup dit paneel altijd onvoorwaardelijk
-// kan renderen, net als de overige panelen).
-export default function BezetteStreekPaneel({
-  state,
-  onStartVerkennerRecrutering,
-  onActiveerVerkenningsModus,
-  verkenningsModusActief,
-  onStartMissionarisRecrutering,
-  onConfrontatieBezetteStreek,
-}: BezetteStreekPaneelProps) {
+// Bezette-Streek-statusbalk (issue: "Bezette streek scherm" — vervangt het
+// eerdere BezetteStreekPaneel in het stadsmenu volledig): alle acties
+// (verkenner sturen, missionaris sturen, confrontatie aangaan) lopen sinds
+// dit issue via een klik op de betreffende tile zelf (zie TileInfoPopup:
+// `verkenningVraag`/`missionarisVraag`/`confrontatieVraag` in GameRoot) —
+// "het scherm met zaken die je kunt doen met een bezette laag" hoort niet in
+// hetzelfde scherm als de stad. Dit balkje is puur status: welke verkenners
+// onderweg zijn en hoe ver elke wololo-meter staat, zodat de speler dat niet
+// per se per tile hoeft na te gaan. Wordt rechtstreeks op de kaart getoond
+// (GameRoot), niet in een pop-up — alleen zichtbaar zolang er een actieve
+// Bezette Streek is (anders `null`).
+export default function BezetteStreekPaneel({ state }: { state: GameState }) {
   const bezetteStreek = state.streken.find((l) => l.bezet);
   if (!bezetteStreek) return null;
 
-  const { stad } = state;
-  const vijandelijkeWachttorens = bezetteStreek.tiles.filter(
+  const onderwegTiles = bezetteStreek.tiles.filter((tile) => tile.verkenningInGang);
+  const heiligdomTiles = bezetteStreek.tiles.filter(
+    (tile) => tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom"
+  );
+  const wachttorenAantal = bezetteStreek.tiles.filter(
     (tile) => tile.status === "actief" && tile.improvement?.id === "vijandelijke-wachttoren"
-  );
-  const heeftVijandelijkHeiligdom = bezetteStreek.tiles.some(
-    (tile) =>
-      (tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom") ||
-      (tile.verhuld && tile.bezetteStreekInhoud === "heiligdom")
-  );
-
-  const verkennerResterend = stad.verkennerInAanbouw
-    ? bouwStagneertVolgendeBeurt(stad.verkennerInAanbouw.improvement, stad.verkennerInAanbouw.voortgang, state.voorraad)
-    : false;
-  const missionarisResterend = stad.missionarisInAanbouw
-    ? bouwStagneertVolgendeBeurt(stad.missionarisInAanbouw.improvement, stad.missionarisInAanbouw.voortgang, state.voorraad)
-    : false;
+  ).length;
+  const vrijeMissionarissen = beschikbareMissionarissen(state).length;
 
   return (
     <div
@@ -56,103 +33,39 @@ export default function BezetteStreekPaneel({
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "0.5rem",
-        padding: "0.75rem 1rem",
-        fontSize: "0.9rem",
+        gap: "0.3rem",
+        padding: "0.5rem 0.9rem",
+        fontSize: "0.85rem",
         margin: "0.5rem",
       }}
     >
       <strong className="fc-heading" style={{ color: "var(--kleur-gevaar)" }}>
         Bezette Streek — {bezetteStreek.hoogte}
       </strong>
+      <span style={{ color: "var(--kleur-tekst-gedempt)" }}>
+        Klik een verhuld vakje om een verkenner te sturen, een vijandelijke wachttoren voor een confrontatie, of een
+        vijandelijk heiligdom om een missionaris te sturen ({vrijeMissionarissen} vrij inzetbaar).
+        {wachttorenAantal > 0 && ` Nog ${wachttorenAantal} vijandelijke wachttoren${wachttorenAantal === 1 ? "" : "s"}.`}
+      </span>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-        <span>Verkenners: {stad.verkenners.length}</span>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          {stad.verkennerInAanbouw ? (
-            <span>
-              Verkenner in opleiding…{" "}
-              {verkennerResterend ? (
-                <span style={{ color: "var(--kleur-gevaar)" }}>⚠ tekort aan grondstoffen</span>
-              ) : (
-                `(nog ${resterendeBouwBeurten(stad.verkennerInAanbouw.improvement, stad.verkennerInAanbouw.voortgang)} beurten)`
-              )}
+      {onderwegTiles.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+          {onderwegTiles.map((tile) => (
+            <span key={tile.positieInStreek}>
+              Verkenner onderweg naar vakje {tile.positieInStreek} — nog {tile.verkenningInGang!.beurtenResterend}{" "}
+              {tile.verkenningInGang!.beurtenResterend === 1 ? "beurt" : "beurten"}.
             </span>
-          ) : (
-            <button className="fc-knop" onClick={onStartVerkennerRecrutering} style={{ padding: "0.3rem 0.6rem" }}>
-              Verkenner opleiden (<KostenIcons kosten={VERKENNER.kosten} />, {VERKENNER.bouwtijdBeurten} beurten)
-            </button>
-          )}
-          <button
-            className="fc-knop"
-            disabled={!kanVerkennen(state) && !verkenningsModusActief}
-            onClick={onActiveerVerkenningsModus}
-            title={
-              stad.verkenners.length === 0
-                ? "Vereist minstens één Verkenner"
-                : state.verkenningGedaanDitBeurt
-                  ? "Al verkend deze beurt"
-                  : `Kost ${VERKENNING_KOSTEN_WETENSCHAP} wetenschap`
-            }
-            style={{ padding: "0.3rem 0.6rem" }}
-          >
-            {verkenningsModusActief ? "Kies een verhuld vakje op de kaart…" : `Verkennen (${VERKENNING_KOSTEN_WETENSCHAP} wetenschap)`}
-          </button>
+          ))}
         </div>
-      </div>
+      )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-        <span>Missionarissen: {stad.missionarissen.length}</span>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          {stad.missionarisInAanbouw ? (
-            <span>
-              Missionaris in opleiding…{" "}
-              {missionarisResterend ? (
-                <span style={{ color: "var(--kleur-gevaar)" }}>⚠ tekort aan grondstoffen</span>
-              ) : (
-                `(nog ${resterendeBouwBeurten(stad.missionarisInAanbouw.improvement, stad.missionarisInAanbouw.voortgang)} beurten)`
-              )}
+      {heiligdomTiles.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+          {heiligdomTiles.map((tile) => (
+            <span key={tile.positieInStreek}>
+              Heiligdom (vakje {tile.positieInStreek}) — wololo-meter: {tile.wololoVoortgang ?? 0} / {BELEGERINGSDREMPEL}
             </span>
-          ) : (
-            <button
-              className="fc-knop"
-              disabled={!heeftOfferAltaar(state)}
-              onClick={onStartMissionarisRecrutering}
-              title={heeftOfferAltaar(state) ? undefined : "Vereist een voltooid Offer Altaar"}
-              style={{ padding: "0.3rem 0.6rem", opacity: heeftOfferAltaar(state) ? 1 : 0.5 }}
-            >
-              Missionaris opleiden (<KostenIcons kosten={MISSIONARIS.kosten} />, {MISSIONARIS.bouwtijdBeurten} beurten)
-            </button>
-          )}
-        </div>
-        {heeftVijandelijkHeiligdom && (
-          <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
-            Belegeringsmeter: {bezetteStreek.belegeringsVoortgang ?? 0} / {BELEGERINGSDREMPEL}
-            {stad.missionarissen.length === 0
-              ? " — bevroren zonder Missionaris"
-              : stad.missionarissen.length > 1 && ` (${stad.missionarissen.length}× snelheid)`}
-          </span>
-        )}
-      </div>
-
-      {vijandelijkeWachttorens.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-          <span style={{ color: "var(--kleur-tekst-gedempt)" }}>Vijandelijke wachttorens:</span>
-          {vijandelijkeWachttorens.map((tile) => {
-            const kan = kanConfrontatieBezetteStreek(state, tile.positieInStreek);
-            return (
-              <button
-                key={tile.positieInStreek}
-                className="fc-knop"
-                disabled={!kan}
-                onClick={() => onConfrontatieBezetteStreek(tile.positieInStreek)}
-                title={kan ? undefined : "Vereist een voltooide, bemande, wegverbonden eigen Wachttoren op de streek direct onder de Bezette Streek"}
-                style={{ padding: "0.3rem 0.6rem", opacity: kan ? 1 : 0.5, alignSelf: "flex-start" }}
-              >
-                Confrontatie aangaan (vakje {tile.positieInStreek})
-              </button>
-            );
-          })}
+          ))}
         </div>
       )}
 
@@ -165,7 +78,7 @@ export default function BezetteStreekPaneel({
         >
           {state.laatsteConfrontatieBezetteStreek.gewonnen ? "Overwinning" : "Verlies"} (winkans was{" "}
           {Math.round(state.laatsteConfrontatieBezetteStreek.winkans * 100)}%)
-          {!state.laatsteConfrontatieBezetteStreek.gewonnen && " — de bemannende strijder is verloren gegaan"}
+          {!state.laatsteConfrontatieBezetteStreek.gewonnen && " — een Legerkamp-strijder is verloren gegaan"}
         </p>
       )}
     </div>

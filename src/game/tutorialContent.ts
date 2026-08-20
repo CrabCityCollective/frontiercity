@@ -206,24 +206,25 @@ export const BEURTENSYSTEEM_UITLEG_TEKST =
   "Elke beurt wordt berekend welke bouwmaterialen nodig zijn voor een gebouw in aanbouw. Tegelijk komt er nieuwe materiaal binnen: hout, steen, erts. Zo groeit of slinkt de voorraad, beurt na beurt.";
 
 // Bezette-Streek-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
-// missionaris en verkenner", Deel 2), getoond zodra streek 13 "in beeld komt"
-// (dezelfde soort trigger als de gegarandeerde Amberader-vondst op streek 8),
-// direct na de gewone streek-pop-up hierboven — vervangt de eerdere, kleinere
-// MILITAIR_UITLEG_*-pop-up volledig.
+// missionaris en verkenner", Deel 2, herzien door "Bezette streek scherm"),
+// getoond zodra streek 13 "in beeld komt" (dezelfde soort trigger als de
+// gegarandeerde Amberader-vondst op streek 8), direct na de gewone
+// streek-pop-up hierboven — vervangt de eerdere, kleinere MILITAIR_UITLEG_*-
+// pop-up volledig.
 export const BEZETTE_STREEK_TITEL = "De Bergkam is bezet";
 export const BEZETTE_STREEK_TEKST =
-  "Op de bergkam staan een wachttoren en een heiligdom die niet van het Hertenpad-volk zijn — en her en der een verlaten huisje. Hier kun je niet zomaar bouwen of verkennen, en cultuur werkt hier anders: ze stapelt niet meer op zolang deze streek bezet blijft. Leid een Verkenner op om de bergkam vakje voor vakje te onthullen, en een Missionaris om het heiligdom te belegeren. De vijandelijke wachttoren vereist een Confrontatie — en daarvoor heb je eerst een eigen, bemande wachttoren op de streek eronder nodig. Pas als zowel het heiligdom als de wachttoren vernietigd zijn, gaat de bergkam open voor je settler en voor nieuwe bebouwing.";
+  "Op de bergkam staan een wachttoren en een heiligdom die niet van het Hertenpad-volk zijn — en her en der een verlaten huisje. Hier kun je niet zomaar bouwen, en cultuur werkt hier anders: ze stapelt niet meer op zolang deze streek bezet blijft. Klik op een verhuld vakje om er een verkenner heen te sturen. Klik op het vijandelijke heiligdom om er een Missionaris heen te sturen — die laat een wololo-meter vollopen die het heiligdom uiteindelijk van jou maakt. Klik op de vijandelijke wachttoren voor een Confrontatie — daarvoor heb je eerst een eigen legerkamp op de streek eronder nodig. Pas als zowel het heiligdom veroverd als de wachttoren opgeruimd is, gaat de bergkam open voor je settler en voor nieuwe bebouwing.";
 
-// Vijandelijk-Heiligdom-onthuld-/vernietigd-pop-up (Deel 4) — zelfde
-// blokkerende overlay als hierboven, maar twee losse momenten van dezelfde
-// dreiging (zelfde patroon als ROOFDIER_VERSCHENEN_*/ROOFDIER_AANVAL_*
-// hieronder).
+// Vijandelijk-Heiligdom-onthuld-/veroverd-pop-up (Deel 4, herzien door
+// "Bezette streek scherm") — zelfde blokkerende overlay als hierboven, maar
+// twee losse momenten van dezelfde dreiging (zelfde patroon als
+// ROOFDIER_VERSCHENEN_*/ROOFDIER_AANVAL_* hieronder).
 export const VIJANDELIJK_HEILIGDOM_ONTHULD_TITEL = "Een vijandelijk heiligdom";
 export const VIJANDELIJK_HEILIGDOM_ONTHULD_TEKST =
-  "Verkenning heeft een heiligdom blootgelegd dat niet het onze is. Zolang je minstens één Missionaris hebt opgeleid, stroomt nieuwe cultuur van je eigen heiligdommen naar een belegeringsmeter voor dit doel — zonder Missionaris gebeurt er niets. Elke extra Missionaris laat de meter sneller vollopen.";
-export const VIJANDELIJK_HEILIGDOM_VERNIETIGD_TITEL = "Het heiligdom valt stil";
-export const VIJANDELIJK_HEILIGDOM_VERNIETIGD_TEKST =
-  "De belegeringsmeter is vol. Het vreemde heiligdom valt stil — geen dreiging meer, geen doel meer.";
+  "Verkenning heeft een heiligdom blootgelegd dat niet het onze is. Stuur er een Missionaris heen om een wololo-meter voor dit heiligdom te laten vollopen — zonder een Missionaris die hierheen gestuurd is, gebeurt er niets. Meer Missionarissen op hetzelfde heiligdom laten de meter sneller vollopen.";
+export const VIJANDELIJK_HEILIGDOM_VEROVERD_TITEL = "Het heiligdom is van ons";
+export const VIJANDELIJK_HEILIGDOM_VEROVERD_TEKST =
+  "De wololo-meter is vol. Het vreemde heiligdom is nu een van de onze — het levert cultuur op zodra het wegverbonden is.";
 
 // Oceaan-uitleg-pop-up (issue: "tutorial laatste stad aan oceaan"), getoond
 // zodra de laatste streek (de oceaan aan de overkant) bereikt is, direct na de

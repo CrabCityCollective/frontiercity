@@ -49,7 +49,6 @@ export function maakInitieleSpelStatus(): GameState {
     vervalStatus: "gezond",
     streekHoogte: 0,
     strijders: [],
-    verkenners: [],
     missionarissen: [],
     cityImprovements: [],
   };

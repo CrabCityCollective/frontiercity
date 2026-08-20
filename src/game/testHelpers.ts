@@ -4,7 +4,7 @@
 // van economie.ts zelf, zie het bestandshoofd daar). Alleen fixtures die door
 // twee of meer van die bestanden gebruikt worden staan hier; fixtures die
 // maar in één bestand nodig zijn, staan lokaal in dat bestand.
-import { GameState } from "./types";
+import { GameState, Improvement } from "./types";
 import {
   CULTUREEL_LAND_IMPROVEMENTS,
   ECONOMISCH_LAND_IMPROVEMENTS,
@@ -13,7 +13,6 @@ import {
 } from "./improvements";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek } from "./world";
-import { metActieveStad } from "./stad";
 
 export const HOUTKAP = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "houtkap")!;
 export const STEENGROEVE = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "steengroeve")!;
@@ -108,9 +107,34 @@ export function metBezetteStreekInBeeld(): GameState {
   return volgendeBeurt(state);
 }
 
-export function metBezetteStreekEnVerkenner(): GameState {
+// Genoeg wetenschap en grondstoffen om `stuurVerkenner` te kunnen aanroepen
+// (issue: "Bezette streek scherm" — vervangt de eerdere Verkenner-eenheid: er
+// hoeft geen aparte unit meer getraind te worden, alleen de kosten moeten
+// betaalbaar zijn).
+export function metBezetteStreekEnVoorraadVoorVerkenning(): GameState {
   const state = metBezetteStreekInBeeld();
-  return { ...metActieveStad(state, { ...state.stad, verkenners: [{ id: "verkenner-0" }] }), wetenschap: 100 };
+  return { ...state, wetenschap: 100, voorraad: { hout: 100, steen: 100, erts: 100, goud: 100 } };
+}
+
+// Onthult direct één vakje van de actieve Bezette Streek met een specifieke
+// improvement (issue: "Bezette streek scherm" — vervangt de eerdere `verken`-
+// actie-aanroep in tests die niet zelf de Verkenner-flow testen, maar alleen
+// een al-onthuld vakje nodig hebben om verder te bouwen).
+export function metOnthuldeBezetteStreekTile(state: GameState, positieInStreek: number, improvement: Improvement): GameState {
+  const bezetteStreek = state.streken.find((l) => l.bezet)!;
+  return {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte !== bezetteStreek.hoogte
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile, index) =>
+              index !== positieInStreek ? tile : { ...tile, verhuld: false, status: "actief" as const, improvement }
+            ),
+          }
+    ),
+  };
 }
 
 // Zet een actieve, wegverbonden Heiligdom op streek 1 (positie 2, met een
@@ -150,11 +174,16 @@ export function metWegCorridorNaarStreek(state: GameState, totHoogte: number): G
 }
 
 // Streek 12 (de streek direct onder de Bezette Streek, BEZETTE_STREEK_HOOGTE
-// = 13 — verschoven van 11/12 door "jagen en farmen omdraaien").
-export function metBeschermendeWachttorenOpStreek12(state: GameState): GameState {
+// = 13 — verschoven van 11/12 door "jagen en farmen omdraaien"): een
+// voltooid, wegverbonden eigen Legerkamp (issue: "Bezette streek scherm" —
+// vervangt de eerdere Wachttoren-eis voor een Confrontatie tegen een Bezette
+// Streek). Geen bemanning nodig voor de gate zelf (`heeftWerkendeLegerkampOpStreek`
+// in militair.ts) — tests die ook legerwaarde nodig hebben, wijzen zelf een
+// strijder toe via `bemanLegerkamp`.
+export function metLegerkampOpStreek12(state: GameState): GameState {
   let s = metWegCorridorNaarStreek(state, 12);
   s = {
-    ...metActieveStad(s, { ...s.stad, strijders: [{ id: "strijder-wachter", wachttoren: { hoogte: 12, positieInStreek: 4 } }] }),
+    ...s,
     streken: s.streken.map((streek) =>
       streek.hoogte !== 12
         ? streek
@@ -162,7 +191,7 @@ export function metBeschermendeWachttorenOpStreek12(state: GameState): GameState
             ...streek,
             ontgrendeld: true,
             tiles: streek.tiles.map((tile) =>
-              tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: WACHTTOREN } : tile
+              tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: LEGERKAMP } : tile
             ),
           }
     ),

@@ -3,19 +3,23 @@
 // eerstvolgende vergrendelde streek haalt, ontgrendelt die streek automatisch
 // (fog of war verdwijnt — hoofdstuk 2).
 //
-// Bezette Streek, Verkenning & belegering (hoofdstuk 6, issue: "De Bezette
-// Streek, missionaris en verkenner"): sommige streken komen in plaats daarvan
-// "in beeld" met verhulde vakjes — Verkenning (met wetenschap, dezelfde pool
-// als de technologie-boom) onthult ze één voor één, en zodra de speler een
-// Missionaris heeft, leidt de cultuurproductie van die beurt om naar een
-// belegeringsmeter tegen de vijandelijke Heiligdommen op die streek.
+// Bezette Streek, Verkenning & wololo (hoofdstuk 6, issue: "De Bezette Streek,
+// missionaris en verkenner", herzien door "Bezette streek scherm"): sommige
+// streken komen in plaats daarvan "in beeld" met verhulde vakjes. Een klik op
+// een verhuld vakje stuurt direct een verkenner (kost grondstoffen +
+// wetenschap, telt een aantal beurten af voordat het vakje onthuld wordt).
+// Een klik op een onthuld vijandelijk Heiligdom stuurt een beschikbare
+// Missionaris daarheen — die vult een eigen wololo-meter voor dát Heiligdom,
+// die het bij het bereiken van de drempel verovert (i.p.v. vernietigt).
 
 import {
   BEZETTE_STREEK_HUISJE,
+  HEILIGDOM,
+  VERKENNER,
   VIJANDELIJK_HEILIGDOM,
   VIJANDELIJKE_WACHTTOREN,
 } from "./improvements";
-import { GameState, Settler } from "./types";
+import { GameState, Settler, Tile } from "./types";
 import {
   AMBER_ONTDEKKING_STREEK,
   AMBER_ONTDEKKING_STREEK_2,
@@ -24,14 +28,25 @@ import {
   initialiseerBezetteStreek,
   isBezetteStreekHoogte,
 } from "./world";
-import { berekenCultuurProductieDitBeurt } from "./productie";
+import { metActieveStad } from "./stad";
 
 // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
-// verkenner"): kosten van één Verkenning (Deel 3) en de belegeringsdrempel
-// tegen een vijandelijk Heiligdom (Deel 4) — beide MVP-richtwaarden,
+// verkenner"): kosten van één Verkenning (Deel 3, hergebruikt `VERKENNER`
+// hierboven voor de grondstofkosten en het aantal beurten tot onthulling) en
+// de wololo-drempel tegen een vijandelijk Heiligdom (Deel 4, per Heiligdom
+// i.p.v. streek-breed sinds "Bezette streek scherm") — beide MVP-richtwaarden,
 // expliciet tunebaar genoemd in het issue (hoofdstuk 14).
 export const VERKENNING_KOSTEN_WETENSCHAP = 10;
 export const BELEGERINGSDREMPEL = 30;
+// Wololo-inkomen per aan een Heiligdom toegewezen Missionaris, per beurt
+// (issue: "Bezette streek scherm"): een vaste waarde i.p.v. omgeleide
+// cultuurproductie — met één Heiligdom als doel is er geen streek-brede
+// cultuurproductie meer om om te leiden, dus dit is een eigen, losstaande
+// bron. Bij `BELEGERINGSDREMPEL` (30) vult één Missionaris de meter in 6
+// beurten, een tweede Missionaris op hetzelfde doel in 3 — zelfde
+// "meer Missionarissen = sneller"-principe als voorheen (issue: "laatste
+// confrontatie tweaken").
+export const WOLOLO_INKOMEN_PER_MISSIONARIS = 5;
 
 // Ontgrendelt de eerstvolgende vergrendelde streek zodra de cumulatieve cultuur
 // de drempel haalt (M5, hoofdstuk 2/5). Cultuur wordt niet "uitgegeven" —
@@ -122,54 +137,81 @@ export function heeftOfferAltaar(state: GameState): boolean {
   );
 }
 
-// Belegering tegen de vijandelijke Heiligdommen van een Bezette Streek
-// (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner", Deel 4).
-// Zolang de speler geen Missionaris heeft, blijft de bevroren cultuurteller
-// (`verwerkProductie` in productie.ts) gewoon bevroren en gebeurt er niets
-// met de belegeringsmeter — zodra er wél minstens één Missionaris is, wordt
-// de cultuurproductie van deze beurt (dezelfde berekening als
-// `verwerkProductie` normaal zou toepassen) omgeleid naar de
-// belegeringsmeter, vermenigvuldigd met het aantal Missionarissen (issue:
-// "Laatste confrontatie tweaken" — zonder dat had een tweede of derde
-// Missionaris geen enkel nut, terwijl ze wel dezelfde grondstoffen kosten
-// als elke andere eenheid). Bereikt de meter de drempel, dan wordt het
-// eerst-onthulde nog-actieve vijandelijke Heiligdom vernietigd (positie als
-// tie-break, bij gebrek aan een onthullings-tijdstempel) en begint de meter
-// weer bij 0 voor het volgende, indien er nog een resterend is — vandaar de
-// `while`-lus, net als `verwerkStreekOntgrendeling` hierboven.
+// Onthult één vakje van `bezetteStreek` op basis van zijn vaste
+// `bezetteStreekInhoud` (Wachttoren, Heiligdom, cosmetisch huisje, of — op het
+// neutrale middelste vakje — gewoon leeg). Gedeeld door `verwerkVerkenningInGang`
+// (een vakje waarvan de verkenner is aangekomen) en `verwerkBelegering`
+// (de streekbrede onthulling zodra alles opgelost is, Deel 6).
+function onthuldImprovementVoorInhoud(tile: Tile) {
+  return tile.bezetteStreekInhoud === "wachttoren"
+    ? VIJANDELIJKE_WACHTTOREN
+    : tile.bezetteStreekInhoud === "heiligdom"
+      ? VIJANDELIJK_HEILIGDOM
+      : tile.bezetteStreekInhoud === "huisje"
+        ? BEZETTE_STREEK_HUISJE
+        : undefined;
+}
+
+// Wololo tegen de vijandelijke Heiligdommen van een Bezette Streek (hoofdstuk
+// 6, issue: "De Bezette Streek, missionaris en verkenner", Deel 4, herzien
+// door "Bezette streek scherm": niet langer een streek-brede meter gevoed
+// door omgeleide cultuurproductie, maar een eigen meter per Heiligdom, gevuld
+// door de Missionarissen die de speler daar specifiek naartoe gestuurd heeft
+// (`stuurMissionaris` hieronder). Elke toegewezen Missionaris levert
+// `WOLOLO_INKOMEN_PER_MISSIONARIS` per beurt op dát ene doel — een tweede
+// Missionaris op hetzelfde Heiligdom verdubbelt dus de snelheid (zelfde
+// principe als voorheen, issue: "laatste confrontatie tweaken"), maar een
+// Missionaris op een ánder Heiligdom draagt niets bij aan dit doel. Bereikt de
+// meter de drempel, dan wordt dat Heiligdom geen ruïne maar eigen bezit (het
+// wordt een gewoon Heiligdom, `HEILIGDOM`) — het produceert cultuur zodra het,
+// net als elk ander land improvement, wegverbonden is (pas mogelijk nadat de
+// hele streek opengaat, zie "Einde van de Bezette Streek" hieronder). De
+// toegewezen Missionarissen komen daarna vrij voor een volgend doel.
 //
-// Los van de Missionaris-gate hierboven wordt bij elke beurt ook gecontroleerd
-// of de streek inmiddels volledig is opgelost (issue: "laatste confrontatie
-// tweaken" — voorheen alleen een Heiligdom-eis, zie "Einde van de Bezette
-// Streek" hieronder): dat mag ook via een Confrontatie-actie in militair.ts
-// gebeuren, die zelf geen Missionaris of cultuurproductie vereist, dus die
-// check mag niet achter de Missionaris-gate hierboven verstopt zitten.
+// Los van wololo wordt bij elke beurt ook gecontroleerd of de streek
+// inmiddels volledig is opgelost (issue: "laatste confrontatie tweaken" —
+// zie "Einde van de Bezette Streek" hieronder): dat mag ook via een
+// Confrontatie-actie in militair.ts gebeuren, die zelf geen Missionaris
+// vereist, dus die check mag niet achter de wololo-verwerking hierboven
+// verstopt zitten.
 export function verwerkBelegering(state: GameState): GameState {
   const bezetteStreek = state.streken.find((l) => l.bezet);
   if (!bezetteStreek) return state;
 
-  let voortgang = bezetteStreek.belegeringsVoortgang ?? 0;
   let tiles = bezetteStreek.tiles;
-  let vijandelijkHeiligdomVernietigdEvent = state.vijandelijkHeiligdomVernietigdEvent;
+  let missionarissen = state.stad.missionarissen;
+  let vijandelijkHeiligdomVeroverdEvent = state.vijandelijkHeiligdomVeroverdEvent;
 
-  if (state.stad.missionarissen.length > 0) {
-    const toevoeging = berekenCultuurProductieDitBeurt(state) * state.stad.missionarissen.length;
-    if (toevoeging > 0) {
-      voortgang += toevoeging;
+  for (const heiligdomTile of bezetteStreek.tiles) {
+    if (heiligdomTile.status !== "actief" || heiligdomTile.improvement?.id !== "vijandelijk-heiligdom") continue;
 
-      while (voortgang >= BELEGERINGSDREMPEL) {
-        const doelIndex = tiles.findIndex(
-          (tile) => tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom"
-        );
-        if (doelIndex === -1) break; // geen resterend doel: meter blijft op de drempel staan
+    const toegewezenAantal = missionarissen.filter(
+      (m) =>
+        m.doelHeiligdom?.hoogte === bezetteStreek.hoogte &&
+        m.doelHeiligdom?.positieInStreek === heiligdomTile.positieInStreek
+    ).length;
+    if (toegewezenAantal === 0) continue;
 
-        tiles = tiles.map((tile, index) =>
-          index === doelIndex ? { ...tile, status: "leeg" as const, improvement: undefined } : tile
-        );
-        voortgang -= BELEGERINGSDREMPEL;
-        vijandelijkHeiligdomVernietigdEvent = true;
-      }
+    const nieuweVoortgang = (heiligdomTile.wololoVoortgang ?? 0) + WOLOLO_INKOMEN_PER_MISSIONARIS * toegewezenAantal;
+
+    if (nieuweVoortgang < BELEGERINGSDREMPEL) {
+      tiles = tiles.map((t) =>
+        t.positieInStreek === heiligdomTile.positieInStreek ? { ...t, wololoVoortgang: nieuweVoortgang } : t
+      );
+      continue;
     }
+
+    tiles = tiles.map((t) =>
+      t.positieInStreek === heiligdomTile.positieInStreek
+        ? { ...t, improvement: HEILIGDOM, wololoVoortgang: undefined }
+        : t
+    );
+    missionarissen = missionarissen.map((m) =>
+      m.doelHeiligdom?.hoogte === bezetteStreek.hoogte && m.doelHeiligdom?.positieInStreek === heiligdomTile.positieInStreek
+        ? { ...m, doelHeiligdom: undefined }
+        : m
+    );
+    vijandelijkHeiligdomVeroverdEvent = true;
   }
 
   // Einde van de Bezette Streek (Deel 6, uitgebreid — issue: "laatste
@@ -181,10 +223,9 @@ export function verwerkBelegering(state: GameState): GameState {
   // voor de settler en bebouwbaar, zie `magSettlerNaar`/`hoogsteOntgrendeldeStreek`
   // in wegen.ts/world.ts en de `streek.ontgrendeld`-eis in
   // infrastructuurEnBouw.ts — geen apart nieuw slot nodig, de bestaande
-  // ontgrendel-gate dekt beide al). Voorheen kon een niet-geconfronteerde
-  // vijandelijke Wachttoren-tile permanent blijven staan zonder de streek te
-  // blokkeren; nu moet de speler 'm via een Legerkamp-Confrontatie
-  // daadwerkelijk opruimen voordat de streek opengaat.
+  // ontgrendel-gate dekt beide al). Een veroverd Heiligdom (`improvement.id`
+  // "heiligdom" i.p.v. "vijandelijk-heiligdom") telt hier vanzelf niet meer
+  // mee als "nog vijandelijk" — geen apart veld nodig.
   const heeftNogHeiligdom = tiles.some(
     (tile) =>
       (tile.status === "actief" && tile.improvement?.id === "vijandelijk-heiligdom") ||
@@ -207,12 +248,8 @@ export function verwerkBelegering(state: GameState): GameState {
         : {
             ...tile,
             verhuld: false,
-            improvement:
-              tile.bezetteStreekInhoud === "wachttoren"
-                ? VIJANDELIJKE_WACHTTOREN
-                : tile.bezetteStreekInhoud === "huisje"
-                  ? BEZETTE_STREEK_HUISJE
-                  : undefined,
+            verkenningInGang: undefined,
+            improvement: onthuldImprovementVoorInhoud(tile),
             status:
               tile.bezetteStreekInhoud === "wachttoren" || tile.bezetteStreekInhoud === "huisje"
                 ? ("actief" as const)
@@ -221,10 +258,10 @@ export function verwerkBelegering(state: GameState): GameState {
     );
   }
 
-  // Niets veranderd (geen siege-voortgang deze beurt, en nog niet opgelost)
+  // Niets veranderd (geen wololo-voortgang deze beurt, en nog niet opgelost)
   // — geef dezelfde state terug, zelfde no-op-conventie als
   // `verwerkStreekOntgrendeling` hierboven.
-  if (tiles === bezetteStreek.tiles && voortgang === (bezetteStreek.belegeringsVoortgang ?? 0) && !opgelost) {
+  if (tiles === bezetteStreek.tiles && missionarissen === state.stad.missionarissen && !opgelost) {
     return state;
   }
 
@@ -233,73 +270,78 @@ export function verwerkBelegering(state: GameState): GameState {
       ? {
           ...streek,
           tiles,
-          belegeringsVoortgang: voortgang,
           bezet: opgelost ? false : streek.bezet,
           ontgrendeld: opgelost ? true : streek.ontgrendeld,
         }
       : streek
   );
 
-  return { ...state, streken, vijandelijkHeiligdomVernietigdEvent };
+  return {
+    ...metActieveStad(state, { ...state.stad, missionarissen }),
+    streken,
+    vijandelijkHeiligdomVeroverdEvent,
+  };
 }
 
-// Sluit de "vijandelijk Heiligdom vernietigd"-melding (Deel 4) — puur een
+// Sluit de "vijandelijk Heiligdom veroverd"-melding (Deel 4) — puur een
 // UI-bevestiging.
-export function sluitVijandelijkHeiligdomVernietigdMelding(state: GameState): GameState {
-  return { ...state, vijandelijkHeiligdomVernietigdEvent: undefined };
+export function sluitVijandelijkHeiligdomVeroverdMelding(state: GameState): GameState {
+  return { ...state, vijandelijkHeiligdomVeroverdEvent: undefined };
 }
 
 // Sluit de "vijandelijk Heiligdom onthuld"-melding (Deel 3/4), gezet door
-// `verken` verderop zodra een onthuld vakje een vijandelijk Heiligdom
+// `verwerkVerkenningInGang` zodra een onthuld vakje een vijandelijk Heiligdom
 // blijkt te zijn.
 export function sluitVijandelijkHeiligdomOnthuldMelding(state: GameState): GameState {
   return { ...state, vijandelijkHeiligdomOnthuldEvent: undefined };
 }
 
-// Of Verkenning uitgevoerd kan worden (Deel 3): een actieve Bezette Streek,
-// minstens één Verkenner, en de beurt-limiet (hoogstens 1 keer per beurt,
-// zelfde soort limiet als de settler-acties) nog niet gebruikt.
-export function kanVerkennen(state: GameState): boolean {
-  return (
-    state.streken.some((l) => l.bezet) &&
-    state.stad.verkenners.length > 0 &&
-    !state.verkenningGedaanDitBeurt &&
-    state.wetenschap >= VERKENNING_KOSTEN_WETENSCHAP
-  );
-}
-
-// Alle nog verhulde vakjes van de actieve Bezette Streek — de geldige
-// klik-doelen tijdens Verkenning (zelfde soort "bereikbare posities"-lijst
-// als `onbemandeWachttorenPosities`).
+// Alle nog verhulde vakjes van de actieve Bezette Streek — gebruikt door de
+// canvas om ze als klikbaar te markeren (issue: "Bezette streek scherm": de
+// bezette laag zelf is klikbaar, geen losse Verkenning-modus meer nodig).
 export function verhuldeBezetteStreekPosities(state: GameState): Settler[] {
   const bezetteStreek = state.streken.find((l) => l.bezet);
   if (!bezetteStreek) return [];
-  return bezetteStreek.tiles.filter((tile) => tile.verhuld).map((tile) => ({ hoogte: bezetteStreek.hoogte, positieInStreek: tile.positieInStreek }));
+  return bezetteStreek.tiles
+    .filter((tile) => tile.verhuld)
+    .map((tile) => ({ hoogte: bezetteStreek.hoogte, positieInStreek: tile.positieInStreek }));
 }
 
-// Voert een Verkenning uit op één door de speler gekozen, nog verhuld vakje
-// van de actieve Bezette Streek (Deel 3): kost `VERKENNING_KOSTEN_WETENSCHAP`
-// wetenschap (dezelfde pool als de technologie-boom, hoofdstuk 3/9 — een
-// bewuste afweging tussen verder verkennen en voortgang in de techboom),
-// onthult het vakje als Wachttoren, Heiligdom of cosmetisch huisje (of, op
-// het neutrale vakje, blijft het gewoon een leeg vakje). Negeert de aanroep
-// stilzwijgend bij een ongeldige aanroep — zelfde veilige-aanroep-conventie
-// als `startBouw`/`bemanWachttoren`.
-export function verken(state: GameState, positieInStreek: number): GameState {
-  if (!kanVerkennen(state)) return state;
+// Of een klik op dit verhulde vakje een verkenner mag sturen (issue: "Bezette
+// streek scherm" — vervangt `kanVerkennen`/de losse Verkenner-rekrutering):
+// het vakje moet nog verhuld zijn en niet al een verkenner onderweg hebben,
+// de 1x-per-beurt-limiet (zelfde soort limiet als de settler-acties) mag nog
+// niet gebruikt zijn, en de speler moet zowel de grondstoffen (dezelfde
+// kosten als de vroegere Verkenner-eenheid, `VERKENNER.kosten`) als de
+// wetenschap (`VERKENNING_KOSTEN_WETENSCHAP`) kunnen betalen.
+export function kanStuurVerkenner(state: GameState, positieInStreek: number): boolean {
+  const bezetteStreek = state.streken.find((l) => l.bezet);
+  if (!bezetteStreek) return false;
+  const tile = bezetteStreek.tiles[positieInStreek];
+  if (!tile?.verhuld || tile.verkenningInGang) return false;
+  if (state.verkenningGedaanDitBeurt) return false;
+  if (state.wetenschap < VERKENNING_KOSTEN_WETENSCHAP) return false;
+
+  return Object.entries(VERKENNER.kosten).every(
+    ([resource, aantal]) => (state.voorraad[resource as keyof typeof state.voorraad] ?? 0) >= (aantal ?? 0)
+  );
+}
+
+// Stuurt een verkenner naar `positieInStreek` (issue: "Bezette streek
+// scherm"): betaalt meteen de grondstoffen + wetenschap, en zet een aftellend
+// tellertje (`Tile.verkenningInGang`) i.p.v. het vakje meteen te onthullen —
+// zie `verwerkVerkenningInGang` hieronder voor het daadwerkelijk onthullen
+// zodra het tellertje op 0 staat. Negeert de aanroep stilzwijgend bij een
+// ongeldige aanroep — zelfde veilige-aanroep-conventie als
+// `startBouw`/`bemanWachttoren`.
+export function stuurVerkenner(state: GameState, positieInStreek: number): GameState {
+  if (!kanStuurVerkenner(state, positieInStreek)) return state;
 
   const bezetteStreek = state.streken.find((l) => l.bezet)!;
-  const tile = bezetteStreek.tiles[positieInStreek];
-  if (!tile?.verhuld) return state;
-
-  const inhoudImprovement =
-    tile.bezetteStreekInhoud === "wachttoren"
-      ? VIJANDELIJKE_WACHTTOREN
-      : tile.bezetteStreekInhoud === "heiligdom"
-        ? VIJANDELIJK_HEILIGDOM
-        : tile.bezetteStreekInhoud === "huisje"
-          ? BEZETTE_STREEK_HUISJE
-          : undefined;
+  const voorraad = { ...state.voorraad };
+  for (const [resource, aantal] of Object.entries(VERKENNER.kosten)) {
+    voorraad[resource as keyof typeof voorraad] -= aantal ?? 0;
+  }
 
   const streken = state.streken.map((streek) =>
     streek.hoogte !== bezetteStreek.hoogte
@@ -307,14 +349,7 @@ export function verken(state: GameState, positieInStreek: number): GameState {
       : {
           ...streek,
           tiles: streek.tiles.map((t, index) =>
-            index !== positieInStreek
-              ? t
-              : {
-                  ...t,
-                  verhuld: false,
-                  improvement: inhoudImprovement,
-                  status: inhoudImprovement ? ("actief" as const) : t.status,
-                }
+            index !== positieInStreek ? t : { ...t, verkenningInGang: { beurtenResterend: VERKENNER.bouwtijdBeurten } }
           ),
         }
   );
@@ -322,9 +357,78 @@ export function verken(state: GameState, positieInStreek: number): GameState {
   return {
     ...state,
     streken,
+    voorraad,
     wetenschap: state.wetenschap - VERKENNING_KOSTEN_WETENSCHAP,
     verkenningGedaanDitBeurt: true,
-    vijandelijkHeiligdomOnthuldEvent:
-      tile.bezetteStreekInhoud === "heiligdom" ? true : state.vijandelijkHeiligdomOnthuldEvent,
   };
+}
+
+// Telt elk lopend verkennings-tellertje van de actieve Bezette Streek één
+// beurt af (issue: "Bezette streek scherm") — op 0 wordt het vakje onthuld
+// (zelfde inhoud-resolutie als voorheen `verken`). Meerdere vakjes kunnen
+// tegelijk onderweg zijn (elk op een andere beurt gestart, zie
+// `kanStuurVerkenner`), dus dit loopt over alle tiles, niet slechts één.
+export function verwerkVerkenningInGang(state: GameState): GameState {
+  const bezetteStreek = state.streken.find((l) => l.bezet);
+  if (!bezetteStreek || !bezetteStreek.tiles.some((t) => t.verkenningInGang)) return state;
+
+  let vijandelijkHeiligdomOnthuldEvent = state.vijandelijkHeiligdomOnthuldEvent;
+
+  const tiles = bezetteStreek.tiles.map((tile) => {
+    if (!tile.verkenningInGang) return tile;
+
+    const beurtenResterend = tile.verkenningInGang.beurtenResterend - 1;
+    if (beurtenResterend > 0) return { ...tile, verkenningInGang: { beurtenResterend } };
+
+    if (tile.bezetteStreekInhoud === "heiligdom") vijandelijkHeiligdomOnthuldEvent = true;
+    const inhoudImprovement = onthuldImprovementVoorInhoud(tile);
+    return {
+      ...tile,
+      verhuld: false,
+      verkenningInGang: undefined,
+      improvement: inhoudImprovement,
+      status: inhoudImprovement ? ("actief" as const) : tile.status,
+    };
+  });
+
+  const streken = state.streken.map((streek) => (streek.hoogte === bezetteStreek.hoogte ? { ...streek, tiles } : streek));
+  return { ...state, streken, vijandelijkHeiligdomOnthuldEvent };
+}
+
+// Missionarissen die nog niet aan een Heiligdom toegewezen zijn — vrij
+// inzetbaar (issue: "Bezette streek scherm").
+export function beschikbareMissionarissen(state: GameState) {
+  return state.stad.missionarissen.filter((m) => !m.doelHeiligdom);
+}
+
+// Of een klik op dit onthulde vijandelijke Heiligdom een Missionaris mag
+// sturen: het vakje moet een actief vijandelijk Heiligdom zijn, en er moet
+// minstens één nog niet toegewezen Missionaris zijn.
+export function kanStuurMissionaris(state: GameState, positieInStreek: number): boolean {
+  const bezetteStreek = state.streken.find((l) => l.bezet);
+  if (!bezetteStreek) return false;
+  const tile = bezetteStreek.tiles[positieInStreek];
+  if (tile?.status !== "actief" || tile.improvement?.id !== "vijandelijk-heiligdom") return false;
+  return beschikbareMissionarissen(state).length > 0;
+}
+
+// Wijst een specifieke, nog niet toegewezen Missionaris toe aan het
+// vijandelijke Heiligdom op `positieInStreek` (issue: "Bezette streek
+// scherm") — zelfde soort omkeerbaar-toewijs-patroon als
+// `bemanWachttoren`/`bemanLegerkamp` in militair.ts, alleen hier niet
+// omkeerbaar (de toewijzing eindigt vanzelf zodra het Heiligdom veroverd is,
+// zie `verwerkBelegering` hierboven — een bewuste vereenvoudiging, geen
+// "terugroepen"-actie nodig voor de MVP-scope van dit issue).
+export function stuurMissionaris(state: GameState, missionarisId: string, positieInStreek: number): GameState {
+  if (!kanStuurMissionaris(state, positieInStreek)) return state;
+
+  const bezetteStreek = state.streken.find((l) => l.bezet)!;
+  const missionaris = state.stad.missionarissen.find((m) => m.id === missionarisId);
+  if (!missionaris || missionaris.doelHeiligdom) return state;
+
+  const missionarissen = state.stad.missionarissen.map((m) =>
+    m.id === missionarisId ? { ...m, doelHeiligdom: { hoogte: bezetteStreek.hoogte, positieInStreek } } : m
+  );
+
+  return metActieveStad(state, { ...state.stad, missionarissen });
 }

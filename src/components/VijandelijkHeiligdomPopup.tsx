@@ -3,23 +3,24 @@
 import {
   VIJANDELIJK_HEILIGDOM_ONTHULD_TEKST,
   VIJANDELIJK_HEILIGDOM_ONTHULD_TITEL,
-  VIJANDELIJK_HEILIGDOM_VERNIETIGD_TEKST,
-  VIJANDELIJK_HEILIGDOM_VERNIETIGD_TITEL,
+  VIJANDELIJK_HEILIGDOM_VEROVERD_TEKST,
+  VIJANDELIJK_HEILIGDOM_VEROVERD_TITEL,
 } from "@/game/tutorialContent";
 
 interface VijandelijkHeiligdomPopupProps {
-  fase: "onthuld" | "vernietigd";
+  fase: "onthuld" | "veroverd";
   onSluiten: () => void;
 }
 
 // Vijandelijk-Heiligdom-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
-// missionaris en verkenner", Deel 4): meldt zowel het onthullen van een
-// vijandelijk Heiligdom (via Verkenning) als het vernietigen ervan (via de
-// belegeringsmeter) — twee losse momenten van dezelfde dreiging, zelfde
-// `fase`-patroon als RoofdierPopup. Zuiver een melding, geen keuze.
+// missionaris en verkenner", Deel 4, herzien door "Bezette streek scherm"):
+// meldt zowel het onthullen van een vijandelijk Heiligdom (via Verkenning)
+// als het veroveren ervan (via de wololo-meter) — twee losse momenten van
+// dezelfde dreiging, zelfde `fase`-patroon als RoofdierPopup. Zuiver een
+// melding, geen keuze.
 export default function VijandelijkHeiligdomPopup({ fase, onSluiten }: VijandelijkHeiligdomPopupProps) {
-  const titel = fase === "onthuld" ? VIJANDELIJK_HEILIGDOM_ONTHULD_TITEL : VIJANDELIJK_HEILIGDOM_VERNIETIGD_TITEL;
-  const tekst = fase === "onthuld" ? VIJANDELIJK_HEILIGDOM_ONTHULD_TEKST : VIJANDELIJK_HEILIGDOM_VERNIETIGD_TEKST;
+  const titel = fase === "onthuld" ? VIJANDELIJK_HEILIGDOM_ONTHULD_TITEL : VIJANDELIJK_HEILIGDOM_VEROVERD_TITEL;
+  const tekst = fase === "onthuld" ? VIJANDELIJK_HEILIGDOM_ONTHULD_TEKST : VIJANDELIJK_HEILIGDOM_VEROVERD_TEKST;
 
   return (
     <div

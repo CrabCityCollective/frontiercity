@@ -12,9 +12,9 @@
 
 import { SOLDAAT } from "./improvements";
 import { legerwaardeBonusPerStrijder } from "./techTree";
-import { ConfrontatieResultaat, GameState, Settler, Strijder } from "./types";
+import { ConfrontatieResultaat, GameState, Settler, Strijder, Streek } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
-import { heeftWerkendeWachttorenOpStreek, isWachttorenBemand } from "./indringersEnDieren";
+import { isWachttorenBemand } from "./indringersEnDieren";
 import { metActieveStad } from "./stad";
 
 // Militair-tuning (M7, hoofdstuk 6/14): net als de verval-tuning bewuste
@@ -165,6 +165,22 @@ export function bemanLegerkamp(state: GameState, strijderId: string, hoogte: num
   return metActieveStad(state, { ...state.stad, strijders });
 }
 
+// Of er een voltooide, wegverbonden eigen Legerkamp-tile op `streek` staat
+// (issue: "Bezette streek scherm" — vervangt de eerdere harde Wachttoren-eis:
+// thematisch logischer, een legerkamp confronteert, geen wachtpost). Anders
+// dan een Wachttoren hoeft een Legerkamp niet bemand te zijn om als "aanwezig"
+// te tellen — de bemanning telt al apart mee via `berekenLegerkampLegerwaarde`
+// hieronder, ongeacht op welke streek dat Legerkamp staat (hoofdstuk 6/11:
+// "Legerkamp overal bouwbaar").
+export function heeftWerkendeLegerkampOpStreek(state: GameState, streek: Streek): boolean {
+  return streek.tiles.some(
+    (tile) =>
+      tile.status === "actief" &&
+      tile.improvement?.id === "legerkamp" &&
+      isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)
+  );
+}
+
 // Opgetelde legerwaarde van alle Legerkamp-toegewezen Soldaten (Deel 5) —
 // dezelfde per-strijder-waarde als de gewone `berekenLegerwaarde` hierboven,
 // maar losstaand: alleen toegewezen strijders tellen hier mee, in
@@ -185,10 +201,12 @@ export function vijandelijkeWachttorenPosities(state: GameState): Settler[] {
 }
 
 // Of een Confrontatie tegen deze specifieke vijandelijke Wachttoren-tile
-// mogelijk is (Deel 5): vereist een voltooide, bemande, wegverbonden eigen
-// Wachttoren op de streek direct onder de Bezette Streek (hoofdstuk 6:
-// "beschermt ook de streek eronder") — zonder die eigen Wachttoren is de actie
-// niet beschikbaar (uitgegrijsd/geblokkeerd), geen mislukte poging.
+// mogelijk is (Deel 5, herzien door "Bezette streek scherm"): vereist een
+// voltooid, wegverbonden eigen Legerkamp op de streek direct onder de Bezette
+// Streek (i.p.v. de eerdere Wachttoren-eis — thematisch logischer: een
+// legerkamp confronteert, geen wachtpost, zie hoofdstuk 11) — zonder dat
+// Legerkamp is de actie niet beschikbaar (uitgegrijsd/geblokkeerd), geen
+// mislukte poging.
 export function kanConfrontatieBezetteStreek(state: GameState, positieInStreek: number): boolean {
   const bezetteStreek = state.streken.find((l) => l.bezet);
   if (!bezetteStreek) return false;
@@ -196,53 +214,40 @@ export function kanConfrontatieBezetteStreek(state: GameState, positieInStreek: 
   if (tile?.status !== "actief" || tile.improvement?.id !== "vijandelijke-wachttoren") return false;
 
   const streekOnder = state.streken.find((l) => l.hoogte === bezetteStreek.hoogte - 1);
-  return streekOnder !== undefined && heeftWerkendeWachttorenOpStreek(state, streekOnder);
+  return streekOnder !== undefined && heeftWerkendeLegerkampOpStreek(state, streekOnder);
 }
 
 // Confrontatie tegen een vijandelijke Wachttoren op een Bezette Streek
-// (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner", Deel 5)
-// — een apart systeem van de gewone Wachttoren-/indringers-mechaniek
-// hierboven, met een eigen eigen-legerwaarde-formule: de verdedigingsbonus
-// van de beschermende eigen Wachttoren op de streek eronder, plus de
-// opgetelde legerwaarde van alle Legerkamp-toegewezen Soldaten (ongeacht op
-// welke streek het Legerkamp staat) — gebruikt verder dezelfde winkans-formule
-// (`berekenWinkans` hierboven, hoofdstuk 14: geclamped 5%-95%).
-// Tegenstandersterkte = `Streek.dreigingsniveau` van de Bezette Streek zelf —
-// dezelfde precedent-waarde als de bestaande, oplopende dreigingsniveau-
-// formule (world.ts) elders al gebruikt, en daardoor automatisch
-// vergelijkbaar met de zwaarste tegenstander die de speler tot dan toe in de
-// tutorial is tegengekomen.
+// (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner", Deel 5,
+// herzien door "Bezette streek scherm") — een apart systeem van de gewone
+// Wachttoren-/indringers-mechaniek hierboven, met een eigen
+// eigen-legerwaarde-formule: de opgetelde legerwaarde van alle
+// Legerkamp-toegewezen Soldaten (ongeacht op welke streek het Legerkamp
+// staat) plus de vaste Barakken-bonus — gebruikt verder dezelfde
+// winkans-formule (`berekenWinkans` hierboven, hoofdstuk 14: geclamped
+// 5%-95%). Tegenstandersterkte = `Streek.dreigingsniveau` van de Bezette
+// Streek zelf — dezelfde precedent-waarde als de bestaande, oplopende
+// dreigingsniveau-formule (world.ts) elders al gebruikt, en daardoor
+// automatisch vergelijkbaar met de zwaarste tegenstander die de speler tot
+// dan toe in de tutorial is tegengekomen.
 //
 // Winst: de vijandelijke Wachttoren-tile wordt "opgeruimd" (leeg, geen
-// dreiging/doel meer). Verlies: de eigen beschermende Wachttoren zelf blijft
-// intact — alleen de strijder die hem bemande is blijvend verloren (moet als
-// nieuwe Soldaat volledig opnieuw opgeleid worden, geen reassignment, anders
-// dan de normale, omkeerbare bemannings-regel in hoofdstuk 6). De Wachttoren
-// staat er daarna wél onbemand bij (zijn verdedigingsbonus telt dus niet mee
-// tot een nieuwe strijder hem overneemt), maar hoeft niet herbouwd te worden
-// (issue: "laatste confrontatie tweaken" — een lichtere straf dan de
-// eerdere ruïne-versie, die een overhaaste poging onevenredig zwaar
-// afstrafte: de speler verloor dan zowel de strijder als de hele
-// verdedigingsinfrastructuur op de streek eronder). Legerkamp-toegewezen
-// strijders blijven bij verlies sowieso gewoon behouden.
+// dreiging/doel meer). Verlies: het eigen Legerkamp op de streek eronder
+// blijft intact — alleen één van de eraan toegewezen strijders (de eerste,
+// bij gebrek aan een aparte "wie voerde het bevel"-notie) is blijvend
+// verloren (moet als nieuwe Soldaat volledig opnieuw opgeleid worden, geen
+// reassignment, anders dan de normale, omkeerbare toewijs-regel in hoofdstuk
+// 6) — dezelfde lichtere straf als voorheen (issue: "laatste confrontatie
+// tweaken": alleen de bemanning, niet de infrastructuur zelf). Zonder
+// toegewezen Legerkamp-strijders (de legerwaarde kwam dan puur van de
+// Barakken-bonus) is er niemand om te verliezen.
 export function confrontatieBezetteStreek(state: GameState, positieInStreek: number): GameState {
   if (!kanConfrontatieBezetteStreek(state, positieInStreek)) return state;
 
   const bezetteStreek = state.streken.find((l) => l.bezet)!;
-  const streekOnder = state.streken.find((l) => l.hoogte === bezetteStreek.hoogte - 1)!;
-  const beschermendeWachttoren = streekOnder.tiles.find(
-    (tile) =>
-      tile.status === "actief" &&
-      tile.improvement?.id === "wachttoren" &&
-      isWachttorenBemand(state.stad.strijders, streekOnder.hoogte, tile.positieInStreek) &&
-      isTileVerbondenMetStad(state.streken, streekOnder.hoogte, tile.positieInStreek)
-  )!;
 
   const tegenstanderSterkte = bezetteStreek.dreigingsniveau ?? 0;
-  const eigenLegerwaarde =
-    (beschermendeWachttoren.improvement?.effect.waarde ?? 0) +
-    berekenLegerkampLegerwaarde(state) +
-    stadLegerwaardeBonus(state);
+  const eigenLegerwaarde = berekenLegerkampLegerwaarde(state) + stadLegerwaardeBonus(state);
   const winkans = berekenWinkans(eigenLegerwaarde, tegenstanderSterkte);
   const gewonnen = Math.random() < winkans;
 
@@ -267,11 +272,10 @@ export function confrontatieBezetteStreek(state: GameState, positieInStreek: num
     return { ...state, streken, laatsteConfrontatieBezetteStreek };
   }
 
-  const bemanner = state.stad.strijders.find(
-    (s) =>
-      s.wachttoren?.hoogte === streekOnder.hoogte && s.wachttoren?.positieInStreek === beschermendeWachttoren.positieInStreek
-  );
-  const strijders = bemanner ? state.stad.strijders.filter((s) => s.id !== bemanner.id) : state.stad.strijders;
+  const verlorenStrijder = state.stad.strijders.find((s) => s.legerkamp);
+  const strijders = verlorenStrijder
+    ? state.stad.strijders.filter((s) => s.id !== verlorenStrijder.id)
+    : state.stad.strijders;
 
   return { ...metActieveStad(state, { ...state.stad, strijders }), laatsteConfrontatieBezetteStreek };
 }

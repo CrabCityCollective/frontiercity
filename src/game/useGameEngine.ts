@@ -24,7 +24,6 @@ import {
   startOpslagplaats as startOpslagplaatsActie,
   startRecrutering as startRecruteringActie,
   startTweedeSettler as startTweedeSettlerActie,
-  startVerkennerRecrutering as startVerkennerRecruteringActie,
   versnelCityVerbeteringMetGoud as versnelCityVerbeteringMetGoudActie,
   versnelCivielMetGoud as versnelCivielMetGoudActie,
   versnelOpslagplaatsMetGoud as versnelOpslagplaatsMetGoudActie,
@@ -44,8 +43,9 @@ import {
   sluitBezetteStreekOntdektMelding as sluitBezetteStreekOntdektMeldingActie,
   sluitTweedeAmberOntdektMelding as sluitTweedeAmberOntdektMeldingActie,
   sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
-  sluitVijandelijkHeiligdomVernietigdMelding as sluitVijandelijkHeiligdomVernietigdMeldingActie,
-  verken as verkenActie,
+  sluitVijandelijkHeiligdomVeroverdMelding as sluitVijandelijkHeiligdomVeroverdMeldingActie,
+  stuurMissionaris as stuurMissionarisActie,
+  stuurVerkenner as stuurVerkennerActie,
 } from "./streekOntgrendeling";
 import { sluitBouwKeuze as sluitBouwKeuzeActie, startBouw as startBouwActie } from "./infrastructuurEnBouw";
 import {
@@ -240,14 +240,14 @@ export function useGameEngine() {
   }, []);
 
   // Bezette Streek, Missionaris & Verkenner (hoofdstuk 6, issue: "De Bezette
-  // Streek, missionaris en verkenner") — zelfde dunne wrapper-conventie als
-  // hierboven.
-  const verken = useCallback((positieInStreek: number) => {
-    setState((huidig) => verkenActie(huidig, positieInStreek));
+  // Streek, missionaris en verkenner", herzien door "Bezette streek scherm")
+  // — zelfde dunne wrapper-conventie als hierboven.
+  const stuurVerkenner = useCallback((positieInStreek: number) => {
+    setState((huidig) => stuurVerkennerActie(huidig, positieInStreek));
   }, []);
 
-  const startVerkennerRecrutering = useCallback(() => {
-    setState((huidig) => startVerkennerRecruteringActie(huidig));
+  const stuurMissionaris = useCallback((missionarisId: string, positieInStreek: number) => {
+    setState((huidig) => stuurMissionarisActie(huidig, missionarisId, positieInStreek));
   }, []);
 
   const startMissionarisRecrutering = useCallback(() => {
@@ -266,8 +266,8 @@ export function useGameEngine() {
     setState((huidig) => sluitVijandelijkHeiligdomOnthuldMeldingActie(huidig));
   }, []);
 
-  const sluitVijandelijkHeiligdomVernietigdMelding = useCallback(() => {
-    setState((huidig) => sluitVijandelijkHeiligdomVernietigdMeldingActie(huidig));
+  const sluitVijandelijkHeiligdomVeroverdMelding = useCallback(() => {
+    setState((huidig) => sluitVijandelijkHeiligdomVeroverdMeldingActie(huidig));
   }, []);
 
   return {
@@ -305,14 +305,14 @@ export function useGameEngine() {
     haalStrijderTerug,
     zetUitlegPopups,
     kiesTech,
-    verken,
-    startVerkennerRecrutering,
+    stuurVerkenner,
+    stuurMissionaris,
     startMissionarisRecrutering,
     bemanLegerkamp,
     confrontatieBezetteStreek,
     sluitBezetteStreekOntdektMelding,
     sluitVijandelijkHeiligdomOnthuldMelding,
-    sluitVijandelijkHeiligdomVernietigdMelding,
+    sluitVijandelijkHeiligdomVeroverdMelding,
     opslaan,
     laden,
   };
