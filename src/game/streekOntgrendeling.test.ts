@@ -4,21 +4,25 @@ import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { startBouw } from "./infrastructuurEnBouw";
 import {
   BELEGERINGSDREMPEL,
-  kanVerkennen,
+  beschikbareMissionarissen,
+  kanStuurMissionaris,
+  kanStuurVerkenner,
   sluitAmberOntdektMelding,
   sluitTweedeAmberOntdektMelding,
-  verken,
+  stuurMissionaris,
+  stuurVerkenner,
   VERKENNING_KOSTEN_WETENSCHAP,
+  WOLOLO_INKOMEN_PER_MISSIONARIS,
 } from "./streekOntgrendeling";
-import { VIJANDELIJK_HEILIGDOM } from "./improvements";
+import { VERKENNER, VIJANDELIJK_HEILIGDOM } from "./improvements";
 import { bereikbarePosities } from "./wegen";
 import { AMBER_ONTDEKKING_STREEK, AMBER_ONTDEKKING_STREEK_2, BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek } from "./world";
+import { metActieveStad } from "./stad";
 import {
-  HEILIGDOM,
   metActiefHeiligdomOpStreek1,
-  metBezetteStreekEnVerkenner,
+  metBezetteStreekEnVoorraadVoorVerkenning,
   metBezetteStreekInBeeld,
-  metVasteRandom,
+  metOnthuldeBezetteStreekTile,
   WACHTTOREN,
 } from "./testHelpers";
 
@@ -92,106 +96,152 @@ test("cultuur-voortgang bevriest volledig zolang de Bezette Streek actief is, oo
   assert.equal(state.cultuur, bevrorenCultuur, "cultuur blijft precies gelijk — bevroren, niet verloren, niet oplopend");
 });
 
-test("kanVerkennen vereist een Bezette Streek, minstens één Verkenner, genoeg wetenschap en de 1x-per-beurt-limiet", () => {
-  const zonderVerkenner = metBezetteStreekInBeeld();
-  assert.equal(kanVerkennen(zonderVerkenner), false);
+test("kanStuurVerkenner vereist een verhuld vakje zonder lopende verkenning, genoeg grondstoffen/wetenschap en de 1x-per-beurt-limiet", () => {
+  const zonderVoorraad = metBezetteStreekInBeeld();
+  assert.equal(kanStuurVerkenner(zonderVoorraad, 0), false, "onvoldoende wetenschap/grondstoffen bij de startstatus");
 
-  const state = metBezetteStreekEnVerkenner();
-  assert.equal(kanVerkennen(state), true);
-  assert.equal(kanVerkennen({ ...state, wetenschap: 0 }), false);
-  assert.equal(kanVerkennen({ ...state, verkenningGedaanDitBeurt: true }), false);
+  const state = metBezetteStreekEnVoorraadVoorVerkenning();
+  assert.equal(kanStuurVerkenner(state, 0), true);
+  assert.equal(kanStuurVerkenner({ ...state, wetenschap: 0 }, 0), false);
+  assert.equal(kanStuurVerkenner({ ...state, verkenningGedaanDitBeurt: true }, 0), false);
+  assert.equal(
+    kanStuurVerkenner({ ...state, voorraad: { ...state.voorraad, hout: 0 } }, 0),
+    false,
+    "grondstoffen van VERKENNER.kosten moeten betaalbaar zijn"
+  );
 });
 
-test("verken onthult het gekozen vakje als de vaste vijandelijke inhoud, kost wetenschap, en mag maar 1x per beurt", () => {
-  let state = metBezetteStreekEnVerkenner();
+test("stuurVerkenner betaalt grondstoffen + wetenschap, zet een aftellend tellertje i.p.v. direct te onthullen, en mag maar 1x per beurt", () => {
+  let state = metBezetteStreekEnVoorraadVoorVerkenning();
   const wetenschapVoor = state.wetenschap;
+  const houtVoor = state.voorraad.hout;
   const streek12 = () => state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
 
+  state = stuurVerkenner(state, 0);
+  assert.equal(streek12().tiles[0].verhuld, true, "nog niet meteen onthuld — de verkenner is onderweg");
+  assert.deepEqual(streek12().tiles[0].verkenningInGang, { beurtenResterend: VERKENNER.bouwtijdBeurten });
+  assert.equal(state.wetenschap, wetenschapVoor - VERKENNING_KOSTEN_WETENSCHAP);
+  assert.equal(state.voorraad.hout, houtVoor - (VERKENNER.kosten.hout ?? 0));
+  assert.equal(state.verkenningGedaanDitBeurt, true);
+
+  const naTweedeVerkenner = stuurVerkenner(state, 1);
+  assert.equal(naTweedeVerkenner, state, "een tweede verkenner dezelfde beurt heeft geen effect");
+
+  for (let i = 0; i < VERKENNER.bouwtijdBeurten; i++) {
+    assert.equal(streek12().tiles[0].improvement, undefined, "nog niet onthuld tot het tellertje op 0 staat");
+    state = volgendeBeurt(state);
+  }
+
   // Positie 0 is in world.ts vastgelegd als "wachttoren" (TUTORIAL_BEZETTE_STREEK_INHOUD).
-  state = verken(state, 0);
   assert.equal(streek12().tiles[0].verhuld, false);
   assert.equal(streek12().tiles[0].improvement?.id, "vijandelijke-wachttoren");
   assert.equal(streek12().tiles[0].status, "actief");
-  assert.equal(state.wetenschap, wetenschapVoor - VERKENNING_KOSTEN_WETENSCHAP);
-  assert.equal(state.verkenningGedaanDitBeurt, true);
-
-  const naTweedeVerkenning = verken(state, 1);
-  assert.equal(naTweedeVerkenning, state, "een tweede Verkenning dezelfde beurt heeft geen effect");
-
-  state = volgendeBeurt(state);
-  assert.equal(state.verkenningGedaanDitBeurt, false, "volgende beurt mag weer");
+  assert.equal(streek12().tiles[0].verkenningInGang, undefined);
+  assert.equal(state.verkenningGedaanDitBeurt, false, "de 1x-per-beurt-limiet is intussen weer teruggezet");
 });
 
-test("verken op het neutrale middelste vakje onthult gewoon een leeg vakje", () => {
-  let state = metBezetteStreekEnVerkenner();
-  state = verken(state, 4);
+test("meerdere vakjes kunnen tegelijk 'onderweg' zijn als ze op verschillende beurten gestart zijn", () => {
+  let state = metBezetteStreekEnVoorraadVoorVerkenning();
+  const streek12 = () => state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
+
+  state = stuurVerkenner(state, 0);
+  state = volgendeBeurt(state); // 1 beurt verstreken voor positie 0, limiet weer vrij
+  state = stuurVerkenner(state, 1);
+
+  assert.equal(streek12().tiles[0].verkenningInGang?.beurtenResterend, VERKENNER.bouwtijdBeurten - 1);
+  assert.equal(streek12().tiles[1].verkenningInGang?.beurtenResterend, VERKENNER.bouwtijdBeurten);
+});
+
+test("stuurVerkenner op het neutrale middelste vakje onthult uiteindelijk gewoon een leeg vakje", () => {
+  let state = metBezetteStreekEnVoorraadVoorVerkenning();
+  state = stuurVerkenner(state, 4);
+  for (let i = 0; i < VERKENNER.bouwtijdBeurten; i++) state = volgendeBeurt(state);
   const tile = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!.tiles[4];
   assert.equal(tile.verhuld, false);
   assert.equal(tile.improvement, undefined);
 });
 
-test("verken op een vakje met vijandelijk Heiligdom meldt dit via vijandelijkHeiligdomOnthuldEvent", () => {
-  let state = metBezetteStreekEnVerkenner();
+test("een onthuld vijandelijk Heiligdom meldt dit via vijandelijkHeiligdomOnthuldEvent", () => {
+  let state = metBezetteStreekEnVoorraadVoorVerkenning();
   // Positie 1 is in world.ts vastgelegd als "heiligdom".
-  state = verken(state, 1);
+  state = stuurVerkenner(state, 1);
+  for (let i = 0; i < VERKENNER.bouwtijdBeurten; i++) state = volgendeBeurt(state);
   assert.equal(state.vijandelijkHeiligdomOnthuldEvent, true);
 });
 
-test("zonder Missionaris blijft de belegeringsmeter op 0, ondanks cultuurproductie elders", () => {
+test("zonder toegewezen Missionaris blijft de wololo-meter van een Heiligdom op 0", () => {
   let state = metBezetteStreekInBeeld();
-  state = metActiefHeiligdomOpStreek1(state);
+  state = metOnthuldeBezetteStreekTile(state, 1, VIJANDELIJK_HEILIGDOM);
   state = volgendeBeurt(state);
-  const streek12 = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
-  assert.equal(streek12.belegeringsVoortgang, 0);
+  const tile = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!.tiles[1];
+  assert.equal(tile.wololoVoortgang ?? 0, 0);
 });
 
-test("met minstens één Missionaris wordt cultuur-inkomen omgeleid naar de belegeringsmeter i.p.v. verloren te gaan", () => {
+test("kanStuurMissionaris/stuurMissionaris: alleen een onthuld vijandelijk Heiligdom, en alleen met een nog niet toegewezen Missionaris", () => {
   let state = metBezetteStreekInBeeld();
-  state = metActiefHeiligdomOpStreek1(state);
-  state = { ...state, stad: { ...state.stad, missionarissen: [{ id: "missionaris-0" }] } };
+  state = metOnthuldeBezetteStreekTile(state, 1, VIJANDELIJK_HEILIGDOM);
+
+  assert.equal(kanStuurMissionaris(state, 1), false, "nog geen Missionaris");
+  assert.equal(kanStuurMissionaris(state, 3), false, "geen vijandelijk Heiligdom op dit vakje");
+
+  state = metActieveStad(state, { ...state.stad, missionarissen: [{ id: "missionaris-0" }] });
+  assert.equal(kanStuurMissionaris(state, 1), true);
+  assert.equal(beschikbareMissionarissen(state).length, 1);
+
+  state = stuurMissionaris(state, "missionaris-0", 1);
+  assert.deepEqual(state.stad.missionarissen[0].doelHeiligdom, { hoogte: BEZETTE_STREEK_HOOGTE, positieInStreek: 1 });
+  assert.equal(beschikbareMissionarissen(state).length, 0, "toegewezen — niet meer vrij inzetbaar");
+  assert.equal(kanStuurMissionaris(state, 1), false, "geen vrije Missionaris meer over");
+
+  const naNogmaals = stuurMissionaris(state, "missionaris-0", 1);
+  assert.equal(naNogmaals, state, "een al toegewezen Missionaris kan niet nogmaals gestuurd worden");
+});
+
+test("een toegewezen Missionaris vult de wololo-meter van precies dát Heiligdom, niet van een ander", () => {
+  let state = metBezetteStreekInBeeld();
+  state = metOnthuldeBezetteStreekTile(state, 1, VIJANDELIJK_HEILIGDOM);
+  state = metActieveStad(state, { ...state.stad, missionarissen: [{ id: "missionaris-0" }] });
+  state = stuurMissionaris(state, "missionaris-0", 1);
+
   state = volgendeBeurt(state);
 
   const streek12 = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
-  // Streek 1 is niet de frontier (die staat op 11 zolang de streek bezet is),
-  // dus de halve opbrengst geldt — zelfde regel als `verwerkProductie`.
-  assert.equal(streek12.belegeringsVoortgang, (HEILIGDOM.effect.waarde ?? 0) / 2);
+  assert.equal(streek12.tiles[1].wololoVoortgang, WOLOLO_INKOMEN_PER_MISSIONARIS);
+  assert.equal(streek12.tiles[3].wololoVoortgang ?? 0, 0, "geen doel — geen voortgang");
 });
 
-test("elke extra Missionaris vermenigvuldigt de belegeringsvoortgang (3 Missionarissen vullen de meter 3x zo snel als 1)", () => {
-  let metEenMissionaris = metBezetteStreekInBeeld();
-  metEenMissionaris = metActiefHeiligdomOpStreek1(metEenMissionaris);
-  metEenMissionaris = {
-    ...metEenMissionaris,
-    stad: { ...metEenMissionaris.stad, missionarissen: [{ id: "missionaris-0" }] },
-  };
-  metEenMissionaris = volgendeBeurt(metEenMissionaris);
-  const voortgangMetEen = metEenMissionaris.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!.belegeringsVoortgang ?? 0;
+test("twee Missionarissen op hetzelfde Heiligdom vullen de meter 2x zo snel", () => {
+  let state = metBezetteStreekInBeeld();
+  state = metOnthuldeBezetteStreekTile(state, 1, VIJANDELIJK_HEILIGDOM);
+  state = metActieveStad(state, {
+    ...state.stad,
+    missionarissen: [{ id: "missionaris-0" }, { id: "missionaris-1" }],
+  });
+  state = stuurMissionaris(state, "missionaris-0", 1);
+  state = stuurMissionaris(state, "missionaris-1", 1);
 
-  let metDrieMissionarissen = metBezetteStreekInBeeld();
-  metDrieMissionarissen = metActiefHeiligdomOpStreek1(metDrieMissionarissen);
-  metDrieMissionarissen = {
-    ...metDrieMissionarissen,
-    stad: {
-      ...metDrieMissionarissen.stad,
-      missionarissen: [{ id: "missionaris-0" }, { id: "missionaris-1" }, { id: "missionaris-2" }],
-    },
-  };
-  metDrieMissionarissen = volgendeBeurt(metDrieMissionarissen);
-  const voortgangMetDrie =
-    metDrieMissionarissen.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!.belegeringsVoortgang ?? 0;
+  state = volgendeBeurt(state);
 
-  assert.equal(voortgangMetDrie, voortgangMetEen * 3);
+  const streek12 = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
+  assert.equal(streek12.tiles[1].wololoVoortgang, WOLOLO_INKOMEN_PER_MISSIONARIS * 2);
 });
 
-test("bij het bereiken van de belegeringsdrempel wordt het onthulde vijandelijke Heiligdom vernietigd en begint de meter opnieuw", () => {
-  let state = metBezetteStreekEnVerkenner();
-  state = verken(state, 1); // onthult het vijandelijke Heiligdom op positie 1
-  state = metActiefHeiligdomOpStreek1(state);
+test("bij het bereiken van de wololo-drempel wordt het Heiligdom veroverd (eigen bezit) i.p.v. vernietigd, en de Missionaris komt vrij", () => {
+  let state = metBezetteStreekInBeeld();
+  state = metOnthuldeBezetteStreekTile(state, 1, VIJANDELIJK_HEILIGDOM);
+  state = metActieveStad(state, { ...state.stad, missionarissen: [{ id: "missionaris-0" }] });
+  state = stuurMissionaris(state, "missionaris-0", 1);
   state = {
     ...state,
-    stad: { ...state.stad, missionarissen: [{ id: "missionaris-0" }] },
     streken: state.streken.map((streek) =>
-      streek.hoogte !== BEZETTE_STREEK_HOOGTE ? streek : { ...streek, belegeringsVoortgang: BELEGERINGSDREMPEL - 1 }
+      streek.hoogte !== BEZETTE_STREEK_HOOGTE
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((t) =>
+              t.positieInStreek === 1 ? { ...t, wololoVoortgang: BELEGERINGSDREMPEL - WOLOLO_INKOMEN_PER_MISSIONARIS } : t
+            ),
+          }
     ),
   };
 
@@ -199,26 +249,32 @@ test("bij het bereiken van de belegeringsdrempel wordt het onthulde vijandelijke
 
   const streek12 = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
   const heiligdomTile = streek12.tiles[1];
-  assert.equal(heiligdomTile.status, "leeg", "opgeruimd — geen dreiging/doel meer");
-  assert.equal(heiligdomTile.improvement, undefined);
-  assert.equal(state.vijandelijkHeiligdomVernietigdEvent, true);
-  assert.equal(streek12.belegeringsVoortgang, 0, "de meter begint weer bij 0, ook al is dit het enige Heiligdom");
+  assert.equal(heiligdomTile.improvement?.id, "heiligdom", "veroverd — eigen Heiligdom, niet vernietigd");
+  assert.equal(heiligdomTile.status, "actief");
+  assert.equal(heiligdomTile.wololoVoortgang, undefined);
+  assert.equal(state.vijandelijkHeiligdomVeroverdEvent, true);
+  assert.equal(state.stad.missionarissen[0].doelHeiligdom, undefined, "de Missionaris komt vrij voor een volgend doel");
   assert.equal(streek12.bezet, true, "nog niet opgelost: de vijandelijke Wachttoren (positie 0) staat nog, al dan niet onthuld");
 });
 
-test("Deel 6: zodra zowel het vijandelijke Heiligdom als de vijandelijke Wachttoren vernietigd zijn, wordt de hele Bezette Streek in één keer onthuld en eindigt de Bezette-status", () => {
-  let state = metBezetteStreekEnVerkenner();
+test("Deel 6: zodra zowel het vijandelijke Heiligdom als de vijandelijke Wachttoren opgelost zijn, wordt de hele Bezette Streek in één keer onthuld en eindigt de Bezette-status", () => {
+  let state = metBezetteStreekEnVoorraadVoorVerkenning();
+  state = metActieveStad(state, { ...state.stad, missionarissen: [{ id: "missionaris-0" }] });
   state = {
     ...state,
-    stad: { ...state.stad, missionarissen: [{ id: "missionaris-0" }] },
     streken: state.streken.map((streek) => {
       if (streek.hoogte !== BEZETTE_STREEK_HOOGTE) return streek;
       return {
         ...streek,
-        belegeringsVoortgang: BELEGERINGSDREMPEL - 1,
         tiles: streek.tiles.map((tile) => {
           if (tile.positieInStreek === 1) {
-            return { ...tile, verhuld: false, status: "actief" as const, improvement: VIJANDELIJK_HEILIGDOM };
+            return {
+              ...tile,
+              verhuld: false,
+              status: "actief" as const,
+              improvement: VIJANDELIJK_HEILIGDOM,
+              wololoVoortgang: BELEGERINGSDREMPEL - WOLOLO_INKOMEN_PER_MISSIONARIS,
+            };
           }
           // De vijandelijke Wachttoren (positie 0) is al via een gewonnen
           // Confrontatie opgeruimd (zie `confrontatieBezetteStreek`) — zonder
@@ -232,16 +288,9 @@ test("Deel 6: zodra zowel het vijandelijke Heiligdom als de vijandelijke Wachtto
       };
     }),
   };
-  state = metActiefHeiligdomOpStreek1(state);
+  state = stuurMissionaris(state, "missionaris-0", 1);
 
-  // Bevries alle willekeurige incidenten (indringers/kuddes/roofdieren) zodat
-  // deze lange lus deterministisch blijft — puur voor de leesbaarheid van
-  // deze test, niet omdat het mechanisme zelf random-afhankelijk is.
-  state = metVasteRandom(0.99, () => {
-    let s = state;
-    for (let i = 0; i < BELEGERINGSDREMPEL + 1; i++) s = volgendeBeurt(s);
-    return s;
-  });
+  state = volgendeBeurt(state);
 
   const streek12 = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
   assert.equal(streek12.bezet, false);
@@ -251,34 +300,35 @@ test("Deel 6: zodra zowel het vijandelijke Heiligdom als de vijandelijke Wachtto
   assert.equal(streek12.tiles[2].improvement?.id, "bezette-streek-huisje");
 });
 
-test("Deel 6, uitgebreid (issue: laatste confrontatie tweaken): een nog niet vernietigde vijandelijke Wachttoren houdt de Bezette Streek vergrendeld, ook als alle Heiligdommen al weg zijn", () => {
-  let state = metBezetteStreekEnVerkenner();
+test("Deel 6, uitgebreid (issue: laatste confrontatie tweaken): een nog niet opgeruimde vijandelijke Wachttoren houdt de Bezette Streek vergrendeld, ook als het Heiligdom al veroverd is", () => {
+  let state = metBezetteStreekEnVoorraadVoorVerkenning();
+  state = metActieveStad(state, { ...state.stad, missionarissen: [{ id: "missionaris-0" }] });
   state = {
     ...state,
-    stad: { ...state.stad, missionarissen: [{ id: "missionaris-0" }] },
     streken: state.streken.map((streek) => {
       if (streek.hoogte !== BEZETTE_STREEK_HOOGTE) return streek;
       return {
         ...streek,
-        belegeringsVoortgang: BELEGERINGSDREMPEL - 1,
         tiles: streek.tiles.map((tile) =>
           tile.positieInStreek === 1
-            ? { ...tile, verhuld: false, status: "actief" as const, improvement: VIJANDELIJK_HEILIGDOM }
+            ? {
+                ...tile,
+                verhuld: false,
+                status: "actief" as const,
+                improvement: VIJANDELIJK_HEILIGDOM,
+                wololoVoortgang: BELEGERINGSDREMPEL - WOLOLO_INKOMEN_PER_MISSIONARIS,
+              }
             : tile
         ),
       };
     }),
   };
-  state = metActiefHeiligdomOpStreek1(state);
+  state = stuurMissionaris(state, "missionaris-0", 1);
 
-  state = metVasteRandom(0.99, () => {
-    let s = state;
-    for (let i = 0; i < BELEGERINGSDREMPEL + 1; i++) s = volgendeBeurt(s);
-    return s;
-  });
+  state = volgendeBeurt(state);
 
   const streek12 = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
-  assert.equal(streek12.tiles[1].improvement, undefined, "het Heiligdom is wel vernietigd");
+  assert.equal(streek12.tiles[1].improvement?.id, "heiligdom", "het Heiligdom is wel veroverd");
   assert.equal(streek12.bezet, true, "de streek blijft bezet: de vijandelijke Wachttoren (positie 0) staat nog");
   assert.equal(streek12.ontgrendeld, false);
 

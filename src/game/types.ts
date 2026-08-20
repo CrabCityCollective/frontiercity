@@ -196,6 +196,25 @@ export interface Tile {
   // blijft leeg tot onthulling (zie `verken` in economie.ts).
   verhuld?: boolean;
   bezetteStreekInhoud?: BezetteStreekInhoud;
+  // Verkenner onderweg (issue: "Bezette streek scherm" — vervangt de eerdere
+  // Verkenner-rekrutering + losse Verkenning-modus): een klik op dit nog
+  // verhulde vakje stuurt direct een verkenner (kost dezelfde grondstoffen als
+  // vroeger de Verkenner-eenheid, plus wetenschap, zie streekOntgrendeling.ts
+  // `VERKENNING_KOSTEN_WETENSCHAP`) — geen losse eenheid meer nodig. Telt af
+  // met 1 per beurt (`verwerkVerkenningInGang`); op 0 wordt het vakje onthuld
+  // en verdwijnt dit veld weer. Hoogstens 1 tegelijk gestart per beurt
+  // (`GameState.verkenningGedaanDitBeurt`), maar er kunnen best meerdere
+  // vakjes tegelijk "onderweg" zijn als ze op verschillende beurten gestart
+  // zijn.
+  verkenningInGang?: { beurtenResterend: number };
+  // Wololo-meter van dit specifieke vijandelijke Heiligdom (issue: "Bezette
+  // streek scherm" — vervangt de eerdere streek-brede belegeringsmeter):
+  // vult zich zodra er minstens één Missionaris hierheen gestuurd is (zie
+  // `Missionaris.doelHeiligdom`), tot `BELEGERINGSDREMPEL`
+  // (streekOntgrendeling.ts) — daarna wordt dit vakje een eigen Heiligdom in
+  // plaats van vernietigd te worden. Alleen relevant op een tile met
+  // `bezetteStreekInhoud === "heiligdom"`.
+  wololoVoortgang?: number;
   // Ligt dit vakje aan vers water — een rivier of een meer (hoofdstuk 2:
   // "een stad kan alleen gesticht worden op een vakje dat aan vers water
   // ligt")? Vast, niet-procedureel (net als `terrein`) — de tutorial-worldgen
@@ -245,13 +264,6 @@ export interface Streek {
   // alle vijandelijke Heiligdommen vernietigd zijn (Deel 6) — de streek telt
   // dan als normaal ontgrendeld.
   bezet?: boolean;
-  // Cumulatieve belegeringsvoortgang tegen de vijandelijke Heiligdommen op
-  // deze Bezette Streek (Deel 4) — vult zich met cultuur-inkomen dat anders
-  // verloren zou gaan, maar uitsluitend zolang de speler minstens één
-  // Missionaris heeft (zie `verwerkBelegering` in economie.ts). Bereikt de
-  // drempel, dan wordt één vijandelijk Heiligdom vernietigd en begint de
-  // meter weer bij 0.
-  belegeringsVoortgang?: number;
 }
 
 export interface Relic {
@@ -270,6 +282,18 @@ export interface Relic {
 // (`haalStrijderTerug` in economie.ts) en meteen elders opnieuw bemand —
 // verplaatsen tussen wachttorens kost geen beurten (issue: "wachttoren
 // tweaks").
+// Individuele opgeleide Missionaris-eenheid (issue: "Bezette streek scherm" —
+// vervangt de eerdere "telt alleen mee zolang hij bestaat"-vereenvoudiging):
+// net als een Strijder aan een Wachttoren/Legerkamp, wordt een Missionaris nu
+// aan één specifiek vijandelijk Heiligdom toegewezen door op dat vakje op de
+// kaart te klikken (`stuurMissionaris` in streekOntgrendeling.ts). Zonder
+// toewijzing draagt hij niet bij aan een wololo-meter — `undefined` betekent
+// "nog niet gestuurd, vrij inzetbaar".
+export interface Missionaris {
+  id: string;
+  doelHeiligdom?: { hoogte: number; positieInStreek: number };
+}
+
 export interface Strijder {
   id: string;
   wachttoren?: { hoogte: number; positieInStreek: number };
@@ -344,24 +368,15 @@ export interface City {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
-  // Verkenner-eenheden (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
-  // verkenner", Deel 3) — wetenschappelijke units, trainbaar via hetzelfde
-  // wachtrij-patroon als Soldaat (`verkennerInAanbouw`/`strijders`
-  // hierboven), zonder toewijzingsconcept (geen "wachttoren"-achtig veld
-  // nodig): hun enige functie is de Verkenning-actie beschikbaar maken zodra
-  // er minstens één bestaat (zie `kanVerkennen` in economie.ts).
-  verkenners: { id: string }[];
-  verkennerInAanbouw?: {
-    improvement: Improvement;
-    voortgang: Partial<Record<ResourceType, number>>;
-  };
-  // Missionaris-eenheden (Deel 4) — culturele units, alleen trainbaar zodra
-  // er een voltooid Offer Altaar staat (zie `heeftOfferAltaar`/
-  // `startMissionarisRecrutering` in economie.ts). Net als Verkenner
-  // hierboven geen toewijzingsconcept: alleen hun bestaan telt (de
-  // "vereenvoudiging" uit Deel 4 van het issue) om cultuur-inkomen om te
-  // leiden naar de belegeringsmeter van een Bezette Streek.
-  missionarissen: { id: string }[];
+  // Missionaris-eenheden (Deel 4, issue: "De Bezette Streek, missionaris en
+  // verkenner" — herzien door "Bezette streek scherm") — culturele units,
+  // alleen trainbaar zodra er een voltooid Offer Altaar staat (zie
+  // `heeftOfferAltaar`/`startMissionarisRecrutering` in economie.ts). Elke
+  // Missionaris kan aan één specifiek vijandelijk Heiligdom toegewezen worden
+  // (zie `Missionaris.doelHeiligdom` hierboven) — geen losse Verkenner-eenheid
+  // meer sinds "Bezette streek scherm" (die actie kost nu direct grondstoffen
+  // per klik, zie `Tile.verkenningInGang`).
+  missionarissen: Missionaris[];
   missionarisInAanbouw?: {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
@@ -685,7 +700,11 @@ export interface GameState {
   // `false` zolang er geen (onopgeloste) melding is.
   bezetteStreekOntdektEvent?: boolean;
   vijandelijkHeiligdomOnthuldEvent?: boolean;
-  vijandelijkHeiligdomVernietigdEvent?: boolean;
+  // Hernoemd van "vernietigd" naar "veroverd" (issue: "Bezette streek
+  // scherm"): een vol gelopen wololo-meter verovert het Heiligdom voortaan
+  // (het wordt eigen bezit en produceert cultuur), in plaats van het te
+  // vernietigen.
+  vijandelijkHeiligdomVeroverdEvent?: boolean;
   // Resultaat van de laatst afgehandelde Confrontatie tegen een Bezette Streek
   // (Deel 5) — los van `laatsteConfrontatie` hierboven (dat blijft de gewone
   // frontier-Confrontatie) omdat de twee losstaande systemen zijn met een

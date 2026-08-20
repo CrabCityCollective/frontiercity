@@ -91,10 +91,10 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
   // huisje hebben geen productie-/verdedigingseffect, maar wel een eigen
   // korte omschrijving.
   if (effect.type === "dreiging") {
-    return "Een vijandelijke Wachttoren. Vereist een eigen, bemande Wachttoren op de streek eronder om een Confrontatie aan te gaan.";
+    return "Een vijandelijke Wachttoren. Vereist een eigen Legerkamp op de streek eronder om een Confrontatie aan te gaan.";
   }
   if (effect.type === "belegeringsdoel") {
-    return "Een vijandelijk Heiligdom. Belegeringsdoel zolang je minstens één Missionaris hebt.";
+    return "Een vijandelijk Heiligdom. Stuur er een Missionaris heen om de wololo-meter te laten vollopen.";
   }
   if (effect.type === "legerkamp") {
     return "Elke hieraan toegewezen Soldaat telt mee als legerwaarde bij een Confrontatie tegen een Bezette Streek, ongeacht op welke streek dit Legerkamp staat.";
@@ -310,18 +310,17 @@ export const OFFER_ALTAAR: Improvement = {
   },
 };
 
-export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [
-  {
-    id: "heiligdom",
-    naam: "Heiligdom",
-    categorie: "cultureel",
-    soort: "land",
-    kosten: { hout: 4, steen: 4 },
-    bouwtijdBeurten: 2,
-    effect: { type: "productie", resource: "cultuur", waarde: 2 },
-  },
-  OFFER_ALTAAR,
-];
+export const HEILIGDOM: Improvement = {
+  id: "heiligdom",
+  naam: "Heiligdom",
+  categorie: "cultureel",
+  soort: "land",
+  kosten: { hout: 4, steen: 4 },
+  bouwtijdBeurten: 2,
+  effect: { type: "productie", resource: "cultuur", waarde: 2 },
+};
+
+export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [HEILIGDOM, OFFER_ALTAAR];
 
 // Wetenschappelijk land improvement (hoofdstuk 3/9, issue: "tech tree
 // toevoegen" Deel 1): de Sterrencirkel is de eerste (en tot "aardewerk"
@@ -454,14 +453,15 @@ export const SOLDAAT: Improvement = {
 };
 
 // Verkenner (hoofdstuk 3/6, issue: "De Bezette Streek, missionaris en
-// verkenner", Deel 3): wetenschappelijke unit — stond al sinds hoofdstuk 3 in
-// het ontwerp ("tijdelijke extra vooruitkijk"), maar krijgt hier voor het
-// eerst een daadwerkelijke functie: zodra er minstens één bestaat, kan de
-// speler de Verkenning-actie uitvoeren op een Bezette Streek (zie
-// `kanVerkennen`/`verken` in economie.ts). Eigen rekruteringswachtrij
-// (`City.verkennerInAanbouw`), net als Soldaat, dus geen onderdeel van
-// IMPROVEMENT_POOLS/beschikbareOpties. Kosten (hoofdstuk 14, MVP-richtwaarde,
-// tunebaar) lichter dan Soldaat — een verkenner is geen vechter.
+// verkenner", Deel 3, herzien door "Bezette streek scherm"): geen losse,
+// trainbare eenheid meer — een klik op een verhuld vakje van een Bezette
+// Streek stuurt direct een verkenner (`stuurVerkenner` in
+// streekOntgrendeling.ts), zonder eerst een unit te hoeven opleiden. Deze
+// constante blijft puur als kosten-/bouwtijd-referentie bestaan: `kosten` is
+// wat elke Verkenning kost (bovenop `VERKENNING_KOSTEN_WETENSCHAP`
+// wetenschap), `bouwtijdBeurten` is hoeveel beurten het duurt voordat het
+// vakje onthuld wordt (`Tile.verkenningInGang`). Geen onderdeel van
+// IMPROVEMENT_POOLS/beschikbareOpties — nooit een eigen rekruteringswachtrij.
 export const VERKENNER: Improvement = {
   id: "verkenner",
   naam: "Verkenner",
@@ -473,16 +473,18 @@ export const VERKENNER: Improvement = {
 };
 
 // Missionaris (hoofdstuk 3/6, issue: "De Bezette Streek, missionaris en
-// verkenner", Deel 4): culturele unit — stond al sinds hoofdstuk 3 in het
-// ontwerp ("voor pushback"), maar krijgt hier voor het eerst een
-// daadwerkelijke functie: zodra er minstens één bestaat, wordt nieuwe
-// cultuurproductie omgeleid naar de belegeringsmeter van een Bezette Streek
-// (zie `verwerkBelegering` in economie.ts) in plaats van verloren te gaan.
-// Alleen trainbaar zodra er een voltooid Offer Altaar staat (zie
-// `heeftOfferAltaar`/`startMissionarisRecrutering`). Eigen
-// rekruteringswachtrij (`City.missionarisInAanbouw`), net als Soldaat/
-// Verkenner. Kosten (hoofdstuk 14, MVP-richtwaarde, tunebaar): hout en goud
-// i.p.v. erts, in lijn met een culturele in plaats van militaire unit.
+// verkenner", Deel 4, herzien door "Bezette streek scherm"): culturele unit —
+// stond al sinds hoofdstuk 3 in het ontwerp ("voor pushback"), maar krijgt
+// hier voor het eerst een daadwerkelijke functie: eenmaal opgeleid, kan de
+// speler 'm op de kaart naar een specifiek vijandelijk Heiligdom sturen (klik
+// op de tile, zie `stuurMissionaris` in streekOntgrendeling.ts) — dat
+// Heiligdom krijgt dan een eigen wololo-meter die, eenmaal vol, het Heiligdom
+// verovert in plaats van te vernietigen. Alleen trainbaar zodra er een
+// voltooid Offer Altaar staat (zie `heeftOfferAltaar`/
+// `startMissionarisRecrutering`). Eigen rekruteringswachtrij
+// (`City.missionarisInAanbouw`), net als Soldaat. Kosten (hoofdstuk 14,
+// MVP-richtwaarde, tunebaar): hout en goud i.p.v. erts, in lijn met een
+// culturele in plaats van militaire unit.
 export const MISSIONARIS: Improvement = {
   id: "missionaris",
   naam: "Missionaris",

@@ -7,6 +7,7 @@ import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "./bouwwachtri
 import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS, effectBeschrijving } from "./improvements";
 import { isWachttorenBemand } from "./indringersEnDieren";
 import { WACHTTOREN_VOEDSEL_VERBRUIK } from "./productie";
+import { BELEGERINGSDREMPEL } from "./streekOntgrendeling";
 import { City, Improvement, Streek, MateriaalType, ResourceType, Tile } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
 import { hoogsteOntgrendeldeStreek, isVooruitkijkStreek } from "./world";
@@ -68,7 +69,9 @@ export function beschrijfTile(
       return {
         titel: "Verhuld vakje",
         ondertitel: `Bezette Streek ${streek.hoogte}`,
-        tekst: "Dit vakje is nog niet verkend. Leid een Verkenner op en verken het om te zien wat hier ligt.",
+        tekst: tile.verkenningInGang
+          ? `Een verkenner is onderweg — nog ${tile.verkenningInGang.beurtenResterend} ${tile.verkenningInGang.beurtenResterend === 1 ? "beurt" : "beurten"} tot dit vakje onthuld wordt.`
+          : "Dit vakje is nog niet verkend. Stuur er een verkenner heen om te zien wat hier ligt.",
       };
     }
   } else if (!streek.ontgrendeld) {
@@ -166,10 +169,17 @@ export function beschrijfTile(
           ? ` Bemand door een strijder — actief, verbruikt ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
           : ` Nog niet bemand door een strijder — daardoor momenteel niet actief. Zodra bemand, verbruikt hij ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
         : "";
+    // Wololo-meter (issue: "Bezette streek scherm"): alleen relevant voor een
+    // nog niet veroverd vijandelijk Heiligdom — zie `wololoVoortgang`
+    // (types.ts) en `verwerkBelegering` (streekOntgrendeling.ts).
+    const wololoStatus =
+      tile.improvement.id === "vijandelijk-heiligdom"
+        ? ` Wololo-meter: ${tile.wololoVoortgang ?? 0} / ${BELEGERINGSDREMPEL}.`
+        : "";
     return {
       titel: tile.improvement.naam,
       ondertitel: CATEGORIE_LABELS[tile.improvement.categorie],
-      tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${bemandStatus}${wegStatus}${uitputting}`.trim(),
+      tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${bemandStatus}${wololoStatus}${wegStatus}${uitputting}`.trim(),
     };
   }
 

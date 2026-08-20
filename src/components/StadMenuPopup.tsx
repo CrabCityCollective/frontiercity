@@ -1,6 +1,5 @@
 "use client";
 
-import BezetteStreekPaneel from "./BezetteStreekPaneel";
 import CivielPaneel from "./CivielPaneel";
 import MilitairPaneel from "./MilitairPaneel";
 import OpslagplaatsPaneel from "./OpslagplaatsPaneel";
@@ -22,11 +21,7 @@ interface StadMenuPopupProps {
   onHaalTerug: (strijderId: string) => void;
   onVersnelCiviel: () => void;
   onVersnelOpslagplaats: () => void;
-  onStartVerkennerRecrutering: () => void;
-  onActiveerVerkenningsModus: () => void;
-  verkenningsModusActief: boolean;
   onStartMissionarisRecrutering: () => void;
-  onConfrontatieBezetteStreek: (positieInStreek: number) => void;
   onSluiten: () => void;
 }
 
@@ -53,11 +48,7 @@ export default function StadMenuPopup({
   onHaalTerug,
   onVersnelCiviel,
   onVersnelOpslagplaats,
-  onStartVerkennerRecrutering,
-  onActiveerVerkenningsModus,
-  verkenningsModusActief,
   onStartMissionarisRecrutering,
-  onConfrontatieBezetteStreek,
   onSluiten,
 }: StadMenuPopupProps) {
   return (
@@ -116,16 +107,9 @@ export default function StadMenuPopup({
           legerwaarde={legerwaarde}
           tegenstanderSterkte={tegenstanderSterkte}
           onStartRecrutering={onStartRecrutering}
+          onStartMissionarisRecrutering={onStartMissionarisRecrutering}
           onKiesStrijderVoorLegerkamp={onKiesStrijderVoorLegerkamp}
           onHaalTerug={onHaalTerug}
-        />
-        <BezetteStreekPaneel
-          state={state}
-          onStartVerkennerRecrutering={onStartVerkennerRecrutering}
-          onActiveerVerkenningsModus={onActiveerVerkenningsModus}
-          verkenningsModusActief={verkenningsModusActief}
-          onStartMissionarisRecrutering={onStartMissionarisRecrutering}
-          onConfrontatieBezetteStreek={onConfrontatieBezetteStreek}
         />
       </div>
     </div>

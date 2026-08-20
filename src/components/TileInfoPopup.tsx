@@ -1,8 +1,11 @@
 "use client";
 
 import RushMetGoudKnop from "./RushMetGoudKnop";
+import { KostenIcons } from "./ResourceIcoon";
+import { VERKENNER } from "@/game/improvements";
+import { VERKENNING_KOSTEN_WETENSCHAP } from "@/game/streekOntgrendeling";
 import { TileInfo } from "@/game/tileInfo";
-import { Improvement, ResourceType, Strijder } from "@/game/types";
+import { Improvement, Missionaris, ResourceType, Strijder } from "@/game/types";
 
 interface TileInfoPopupProps {
   tileInfo: TileInfo | null;
@@ -39,6 +42,31 @@ interface TileInfoPopupProps {
     onKiesStrijder: (strijderId: string) => void;
     onStuurNaarHuis: () => void;
   };
+  // Gezet als de aangeklikte tile een nog verhuld vakje van een Bezette Streek
+  // is (issue: "Bezette streek scherm" — vervangt de eerdere Verkenner-
+  // rekrutering + losse Verkenning-modus): een klik stuurt direct een
+  // verkenner, met een aftellend tellertje i.p.v. een instant onthulling.
+  verkenningVraag?: {
+    kan: boolean;
+    onderweg?: { beurtenResterend: number };
+    onStuurVerkenner: () => void;
+  };
+  // Gezet als de aangeklikte tile een onthulde vijandelijke Wachttoren is
+  // (issue: "Bezette streek scherm" — de Confrontatie-knop verschijnt nu bij
+  // een klik op de wachttoren zelf, i.p.v. in een lijst in het stadsmenu).
+  confrontatieVraag?: {
+    kan: boolean;
+    onConfrontatieAangaan: () => void;
+  };
+  // Gezet als de aangeklikte tile een onthuld vijandelijk Heiligdom is (issue:
+  // "Bezette streek scherm" — een Missionaris sturen gebeurt nu met een klik
+  // op het Heiligdom zelf, i.p.v. via een streek-brede belegeringsmeter).
+  missionarisVraag?: {
+    wololoVoortgang: number;
+    wololoDrempel: number;
+    beschikbareMissionarissen: Missionaris[];
+    onStuurMissionaris: (missionarisId: string) => void;
+  };
   onBevestigBouw: () => void;
   onAnnuleerBouw: () => void;
   onSluiten: () => void;
@@ -55,6 +83,9 @@ export default function TileInfoPopup({
   terreinWaarschuwing,
   rushVraag,
   wachttorenVraag,
+  verkenningVraag,
+  confrontatieVraag,
+  missionarisVraag,
   onBevestigBouw,
   onAnnuleerBouw,
   onSluiten,
@@ -206,6 +237,69 @@ export default function TileInfoPopup({
               >
                 Wachttoren bemannen
               </button>
+            )}
+          </div>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && verkenningVraag && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+            {verkenningVraag.onderweg ? (
+              <p style={{ margin: 0 }}>
+                Verkenner onderweg — nog {verkenningVraag.onderweg.beurtenResterend}{" "}
+                {verkenningVraag.onderweg.beurtenResterend === 1 ? "beurt" : "beurten"} tot onthulling.
+              </p>
+            ) : (
+              <button
+                className="fc-knop"
+                disabled={!verkenningVraag.kan}
+                onClick={verkenningVraag.onStuurVerkenner}
+                style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start", opacity: verkenningVraag.kan ? 1 : 0.5 }}
+              >
+                Verkenner sturen (<KostenIcons kosten={VERKENNER.kosten} />, {VERKENNING_KOSTEN_WETENSCHAP} wetenschap)
+              </button>
+            )}
+          </div>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && confrontatieVraag && (
+          <button
+            className="fc-knop"
+            disabled={!confrontatieVraag.kan}
+            onClick={confrontatieVraag.onConfrontatieAangaan}
+            title={
+              confrontatieVraag.kan
+                ? undefined
+                : "Vereist een voltooid, wegverbonden eigen Legerkamp op de streek direct onder de Bezette Streek"
+            }
+            style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start", opacity: confrontatieVraag.kan ? 1 : 0.5 }}
+          >
+            Confrontatie aangaan
+          </button>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && missionarisVraag && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+            <p style={{ margin: 0 }}>
+              Wololo-meter: {missionarisVraag.wololoVoortgang} / {missionarisVraag.wololoDrempel}
+            </p>
+            {missionarisVraag.beschikbareMissionarissen.length > 0 ? (
+              <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                {missionarisVraag.beschikbareMissionarissen.map((missionaris) => (
+                  <button
+                    key={missionaris.id}
+                    className="fc-knop"
+                    onClick={() => missionarisVraag.onStuurMissionaris(missionaris.id)}
+                    title="Stuur deze Missionaris naar dit Heiligdom"
+                    style={{ padding: "0.35rem 0.6rem" }}
+                  >
+                    Missionaris sturen
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p style={{ margin: 0, color: "var(--kleur-tekst-gedempt)" }}>
+                Geen beschikbare Missionarissen — leid er een op via het stadsmenu.
+              </p>
             )}
           </div>
         )}

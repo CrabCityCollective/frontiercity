@@ -6,10 +6,12 @@
 // (hoofdstuk 3/11/13/16) — hoogstens één van de twee tegelijk. Opslagplaats
 // (hoofdstuk 3/5/13/14), de vijf gecapte city improvements (Bibliotheek/
 // Markt/Barakken/Tempel/Grote Tempel, hoofdstuk 3/4/11/14), de Soldaat-/
-// Verkenner-/Missionaris-rekrutering (M7, hoofdstuk 6) en de tweede-settler-
+// Missionaris-rekrutering (M7, hoofdstuk 6) en de tweede-settler-
 // wachtrij (issue: "Altijd 2e settler" #236) volgen elk hun eigen, verder
 // losstaande wachtrij, maar hergebruiken dezelfde
 // `investeerInBouwkosten`/`pasVersnellingToe`-machinerie uit bouwwachtrij.ts.
+// Sinds "Bezette streek scherm" is er geen Verkenner-rekrutering meer — zie
+// `stuurVerkenner` in streekOntgrendeling.ts.
 
 import {
   cityImprovementCap,
@@ -18,7 +20,6 @@ import {
   NIEUWE_SETTLER,
   OPSLAGPLAATS,
   SOLDAAT,
-  VERKENNER,
   WOONWIJK,
 } from "./improvements";
 import { City, GameState, Improvement, Strijder } from "./types";
@@ -311,37 +312,12 @@ export function verwerkRecrutering(state: GameState): GameState {
   };
 }
 
-// Betaalt de bouwkosten van een lopende Verkenner-rekrutering (hoofdstuk 6,
-// issue: "De Bezette Streek, missionaris en verkenner", Deel 3) — zelfde
-// wachtrij-patroon als `verwerkRecrutering` hierboven, eigen wachtrij
-// (`verkennerInAanbouw`) omdat een Verkenner een andere unit is dan Soldaat.
-export function verwerkVerkennerRecrutering(state: GameState): GameState {
-  const verkennerInAanbouw = state.stad.verkennerInAanbouw;
-  if (!verkennerInAanbouw) return state;
-
-  const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(verkennerInAanbouw.improvement, verkennerInAanbouw.voortgang, voorraad);
-  if (!resultaat) return state;
-
-  if (resultaat.voltooid) {
-    return {
-      ...metActieveStad(state, {
-        ...state.stad,
-        verkenners: [...state.stad.verkenners, { id: `verkenner-${state.stad.verkenners.length}` }],
-        verkennerInAanbouw: undefined,
-      }),
-      voorraad,
-    };
-  }
-
-  return {
-    ...metActieveStad(state, { ...state.stad, verkennerInAanbouw: { ...verkennerInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
-    voorraad,
-  };
-}
-
 // Betaalt de bouwkosten van een lopende Missionaris-rekrutering (Deel 4) —
-// zelfde patroon als `verwerkVerkennerRecrutering` hierboven.
+// zelfde wachtrij-patroon als `verwerkRecrutering` hierboven, eigen wachtrij
+// (`missionarisInAanbouw`) omdat een Missionaris een andere unit is dan
+// Soldaat. Sinds "Bezette streek scherm" is er geen Verkenner-rekrutering
+// meer — die actie kost nu direct grondstoffen per klik op een verhuld vakje
+// (zie `stuurVerkenner` in streekOntgrendeling.ts).
 export function verwerkMissionarisRecrutering(state: GameState): GameState {
   const missionarisInAanbouw = state.stad.missionarisInAanbouw;
   if (!missionarisInAanbouw) return state;
@@ -515,16 +491,6 @@ export function startRecrutering(state: GameState): GameState {
     ...state.stad,
     legerInAanbouw: { improvement: SOLDAAT, voortgang: { ...SOLDAAT.kosten } },
   });
-}
-
-// Start het rekruteren van een Verkenner (hoofdstuk 6, issue: "De Bezette
-// Streek, missionaris en verkenner", Deel 3) — geen vereiste zoals het Offer
-// Altaar bij Missionaris hieronder, altijd trainbaar zodra er niet al een
-// Verkenner in opleiding is.
-export function startVerkennerRecrutering(state: GameState): GameState {
-  if (state.stad.verkennerInAanbouw) return state;
-
-  return metActieveStad(state, { ...state.stad, verkennerInAanbouw: { improvement: VERKENNER, voortgang: { ...VERKENNER.kosten } } });
 }
 
 // Start het rekruteren van een Missionaris (Deel 4) — alleen mogelijk zodra

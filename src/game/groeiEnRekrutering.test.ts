@@ -12,19 +12,19 @@ import {
   startOpslagplaats,
   startRecrutering,
   startTweedeSettler,
-  startVerkennerRecrutering,
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
 } from "./groeiEnRekrutering";
-import { heeftOfferAltaar, verken } from "./streekOntgrendeling";
+import { heeftOfferAltaar } from "./streekOntgrendeling";
 import { bemanWachttoren, berekenLegerwaarde, confrontatieBezetteStreek } from "./militair";
-import { BARAKKEN, BIBLIOTHEEK, GROTE_TEMPEL, GROTE_WOONWIJK, MARKT, SOLDAAT, TEMPEL } from "./improvements";
+import { BARAKKEN, BIBLIOTHEEK, GROTE_TEMPEL, GROTE_WOONWIJK, MARKT, SOLDAAT, TEMPEL, VIJANDELIJKE_WACHTTOREN } from "./improvements";
 import { GameState } from "./types";
 import { STAD_POSITIE, VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
 import {
   HEILIGDOM,
-  metBeschermendeWachttorenOpStreek12,
-  metBezetteStreekEnVerkenner,
+  metBezetteStreekInBeeld,
+  metLegerkampOpStreek12,
+  metOnthuldeBezetteStreekTile,
   metVasteRandom,
   WACHTTOREN,
 } from "./testHelpers";
@@ -94,20 +94,6 @@ test("heeftOfferAltaar en startMissionarisRecrutering: Missionaris is pas trainb
   };
   // Nog steeds geen Offer Altaar (dit is een gewoon Heiligdom) — nog steeds geen effect.
   assert.equal(startMissionarisRecrutering(state), state);
-});
-
-test("Verkenner is direct trainbaar (geen vereiste), en levert na de bouwtijd een inzetbare eenheid op", () => {
-  let state = maakInitieleSpelStatus();
-  state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 20 } };
-  state = startVerkennerRecrutering(state);
-  assert.equal(state.stad.verkennerInAanbouw?.improvement.id, "verkenner");
-  const bouwtijd = state.stad.verkennerInAanbouw!.improvement.bouwtijdBeurten;
-
-  for (let i = 0; i < bouwtijd; i++) {
-    state = volgendeBeurt(state);
-  }
-  assert.equal(state.stad.verkennerInAanbouw, undefined);
-  assert.equal(state.stad.verkenners.length, 1);
 });
 
 test("een nieuw opgeleide strijder krijgt nooit een id dat al in gebruik is door een nog bemande strijder, ook niet nadat een eerdere strijder verloren is gegaan (issue #242: 'soms lukt wachttoren bemannen niet meer')", () => {
@@ -241,18 +227,14 @@ test("Barakken levert een vaste, stad-brede legerwaarde-bonus die meetelt bij zo
   state = { ...state, stad: { ...state.stad, cityImprovements: [BARAKKEN] } };
   assert.equal(berekenLegerwaarde(state), zonderBarakken + (BARAKKEN.effect.waarde ?? 0));
 
-  // Ook meetellen in de Bezette-Streek-Confrontatie: een geforceerde winst
-  // (winkans 100%) is alleen te garanderen als de Barakken-bonus daadwerkelijk
-  // meetelt in de eigen legerwaarde tegenover een fors dreigingsniveau.
-  let bezetteStreekStaat = metBezetteStreekEnVerkenner();
-  bezetteStreekStaat = verken(bezetteStreekStaat, 0);
-  bezetteStreekStaat = metBeschermendeWachttorenOpStreek12(bezetteStreekStaat);
+  // Ook meetellen in de Bezette-Streek-Confrontatie: de Barakken-bonus telt op
+  // bovenop de (hier lege) Legerkamp-legerwaarde.
+  let bezetteStreekStaat = metBezetteStreekInBeeld();
+  bezetteStreekStaat = metOnthuldeBezetteStreekTile(bezetteStreekStaat, 0, VIJANDELIJKE_WACHTTOREN);
+  bezetteStreekStaat = metLegerkampOpStreek12(bezetteStreekStaat);
   bezetteStreekStaat = { ...bezetteStreekStaat, stad: { ...bezetteStreekStaat.stad, cityImprovements: [BARAKKEN] } };
   const resultaat = metVasteRandom(0, () => confrontatieBezetteStreek(bezetteStreekStaat, 0));
-  assert.equal(
-    resultaat.laatsteConfrontatieBezetteStreek?.eigenLegerwaarde,
-    (WACHTTOREN.effect.waarde ?? 0) + (BARAKKEN.effect.waarde ?? 0)
-  );
+  assert.equal(resultaat.laatsteConfrontatieBezetteStreek?.eigenLegerwaarde, BARAKKEN.effect.waarde ?? 0);
 });
 
 // Ontgrendelt streek `hoogte` (en alle streken eronder, zoals de echte
