@@ -17,6 +17,13 @@ type Scherm = "titel" | "navigatie" | "campagne" | "spel";
 export default function AppRoot() {
   const [scherm, setScherm] = useState<Scherm>("titel");
   const [toonInstellingen, setToonInstellingen] = useState(false);
+  // Actieve campagne (M20d deelstap 3, hoofdstuk 9/13/15) — `undefined` voor
+  // de tutorial, anders de `CampaignConfig.id` (campagnes.ts) die
+  // `CampagneSelectScherm` doorgeeft via `onKiesCampagne`. Net als `scherm`
+  // hierboven puur navigatie-state: `GameRoot` leest 'm bij het opzetten van
+  // een verse `useGameEngine()`-status, de lopende run zelf onthoudt zijn
+  // eigen `campagneId` (`GameState.campagneId`, sinds M20d deelstap 1).
+  const [actieveCampagneId, setActieveCampagneId] = useState<string | undefined>(undefined);
 
   if (scherm === "titel") return <TitelScherm onStart={() => setScherm("navigatie")} />;
 
@@ -32,9 +39,19 @@ export default function AppRoot() {
     );
   }
 
-  if (scherm === "campagne") return <CampagneSelectScherm onKiesTutorial={() => setScherm("spel")} />;
+  if (scherm === "campagne") {
+    return (
+      <CampagneSelectScherm
+        onKiesCampagne={(campagneId) => {
+          setActieveCampagneId(campagneId);
+          setScherm("spel");
+        }}
+      />
+    );
+  }
   return (
     <GameRoot
+      campagneId={actieveCampagneId}
       onVerlaten={() => setScherm("titel")}
       onTutorialAfgerond={() => setScherm("campagne")}
     />

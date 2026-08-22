@@ -14,10 +14,11 @@
 // stad.ts — zie worldGoingWest.test.ts) en bleek zonder aanpassingen al aan
 // de garantie te voldoen. Sinds M20d deelstap 1 kan `maakInitieleSpelStatus()`
 // (initieleSpelStatus.ts) hier al doorheen bouwen (via een expliciete
-// `campagneId`-parameter), maar `CampagneSelectScherm` blijft "Binnenkort
-// beschikbaar" tonen — er is nog geen manier voor de speler om die
-// `campagneId` daadwerkelijk te kiezen (dat raakt de spel-opstart-UI breder
-// en hoort in een eigen vervolg-deelstap, zie het M20d-issue).
+// `campagneId`-parameter), en sinds M20d deelstap 3 loopt die `campagneId`
+// ook al helemaal door van `CampagneSelectScherm` (via AppRoot/GameRoot) tot
+// aan `useGameEngine()`. `CampagneSelectScherm` toont Going West voorlopig
+// echter nog altijd als `beschikbaar: false` ("Binnenkort beschikbaar") —
+// pas de laatste M20d-deelstap zet die knop aan, zie het M20d-issue.
 
 import { Streek, TerreinType, Tile } from "./types";
 
