@@ -311,6 +311,18 @@ export const VIJAND_AAN_DE_HORIZON_TITEL = "De vijand aan de horizon";
 export const VIJAND_AAN_DE_HORIZON_TEKST =
   "Niet alle wilde stammen zitten op onze opmars te wachten, ze proberen ons gebied binnen te dringen. We hebben nu erts nodig uit de heuvels en bergen. Bouw een mijn. Dat is het eerste wat we nu nodig hebben.";
 
+// Roofdier-intro-uitleg-pop-up (hoofdstuk 14/17, issue: "Eerste streek geen
+// roofdieren"): getoond zodra streek `ROOFDIER_MIN_STREEK` (world.ts, streek
+// 6) ontgrendelt (zie GameRoot: `toonRoofdierIntroPopup`) — vóór de speler er
+// ooit kan jagen, dus vóór het risico voor het eerst kan optreden. Sluit aan
+// bij de flavor-tekst van deze streek hierboven ("wat hen al sinds het begin
+// volgt"). Legt het mechanisme uit (RoofdierPopup verderop meldt de
+// afzonderlijke momenten daarna pas) — de eerstvolgende jachtbeurt roept
+// gegarandeerd een roofdier op (zie `jaag` in acties.ts), zodat de speler de
+// uitleg meteen in de praktijk ziet.
+export const ROOFDIER_INTRO_TITEL = "Wat de kuddes volgt";
+export const ROOFDIER_INTRO_TEKST =
+  "Vanaf hier is de jacht niet meer zonder gevaar. Soms wordt de settler zelf opgemerkt terwijl hij jaagt. Verschijnt er een roofdier op het jachtvakje, dan valt het pas de beurt erna aan — beweeg de settler dan meteen weg, of hij overleeft het niet.";
 
 // Strijders-opleiden-uitleg-pop-up (issue: "pop-ups wijzigen"): getoond zodra
 // er voor het eerst een gebouwde mijn staat (zie economie.ts

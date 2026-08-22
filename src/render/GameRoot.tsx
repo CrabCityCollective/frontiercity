@@ -19,6 +19,7 @@ import StreekIntroPaneel from "@/components/StreekIntroPaneel";
 import StreekPopup from "@/components/StreekPopup";
 import OceaanUitlegPopup from "@/components/OceaanUitlegPopup";
 import ResourceHud from "@/components/ResourceHud";
+import RoofdierIntroPopup from "@/components/RoofdierIntroPopup";
 import RoofdierPopup from "@/components/RoofdierPopup";
 import SettlerActiesUitlegPopup from "@/components/SettlerActiesUitlegPopup";
 import SettlerPaneel from "@/components/SettlerPaneel";
@@ -71,6 +72,7 @@ import { useGameEngine } from "@/game/useGameEngine";
 import { bereikbarePosities } from "@/game/wegen";
 import {
   EINDE_OCEAAN_HOOGTE,
+  ROOFDIER_MIN_STREEK,
   TUTORIAL_STREEK_AANTAL,
   VOEDSEL_DREMPEL_GROEI,
   hoogsteOntgrendeldeStreek,
@@ -250,6 +252,11 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // `toonVijandAanDeHorizonPopup`/`toonGoddelijkeRaadgevingPopup` hieronder.
   const [vijandAanDeHorizonBevestigd, setVijandAanDeHorizonBevestigd] = useState(false);
   const [goddelijkeRaadgevingBevestigd, setGoddelijkeRaadgevingBevestigd] = useState(false);
+  // Roofdier-intro-uitleg-pop-up (hoofdstuk 14/17, issue: "Eerste streek geen
+  // roofdieren"): zelfde eenmalige-confirm-vlag als de twee hierboven,
+  // getoond zodra streek `ROOFDIER_MIN_STREEK` (world.ts) voor het eerst
+  // ontgrendelt — zie `toonRoofdierIntroPopup` hieronder.
+  const [roofdierIntroBevestigd, setRoofdierIntroBevestigd] = useState(false);
   // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
   // van streek 2 naar 3 door "Tweede streek boerderij"): zelfde
   // eenmalige-confirm-vlag, getoond zodra streek 3 voor het eerst ontgrendelt
@@ -602,6 +609,20 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !goddelijkeRaadgevingBevestigd &&
     hoogsteOntgrendeldeStreek(state.streken) >= 4;
+  // Roofdier-intro-uitleg-pop-up (hoofdstuk 14/17, issue: "Eerste streek geen
+  // roofdieren"): zodra streek `ROOFDIER_MIN_STREEK` voor het eerst
+  // ontgrendelt — vóór de speler er ooit kan jagen, dus vóór het risico voor
+  // het eerst kan optreden (zie `jaag` in acties.ts).
+  const toonRoofdierIntroPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    uitlegAan &&
+    !roofdierIntroBevestigd &&
+    hoogsteOntgrendeldeStreek(state.streken) >= ROOFDIER_MIN_STREEK;
   // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen",
   // inhoud aangepast door "jagen en farmen omdraaien" en nogmaals door
   // "Tweede streek boerderij"): zodra er voor het eerst een actieve,
@@ -616,6 +637,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     uitlegAan &&
     !boerderijKlaarBevestigd &&
     heeftWerkendeBoerderij(state);
@@ -629,6 +651,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     uitlegAan &&
     !strijdersOpleidenBevestigd &&
@@ -646,6 +669,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     Boolean(state.bezetteStreekOntdektEvent);
@@ -659,6 +683,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -675,6 +700,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -696,6 +722,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -712,6 +739,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -726,6 +754,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -744,6 +773,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -764,6 +794,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -786,6 +817,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -810,6 +842,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -829,6 +862,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -855,6 +889,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -886,6 +921,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -915,6 +951,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -945,6 +982,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -982,6 +1020,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -1025,6 +1064,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -1056,6 +1096,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -1088,6 +1129,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -1121,6 +1163,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -1155,6 +1198,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselWaarschuwingPopup &&
     !toonVijandAanDeHorizonPopup &&
     !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
     !toonBoerderijKlaarUitlegPopup &&
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
@@ -1316,6 +1360,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonGoddelijkeRaadgevingPopup && (
           <GoddelijkeRaadgevingPopup onDoorgaan={() => setGoddelijkeRaadgevingBevestigd(true)} />
         )}
+        {toonRoofdierIntroPopup && <RoofdierIntroPopup onDoorgaan={() => setRoofdierIntroBevestigd(true)} />}
         {toonBoerderijKlaarUitlegPopup && (
           <BoerderijKlaarUitlegPopup onDoorgaan={() => setBoerderijKlaarBevestigd(true)} />
         )}
@@ -1406,6 +1451,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonVoedselWaarschuwingPopup &&
             !toonVijandAanDeHorizonPopup &&
             !toonGoddelijkeRaadgevingPopup &&
+            !toonRoofdierIntroPopup &&
             !toonBoerderijKlaarUitlegPopup &&
             !toonStrijdersOpleidenPopup &&
             !toonBezetteStreekOntdektPopup &&

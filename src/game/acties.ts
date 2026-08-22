@@ -19,7 +19,7 @@ import {
   settlerWegaanlegGratis,
 } from "./techTree";
 import { City, GameState, RoofdierEvent, Settler } from "./types";
-import { isGeschiktVoorStichten } from "./world";
+import { isGeschiktVoorStichten, ROOFDIER_MIN_STREEK } from "./world";
 
 export type SettlerSlot = "primair" | "tweede";
 
@@ -90,15 +90,12 @@ const KUDDE_VOEDSEL_PER_BEURT = 3;
 // (hoofdstuk 16: bouw-ritme).
 const HOUTHAKKEN_HOUT_PER_BEURT = 1;
 
-// Roofdieren (hoofdstuk 14/17, issue: "roofdieren toevoegen"; verschoven naar
-// streek 1, issue: "jagen en farmen omdraaien" — nu de jacht al vanaf streek
-// 1 de belangrijkste voedselbron is, hoort het roofdier-risico er vanaf het
-// begin bij, niet pas veel later): vanaf `ROOFDIER_MIN_STREEK` heeft elke
-// jachtactie (niet elke beurt/streek zoals indringers/kuddes in
-// indringersEnDieren.ts) een kans om een roofdier op te roepen op het
-// jachtvakje zelf. Bewuste MVP-placeholder, net als de overige
-// tuning-getallen hierboven.
-const ROOFDIER_MIN_STREEK = 1;
+// Roofdieren (hoofdstuk 14/17, issue: "roofdieren toevoegen"): vanaf
+// `ROOFDIER_MIN_STREEK` (world.ts, sinds issue "Eerste streek geen
+// roofdieren" streek 6 in plaats van streek 1) heeft elke jachtactie (niet
+// elke beurt/streek zoals indringers/kuddes in indringersEnDieren.ts) een
+// kans om een roofdier op te roepen op het jachtvakje zelf. Bewuste
+// MVP-placeholder, net als de overige tuning-getallen hierboven.
 const ROOFDIER_KANS = 0.15;
 
 // Verplaatst de settler naar een aangeklikte tile (issue: "de tegels waar je
@@ -179,6 +176,16 @@ export function legWegAan(state: GameState, slot: SettlerSlot = "primair"): Game
 // roepen, op hetzelfde vakje. Meldt dit meteen (`roofdierEvent`,
 // fase "verschenen") — de daadwerkelijke aanval volgt pas een beurt later,
 // zie `verwerkRoofdieren` (indringersEnDieren.ts) in `volgendeBeurt`.
+//
+// Gegarandeerd eerste roofdier (issue: "Eerste streek geen roofdieren" —
+// "gegarandeerd roofdieren" bij de introductie): de eerste jachtbeurt vanaf
+// `ROOFDIER_MIN_STREEK` roept altijd een roofdier op, in plaats van de
+// gewone kans hieronder — zelfde gegarandeerde-eerste-keer-patroon als
+// `verwerkEersteKudde` (indringersEnDieren.ts). Zonder deze garantie zou de
+// nieuwe introductie-pop-up (GameRoot: `RoofdierIntroPopup`) de speler
+// kunnen waarschuwen voor een mechaniek die daarna alsnog een tijd op zich
+// laat wachten (15% kans per jachtbeurt) — de garantie zorgt dat de speler
+// 'm meteen daarna ook echt meemaakt, één keer, met de uitleg nog vers.
 export function jaag(state: GameState, slot: SettlerSlot = "primair"): GameState {
   const settler = leesSettler(state, slot);
   if (!settler || leesActieGedaan(state, slot)) return state;
@@ -189,11 +196,14 @@ export function jaag(state: GameState, slot: SettlerSlot = "primair"): GameState
   if (!streek || !tile?.kudde) return state;
 
   const beurtenResterend = tile.kudde.beurtenResterend - 1;
+  const magRoofdier = hoogte >= ROOFDIER_MIN_STREEK;
+  const eersteRoofdierGegarandeerd = magRoofdier && !state.eersteRoofdierVerschenen;
   // "B2. Speerwerper" / "B2a. Boogschieten" (hoofdstuk 3/9, techTree.ts):
   // verlagen de roofdier-kans (`roofdierKansFactor`); "B. Het spoor lezen" /
   // "B2a. Boogschieten" verhogen de jachtopbrengst (`jachtVoedselBonus`).
   const roofdierVerschijnt =
-    hoogte >= ROOFDIER_MIN_STREEK && Math.random() < ROOFDIER_KANS * roofdierKansFactor(state.technologieen);
+    magRoofdier &&
+    (eersteRoofdierGegarandeerd || Math.random() < ROOFDIER_KANS * roofdierKansFactor(state.technologieen));
 
   const streken = state.streken.map((l) => {
     if (l.hoogte !== hoogte) return l;
@@ -218,6 +228,7 @@ export function jaag(state: GameState, slot: SettlerSlot = "primair"): GameState
     streken,
     voedsel: state.voedsel + KUDDE_VOEDSEL_PER_BEURT + jachtVoedselBonus(state.technologieen),
     roofdierEvent,
+    eersteRoofdierVerschenen: state.eersteRoofdierVerschenen || magRoofdier,
     ...metSettlerUpdate(state, slot, settler, true),
   };
 }

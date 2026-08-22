@@ -176,8 +176,8 @@ export interface Tile {
   kudde?: {
     beurtenResterend: number;
   };
-  // Roofdier (hoofdstuk 14/17, issue: "roofdieren toevoegen"; vanaf streek 1,
-  // issue: "jagen en farmen omdraaien"): kan verschijnen op het vakje waar de
+  // Roofdier (hoofdstuk 14/17, issue: "roofdieren toevoegen"; vanaf
+  // `ROOFDIER_MIN_STREEK`, world.ts): kan verschijnen op het vakje waar de
   // settler net gejaagd heeft (zie `jaag` in economie.ts) — nooit los van een
   // kudde-jachtactie. Valt pas de
   // beurt ná verschijnen aan (`beurtenTotAanval` telt af in
@@ -688,6 +688,14 @@ export interface GameState {
   // afgaat, en opent tegelijk streek 1 voor de gewone, willekeurige
   // `verwerkKuddes`-trekking (die streek 1 tot dan toe overslaat).
   eersteKuddeVerschenen?: boolean;
+  // Gegarandeerd eerste roofdier (hoofdstuk 14/17, issue: "Eerste streek geen
+  // roofdieren"): gezet door `jaag` (acties.ts) zodra de eerste jachtbeurt op
+  // of boven `ROOFDIER_MIN_STREEK` (world.ts) heeft plaatsgevonden — die
+  // beurt roept altijd een roofdier op, zie `jaag` voor de reden. Blijft
+  // daarna permanent `true` en laat vanaf dan de gewone, kans-gebaseerde
+  // roofdier-trekking gelden — zelfde eenmalige-garantie-patroon als
+  // `eersteKuddeVerschenen` hierboven.
+  eersteRoofdierVerschenen?: boolean;
   // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): gezet
   // door `verwerkStreekOntgrendeling` in economie.ts zodra streek
   // `AMBER_ONTDEKKING_STREEK` (world.ts) voor het eerst ontgrendeld wordt — de

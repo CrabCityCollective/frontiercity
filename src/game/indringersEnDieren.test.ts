@@ -23,21 +23,21 @@ import {
 } from "./testHelpers";
 
 test("een roofdier valt pas de beurt ná verschijnen aan, en doodt de settler als die er dan nog op staat", () => {
-  let state = metSettlerOpKuddeVakje(5);
+  let state = metSettlerOpKuddeVakje(6);
   state = metVasteRandom(0, () => jaag(state));
-  assert.deepEqual(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 1 });
+  assert.deepEqual(state.streken.find((l) => l.hoogte === 6)!.tiles[0].roofdier, { beurtenTotAanval: 1 });
 
   // Eerste beurtovergang: de reactietijd, geen aanval.
   state = volgendeBeurt(state);
   assert.notEqual(state.settler, undefined, "de settler overleeft de eerste beurtovergang (reactietijd)");
-  assert.deepEqual(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 0 });
+  assert.deepEqual(state.streken.find((l) => l.hoogte === 6)!.tiles[0].roofdier, { beurtenTotAanval: 0 });
 
   // Tweede beurtovergang: de settler is niet weggegaan, dus de aanval slaat toe.
   state = volgendeBeurt(state);
   assert.equal(state.settler, undefined, "de settler sterft als hij op het roofdier-vakje bleef staan");
   assert.equal(state.settlerVerlorenAanRoofdier, true);
-  assert.deepEqual(state.roofdierEvent, { hoogte: 5, positieInStreek: 0, fase: "aanval" });
-  assert.equal(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, undefined);
+  assert.deepEqual(state.roofdierEvent, { hoogte: 6, positieInStreek: 0, fase: "aanval" });
+  assert.equal(state.streken.find((l) => l.hoogte === 6)!.tiles[0].roofdier, undefined);
 });
 
 // Tweede settler (issue: "Altijd 2e settler" #236): een roofdier kan ook de
@@ -47,12 +47,12 @@ test("een roofdier valt pas de beurt ná verschijnen aan, en doodt de settler al
 // voor de tweede settler toch al nooit gebeurt).
 test("een roofdier kan de tweede settler doden zonder de eerste te raken (issue #236)", () => {
   let state: GameState = {
-    ...metSettlerOpKuddeVakje(5),
+    ...metSettlerOpKuddeVakje(6),
     settler: undefined,
-    tweedeSettler: { hoogte: 5, positieInStreek: 0 },
+    tweedeSettler: { hoogte: 6, positieInStreek: 0 },
   };
   state = metVasteRandom(0, () => jaag(state, "tweede"));
-  assert.deepEqual(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, { beurtenTotAanval: 1 });
+  assert.deepEqual(state.streken.find((l) => l.hoogte === 6)!.tiles[0].roofdier, { beurtenTotAanval: 1 });
 
   state = volgendeBeurt(state); // reactietijd
   assert.notEqual(state.tweedeSettler, undefined, "overleeft de reactietijd");
@@ -60,25 +60,25 @@ test("een roofdier kan de tweede settler doden zonder de eerste te raken (issue 
   state = volgendeBeurt(state); // de aanval
   assert.equal(state.tweedeSettler, undefined, "de tweede settler sterft als hij bleef staan");
   assert.equal(state.settlerVerlorenAanRoofdier, undefined, "dit vlag geldt alleen voor de eerste settler");
-  assert.deepEqual(state.roofdierEvent, { hoogte: 5, positieInStreek: 0, fase: "aanval" });
+  assert.deepEqual(state.roofdierEvent, { hoogte: 6, positieInStreek: 0, fase: "aanval" });
 });
 
 test("de settler overleeft een roofdier als hij op tijd wegbeweegt", () => {
-  let state = metSettlerOpKuddeVakje(5);
+  let state = metSettlerOpKuddeVakje(6);
   state = metVasteRandom(0, () => jaag(state));
 
   state = volgendeBeurt(state); // reactietijd
-  state = verplaatsSettlerNaar(state, 5, 1);
-  assert.deepEqual(state.settler, { hoogte: 5, positieInStreek: 1 }, "de settler moet daadwerkelijk verplaatst zijn");
+  state = verplaatsSettlerNaar(state, 6, 1);
+  assert.deepEqual(state.settler, { hoogte: 6, positieInStreek: 1 }, "de settler moet daadwerkelijk verplaatst zijn");
 
   state = volgendeBeurt(state); // de aanval, maar de settler staat er niet meer
-  assert.deepEqual(state.settler, { hoogte: 5, positieInStreek: 1 }, "de settler overleeft");
+  assert.deepEqual(state.settler, { hoogte: 6, positieInStreek: 1 }, "de settler overleeft");
   assert.equal(state.settlerVerlorenAanRoofdier, undefined);
-  assert.equal(state.streken.find((l) => l.hoogte === 5)!.tiles[0].roofdier, undefined);
+  assert.equal(state.streken.find((l) => l.hoogte === 6)!.tiles[0].roofdier, undefined);
 });
 
 test("na het verlies van de settler aan een roofdier komt hij niet gratis terug, maar wel via de civiele pool", () => {
-  let state = metSettlerOpKuddeVakje(5);
+  let state = metSettlerOpKuddeVakje(6);
   state = metVasteRandom(0, () => jaag(state));
   state = volgendeBeurt(state); // reactietijd
   state = volgendeBeurt(state); // de aanval doodt de settler
