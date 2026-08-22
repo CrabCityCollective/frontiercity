@@ -627,6 +627,15 @@ export interface GameState {
   // óf een weg aanleggen) per beurt, teruggezet door `volgendeBeurt`.
   settler?: Settler;
   settlerActieGedaanDitBeurt: boolean;
+  // "B1b. Handkar" (hoofdstuk 3/9, techTree.ts: `settlerBeweegtGratis`): de
+  // eerste verplaatsing per beurt kost dan geen aparte settler-actie, zodat
+  // de settler nog een andere actie kan doen. Zonder deze eigen vlag zou
+  // `verplaatsSettlerNaar` (acties.ts) `settlerActieGedaanDitBeurt` nooit op
+  // `true` zetten en kon de settler zo onbeperkt doorlopen (issue: "tech met
+  // settler verplaatsen") — dit vlag zorgt dat alleen de éérste verplaatsing
+  // gratis is, elke volgende telt weer als de gewone settler-actie. Net als
+  // `settlerActieGedaanDitBeurt` teruggezet door `volgendeBeurt`.
+  settlerGratisBewogenDitBeurt: boolean;
   // Tweede settler (hoofdstuk 11/13/16, issue: "Altijd 2e settler" #236): op
   // uitdrukkelijk verzoek een bewuste versoepeling van de "maximaal één
   // settler"-rem hierboven, pas beschikbaar vanaf streek 7
@@ -640,6 +649,10 @@ export interface GameState {
   // elkaar kunnen handelen.
   tweedeSettler?: Settler;
   tweedeSettlerActieGedaanDitBeurt: boolean;
+  // `settlerGratisBewogenDitBeurt` hierboven, maar dan voor de tweede
+  // settler — zelfde onafhankelijke-vlag-patroon als
+  // `tweedeSettlerActieGedaanDitBeurt`.
+  tweedeSettlerGratisBewogenDitBeurt: boolean;
   // Eerstvolgende beurt waarop weer een nieuw bouwproject gestart mag worden
   // (hoofdstuk 16: bouw-ritme, "om de 3 beurten"). Begint op 1 zodat de
   // allereerste bouw-pop-up gewoon blijft verschijnen.

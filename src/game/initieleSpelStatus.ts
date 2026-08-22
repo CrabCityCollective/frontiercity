@@ -89,10 +89,12 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     bouwKeuzeGedaanDitBeurt: false,
     bouwPopupAfgehandeldTellerPerStreek: {},
     settlerActieGedaanDitBeurt: false,
+    settlerGratisBewogenDitBeurt: false,
     // Tweede settler (issue: "Altijd 2e settler" #236): begint altijd leeg —
     // pas via `tweedeSettlerInAanbouw` te krijgen zodra streek 7 ontgrendeld
     // is, zie `kanTweedeSettlerBouwen` (groeiEnRekrutering.ts).
     tweedeSettlerActieGedaanDitBeurt: false,
+    tweedeSettlerGratisBewogenDitBeurt: false,
     verkenningGedaanDitBeurt: false,
     volgendeBouwBeurt: 1,
     // Geen `kuddeEvent` bij de start meer (issue: "genoeg hout om ook

@@ -183,6 +183,34 @@ test("een actie op slot 'tweede' raakt alleen de tweede settler, en omgekeerd (i
   assert.deepEqual(naVerplaatsing.settler, { hoogte: 1, positieInStreek: 4 }, "de eerste settler bleef staan");
 });
 
+test("Handkar (settlerBeweegtGratis): alleen de eerste verplaatsing per beurt is gratis, niet elke volgende", () => {
+  const state: GameState = {
+    ...maakInitieleSpelStatus(),
+    technologieen: ["spoor-lezen", "wiel", "handkar"],
+    settler: { hoogte: 1, positieInStreek: 4 },
+  };
+
+  const naEersteZet = verplaatsSettlerNaar(state, 1, 3);
+  assert.equal(naEersteZet.settlerActieGedaanDitBeurt, false, "de eerste verplaatsing is gratis dankzij Handkar");
+  assert.equal(naEersteZet.settlerGratisBewogenDitBeurt, true, "de gratis verplaatsing is nu gebruikt voor deze beurt");
+
+  // Zonder de fix bleef `settlerActieGedaanDitBeurt` bij élke verplaatsing op
+  // `false` staan, waardoor de settler onbeperkt kon doorlopen in 1 beurt
+  // (issue: "tech met settler verplaatsen"). Een tweede verplaatsing dezelfde
+  // beurt moet daarom weer gewoon de normale settler-actie verbruiken.
+  const naTweedeZet = verplaatsSettlerNaar(naEersteZet, 1, 2);
+  assert.deepEqual(naTweedeZet.settler, { hoogte: 1, positieInStreek: 2 });
+  assert.equal(naTweedeZet.settlerActieGedaanDitBeurt, true, "de tweede verplaatsing verbruikt de settler-actie");
+
+  const naDerdeZetPoging = verplaatsSettlerNaar(naTweedeZet, 1, 1);
+  assert.equal(naDerdeZetPoging, naTweedeZet, "geen actie meer over, dus een derde verplaatsing heeft geen effect");
+
+  // Volgende beurt is de gratis verplaatsing weer beschikbaar.
+  const volgende = volgendeBeurt(naTweedeZet);
+  assert.equal(volgende.settlerGratisBewogenDitBeurt, false);
+  assert.equal(volgende.settlerActieGedaanDitBeurt, false);
+});
+
 test("hakHout doet niets op een uitgeputte (ghost_town) Houtkap-tile, ook al blijft het terrein bos", () => {
   const state = maakInitieleSpelStatus();
   const metUitgeputteHoutkap: GameState = {
