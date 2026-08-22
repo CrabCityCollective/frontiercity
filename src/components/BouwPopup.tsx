@@ -10,7 +10,7 @@ import {
   improvementNaam,
   terreinEisenBeschrijving,
 } from "@/game/improvements";
-import { Categorie, Improvement, Streek, TechId } from "@/game/types";
+import { CampaignConfig, Categorie, Improvement, Streek, TechId } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
 
 const CATEGORIEEN = Object.keys(CATEGORIE_LABELS) as Categorie[];
@@ -90,6 +90,11 @@ interface BouwPopupProps {
   // improvements" Deel 4) — nodig om de infrastructuur-eis van Legerkamp/
   // Offer Altaar te tonen (`infrastructuurVoortgang`, economie.ts).
   cityImprovements: Improvement[];
+  // Actieve campagne (hoofdstuk 9/13, M20d deelstap 1) — bepaalt de
+  // weergavenaam via `improvementNaam()` hieronder. `undefined` voor de
+  // tutorial (die geen eigen `CampaignConfig` heeft), zie `campagneConfig()`
+  // in campagnes.ts.
+  campagne?: CampaignConfig;
   zichtbaar: boolean;
   onBouwStarten: (improvement: Improvement) => void;
   onSluiten: () => void;
@@ -111,6 +116,7 @@ export default function BouwPopup({
   alleStreken,
   technologieen,
   cityImprovements,
+  campagne,
   zichtbaar,
   onBouwStarten,
   onSluiten,
@@ -243,7 +249,7 @@ export default function BouwPopup({
                       disabled={voortgang !== undefined && !voortgang.vervuld}
                       onClick={() => onBouwStarten(improvement)}
                     >
-                      {improvementNaam(improvement)} (<KostenIcons kosten={improvement.kosten} />,{" "}
+                      {improvementNaam(improvement, campagne)} (<KostenIcons kosten={improvement.kosten} />,{" "}
                       {improvement.bouwtijdBeurten} beurten)
                       {/* Wat dit improvement oplevert/doet (issue: "teksten bij city
                           gebouwen" — ontbrak hier volledig, zie effectBeschrijving() in

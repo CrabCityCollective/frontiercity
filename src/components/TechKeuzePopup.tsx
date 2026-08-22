@@ -1,11 +1,15 @@
 "use client";
 
 import { TECH_TREE, techNaam } from "@/game/techTree";
-import { TechDrempel, TechId } from "@/game/types";
+import { CampaignConfig, TechDrempel, TechId } from "@/game/types";
 
 interface TechKeuzePopupProps {
   drempel: TechDrempel;
   opties: [TechId, TechId];
+  // Actieve campagne (hoofdstuk 9/13, M20d deelstap 1) — bepaalt de
+  // weergavenaam via `techNaam()` hieronder, zie `campagneConfig()` in
+  // campagnes.ts. `undefined` voor de tutorial.
+  campagne?: CampaignConfig;
   onKiesTech: (techId: TechId) => void;
 }
 
@@ -17,7 +21,7 @@ interface TechKeuzePopupProps {
 // in de boom hangt) wordt hiermee voor de rest van de run permanent
 // onbereikbaar (zelfde onomkeerbare vertakkingslogica als de Anker-verhalen,
 // hoofdstuk 9/11) — vandaar de expliciete waarschuwing in de tekst.
-export default function TechKeuzePopup({ drempel, opties, onKiesTech }: TechKeuzePopupProps) {
+export default function TechKeuzePopup({ drempel, opties, campagne, onKiesTech }: TechKeuzePopupProps) {
   return (
     <div
       style={{
@@ -57,7 +61,7 @@ export default function TechKeuzePopup({ drempel, opties, onKiesTech }: TechKeuz
               onClick={() => onKiesTech(techId)}
               style={{ padding: "0.6rem 1rem", maxWidth: "15rem", textAlign: "left" }}
             >
-              <strong style={{ display: "block" }}>{techNaam(techId)}</strong>
+              <strong style={{ display: "block" }}>{techNaam(techId, campagne)}</strong>
               <span style={{ display: "block", fontSize: "0.8rem", color: "var(--kleur-tekst-gedempt)" }}>
                 {TECH_TREE[techId].beschrijving}
               </span>
