@@ -408,7 +408,7 @@ export function startNieuweSettler(state: GameState): GameState {
 // vanaf het begin" te makkelijk bleek: de ontwerper wilde dat heen-en-weer-
 // lopen voor jacht/wachttoren-herbouw op eerdere streken eerst écht
 // irritant wordt voordat de tweede settler die last wegneemt.
-const TWEEDE_SETTLER_MIN_STREEK = 7;
+export const TWEEDE_SETTLER_MIN_STREEK = 7;
 
 // Of de tweede-settler-wachtrij nu gestart mag worden (hoofdstuk 11/13/16,
 // issue #236): pas vanaf `TWEEDE_SETTLER_MIN_STREEK`, niet terwijl er al een
