@@ -61,6 +61,8 @@ import {
   HOUTKAP_STREEK_UITLEG_TITEL,
   NIET_BOUWEN_UITLEG_TEKST,
   NIET_BOUWEN_UITLEG_TITEL,
+  SETTLER_WEG_SNELHEID_UITLEG_TEKST,
+  SETTLER_WEG_SNELHEID_UITLEG_TITEL,
   TWEEDE_SETTLER_UITLEG_TEKST,
   TWEEDE_SETTLER_UITLEG_TITEL,
 } from "@/game/tutorialContent";
@@ -72,7 +74,7 @@ import { beschrijfEindeOceaanTile, beschrijfOceaanTile, beschrijfTile } from "@/
 import { Improvement } from "@/game/types";
 import { berekenHistorieStatistieken } from "@/game/uitputtingEnVerval";
 import { useGameEngine } from "@/game/useGameEngine";
-import { bereikbarePosities } from "@/game/wegen";
+import { aantalAangelegdeWegen, bereikbarePosities } from "@/game/wegen";
 import {
   EINDE_OCEAAN_HOOGTE,
   ROOFDIER_MIN_STREEK,
@@ -302,6 +304,10 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
   const [nietBouwenUitlegBevestigd, setNietBouwenUitlegBevestigd] = useState(false);
   const [boerderijStreekUitlegBevestigd, setBoerderijStreekUitlegBevestigd] = useState(false);
   const [houtkapStreekUitlegBevestigd, setHoutkapStreekUitlegBevestigd] = useState(false);
+  // Settler-wegsnelheid-uitleg-pop-up (issue: "Settlers verplaatsen sneller
+  // over wegen"): zelfde eenmalige-confirm-vlag, getoond zodra er minstens 2
+  // wegvakjes liggen — zie `toonSettlerWegSnelheidUitlegPopup` hieronder.
+  const [settlerWegSnelheidUitlegBevestigd, setSettlerWegSnelheidUitlegBevestigd] = useState(false);
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is"): anders dan de
   // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
@@ -1236,6 +1242,45 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
     magBouwUitlegTonen &&
     actieveStreek.hoogte === 2 &&
     bouwPopupWeergaveNummer === 2;
+  // Settler-wegsnelheid-uitleg-pop-up (issue: "Settlers verplaatsen sneller
+  // over wegen"): getoond zodra er minstens 2 wegvakjes liggen (zie wegen.ts:
+  // `aantalAangelegdeWegen` — dat is het eerste moment waarop een route van 2
+  // vakjes over de weg kán bestaan). Laagste prioriteit van de streek-
+  // drempel-uitleg-pop-ups, net als de andere hierboven.
+  const toonSettlerWegSnelheidUitlegPopup =
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    uitlegAan &&
+    !settlerWegSnelheidUitlegBevestigd &&
+    aantalAangelegdeWegen(state.streken) >= 2;
   // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
   // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
   // "confrontatie op streek 12 gewonnen" als trigger: het stichten is nu het
@@ -1271,6 +1316,7 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
     !toonNietBouwenUitlegPopup &&
     !toonBoerderijStreekUitlegPopup &&
     !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
 
@@ -1470,6 +1516,13 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
             onDoorgaan={() => setHoutkapStreekUitlegBevestigd(true)}
           />
         )}
+        {toonSettlerWegSnelheidUitlegPopup && (
+          <BouwUitlegPopup
+            titel={SETTLER_WEG_SNELHEID_UITLEG_TITEL}
+            tekst={SETTLER_WEG_SNELHEID_UITLEG_TEKST}
+            onDoorgaan={() => setSettlerWegSnelheidUitlegBevestigd(true)}
+          />
+        )}
         {legerkampKiesModusStrijderId && (
           <WachttorenKiesBanner onAnnuleren={() => setLegerkampKiesModusStrijderId(null)} />
         )}
@@ -1532,6 +1585,7 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
             !toonNietBouwenUitlegPopup &&
             !toonBoerderijStreekUitlegPopup &&
             !toonHoutkapStreekUitlegPopup &&
+            !toonSettlerWegSnelheidUitlegPopup &&
             !toonTutorialVoltooidPopup &&
             !legerkampKiesModusStrijderId &&
             !toonStichtStadPopup &&

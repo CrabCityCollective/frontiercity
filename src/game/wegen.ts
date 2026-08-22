@@ -37,15 +37,38 @@ export function magSettlerNaar(streken: Streek[], positie: Settler): boolean {
 
 const ALLE_RICHTINGEN: SettlerRichting[] = ["vooruit", "achteruit", "links", "rechts"];
 
-// De vakjes waar de settler deze beurt direct naartoe kan (issue: "de tegels
-// waar je heen kunt lichten op, door te klikken op een tegel ga je er naar
-// toe") — gebruikt zowel om die vakjes op de canvas te markeren als om een
-// klik op zo'n vakje als geldige zet te herkennen (zie economie.ts:
-// `verplaatsSettlerNaar`).
+// Twee vakjes ver in dezelfde richting (issue: "Settlers verplaatsen sneller
+// over wegen"): alleen als de hele route — het vakje waar de settler nu
+// staat, én beide stappen ernaartoe — al een weg heeft. Dat maakt vooral de
+// terugreis over een eerder aangelegde weg sneller; zonder weg (of met een
+// weg die halverwege ophoudt) blijft het bij de gewone ene stap hierboven.
+function tweedeStapOverWeg(streken: Streek[], settler: Settler, richting: SettlerRichting): Settler | undefined {
+  if (!heeftWegOp(streken, settler.hoogte, settler.positieInStreek)) return undefined;
+  const eersteStap = volgendePositie(settler, richting);
+  if (!magSettlerNaar(streken, eersteStap) || !heeftWegOp(streken, eersteStap.hoogte, eersteStap.positieInStreek)) {
+    return undefined;
+  }
+  const tweedeStap = volgendePositie(eersteStap, richting);
+  if (!magSettlerNaar(streken, tweedeStap) || !heeftWegOp(streken, tweedeStap.hoogte, tweedeStap.positieInStreek)) {
+    return undefined;
+  }
+  return tweedeStap;
+}
+
+// De vakjes waar de settler deze beurt naartoe kan (issue: "de tegels waar je
+// heen kunt lichten op, door te klikken op een tegel ga je er naar toe") —
+// gebruikt zowel om die vakjes op de canvas te markeren als om een klik op
+// zo'n vakje als geldige zet te herkennen (zie economie.ts:
+// `verplaatsSettlerNaar`). Bevat naast de gewone buurvakjes ook de vakjes
+// twee stappen verderop als de volledige route daar over een weg loopt.
 export function bereikbarePosities(streken: Streek[], settler: Settler): Settler[] {
-  return ALLE_RICHTINGEN.map((richting) => volgendePositie(settler, richting)).filter((positie) =>
+  const eenStap = ALLE_RICHTINGEN.map((richting) => volgendePositie(settler, richting)).filter((positie) =>
     magSettlerNaar(streken, positie)
   );
+  const tweeStappenOverWeg = ALLE_RICHTINGEN.map((richting) => tweedeStapOverWeg(streken, settler, richting)).filter(
+    (positie): positie is Settler => positie !== undefined
+  );
+  return [...eenStap, ...tweeStappenOverWeg];
 }
 
 function tileSleutel(hoogte: number, positieInStreek: number): string {
@@ -133,4 +156,14 @@ export function wegVerbindingen(streken: Streek[], hoogte: number, positieInStre
     omhoog: heeftWegOp(streken, hoogte + 1, positieInStreek),
     omlaag: heeftWegOp(streken, hoogte - 1, positieInStreek),
   };
+}
+
+// Aantal wegvakjes dat de settler zelf heeft aangelegd (issue: "Settlers
+// verplaatsen sneller over wegen") — de stadstegel telt niet mee, die heeft
+// altijd `heeftWeg: true` zonder dat de settler er iets voor deed (zie
+// world.ts). Gebruikt om de bijbehorende uitleg-pop-up pas te tonen zodra er
+// daadwerkelijk een route van minstens 2 vakjes over de weg kán lopen (zie
+// GameRoot: `toonSettlerWegSnelheidUitlegPopup`).
+export function aantalAangelegdeWegen(streken: Streek[]): number {
+  return streken.reduce((totaal, streek) => totaal + streek.tiles.filter((tile) => tile.heeftWeg).length, 0) - 1;
 }

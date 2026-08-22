@@ -480,3 +480,13 @@ export const STADSVERBETERINGEN_UITLEG_TEKST =
 export const TWEEDE_SETTLER_UITLEG_TITEL = "Een tweede settler";
 export const TWEEDE_SETTLER_UITLEG_TEKST =
   "Je kunt nu een tweede settler bouwen, via het Civiel-paneel in het stadsmenu — los van je gewone groei/eerste-settler-wachtrij, dus beide kunnen tegelijk lopen. Kosten en bouwtijd zijn hetzelfde als je eerste settler. Anders dan de eerste settler is deze permanent herbouwbaar: raak je hem kwijt, dan start je de wachtrij gewoon opnieuw. Zodra je er twee hebt, verschijnt op elke settler-kaart een 'Besturen'-knop om te kiezen welke settler reageert op kliks op de kaart.";
+
+// Settler-wegsnelheid-uitleg-pop-up (issue: "Settlers verplaatsen sneller
+// over wegen"), getoond zodra er minstens 2 wegvakjes liggen (zie wegen.ts:
+// `aantalAangelegdeWegen` — dat is het eerste moment waarop een route van 2
+// vakjes over de weg kán bestaan). Laagste prioriteit van de streek-drempel-
+// uitleg-pop-ups (zie GameRoot: `toonSettlerWegSnelheidUitlegPopup`, na
+// `toonHoutkapStreekUitlegPopup`).
+export const SETTLER_WEG_SNELHEID_UITLEG_TITEL = "Sneller over de weg";
+export const SETTLER_WEG_SNELHEID_UITLEG_TEKST =
+  "Loopt de hele route van de settler over een aangelegde weg, dan mag hij in 1 beurt 2 vakjes bewegen in plaats van 1. Zonder weg (of met een weg die halverwege ophoudt) blijft het bij 1 vakje per beurt. Vooral de terugreis gaat daardoor sneller zodra je eenmaal wegen hebt aangelegd.";
