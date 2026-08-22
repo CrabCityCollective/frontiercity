@@ -60,7 +60,10 @@ import {
   HOUTKAP_STREEK_UITLEG_TITEL,
   NIET_BOUWEN_UITLEG_TEKST,
   NIET_BOUWEN_UITLEG_TITEL,
+  TWEEDE_SETTLER_UITLEG_TEKST,
+  TWEEDE_SETTLER_UITLEG_TITEL,
 } from "@/game/tutorialContent";
+import { TWEEDE_SETTLER_MIN_STREEK } from "@/game/groeiEnRekrutering";
 import { berekenLegerwaarde, kanConfrontatieBezetteStreek, onbemandeLegerkampPosities } from "@/game/militair";
 import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij } from "@/game/productie";
 import { grafischeStijl, heeftOpgeslagenSpel, markeerTutorialVoltooid, zetGrafischeStijl } from "@/game/save";
@@ -275,6 +278,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // zelfde eenmalige-confirm-vlag, getoond zodra streek 2 voor het eerst
   // ontgrendelt — zie `toonStadsverbeteringenUitlegPopup` hieronder.
   const [stadsverbeteringenUitlegBevestigd, setStadsverbeteringenUitlegBevestigd] = useState(false);
+  // Tweede-settler-uitleg-pop-up (issue #261, "Uitleg 2e settler"): zelfde
+  // eenmalige-confirm-vlag, getoond zodra `TWEEDE_SETTLER_MIN_STREEK` voor
+  // het eerst ontgrendelt — zie `toonTweedeSettlerUitlegPopup` hieronder.
+  const [tweedeSettlerUitlegBevestigd, setTweedeSettlerUitlegBevestigd] = useState(false);
   // Bouw-pop-up-vervangende uitleg-pop-ups (issue: "Teksten aanpassen (nog
   // meer)"): zelfde eenmalige-confirm-vlaggen, getoond in plaats van de
   // gewone bouw-pop-up op de tweede/derde bouw-beurt van streek 1 en de
@@ -1002,6 +1009,39 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !stadsverbeteringenUitlegBevestigd &&
     hoogsteOntgrendeldeStreek(state.streken) >= 2;
+  // Tweede-settler-uitleg-pop-up (issue #261, "Uitleg 2e settler"): laagste
+  // prioriteit van de streek-drempel-uitleg-pop-ups, verschijnt zodra
+  // `TWEEDE_SETTLER_MIN_STREEK` voor het eerst ontgrendelt — hetzelfde moment
+  // waarop `kanTweedeSettlerBouwen` (groeiEnRekrutering.ts) voor het eerst
+  // waar wordt.
+  const toonTweedeSettlerUitlegPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    uitlegAan &&
+    !tweedeSettlerUitlegBevestigd &&
+    hoogsteOntgrendeldeStreek(state.streken) >= TWEEDE_SETTLER_MIN_STREEK;
   // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
   // worden vanaf `volgendeBouwBeurt` — de `?? 1` is puur een veilige default
   // voor een save van vóór dit veld bestond.
@@ -1043,6 +1083,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
     !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
     uitlegAan &&
     !heiligdomUitlegBevestigd &&
     magBouwUitlegTonen &&
@@ -1074,6 +1115,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
     !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
     uitlegAan &&
     !nietBouwenUitlegBevestigd &&
     magBouwUitlegTonen &&
@@ -1106,6 +1148,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
     !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
     uitlegAan &&
     !boerderijStreekUitlegBevestigd &&
     magBouwUitlegTonen &&
@@ -1139,6 +1182,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
     !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
     uitlegAan &&
     !houtkapStreekUitlegBevestigd &&
     magBouwUitlegTonen &&
@@ -1173,6 +1217,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
     !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
     !toonHeiligdomUitlegPopup &&
     !toonNietBouwenUitlegPopup &&
     !toonBoerderijStreekUitlegPopup &&
@@ -1340,6 +1385,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonStadsverbeteringenUitlegPopup && (
           <StadsverbeteringenUitlegPopup onDoorgaan={() => setStadsverbeteringenUitlegBevestigd(true)} />
         )}
+        {toonTweedeSettlerUitlegPopup && (
+          <BouwUitlegPopup
+            titel={TWEEDE_SETTLER_UITLEG_TITEL}
+            tekst={TWEEDE_SETTLER_UITLEG_TEKST}
+            onDoorgaan={() => setTweedeSettlerUitlegBevestigd(true)}
+          />
+        )}
         {toonHeiligdomUitlegPopup && (
           <BouwUitlegPopup
             titel={HEILIGDOM_UITLEG_TITEL}
@@ -1424,6 +1476,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonSettlerActiesUitlegPopup &&
             !toonBeurtensysteemUitlegPopup &&
             !toonStadsverbeteringenUitlegPopup &&
+            !toonTweedeSettlerUitlegPopup &&
             !toonHeiligdomUitlegPopup &&
             !toonNietBouwenUitlegPopup &&
             !toonBoerderijStreekUitlegPopup &&

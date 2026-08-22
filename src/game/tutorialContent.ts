@@ -458,3 +458,13 @@ export const HOUTKAP_STREEK_UITLEG_TEKST =
 export const STADSVERBETERINGEN_UITLEG_TITEL = "Stadsverbeteringen";
 export const STADSVERBETERINGEN_UITLEG_TEKST =
   "Open het stadsmenu door op de stad te klikken. Daar vind je Stadsverbeteringen: Bibliotheek, Markt, en later Barakken en Tempel. Ze staan niet op een vakje en hebben dus geen weg nodig, ze werken zodra ze klaar zijn. Elke stad heeft maar een beperkt aantal sloten tegelijk vrij; een grotere stad krijgt er meer.";
+
+// Tweede-settler-uitleg-pop-up (issue #261, "Uitleg 2e settler"): getoond
+// zodra `TWEEDE_SETTLER_MIN_STREEK` (groeiEnRekrutering.ts) voor het eerst
+// ontgrendelt — hetzelfde moment waarop `kanTweedeSettlerBouwen` voor het
+// eerst waar wordt. Laagste prioriteit van de streek-drempel-uitleg-pop-ups
+// (zie GameRoot: `toonTweedeSettlerUitlegPopup`, na
+// `toonStadsverbeteringenUitlegPopup`).
+export const TWEEDE_SETTLER_UITLEG_TITEL = "Een tweede settler";
+export const TWEEDE_SETTLER_UITLEG_TEKST =
+  "Je kunt nu een tweede settler bouwen, via het Civiel-paneel in het stadsmenu — los van je gewone groei/eerste-settler-wachtrij, dus beide kunnen tegelijk lopen. Kosten en bouwtijd zijn hetzelfde als je eerste settler. Anders dan de eerste settler is deze permanent herbouwbaar: raak je hem kwijt, dan start je de wachtrij gewoon opnieuw. Zodra je er twee hebt, verschijnt op elke settler-kaart een 'Besturen'-knop om te kiezen welke settler reageert op kliks op de kaart.";
