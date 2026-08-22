@@ -173,10 +173,12 @@ export function volgendeBeurt(state: GameState): GameState {
     beurt: nieuweBeurt,
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,
+    settlerGratisBewogenDitBeurt: false,
     // Tweede settler (issue #236): geen val-terug-verschijning zoals
     // `settler` hierboven — hij bestaat alleen via `tweedeSettler` op
     // `naRoofdieren`, hier wordt alleen zijn actie-vlag weer teruggezet.
     tweedeSettlerActieGedaanDitBeurt: false,
+    tweedeSettlerGratisBewogenDitBeurt: false,
     verkenningGedaanDitBeurt: false,
     settler,
   };

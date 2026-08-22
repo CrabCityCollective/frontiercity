@@ -31,6 +31,28 @@ function leesActieGedaan(state: GameState, slot: SettlerSlot): boolean {
   return slot === "primair" ? state.settlerActieGedaanDitBeurt : state.tweedeSettlerActieGedaanDitBeurt;
 }
 
+// "B1b. Handkar": of deze settler zijn ene gratis verplaatsing deze beurt al
+// gebruikt heeft (zie `verplaatsSettlerNaar` hieronder).
+function leesGratisBewogen(state: GameState, slot: SettlerSlot): boolean {
+  return slot === "primair" ? state.settlerGratisBewogenDitBeurt : state.tweedeSettlerGratisBewogenDitBeurt;
+}
+
+function metGratisBewogenUpdate(
+  state: GameState,
+  slot: SettlerSlot,
+  gratisGebruikt: boolean
+): Pick<GameState, "settlerGratisBewogenDitBeurt" | "tweedeSettlerGratisBewogenDitBeurt"> {
+  return slot === "primair"
+    ? {
+        settlerGratisBewogenDitBeurt: gratisGebruikt,
+        tweedeSettlerGratisBewogenDitBeurt: state.tweedeSettlerGratisBewogenDitBeurt,
+      }
+    : {
+        settlerGratisBewogenDitBeurt: state.settlerGratisBewogenDitBeurt,
+        tweedeSettlerGratisBewogenDitBeurt: gratisGebruikt,
+      };
+}
+
 // Bouwt het settler-/actie-vlag-deel van een state-update voor `slot`, zonder
 // de andere settler-slot aan te raken — elke actiefunctie hieronder spreidt
 // dit in zijn return-object.
@@ -102,11 +124,18 @@ export function verplaatsSettlerNaar(
 
   // "B1b. Handkar" (hoofdstuk 3/9, techTree.ts): verplaatsen kost dan geen
   // aparte settler-actie meer, dus de speler kan deze beurt nog een andere
-  // actie (weg aanleggen/jagen/hout hakken) uitvoeren.
-  const kostGeenActie = settlerBeweegtGratis(state.technologieen);
+  // actie (weg aanleggen/jagen/hout hakken) uitvoeren — maar alleen de
+  // éérste verplaatsing per beurt is gratis (`leesGratisBewogen`). Zonder
+  // die beperking bleef `settlerActieGedaanDitBeurt` bij elke verplaatsing
+  // op `false` staan en kon de settler onbeperkt doorlopen in 1 beurt
+  // (issue: "tech met settler verplaatsen"); een volgende verplaatsing
+  // gebruikt daarom weer gewoon de normale settler-actie.
+  const gratisAlGebruikt = leesGratisBewogen(state, slot);
+  const kostGeenActie = settlerBeweegtGratis(state.technologieen) && !gratisAlGebruikt;
   return {
     ...state,
     ...metSettlerUpdate(state, slot, { hoogte, positieInStreek }, kostGeenActie ? leesActieGedaan(state, slot) : true),
+    ...metGratisBewogenUpdate(state, slot, kostGeenActie ? true : gratisAlGebruikt),
   };
 }
 
