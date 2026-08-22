@@ -85,6 +85,15 @@ export default function StadMenuPopup({
           </button>
         </div>
 
+        <MilitairPaneel
+          state={state}
+          legerwaarde={legerwaarde}
+          tegenstanderSterkte={tegenstanderSterkte}
+          onStartRecrutering={onStartRecrutering}
+          onStartMissionarisRecrutering={onStartMissionarisRecrutering}
+          onKiesStrijderVoorLegerkamp={onKiesStrijderVoorLegerkamp}
+          onHaalTerug={onHaalTerug}
+        />
         <CivielPaneel
           state={state}
           onStartGroei={onStartGroei}
@@ -101,15 +110,6 @@ export default function StadMenuPopup({
           state={state}
           onStartCityVerbetering={onStartCityVerbetering}
           onVersnelCityVerbetering={onVersnelCityVerbetering}
-        />
-        <MilitairPaneel
-          state={state}
-          legerwaarde={legerwaarde}
-          tegenstanderSterkte={tegenstanderSterkte}
-          onStartRecrutering={onStartRecrutering}
-          onStartMissionarisRecrutering={onStartMissionarisRecrutering}
-          onKiesStrijderVoorLegerkamp={onKiesStrijderVoorLegerkamp}
-          onHaalTerug={onHaalTerug}
         />
       </div>
     </div>

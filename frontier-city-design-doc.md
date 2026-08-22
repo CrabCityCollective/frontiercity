@@ -318,7 +318,7 @@ Bij het stichten: afsluitende scène, opent het campagnemenu (alleen Amerikaanse
 - Hoofdstuktitel: **"De Eerste Vuren"**
 - Stam van de speler: **Het Hertenpad-volk**
 - Mogelijke NPC-stam (indien nodig): Het Steenhoorn-volk / De Rivierwakers
-- Steden hebben, net als tribes, een eigen naam (los van de stam die er woont) — zichtbaar zodra je op de stad-tile klikt, en waar relevant terug te laten komen in flavor-teksten. Prehistorisch klinkende voorbeeldnamen, in de stijl van *De Stam van de Holenbeer*: **Holenrots**, **Vuurbron**, **Asvallei**. De eerste stad (het startkamp van het Hertenpad-volk) heet **Holenrots**. In de MVP is dit de enige stad; zodra meerdere steden/frontier-verplaatsing bestaat (post-MVP, hoofdstuk 13), kunnen de overige namen als volgende stadsnamen dienen — `City.naam` (hoofdstuk 13) ondersteunt dit al.
+- Steden hebben, net als tribes, een eigen naam (los van de stam die er woont) — zichtbaar zodra je op de stad-tile klikt, en waar relevant terug te laten komen in flavor-teksten. Prehistorisch klinkende voorbeeldnamen, in de stijl van *De Stam van de Holenbeer*: **Oer-stad**, **Vuurbron**, **Asvallei**. De eerste stad (het startkamp van het Hertenpad-volk) heet **Oer-stad**. In de MVP is dit de enige stad; zodra meerdere steden/frontier-verplaatsing bestaat (post-MVP, hoofdstuk 13), kunnen de overige namen als volgende stadsnamen dienen — `City.naam` (hoofdstuk 13) ondersteunt dit al.
 
 ---
 
@@ -539,7 +539,7 @@ Om een speelbare kernloop te krijgen vóór alle content is ingevuld, beperkt de
 - Waarschuwing bij "Volgende beurt" (hoofdstuk 11) als de settler nog een actie heeft of er nog een bouwkeuze openstaat, met de mogelijkheid om alsnog terug te gaan en te handelen
 - Placeholder-tegels (simpele, consistente stijl — geen definitieve pre-rendered assets nodig om te testen)
 - Alléén de tutorial-content (Het Hertenpad-volk, streken 1-13) als speelbare inhoud
-- De stad heeft een zichtbare naam (**Holenrots**, zie hoofdstuk 10), te zien via een klik op de stad-tile — geen naam-generator voor toekomstige steden, dat komt pas met meerdere-steden-support
+- De stad heeft een zichtbare naam (**Oer-stad**, zie hoofdstuk 10), te zien via een klik op de stad-tile — geen naam-generator voor toekomstige steden, dat komt pas met meerdere-steden-support
 - **Opslagplaats** (hoofdstuk 3/5/11/14, economische city improvement): verhoogt de gedeelde opslag-cap met +20, herhaalbaar. Eigen wachtrij, los van de civiele wachtrij hieronder.
 - **Stad stichten** (hoofdstuk 2/10/16): op een vakje aan vers water waar de settler fysiek staat, met een bevestigingswaarschuwing (de settler verdwijnt hierbij — "de huifkar wordt de stad"). In de tutorial is dit uitsluitend mogelijk op streek 13 (de oceaan aan de overkant, hoofdstuk 10) — de enige plek met vers water. Vervangt "bereik streek 12" als tutorial-einddoel; opent daarna de afsluitende scène en het campagnemenu. Nog **geen** volledige frontier-verplaatsing (dat blijft hieronder uitgesteld).
 - **Nieuwe settler in de civiele improvement-pool** (hoofdstuk 3/11): concurreert met de groei-tier-improvement (hoogstens één van de twee tegelijk in aanbouw). Alleen beschikbaar als het huidige aantal settlers lager is dan het aantal gestichte steden.
@@ -877,7 +877,7 @@ Nieuw spelmechanisme (in de MVP, zie hoofdstuk 13): twee extra, directe settler-
   1. **Waarschuwing**: het roofdier is meteen zichtbaar op de kaart, op het vakje waar de settler zojuist jaagde. Een pop-up meldt zijn komst — dezelfde stijl als de indringers- en kudde-pop-up hierboven: korte flavor-tekst, geen paniekerige taal.
   2. **Reactietijd**: het roofdier valt pas de **beurt erna** aan, niet meteen. De speler heeft die tussenliggende beurt om de settler weg te bewegen (een gewone verplaatsings-actie, hoofdstuk 16) en zo te ontsnappen.
   3. **Gevolg**: staat de settler nog op (of keert hij terug naar) het vakje met het roofdier wanneer die beurt om is, dan **sterft de settler**.
-- Verlies van de settler activeert de bestaande regel uit hoofdstuk 6/13: is het aantal settlers lager dan het aantal steden (de startstad Holenrots telt hierbij mee, ook al is die niet via de stichter-actie ontstaan, hoofdstuk 16), dan verschijnt de huifkar weer als optie in de civiele improvement-pool. Dit is de eerste situatie waarin die regel al van toepassing is vóórdat er ooit gesticht is.
+- Verlies van de settler activeert de bestaande regel uit hoofdstuk 6/13: is het aantal settlers lager dan het aantal steden (de startstad Oer-stad telt hierbij mee, ook al is die niet via de stichter-actie ontstaan, hoofdstuk 16), dan verschijnt de huifkar weer als optie in de civiele improvement-pool. Dit is de eerste situatie waarin die regel al van toepassing is vóórdat er ooit gesticht is.
 - **Buiten scope**: geen "strijder verjaagt het roofdier"-mechanisme — militaire eenheden en Wachttorens (hoofdstuk 6) spelen hier bewust geen rol. De enige uitweg is de settler op tijd wegbewegen.
 
 **Hout hakken**

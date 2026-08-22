@@ -12,7 +12,7 @@ import { TUTORIAL_STREEK_AANTAL } from "./world";
 test("maakInitieleSpelStatus() zonder argument blijft de tutorial-start geven, met campagneId undefined", () => {
   const state = maakInitieleSpelStatus();
   assert.equal(state.campagneId, undefined);
-  assert.equal(state.stad.naam, "Holenrots");
+  assert.equal(state.stad.naam, "Oer-stad");
   assert.equal(state.streken.length, TUTORIAL_STREEK_AANTAL);
 });
 

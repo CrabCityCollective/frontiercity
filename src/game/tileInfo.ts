@@ -101,7 +101,7 @@ export function beschrijfTile(
     // stichten van een nieuwe stad (hoofdstuk 2/16, issue: "stad stichten op
     // de frontier") kan er een tweede city-tile bestaan (de zojuist
     // gestichte stad) met een eigen naam, los van de originele `stad`-status
-    // die alleen Holenrots beschrijft.
+    // die alleen Oer-stad beschrijft.
     return {
       titel: tile.improvement.naam,
       ondertitel: "Jouw nederzetting",

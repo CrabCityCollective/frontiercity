@@ -258,7 +258,7 @@ function maakStartStreek(): Streek {
     heeftWeg: true,
     improvement: {
       id: "holenrots",
-      naam: "Holenrots",
+      naam: "Oer-stad",
       categorie: "civiel",
       soort: "city",
       kosten: {},
