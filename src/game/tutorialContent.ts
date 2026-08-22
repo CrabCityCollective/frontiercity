@@ -443,3 +443,14 @@ export const BOERDERIJ_STREEK_UITLEG_TEKST =
 export const HOUTKAP_STREEK_UITLEG_TITEL = "Houtkap";
 export const HOUTKAP_STREEK_UITLEG_TEKST =
   "Het bouwen van de boerderij kostte het laatste hout uit de voorraad dus dat moeten we als eerste weer aanvullen. Bouw een houtkap op een bos.";
+
+// Tweede-settler-uitleg-pop-up (issue: "Uitleg 2e settler"): getoond zodra
+// streek `TWEEDE_SETTLER_MIN_STREEK` (groeiEnRekrutering.ts, momenteel 7) voor
+// het eerst ontgrendelt — hetzelfde moment waarop `kanTweedeSettlerBouwen`
+// voor het eerst `true` kan worden en de knop in het Civiel-paneel verschijnt.
+// Zelfde laagste-prioriteit, eenmalige-confirm-patroon als
+// HOUTKAP_STREEK_UITLEG_* hierboven, en dezelfde inhoud als het antwoord dat
+// eerder al in issue #261 gegeven is.
+export const TWEEDE_SETTLER_UITLEG_TITEL = "Een tweede settler";
+export const TWEEDE_SETTLER_UITLEG_TEKST =
+  "Vanaf hier kun je een tweede settler bouwen, in het Civiel-paneel van de stad — los van groei of de eerste settler, dus ze concurreren niet met elkaar. Kosten en bouwtijd zijn hetzelfde als de eerste settler: 10 hout, 4 steen, 4 beurten. Raak je hem kwijt, aan een roofdier of door er een stad mee te stichten, dan kun je de wachtrij meteen opnieuw starten. Zodra je twee settlers hebt, verschijnt bij elke settler-kaart onderaan een 'Besturen'-knop om te kiezen welke van de twee reageert op kliks op de kaart.";

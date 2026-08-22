@@ -59,7 +59,10 @@ import {
   HOUTKAP_STREEK_UITLEG_TITEL,
   NIET_BOUWEN_UITLEG_TEKST,
   NIET_BOUWEN_UITLEG_TITEL,
+  TWEEDE_SETTLER_UITLEG_TEKST,
+  TWEEDE_SETTLER_UITLEG_TITEL,
 } from "@/game/tutorialContent";
+import { TWEEDE_SETTLER_MIN_STREEK } from "@/game/groeiEnRekrutering";
 import { berekenLegerwaarde, kanConfrontatieBezetteStreek, onbemandeLegerkampPosities } from "@/game/militair";
 import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij } from "@/game/productie";
 import { grafischeStijl, heeftOpgeslagenSpel, markeerTutorialVoltooid, zetGrafischeStijl } from "@/game/save";
@@ -278,6 +281,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   const [nietBouwenUitlegBevestigd, setNietBouwenUitlegBevestigd] = useState(false);
   const [boerderijStreekUitlegBevestigd, setBoerderijStreekUitlegBevestigd] = useState(false);
   const [houtkapStreekUitlegBevestigd, setHoutkapStreekUitlegBevestigd] = useState(false);
+  // Tweede-settler-uitleg-pop-up (issue: "Uitleg 2e settler"): zelfde
+  // eenmalige-confirm-vlag, getoond zodra `TWEEDE_SETTLER_MIN_STREEK` voor het
+  // eerst ontgrendelt — zie `toonTweedeSettlerUitlegPopup` hieronder.
+  const [tweedeSettlerUitlegBevestigd, setTweedeSettlerUitlegBevestigd] = useState(false);
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is"): anders dan de
   // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
@@ -1097,6 +1104,43 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     magBouwUitlegTonen &&
     actieveStreek.hoogte === 2 &&
     bouwPopupWeergaveNummer === 2;
+  // Tweede-settler-uitleg-pop-up (issue: "Uitleg 2e settler"): laagste
+  // prioriteit van alle uitleg-pop-ups, zodat hij nooit kerninhoud
+  // onderbreekt — verschijnt zodra `TWEEDE_SETTLER_MIN_STREEK` voor het eerst
+  // ontgrendelt (het moment waarop `kanTweedeSettlerBouwen`,
+  // groeiEnRekrutering.ts, voor het eerst `true` kan worden en de knop in het
+  // Civiel-paneel verschijnt).
+  const toonTweedeSettlerUitlegPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    uitlegAan &&
+    !tweedeSettlerUitlegBevestigd &&
+    hoogsteOntgrendeldeStreek(state.streken) >= TWEEDE_SETTLER_MIN_STREEK;
   // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
   // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
   // "confrontatie op streek 12 gewonnen" als trigger: het stichten is nu het
@@ -1129,6 +1173,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonNietBouwenUitlegPopup &&
     !toonBoerderijStreekUitlegPopup &&
     !toonHoutkapStreekUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
 
@@ -1315,6 +1360,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             titel={HOUTKAP_STREEK_UITLEG_TITEL}
             tekst={HOUTKAP_STREEK_UITLEG_TEKST}
             onDoorgaan={() => setHoutkapStreekUitlegBevestigd(true)}
+          />
+        )}
+        {toonTweedeSettlerUitlegPopup && (
+          <BouwUitlegPopup
+            titel={TWEEDE_SETTLER_UITLEG_TITEL}
+            tekst={TWEEDE_SETTLER_UITLEG_TEKST}
+            onDoorgaan={() => setTweedeSettlerUitlegBevestigd(true)}
           />
         )}
         {legerkampKiesModusStrijderId && (
