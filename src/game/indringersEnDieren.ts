@@ -10,9 +10,10 @@
 // Kuddes & roofdieren (hoofdstuk 14/16/17; issue: "kuddes met dieren waar je
 // op kunt jagen voor voedsel", "roofdieren toevoegen"): wilde kuddes
 // verschijnen per beurt met een kleine kans op een leeg vakje (bejaagbaar via
-// `jaag` in acties.ts); vanaf `ROOFDIER_MIN_STREEK` kan diezelfde jachtactie een
-// roofdier oproepen, dat één beurt later toeslaat als de settler er nog
-// staat (`verwerkRoofdieren` hieronder).
+// `jaag` in acties.ts); vanaf `ROOFDIER_MIN_STREEK` (world.ts, sinds issue
+// "Eerste streek geen roofdieren" streek 6 i.p.v. streek 1) kan diezelfde
+// jachtactie een roofdier oproepen, dat één beurt later toeslaat als de
+// settler er nog staat (`verwerkRoofdieren` hieronder).
 
 import { GameState, IndringersTribuut, KuddeEvent, Streek, MateriaalType, RoofdierEvent, Strijder, Tile } from "./types";
 import { hoogsteOntgrendeldeStreek, KUDDE_JACHT_BEURTEN, STARTKUDDE_POSITIE } from "./world";

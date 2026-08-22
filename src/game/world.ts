@@ -160,6 +160,23 @@ export const AMBER_ONTDEKKING_STREEK = 8;
 // `AMBER_ONTDEKKING_STREEK` hierboven.
 export const AMBER_ONTDEKKING_STREEK_2 = 12;
 
+// Streek vanaf waar de jacht een roofdier-risico met zich meebrengt
+// (hoofdstuk 14/17, issue: "Eerste streek geen roofdieren" — verplaatst van
+// streek 1, waar spelers regelmatig een settler verloren voordat ze het risico
+// ooit bewust hadden kunnen leren kennen; eerder al eens verplaatst náár
+// streek 1 door issue "jagen en farmen omdraaien", maar dat bleek in de
+// praktijk te vroeg). Streek 6 ("De Heuvelvoet"/"Diepere jachtgronden",
+// tutorialContent.ts) is bewust gekozen: de flavor-tekst van die streek wijst
+// al vooruit naar "wat hen al sinds het begin volgt", en de streek introduceert
+// verder geen andere nieuwe mechaniek, dus het roofdier krijgt hier de volle
+// aandacht via een eigen uitleg-pop-up (GameRoot: `toonRoofdierIntroPopup`)
+// vóórdat de speler er ooit kan jagen. Gedeeld tussen `jaag` (acties.ts, de
+// kans-trekking zelf) en `verwerkStreekOntgrendeling`/GameRoot (de
+// introductie-pop-up), vandaar hier gedefinieerd in plaats van lokaal in
+// acties.ts — dat zou een circulaire import in `streekOntgrendeling.ts`
+// vereisen.
+export const ROOFDIER_MIN_STREEK = 6;
+
 // Vakjes met een amberader — de vondst-eis van de Amberader/goudmijn-
 // improvement (hoofdstuk 3/14), bovenop de gewone heuvel/berg-terreineis van
 // een mijn (zie `improvementPastOpTile` in improvements.ts). Bewust schaarser

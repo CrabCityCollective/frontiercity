@@ -118,25 +118,53 @@ test("kanStichten is false op een vakje zonder vers water, of als het vakje al b
   assert.equal(kanStichten(state), false, "een al bebouwd vakje is geen geldig stichtingsdoel, ook al ligt het aan water");
 });
 
-// Roofdieren zijn al vanaf streek 1 mogelijk (issue: "jagen en farmen
-// omdraaien" — de jacht is nu vanaf streek 1 de eerste voedselbron, dus het
-// roofdier-risico hoort er meteen bij, was voorheen pas vanaf streek 5).
-test("jaag roept al op streek 1 een roofdier op als de worp binnen de kans valt", () => {
+// Roofdieren zijn pas mogelijk vanaf ROOFDIER_MIN_STREEK (issue: "Eerste
+// streek geen roofdieren" — verplaatst van streek 1, waar spelers regelmatig
+// een settler verloren voordat ze het risico ooit bewust hadden leren
+// kennen; eerder al eens verplaatst náár streek 1 door issue "jagen en
+// farmen omdraaien", wat dus te vroeg bleek).
+test("jaag roept nooit een roofdier op vóór ROOFDIER_MIN_STREEK, ook niet bij een gunstige worp", () => {
   const state = metSettlerOpKuddeVakje(1);
   const naJacht = metVasteRandom(0, () => jaag(state));
-
-  assert.deepEqual(naJacht.roofdierEvent, { hoogte: 1, positieInStreek: 0, fase: "verschenen" });
-  const tile = naJacht.streken.find((l) => l.hoogte === 1)!.tiles[0];
-  assert.deepEqual(tile.roofdier, { beurtenTotAanval: 1 });
-});
-
-test("jaag roept geen roofdier op bij een ongunstige worp", () => {
-  const state = metSettlerOpKuddeVakje(1);
-  const naJacht = metVasteRandom(0.99, () => jaag(state));
 
   assert.equal(naJacht.roofdierEvent, undefined);
   const tile = naJacht.streken.find((l) => l.hoogte === 1)!.tiles[0];
   assert.equal(tile.roofdier, undefined);
+});
+
+// Gegarandeerd eerste roofdier (issue: "Eerste streek geen roofdieren" —
+// "gegarandeerd roofdieren" bij de introductie): de allereerste jachtbeurt op
+// of boven ROOFDIER_MIN_STREEK roept altijd een roofdier op, ongeacht de worp.
+test("jaag roept op ROOFDIER_MIN_STREEK gegarandeerd een roofdier op bij de eerste jachtbeurt, ook bij een ongunstige worp", () => {
+  const state = metSettlerOpKuddeVakje(6);
+  const naJacht = metVasteRandom(0.99, () => jaag(state));
+
+  assert.deepEqual(naJacht.roofdierEvent, { hoogte: 6, positieInStreek: 0, fase: "verschenen" });
+  const tile = naJacht.streken.find((l) => l.hoogte === 6)!.tiles[0];
+  assert.deepEqual(tile.roofdier, { beurtenTotAanval: 1 });
+  assert.equal(naJacht.eersteRoofdierVerschenen, true);
+});
+
+test("jaag valt na het gegarandeerde eerste roofdier terug op de gewone 15%-kans", () => {
+  let state = metSettlerOpKuddeVakje(6);
+  state = metVasteRandom(0.99, () => jaag(state));
+  assert.equal(state.eersteRoofdierVerschenen, true, "de garantie is verbruikt");
+
+  // Simuleert een volgende, losstaande jachtbeurt (actie-vlag gereset, geen
+  // nasleep van het eerste roofdier) om te bevestigen dat de garantie niet
+  // blijft gelden.
+  state = {
+    ...state,
+    settlerActieGedaanDitBeurt: false,
+    roofdierEvent: undefined,
+    streken: state.streken.map((l) =>
+      l.hoogte === 6
+        ? { ...l, tiles: l.tiles.map((t) => (t.positieInStreek === 0 ? { ...t, roofdier: undefined } : t)) }
+        : l
+    ),
+  };
+  const naTweedeJacht = metVasteRandom(0.99, () => jaag(state));
+  assert.equal(naTweedeJacht.roofdierEvent, undefined, "een ongunstige worp ná de garantie levert geen roofdier meer op");
 });
 
 // Streek 1, positie 2 is vast terrein-subtype "bos" (world.ts, TUTORIAL_TERREIN).
