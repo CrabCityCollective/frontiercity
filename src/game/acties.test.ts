@@ -49,9 +49,9 @@ test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbr
   assert.equal(gestichteTile.improvement?.soort, "city");
 
   // M18: de nieuwe stad komt er echt bij (i.p.v. de oude te vervangen) en
-  // wordt de actieve stad — Holenrots blijft als eerder gestichte stad staan.
+  // wordt de actieve stad — Oer-stad blijft als eerder gestichte stad staan.
   assert.equal(naStichten.steden.length, 2);
-  assert.equal(naStichten.steden[0].naam, "Holenrots");
+  assert.equal(naStichten.steden[0].naam, "Oer-stad");
   assert.equal(naStichten.steden[1].naam, "Vuurbron");
   assert.equal(naStichten.steden[1].streekHoogte, 14);
   assert.deepEqual(naStichten.stad, naStichten.steden[1]);

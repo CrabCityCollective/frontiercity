@@ -64,7 +64,7 @@ const VOEDSEL_START = 20;
 export function maakInitieleSpelStatus(campagneId?: string): GameState {
   const isGoingWest = campagneId === "going-west";
   const stad: GameState["stad"] = {
-    naam: isGoingWest ? GOING_WEST_STARTSTAD_NAAM : "Holenrots",
+    naam: isGoingWest ? GOING_WEST_STARTSTAD_NAAM : "Oer-stad",
     grootte: "klein",
     relics: [],
     vervalStatus: "gezond",

@@ -115,7 +115,7 @@ export const TUTORIAL_STREEK_CONTENT: Record<number, StreekContent> = {
     naam: "De Oceaanoever",
     mechaniek: "Stad stichten aan het vers water",
     flavorTekst:
-      "Het land houdt hier op. Aan de voet van de oever ligt weer vers water, voor het eerst sinds de rivier bij Holenrots.",
+      "Het land houdt hier op. Aan de voet van de oever ligt weer vers water, voor het eerst sinds de rivier bij Oer-stad.",
   },
 };
 
@@ -124,7 +124,7 @@ export const TUTORIAL_STREEK_CONTENT: Record<number, StreekContent> = {
 // (alleen tutorial-content is speelbaar, hoofdstuk 13) — deze tekst sluit de
 // tutorial-run zelf af, zonder naar een systeem te verwijzen dat nog niet bestaat.
 export const AFSLUITENDE_SCENE =
-  "Bij de oceaan staat Holenrots nog overeind, vele streken daaronder. De vuren branden. Verder is er, voor nu, niets te zeggen.";
+  "Bij de oceaan staat Oer-stad nog overeind, vele streken daaronder. De vuren branden. Verder is er, voor nu, niets te zeggen.";
 
 // Stichtings-waarschuwing (hoofdstuk 2/10/16, issue: "stad stichten op de
 // frontier" deel 4): getoond vóór de speler bevestigt — de settler verdwijnt
@@ -141,7 +141,7 @@ export const STICHT_STAD_WAARSCHUWING =
 // naam aan ontleent.
 export const STICHTING_AFSLUITENDE_SCENE =
   "De huifkar wordt de stad. Vuurbron, noemen ze het, voor het vuur dat er die avond voor het eerst brandt.\n" +
-  "Holenrots ligt nu ver onder hen, stil, achtergelaten maar niet vergeten.\n" +
+  "Oer-stad ligt nu ver onder hen, stil, achtergelaten maar niet vergeten.\n" +
   "Het Hertenpad-volk is niet langer op doortocht. Het is aangekomen — voor nu.";
 
 export function streekContent(hoogte: number): StreekContent | undefined {
@@ -236,7 +236,7 @@ export const VIJANDELIJK_HEILIGDOM_VEROVERD_TEKST =
 // bevestigingsstap zelf).
 export const OCEAAN_UITLEG_TITEL = "De oceaan aan de overkant";
 export const OCEAAN_UITLEG_TEKST =
-  "Hier houdt het land op. Voor het eerst sinds Holenrots ligt er weer vers water binnen bereik — de enige plek in de hele tocht. Breng de settler naar het vakje aan het water en kies daar 'Stad stichten' in het settler-paneel. Zodra die stad er staat, eindigt deze tocht.";
+  "Hier houdt het land op. Voor het eerst sinds Oer-stad ligt er weer vers water binnen bereik — de enige plek in de hele tocht. Breng de settler naar het vakje aan het water en kies daar 'Stad stichten' in het settler-paneel. Zodra die stad er staat, eindigt deze tocht.";
 
 // Settler-uitleg-pop-up (M10, hoofdstuk 16: settler-mechaniek + bouw-ritme),
 // getoond zodra de settler in beurt 2 verschijnt. Zelfde eenmalige-confirm-

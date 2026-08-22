@@ -268,9 +268,9 @@ export const STICHTING_KOSTEN: { hout: number; steen: number; erts: number; voed
 };
 
 // Namen van nieuw te stichten steden, in stichtingsvolgorde (hoofdstuk 10:
-// prehistorisch klinkende stadsnamen naast Holenrots). Geïndexeerd op
+// prehistorisch klinkende stadsnamen naast Oer-stad). Geïndexeerd op
 // `state.steden.length - 1` van vóór de stichting (0 voor de eerste stad die
-// ná Holenrots gesticht wordt, enzovoort) — in de tutorial is dat altijd
+// ná Oer-stad gesticht wordt, enzovoort) — in de tutorial is dat altijd
 // index 0 ("Vuurbron", zie ook de afsluitende flavor-tekst in
 // tutorialContent.ts die deze naam letterlijk noemt), maar het herhalende
 // stichtingspatroon (hoofdstuk 9, Deel 2/M18) kan in een langere campagne
