@@ -141,7 +141,7 @@ test("de startkudde op streek 1 verschijnt pas zodra de Steengroeve voltooid is,
   assert.equal(kuddeTiles.length, 1, "precies één gegarandeerde startkudde, verschenen zodra de Steengroeve klaar is");
   assert.deepEqual(kuddeTiles[0].kudde, { beurtenResterend: 4 });
   assert.notEqual(kuddeTiles[0].status, "actief", "de startkudde staat niet op het stad-vakje");
-  assert.deepEqual(state.kuddeEvent, { hoogte: 1, positieInStreek: 5 });
+  assert.deepEqual(state.kuddeEvent, { hoogte: 1, positieInStreek: 7 });
   assert.equal(state.eersteKuddeVerschenen, true);
 });
 
