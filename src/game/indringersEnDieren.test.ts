@@ -13,6 +13,7 @@ import {
 import { startBouw } from "./infrastructuurEnBouw";
 import { AMBERADER } from "./improvements";
 import { GameState } from "./types";
+import { KUDDE_GROTE_JACHT_BEURTEN, ROOFDIER_MIN_STREEK } from "./world";
 import {
   metBezetteStreekInBeeld,
   metSettlerOpKuddeVakje,
@@ -111,6 +112,26 @@ test("verwerkKuddes meldt een nieuwe kudde via kuddeEvent", () => {
   assert.deepEqual(tile.kudde, { beurtenResterend: 4 });
 });
 
+// Issue: "Eerste streek geen roofdieren", vervolgvraag: kuddes die op streek
+// ROOFDIER_MIN_STREEK of hoger verschijnen zijn groter — één jachtbeurt extra
+// als compensatie voor het roofdier-risico dat vanaf die streek geldt.
+test("verwerkKuddes plaatst een grotere kudde (1 jachtbeurt extra) vanaf ROOFDIER_MIN_STREEK", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte === ROOFDIER_MIN_STREEK ? { ...streek, ontgrendeld: true } : streek
+    ),
+  };
+
+  state = metVasteRandom(0, () => volgendeBeurt(state));
+
+  assert.notEqual(state.kuddeEvent, undefined, "een gunstige worp op de ontgrendelde streek moet een kudde melden");
+  const gemeldeStreek = state.streken.find((l) => l.hoogte === state.kuddeEvent!.hoogte)!;
+  const tile = gemeldeStreek.tiles[state.kuddeEvent!.positieInStreek];
+  assert.deepEqual(tile.kudde, { beurtenResterend: KUDDE_GROTE_JACHT_BEURTEN });
+});
+
 // Issue: "Eerste streek gegarandeerd een kudde" — zonder deze garantie hing
 // de allereerste jachtkans volledig af van de willekeurige `verwerkKuddes`-
 // trekking (5% per beurt), wat bij pech de startvoorraad voedsel kon laten
@@ -158,11 +179,31 @@ test("zolang de confrontatie op de Bezette Streek loopt, garandeert het spel elk
   const bezetteStreek = state.streken.find((l) => l.hoogte === 13)!;
   assert.equal(bezetteStreek.bezet, true, "de confrontatie moet nu actief zijn");
 
+  // De cultuur-sprong naar streek 13 in `metBezetteStreekInBeeld` ontgrendelt
+  // onderweg ook streek `ROOFDIER_MIN_STREEK`, en dus diens eigen
+  // gegarandeerde kudde (issue: "Eerste streek geen roofdieren",
+  // vervolgvraag). Verwijder die hier expliciet, zodat deze test puur de
+  // confrontatie-garantie hieronder test, los van die andere garantie.
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte === ROOFDIER_MIN_STREEK
+        ? { ...streek, tiles: streek.tiles.map((tile) => ({ ...tile, kudde: undefined })) }
+        : streek
+    ),
+  };
+
   const telActieveKuddes = (s: typeof state) =>
     s.streken.reduce((totaal, streek) => totaal + streek.tiles.filter((tile) => tile.kudde).length, 0);
 
   assert.equal(telActieveKuddes(state), 1, "de eerste beurt van de confrontatie garandeert al één kudde");
   assert.notEqual(state.kuddeEvent, undefined, "de gegarandeerde kudde wordt ook gemeld");
+  const gemeldeStreek = state.streken.find((l) => l.hoogte === state.kuddeEvent!.hoogte)!;
+  assert.deepEqual(
+    gemeldeStreek.tiles[state.kuddeEvent!.positieInStreek].kudde,
+    { beurtenResterend: KUDDE_GROTE_JACHT_BEURTEN },
+    "streek 13 ligt op/boven ROOFDIER_MIN_STREEK, dus ook deze gegarandeerde kudde is groter"
+  );
 
   state = metVasteRandom(0.5, () => volgendeBeurt(state));
   assert.equal(telActieveKuddes(state), 2, "een tweede beurt vult aan tot het gegarandeerde minimum van 2");

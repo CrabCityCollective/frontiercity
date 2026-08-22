@@ -27,6 +27,9 @@ import {
   hoogsteOntgrendeldeStreek,
   initialiseerBezetteStreek,
   isBezetteStreekHoogte,
+  kuddeJachtBeurtenVoorStreek,
+  ROOFDIER_MIN_STREEK,
+  ROOFDIER_STREEK_KUDDE_POSITIE,
 } from "./world";
 import { metActieveStad } from "./stad";
 
@@ -99,6 +102,29 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     // Streek.
     if (volgendeHoogte === AMBER_ONTDEKKING_STREEK_2) {
       tweedeAmberOntdektEvent = true;
+    }
+    // Gegarandeerde kudde op de roofdier-introductiestreek (hoofdstuk 14/17,
+    // issue: "Eerste streek geen roofdieren", vervolgvraag): zodra
+    // `ROOFDIER_MIN_STREEK` voor het eerst ontgrendelt, staat er meteen een
+    // kudde op `ROOFDIER_STREEK_KUDDE_POSITIE` — de speler hoeft niet op de
+    // gewone, willekeurige `verwerkKuddes`-trekking te wachten om het net
+    // uitgelegde roofdier-risico ook meteen in de praktijk te kunnen
+    // ervaren. Zelfde eenmalige trigger als de Amberader-ontdekkingen
+    // hierboven: deze `while`-lus loopt precies één keer door deze hoogte
+    // heen op het moment van ontgrendelen.
+    if (volgendeHoogte === ROOFDIER_MIN_STREEK) {
+      streken = streken.map((streek) =>
+        streek.hoogte !== ROOFDIER_MIN_STREEK
+          ? streek
+          : {
+              ...streek,
+              tiles: streek.tiles.map((tile, index) =>
+                index === ROOFDIER_STREEK_KUDDE_POSITIE
+                  ? { ...tile, kudde: { beurtenResterend: kuddeJachtBeurtenVoorStreek(ROOFDIER_MIN_STREEK) } }
+                  : tile
+              ),
+            }
+      );
     }
     volgendeHoogte += 1;
   }

@@ -319,10 +319,15 @@ export const VIJAND_AAN_DE_HORIZON_TEKST =
 // volgt"). Legt het mechanisme uit (RoofdierPopup verderop meldt de
 // afzonderlijke momenten daarna pas) — de eerstvolgende jachtbeurt roept
 // gegarandeerd een roofdier op (zie `jaag` in acties.ts), zodat de speler de
-// uitleg meteen in de praktijk ziet.
+// uitleg meteen in de praktijk ziet. Vervolgvraag op hetzelfde issue voegde
+// twee compensaties toe, allebei hier al vermeld zodat de speler ze niet zelf
+// hoeft te ontdekken: een gegarandeerde kudde op deze streek
+// (`ROOFDIER_STREEK_KUDDE_POSITIE`, vakje 5, geplaatst door
+// `verwerkStreekOntgrendeling`) en grotere kuddes vanaf hier
+// (`kuddeJachtBeurtenVoorStreek`, wereld.ts) — één jachtbeurt extra per kudde.
 export const ROOFDIER_INTRO_TITEL = "Wat de kuddes volgt";
 export const ROOFDIER_INTRO_TEKST =
-  "Vanaf hier is de jacht niet meer zonder gevaar. Soms wordt de settler zelf opgemerkt terwijl hij jaagt. Verschijnt er een roofdier op het jachtvakje, dan valt het pas de beurt erna aan — beweeg de settler dan meteen weg, of hij overleeft het niet.";
+  "Vanaf hier is de jacht niet meer zonder gevaar. Soms wordt de settler zelf opgemerkt terwijl hij jaagt. Verschijnt er een roofdier op het jachtvakje, dan valt het pas de beurt erna aan — beweeg de settler dan meteen weg, of hij overleeft het niet. Op vakje 5 van deze streek staat meteen een kudde klaar. En de kuddes die zich hier ophouden zijn groter: ze bieden voortaan één jachtbeurt extra voordat ze uitgeput raken.";
 
 // Strijders-opleiden-uitleg-pop-up (issue: "pop-ups wijzigen"): getoond zodra
 // er voor het eerst een gebouwde mijn staat (zie economie.ts

@@ -16,7 +16,15 @@ import {
 } from "./streekOntgrendeling";
 import { VERKENNER, VIJANDELIJK_HEILIGDOM } from "./improvements";
 import { bereikbarePosities } from "./wegen";
-import { AMBER_ONTDEKKING_STREEK, AMBER_ONTDEKKING_STREEK_2, BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek } from "./world";
+import {
+  AMBER_ONTDEKKING_STREEK,
+  AMBER_ONTDEKKING_STREEK_2,
+  BEZETTE_STREEK_HOOGTE,
+  cultuurKostenVoorStreek,
+  KUDDE_GROTE_JACHT_BEURTEN,
+  ROOFDIER_MIN_STREEK,
+  ROOFDIER_STREEK_KUDDE_POSITIE,
+} from "./world";
 import { metActieveStad } from "./stad";
 import {
   metActiefHeiligdomOpStreek1,
@@ -66,6 +74,37 @@ test("tweedeAmberOntdektEvent wordt precies één keer gezet, zodra AMBER_ONTDEK
     nogEenBeurt.tweedeAmberOntdektEvent,
     undefined,
     "geen herhaalde melding zodra de streek al ontgrendeld is"
+  );
+});
+
+// Compensatie bij de roofdier-introductie (issue: "Eerste streek geen
+// roofdieren", vervolgvraag): zodra ROOFDIER_MIN_STREEK (streek 6) voor het
+// eerst ontgrendelt, staat er meteen een gegarandeerde, grotere kudde op
+// ROOFDIER_STREEK_KUDDE_POSITIE (vakje 5) — de speler hoeft niet op de
+// gewone, willekeurige kudde-trekking te wachten.
+test("een gegarandeerde, grotere kudde verschijnt op vakje 5 zodra ROOFDIER_MIN_STREEK voor het eerst ontgrendelt", () => {
+  let state = maakInitieleSpelStatus();
+  const streekVoorOntgrendeling = state.streken.find((l) => l.hoogte === ROOFDIER_MIN_STREEK)!;
+  assert.equal(
+    streekVoorOntgrendeling.tiles[ROOFDIER_STREEK_KUDDE_POSITIE].kudde,
+    undefined,
+    "nog geen kudde vóór de streek ontgrendeld is"
+  );
+
+  state = { ...state, cultuur: cultuurKostenVoorStreek(ROOFDIER_MIN_STREEK) };
+
+  const naOntgrendeling = volgendeBeurt(state);
+  const streekNaOntgrendeling = naOntgrendeling.streken.find((l) => l.hoogte === ROOFDIER_MIN_STREEK)!;
+  assert.equal(streekNaOntgrendeling.ontgrendeld, true);
+  assert.deepEqual(streekNaOntgrendeling.tiles[ROOFDIER_STREEK_KUDDE_POSITIE].kudde, {
+    beurtenResterend: KUDDE_GROTE_JACHT_BEURTEN,
+  });
+
+  const nogEenBeurt = volgendeBeurt(naOntgrendeling);
+  assert.deepEqual(
+    nogEenBeurt.streken.find((l) => l.hoogte === ROOFDIER_MIN_STREEK)!.tiles[ROOFDIER_STREEK_KUDDE_POSITIE].kudde,
+    { beurtenResterend: KUDDE_GROTE_JACHT_BEURTEN },
+    "de gegarandeerde kudde blijft staan, geen herplaatsing op een volgende beurt"
   );
 });
 

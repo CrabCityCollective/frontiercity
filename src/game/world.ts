@@ -177,6 +177,38 @@ export const AMBER_ONTDEKKING_STREEK_2 = 12;
 // vereisen.
 export const ROOFDIER_MIN_STREEK = 6;
 
+// Vakje waarop `ROOFDIER_MIN_STREEK` gegarandeerd een kudde staat zodra die
+// streek ontgrendelt (issue: "Eerste streek geen roofdieren", vervolgvraag —
+// zonder deze garantie hangt de allereerste kudde die de speler ná de
+// roofdier-introductie tegenkomt af van de gewone, willekeurige
+// `verwerkKuddes`-trekking, net zoals streek 1 vóór `verwerkEersteKudde` een
+// softlock-risico was). Positie 4 (0-indexed, UI toont dit als "vakje 5", zie
+// positieInStreek + 1 in de kudde-/settler-popups) — toevallig dezelfde
+// waarde als `STAD_POSITIE` hierboven, maar functioneel losstaand: streek 6
+// heeft nooit vers water (zie `TUTORIAL_VERS_WATER` hieronder, uitsluitend op
+// de laatste streek), dus er kan hier nooit een stad gesticht worden en dit
+// vakje blijft voor deze garantie beschikbaar. Geplaatst door
+// `verwerkStreekOntgrendeling` (streekOntgrendeling.ts), samen met de
+// `toonRoofdierIntroPopup`-trigger (GameRoot) op dezelfde streek — de speler
+// ziet de kudde dus meteen naast de uitleg over het roofdier-risico.
+export const ROOFDIER_STREEK_KUDDE_POSITIE = 4;
+
+// Extra jachtbeurten die een kudde biedt vanaf `ROOFDIER_MIN_STREEK` (issue:
+// "Eerste streek geen roofdieren", vervolgvraag: "de kudden mogen vanaf dat
+// moment ook groter worden") — de streken waar roofdieren rondtrekken bieden
+// zo ook iets terug voor het risico. Zie `kuddeJachtBeurtenVoorStreek`
+// hieronder.
+export const KUDDE_GROTE_JACHT_BEURTEN = KUDDE_JACHT_BEURTEN + 1;
+
+// Hoeveel jachtbeurten een nieuw geplaatste kudde op streek `hoogte` biedt —
+// het gewone aantal (`KUDDE_JACHT_BEURTEN`) onder `ROOFDIER_MIN_STREEK`, en
+// `KUDDE_GROTE_JACHT_BEURTEN` erop of erboven (zie hierboven). Gebruikt door
+// elke plek die een nieuwe `kudde` op een tile zet (indringersEnDieren.ts,
+// streekOntgrendeling.ts).
+export function kuddeJachtBeurtenVoorStreek(hoogte: number): number {
+  return hoogte >= ROOFDIER_MIN_STREEK ? KUDDE_GROTE_JACHT_BEURTEN : KUDDE_JACHT_BEURTEN;
+}
+
 // Vakjes met een amberader — de vondst-eis van de Amberader/goudmijn-
 // improvement (hoofdstuk 3/14), bovenop de gewone heuvel/berg-terreineis van
 // een mijn (zie `improvementPastOpTile` in improvements.ts). Bewust schaarser

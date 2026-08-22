@@ -16,7 +16,7 @@
 // settler er nog staat (`verwerkRoofdieren` hieronder).
 
 import { GameState, IndringersTribuut, KuddeEvent, Streek, MateriaalType, RoofdierEvent, Strijder, Tile } from "./types";
-import { hoogsteOntgrendeldeStreek, KUDDE_JACHT_BEURTEN, STARTKUDDE_POSITIE } from "./world";
+import { hoogsteOntgrendeldeStreek, kuddeJachtBeurtenVoorStreek, STARTKUDDE_POSITIE } from "./world";
 import { kuddeKansFactor } from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
 import { isTileVerbondenMetStad } from "./wegen";
@@ -385,7 +385,9 @@ export function verwerkKuddes(state: GameState): GameState {
   const streken = state.streken.map((streek) => {
     if (streek.hoogte !== doel.hoogte) return streek;
     const tiles = streek.tiles.map((tile, index) =>
-      index === doel.positieInStreek ? { ...tile, kudde: { beurtenResterend: KUDDE_JACHT_BEURTEN } } : tile
+      index === doel.positieInStreek
+        ? { ...tile, kudde: { beurtenResterend: kuddeJachtBeurtenVoorStreek(streek.hoogte) } }
+        : tile
     );
     return { ...streek, tiles };
   });
@@ -438,7 +440,9 @@ export function verwerkConfrontatieKuddes(state: GameState): GameState {
   const streken = state.streken.map((streek) => {
     if (streek.hoogte !== doel.hoogte) return streek;
     const tiles = streek.tiles.map((tile, index) =>
-      index === doel.positieInStreek ? { ...tile, kudde: { beurtenResterend: KUDDE_JACHT_BEURTEN } } : tile
+      index === doel.positieInStreek
+        ? { ...tile, kudde: { beurtenResterend: kuddeJachtBeurtenVoorStreek(streek.hoogte) } }
+        : tile
     );
     return { ...streek, tiles };
   });
@@ -476,7 +480,9 @@ export function verwerkEersteKudde(state: GameState): GameState {
       : {
           ...streek,
           tiles: streek.tiles.map((tile, index) =>
-            index === STARTKUDDE_POSITIE ? { ...tile, kudde: { beurtenResterend: KUDDE_JACHT_BEURTEN } } : tile
+            index === STARTKUDDE_POSITIE
+              ? { ...tile, kudde: { beurtenResterend: kuddeJachtBeurtenVoorStreek(1) } }
+              : tile
           ),
         }
   );
