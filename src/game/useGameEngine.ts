@@ -71,15 +71,21 @@ function metAutomatischeVolgendeBeurt(state: GameState): GameState {
 // de MVP-omvang — één useState met pure update-functies uit economie.ts.
 //
 // Save/load (M9, hoofdstuk 13; issue: "niet automatisch opslaan, maar bewust
-// via een menu"): elke keer dat de tutorial start (GameRoot mount, zie
-// AppRoot) begint de run bij het begin, met een verse spelstatus — ook als er
-// een bewaarde run klaarstaat (issue: "als je op SpelVerlaten hebt geklikt en
+// via een menu"): elke keer dat een run start (GameRoot mount, zie AppRoot)
+// begint de run bij het begin, met een verse spelstatus — ook als er een
+// bewaarde run klaarstaat (issue: "als je op SpelVerlaten hebt geklikt en
 // daarna opnieuw de tutorial begint, dat je dan helemaal bij het begin
 // begint"). Een bewaarde run wordt uitsluitend teruggehaald als de speler
 // zelf bewust op "Spel laden" drukt (`laden` hieronder) — geen automatisch
 // laden bij mount.
-export function useGameEngine() {
-  const [state, setState] = useState(maakInitieleSpelStatus);
+//
+// `campagneId` (M20d deelstap 3, hoofdstuk 9/13/15): `undefined` (tutorial)
+// of een `CampaignConfig.id` (campagnes.ts) — bepaalt uitsluitend de
+// éénmalige initiële status; latere wijzigingen aan deze prop (GameRoot
+// unmount/remount't bij elke campagnewissel via AppRoot) hebben geen effect
+// op een al lopende run.
+export function useGameEngine(campagneId?: string) {
+  const [state, setState] = useState(() => maakInitieleSpelStatus(campagneId));
 
   const opslaan = useCallback(() => {
     saveSpel(state);

@@ -82,6 +82,12 @@ import {
 import GameCanvas from "./GameCanvas";
 
 interface GameRootProps {
+  // Actieve campagne (M20d deelstap 3, hoofdstuk 9/13/15) — `undefined` voor
+  // de tutorial, anders een `CampaignConfig.id` (campagnes.ts). Komt van
+  // AppRoot (gezet via `CampagneSelectScherm.onKiesCampagne`) en gaat
+  // uitsluitend naar `useGameEngine()` voor het opzetten van de initiële
+  // status — de lopende run zelf leest verder overal `state.campagneId`.
+  campagneId?: string;
   // Terug naar het startscherm (issue: "spel verlaten, waarmee je weer naar
   // het start scherm gaat") — navigatie zelf blijft bij AppRoot, GameRoot
   // roept dit alleen aan.
@@ -103,7 +109,7 @@ interface GameRootProps {
 // grondstoffenbalk als vaste footer eronder — die scrolt dus nooit mee weg en
 // de stad staat meteen in beeld zonder te scrollen (issue: sticky
 // grondstoffenbalk onderaan, stad direct zichtbaar).
-export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootProps) {
+export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }: GameRootProps) {
   const {
     state,
     startBouw,
@@ -147,14 +153,13 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     sluitVijandelijkHeiligdomVeroverdMelding,
     opslaan,
     laden,
-  } = useGameEngine();
+  } = useGameEngine(campagneId);
 
-  // Actieve campagne (hoofdstuk 9/13, M20d deelstap 1): `state.campagneId` is
-  // nog altijd `undefined` (tutorial) zolang `useGameEngine` zonder argument
-  // initialiseert — zie `maakInitieleSpelStatus()` in initieleSpelStatus.ts.
-  // `improvementNaam()`/`techNaam()`-gebruikers hieronder lezen deze config
-  // al wel voor de hele run, zodat ze later automatisch meeschakelen zodra de
-  // spel-opstart een campagne laat kiezen.
+  // Actieve campagne (hoofdstuk 9/13, M20d deelstap 3): `state.campagneId` is
+  // nu de door `CampagneSelectScherm`/AppRoot gekozen campagne (zie de
+  // `campagneId`-prop hierboven) — `undefined` betekent tutorial, net als
+  // voorheen. `improvementNaam()`/`techNaam()`-gebruikers hieronder lezen
+  // deze config voor de hele run.
   const campagne = campagneConfig(state.campagneId);
 
   // Historiescherm is een losse volledig-schermige pop-up, geen aan/uit-paneel.
