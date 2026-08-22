@@ -13,6 +13,7 @@ import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Streek, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import { BAND_WIDTH_TILES, eindeOceaanZichtbaar, isVooruitkijkStreek } from "@/game/world";
+import { pasTegelSetTint } from "./tegelSets";
 
 export { BAND_WIDTH_TILES };
 
@@ -1548,7 +1549,10 @@ export function tekenWereld(
   verkenningBereikbarePosities?: Settler[],
   // Tweede settler (issue: "Altijd 2e settler" #236) — apart van `settler`
   // hierboven, altijd los getekend zodat beide tegelijk zichtbaar zijn.
-  tweedeSettler?: Settler
+  tweedeSettler?: Settler,
+  // Campagne-tegelset (M20d deelstap 4, `CampaignConfig.tegelSet`) — `undefined`
+  // voor de tutorial, zie `pasTegelSetTint` (tegelSets.ts).
+  tegelSet?: string
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
@@ -1661,4 +1665,6 @@ export function tekenWereld(
       tekenTileGrid(ctx, x, 0, tileSize);
     }
   }
+
+  pasTegelSetTint(ctx, width, height, tegelSet);
 }

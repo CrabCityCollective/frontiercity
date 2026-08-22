@@ -1313,6 +1313,7 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
           legerkampBereikbarePosities={legerkampBereikbarePosities}
           verkenningBereikbarePosities={verkenningBereikbarePosities}
           stijl={stijl}
+          tegelSet={campagne?.tegelSet}
           onTileClick={handleTileClick}
         />
         <SettlerPaneel
