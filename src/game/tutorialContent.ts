@@ -443,3 +443,18 @@ export const BOERDERIJ_STREEK_UITLEG_TEKST =
 export const HOUTKAP_STREEK_UITLEG_TITEL = "Houtkap";
 export const HOUTKAP_STREEK_UITLEG_TEKST =
   "Het bouwen van de boerderij kostte het laatste hout uit de voorraad dus dat moeten we als eerste weer aanvullen. Bouw een houtkap op een bos.";
+
+// Stadsverbeteringen-uitleg-pop-up (issue: "Uitleg city improvements"):
+// getoond zodra streek 2 voor het eerst ontgrendelt (zie GameRoot:
+// `toonStadsverbeteringenUitlegPopup`). Bibliotheek en Markt hebben geen
+// `minStreek`-eis (improvements.ts) en zijn dus strikt genomen al vanaf
+// streek 1 bouwbaar, maar streek 1 zit al vol met eigen uitleg (jacht,
+// heiligdom, steengroeve, voedselbalans). Streek 2 is de eerstvolgende
+// streek-ontgrendeling zonder een eigen "zodra streek X ontgrendelt"-pop-up
+// (vergelijk VIJAND_AAN_DE_HORIZON_*/GODDELIJKE_RAADGEVING_* hierboven, voor
+// streek 3/4) — een rustiger moment om het Stadsverbeteringen-paneel
+// (altijd zichtbaar in het stadsmenu, StadsverbeteringenPaneel.tsx) voor het
+// eerst onder de aandacht te brengen.
+export const STADSVERBETERINGEN_UITLEG_TITEL = "Stadsverbeteringen";
+export const STADSVERBETERINGEN_UITLEG_TEKST =
+  "Open het stadsmenu door op de stad te klikken. Daar vind je Stadsverbeteringen: Bibliotheek, Markt, en later Barakken en Tempel. Ze staan niet op een vakje en hebben dus geen weg nodig, ze werken zodra ze klaar zijn. Elke stad heeft maar een beperkt aantal sloten tegelijk vrij; een grotere stad krijgt er meer.";
