@@ -121,3 +121,50 @@ export function gegarandeerdeStichtingskansHoogten(streekHoogteStad: number): St
     kans3: streekHoogteStad + 13,
   };
 }
+
+// M20c: koppelt bovenstaande formule aan een vaste (handgeschreven, niet-
+// procedurele) campagnekaart. Zo'n kaart kan niet, zoals procedurele
+// generatie zou kunnen, ná een stichting dynamisch een vers-water-vakje op
+// exact de berekende hoogte neerzetten — de garantie moet daarom vooraf
+// gehaald worden via voldoende dichtheid van vooraf geplaatste vakjes
+// (hoofdstuk 13, M20c-omschrijving). Deze functie maakt dat toetsbaar: voor
+// elke hoogte waar een stad zou kúnnen staan (de starthoogte plus elke
+// vers-water-hoogte op de kaart — dat zijn de enige hoogten waarop
+// daadwerkelijk gesticht kan worden) moet elk van de drie kans-vensters die
+// samen de vier afstandszones overspannen ((hoogte, +4], (+4, +12], (+12,
+// einde-kaart]) minstens één ándere vers-water-hoogte bevatten — ongeacht op
+// welke van die bereikbare hoogten de speler daadwerkelijk sticht. Een
+// venster dat al voorbij het einde van de kaart begint, wordt overgeslagen:
+// de run is dan sowieso al voorbij (M18: stichten op de laatste streek
+// beëindigt de run) vóórdat die kans nog een rol kan spelen.
+export interface StichtingskansGat {
+  vanafHoogte: number;
+  kans: keyof StichtingsKansHoogten;
+  venster: [number, number];
+}
+
+export function vindStichtingskansGaten(
+  startHoogte: number,
+  versWaterHoogten: number[],
+  streekAantal: number
+): StichtingskansGat[] {
+  const referentieHoogten = [startHoogte, ...versWaterHoogten];
+  const gaten: StichtingskansGat[] = [];
+
+  for (const hoogte of referentieHoogten) {
+    const vensters: [keyof StichtingsKansHoogten, number, number][] = [
+      ["kans1", hoogte + 1, hoogte + 4],
+      ["kans2", hoogte + 5, hoogte + 12],
+      ["kans3", hoogte + 13, streekAantal],
+    ];
+
+    for (const [kans, begin, eind] of vensters) {
+      if (begin > streekAantal) continue;
+      const clampEind = Math.min(eind, streekAantal);
+      const heeftTreffer = versWaterHoogten.some((h) => h >= begin && h <= clampEind);
+      if (!heeftTreffer) gaten.push({ vanafHoogte: hoogte, kans, venster: [begin, clampEind] });
+    }
+  }
+
+  return gaten;
+}

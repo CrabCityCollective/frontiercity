@@ -9,12 +9,13 @@
 // gekozen voor een veel langere campagne.
 //
 // Scope-grens (hoofdstuk 13, milestone-tabel): M20b levert alleen de
-// kaartdata. Deze module is nog niet gekoppeld aan het spel starten/
-// `CampagneSelectScherm` (dat blijft "Binnenkort beschikbaar" tonen) en de
-// vers-water-dichtheid hieronder is nog niet geverifieerd tegen
-// `gegarandeerdeStichtingskansHoogten()` (stad.ts, M18) — dat is expliciet
-// M20c's taak ("de koppeling die het stichtingspatroon daadwerkelijk
-// speelbaar maakt").
+// kaartdata; de vers-water-dichtheid hieronder is sinds M20c geverifieerd
+// tegen `gegarandeerdeStichtingskansHoogten()` (`vindStichtingskansGaten()`,
+// stad.ts — zie worldGoingWest.test.ts) en bleek zonder aanpassingen al aan
+// de garantie te voldoen. Deze module is nog niet gekoppeld aan het spel
+// starten/`CampagneSelectScherm` (dat blijft "Binnenkort beschikbaar" tonen)
+// — dat raakt de spel-opstart-architectuur breder dan deze kaart-milestone
+// en hoort eerst als eigen milestone voorgesteld te worden (CLAUDE.md).
 
 import { Streek, TerreinType, Tile } from "./types";
 
@@ -127,11 +128,13 @@ function terreinVoorTile(hoogte: number, positieInStreek: number): TerreinType {
 // bewust nooit meer dan die ene keer zien, hoofdstuk 9/13) heeft de Going
 // West-kaart hier meerdere, over de hele route verspreide vakjes nodig zodra
 // het stichtingspatroon speelbaar wordt. Interval hier is ruwweg om de 3-4
-// streken, ter voorbereiding op M20c — de exacte plaatsing/dichtheid tegen
-// `gegarandeerdeStichtingskansHoogten()` (stad.ts) is nadrukkelijk M20c's
-// taak, niet deze milestone. Op een `vlak`-vakje gekozen (nooit het
-// stad-centrum, positie 4), zelfde reden als de tutorial: ook bruikbaar als
-// Boerderij-kandidaat.
+// streken, met het laatste vakje op de laatste streek (35) — M20c
+// (`vindStichtingskansGaten()`, stad.ts, getoetst in worldGoingWest.test.ts)
+// bevestigt dat deze dichtheid alle drie de kans-vensters uit
+// `gegarandeerdeStichtingskansHoogten()` een treffer geeft, ongeacht op welke
+// van deze hoogten daadwerkelijk gesticht wordt. Op een `vlak`-vakje gekozen
+// (nooit het stad-centrum, positie 4), zelfde reden als de tutorial: ook
+// bruikbaar als Boerderij-kandidaat.
 const GOING_WEST_VERS_WATER: Record<number, number[]> = {
   4: [1],
   8: [3],
