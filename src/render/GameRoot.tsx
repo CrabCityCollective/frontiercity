@@ -61,6 +61,7 @@ import {
   HOUTKAP_STREEK_UITLEG_TITEL,
   NIET_BOUWEN_UITLEG_TEKST,
   NIET_BOUWEN_UITLEG_TITEL,
+  streekContent,
   TWEEDE_SETTLER_UITLEG_TEKST,
   TWEEDE_SETTLER_UITLEG_TITEL,
 } from "@/game/tutorialContent";
@@ -575,7 +576,14 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
   // kerninhoud, geen uitleg.
   const uitlegAan = state.uitlegPopupsAan;
 
-  const toonStreekPopup = actieveStreek.hoogte > laatstBevestigdeStreek;
+  // `StreekPopup` rendert zelf `null` zolang `streekContent()` niets voor deze
+  // hoogte teruggeeft (bijv. voorbij `TUTORIAL_STREEK_CONTENT`'s streek 14 op
+  // een langere, niet-tutorial-campagnekaart) — zonder deze extra voorwaarde
+  // zou `laatstBevestigdeStreek` dan nooit meer bijwerken (de popup heeft geen
+  // "Doorgaan"-knop om op te klikken als hij niet rendert), en zou elke
+  // lager-prioriteit pop-up hieronder (inclusief de verplichte tech-keuze) voor
+  // de rest van de run geblokkeerd blijven.
+  const toonStreekPopup = actieveStreek.hoogte > laatstBevestigdeStreek && streekContent(actieveStreek.hoogte) !== undefined;
   // Openings-uitleg bij het begin van beurt 1 (issue: "uitleg pop-ups
   // dynamisch tonen") — geen vast beurtbereik meer, één vaste pop-up.
   const toonUitlegPopup = !toonStreekPopup && uitlegAan && state.beurt === 1 && !openingsUitlegBevestigd;

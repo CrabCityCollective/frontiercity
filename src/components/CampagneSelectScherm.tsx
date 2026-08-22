@@ -88,7 +88,11 @@ export default function CampagneSelectScherm({ onKiesCampagne }: CampagneSelectS
           >
             <strong className="fc-heading" style={{ fontSize: "1.1rem" }}>
               {campagne.naam}
-              {campagne.beschikbaar && heeftTutorialVoltooid() && (
+              {/* `heeftTutorialVoltooid()` is tutorial-specifiek (save.ts) — alleen
+                  voor de tutorial-entry (`campagne.id === undefined`) betekent dat
+                  ook echt dat déze campagne voltooid is, anders zou elke andere
+                  beschikbare campagne per ongeluk hetzelfde vinkje tonen. */}
+              {campagne.beschikbaar && campagne.id === undefined && heeftTutorialVoltooid() && (
                 <span
                   aria-label="Voltooid"
                   title="Voltooid — nog altijd opnieuw te spelen"
