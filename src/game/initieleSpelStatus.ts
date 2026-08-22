@@ -7,6 +7,7 @@
 import { standaardUitlegAan } from "./save";
 import { GameState, MateriaalType } from "./types";
 import { maakInitieleWereld } from "./world";
+import { GOING_WEST_STARTSTAD_NAAM, maakInitieleWereldGoingWest } from "./worldGoingWest";
 
 export const OPSLAG_CAP = 30;
 
@@ -20,6 +21,18 @@ export const OPSLAG_CAP = 30;
 // moet in zijn geheel uit de startvoorraad komen. Zo kan de speler, zodra
 // streek 2 ontgrendelt, de Boerderij daar meteen neerzetten in plaats van
 // eerst op houtproductie te moeten wachten.
+//
+// Gedeeld met Going West (M20d deelstap 1, hoofdstuk 13/15): dit bedrag is
+// afgeleid van de streek-1-tegelmix (1 bos, 1 heuvel/berg, de rest vlak — de
+// enige terreinen waar Steengroeve/Heiligdom/Boerderij op mogen, zie
+// `terreinEisen` in improvements.ts) en van `minStreek`-gates die niet per
+// campagne verschillen. `GOING_WEST_TILE_TERREIN[1]` (worldGoingWest.ts)
+// heeft exact dezelfde mix (1 bos, 1 heuvel, rest vlak) als
+// `TUTORIAL_TILE_TERREIN[1]` (world.ts) — op streek 1 zijn dus in beide
+// campagnes precies dezelfde twee improvements bouwbaar, ongeacht dat Going
+// West in totaal 35 in plaats van 14 streken telt. Deze balans hoeft dus
+// (nog) niet apart afgestemd te worden; mocht `GOING_WEST_TILE_TERREIN[1]`
+// ooit wijzigen, dan moet deze aanname opnieuw gecontroleerd worden.
 const STARTVOORRAAD: Record<MateriaalType, number> = {
   hout: 14,
   steen: 4,
@@ -41,9 +54,17 @@ const STARTVOORRAAD: Record<MateriaalType, number> = {
 // aanleggen, of pech met een roofdier onderweg).
 const VOEDSEL_START = 20;
 
-export function maakInitieleSpelStatus(): GameState {
+// `campagneId` (M20d deelstap 1, hoofdstuk 9/13/15): `undefined` (of elke
+// onbekende id) geeft de bestaande tutorial-start; `"going-west"` bouwt in
+// plaats daarvan de Going West-wereld (`maakInitieleWereldGoingWest()`,
+// worldGoingWest.ts) met de bijbehorende startnederzetting-naam. Nog niet
+// aangeroepen met `"going-west"` vanuit de UI (`useGameEngine`/GameRoot
+// initialiseren nog altijd zonder argument) — dat volgt in een latere M20d-
+// deelstap zodra `CampagneSelectScherm` een campagne laat kiezen.
+export function maakInitieleSpelStatus(campagneId?: string): GameState {
+  const isGoingWest = campagneId === "going-west";
   const stad: GameState["stad"] = {
-    naam: "Holenrots",
+    naam: isGoingWest ? GOING_WEST_STARTSTAD_NAAM : "Holenrots",
     grootte: "klein",
     relics: [],
     vervalStatus: "gezond",
@@ -56,7 +77,7 @@ export function maakInitieleSpelStatus(): GameState {
   return {
     stad,
     steden: [stad],
-    streken: maakInitieleWereld(),
+    streken: isGoingWest ? maakInitieleWereldGoingWest() : maakInitieleWereld(),
     voorraad: { ...STARTVOORRAAD },
     opslagCap: OPSLAG_CAP,
     voedsel: VOEDSEL_START,
@@ -64,6 +85,7 @@ export function maakInitieleSpelStatus(): GameState {
     wetenschap: 0,
     technologieen: [],
     beurt: 1,
+    campagneId,
     bouwKeuzeGedaanDitBeurt: false,
     bouwPopupAfgehandeldTellerPerStreek: {},
     settlerActieGedaanDitBeurt: false,

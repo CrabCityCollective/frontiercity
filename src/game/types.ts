@@ -733,4 +733,13 @@ export interface GameState {
   // (indringersEnDieren.ts), getoond door `berekenHistorieStatistieken`
   // (uitputtingEnVerval.ts) via HistoriePaneel.
   indringersStatistieken: IndringersStatistieken;
+  // Bij welke campagne deze run hoort (hoofdstuk 9/13/15, M20d deelstap 1) —
+  // `CampaignConfig.id` (campagnes.ts), of `undefined` voor de tutorial (die
+  // nog geen eigen `CampaignConfig`-instantie heeft). Bepaalt gedurende de
+  // hele run welke weergavenamen `improvementNaam()`/`techNaam()`
+  // (improvements.ts/techTree.ts) gebruiken — niet alleen bij het opzetten
+  // van de eerste stad, zie `campagneConfig()` in campagnes.ts. Oudere saves
+  // kennen dit veld nog niet; `undefined` daar betekent, net als bij een
+  // nieuwe tutorial-run, gewoon "tutorial".
+  campagneId?: string;
 }

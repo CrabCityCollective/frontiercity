@@ -12,10 +12,12 @@
 // kaartdata; de vers-water-dichtheid hieronder is sinds M20c geverifieerd
 // tegen `gegarandeerdeStichtingskansHoogten()` (`vindStichtingskansGaten()`,
 // stad.ts — zie worldGoingWest.test.ts) en bleek zonder aanpassingen al aan
-// de garantie te voldoen. Deze module is nog niet gekoppeld aan het spel
-// starten/`CampagneSelectScherm` (dat blijft "Binnenkort beschikbaar" tonen)
-// — dat raakt de spel-opstart-architectuur breder dan deze kaart-milestone
-// en hoort eerst als eigen milestone voorgesteld te worden (CLAUDE.md).
+// de garantie te voldoen. Sinds M20d deelstap 1 kan `maakInitieleSpelStatus()`
+// (initieleSpelStatus.ts) hier al doorheen bouwen (via een expliciete
+// `campagneId`-parameter), maar `CampagneSelectScherm` blijft "Binnenkort
+// beschikbaar" tonen — er is nog geen manier voor de speler om die
+// `campagneId` daadwerkelijk te kiezen (dat raakt de spel-opstart-UI breder
+// en hoort in een eigen vervolg-deelstap, zie het M20d-issue).
 
 import { Streek, TerreinType, Tile } from "./types";
 
@@ -190,7 +192,7 @@ function maakLegeTiles(hoogte: number): Tile[] {
 // Placeholder-startnederzetting (naam/flavor is bewust nog geen inhoudelijke
 // content — dat hoort bij de Anker-uitwerking, hoofdstuk 9/15, niet bij deze
 // kaart-milestone). Zelfde tile-opzet als `maakStartStreek` in world.ts.
-const GOING_WEST_STARTSTAD_NAAM = "Startkamp";
+export const GOING_WEST_STARTSTAD_NAAM = "Startkamp";
 
 function maakStartStreek(): Streek {
   const tiles = maakLegeTiles(1);

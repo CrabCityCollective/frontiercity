@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { GOING_WEST_CAMPAGNE } from "./campagnes";
+import { campagneConfig, GOING_WEST_CAMPAGNE } from "./campagnes";
 import {
   AMBERADER,
   BARAKKEN,
@@ -57,4 +57,10 @@ test("generieke land improvements zonder Amerikaanse naam vallen terug op de tut
 
 test("zonder campagne (tutorial) blijft improvementNaam altijd de tutorial-naam geven", () => {
   assert.equal(improvementNaam(STERRENCIRKEL), "Sterrencirkel");
+});
+
+test("campagneConfig zoekt een CampaignConfig op via GameState.campagneId, undefined/onbekend geeft undefined (M20d deelstap 1)", () => {
+  assert.equal(campagneConfig("going-west"), GOING_WEST_CAMPAGNE);
+  assert.equal(campagneConfig(undefined), undefined);
+  assert.equal(campagneConfig("onbekende-campagne"), undefined);
 });

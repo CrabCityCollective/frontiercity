@@ -1,11 +1,15 @@
 "use client";
 
 import { TECH_TREE, TechNode, techNaam, wetenschapKostenVoorDrempel } from "@/game/techTree";
-import { TechDrempel, TechId } from "@/game/types";
+import { CampaignConfig, TechDrempel, TechId } from "@/game/types";
 
 interface TechboomPaneelProps {
   technologieen: TechId[];
   techKeuzeEvent?: { drempel: TechDrempel; opties: [TechId, TechId] };
+  // Actieve campagne (hoofdstuk 9/13, M20d deelstap 1) — bepaalt de
+  // weergavenaam via `techNaam()` hieronder, zie `campagneConfig()` in
+  // campagnes.ts. `undefined` voor de tutorial.
+  campagne?: CampaignConfig;
   onSluiten: () => void;
 }
 
@@ -56,7 +60,12 @@ const STATUS_KLEUR: Record<TechStatus, string> = {
 // technologieën er waren, en of de speler die deze run gekozen, gemist, of
 // nog niet bereikt heeft. Bereikbaar via het hoofdmenu, zelfde plek/patroon
 // als "Historie" (HoofdMenu/HistoriePaneel).
-export default function TechboomPaneel({ technologieen, techKeuzeEvent, onSluiten }: TechboomPaneelProps) {
+export default function TechboomPaneel({
+  technologieen,
+  techKeuzeEvent,
+  campagne,
+  onSluiten,
+}: TechboomPaneelProps) {
   const drempels: TechDrempel[] = [1, 2, 3];
 
   return (
@@ -111,7 +120,7 @@ export default function TechboomPaneel({ technologieen, techKeuzeEvent, onSluite
                         }}
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                          <strong>{status === "onbekend" ? "???" : techNaam(node.id)}</strong>
+                          <strong>{status === "onbekend" ? "???" : techNaam(node.id, campagne)}</strong>
                           <span style={{ color: STATUS_KLEUR[status], whiteSpace: "nowrap" }}>
                             {STATUS_LABEL[status]}
                           </span>

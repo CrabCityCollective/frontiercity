@@ -39,6 +39,7 @@ import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
 import { SettlerSlot } from "@/game/acties";
+import { campagneConfig } from "@/game/campagnes";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import {
   BELEGERINGSDREMPEL,
@@ -143,6 +144,14 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     opslaan,
     laden,
   } = useGameEngine();
+
+  // Actieve campagne (hoofdstuk 9/13, M20d deelstap 1): `state.campagneId` is
+  // nog altijd `undefined` (tutorial) zolang `useGameEngine` zonder argument
+  // initialiseert — zie `maakInitieleSpelStatus()` in initieleSpelStatus.ts.
+  // `improvementNaam()`/`techNaam()`-gebruikers hieronder lezen deze config
+  // al wel voor de hele run, zodat ze later automatisch meeschakelen zodra de
+  // spel-opstart een campagne laat kiezen.
+  const campagne = campagneConfig(state.campagneId);
 
   // Historiescherm is een losse volledig-schermige pop-up, geen aan/uit-paneel.
   // Bereikbaar via het hoofdmenu (issue: "Settings uitbreiden" — "de
@@ -1241,6 +1250,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           <TechKeuzePopup
             drempel={state.techKeuzeEvent.drempel}
             opties={state.techKeuzeEvent.opties}
+            campagne={campagne}
             onKiesTech={kiesTech}
           />
         )}
@@ -1337,6 +1347,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           alleStreken={state.streken}
           technologieen={state.technologieen}
           cityImprovements={state.stad.cityImprovements}
+          campagne={campagne}
           zichtbaar={
             !toonStreekPopup &&
             !toonUitlegPopup &&
@@ -1470,6 +1481,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
           <TechboomPaneel
             technologieen={state.technologieen}
             techKeuzeEvent={state.techKeuzeEvent}
+            campagne={campagne}
             onSluiten={() => setToonTechboom(false)}
           />
         )}

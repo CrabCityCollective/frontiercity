@@ -48,3 +48,20 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
     missionaris: "Prediker",
   },
 };
+
+// Alle bestaande, niet-tutorial `CampaignConfig`-instanties, gesleuteld op
+// `id` (M20d deelstap 1). De tutorial staat hier bewust niet in — die heeft
+// geen eigen `CampaignConfig`, `campagneConfig(undefined)` geeft dus terecht
+// `undefined` terug en `improvementNaam()`/`techNaam()` vallen dan vanzelf op
+// de tutorial-naam terug.
+const CAMPAGNES: Record<string, CampaignConfig> = {
+  [GOING_WEST_CAMPAGNE.id]: GOING_WEST_CAMPAGNE,
+};
+
+// Zoekt de `CampaignConfig` bij `GameState.campagneId` op (M20d deelstap 1) —
+// centrale plek zodat GameRoot niet zelf per component hoeft te weten welke
+// id bij welke config hoort. `undefined` (tutorial, of een onbekende/oude
+// id) geeft bewust `undefined` terug in plaats van te gooien.
+export function campagneConfig(campagneId?: string): CampaignConfig | undefined {
+  return campagneId ? CAMPAGNES[campagneId] : undefined;
+}
