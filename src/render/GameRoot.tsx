@@ -24,6 +24,7 @@ import SettlerActiesUitlegPopup from "@/components/SettlerActiesUitlegPopup";
 import SettlerPaneel from "@/components/SettlerPaneel";
 import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
 import StadMenuPopup from "@/components/StadMenuPopup";
+import StadsverbeteringenUitlegPopup from "@/components/StadsverbeteringenUitlegPopup";
 import StadUpgradeUitlegPopup from "@/components/StadUpgradeUitlegPopup";
 import StichtStadPopup from "@/components/StichtStadPopup";
 import StrijdersOpleidenPopup from "@/components/StrijdersOpleidenPopup";
@@ -270,6 +271,10 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
   // confirm-vlag, getoond zodra beurt 2 begint — het eerste moment waarop een
   // volledige beurt (verbruik + productie) al is doorgerekend.
   const [beurtensysteemUitlegBevestigd, setBeurtensysteemUitlegBevestigd] = useState(false);
+  // Stadsverbeteringen-uitleg-pop-up (issue: "Uitleg city improvements"):
+  // zelfde eenmalige-confirm-vlag, getoond zodra streek 2 voor het eerst
+  // ontgrendelt — zie `toonStadsverbeteringenUitlegPopup` hieronder.
+  const [stadsverbeteringenUitlegBevestigd, setStadsverbeteringenUitlegBevestigd] = useState(false);
   // Bouw-pop-up-vervangende uitleg-pop-ups (issue: "Teksten aanpassen (nog
   // meer)"): zelfde eenmalige-confirm-vlaggen, getoond in plaats van de
   // gewone bouw-pop-up op de tweede/derde bouw-beurt van streek 1 en de
@@ -959,6 +964,44 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     uitlegAan &&
     !beurtensysteemUitlegBevestigd &&
     heeftGeplaatsteSteengroeve(state);
+  // Stadsverbeteringen-uitleg-pop-up (issue: "Uitleg city improvements"):
+  // zodra streek 2 voor het eerst ontgrendelt. Bibliotheek en Markt hebben
+  // geen `minStreek`-eis (improvements.ts) en zijn dus strikt genomen al
+  // vanaf streek 1 bouwbaar, maar streek 1 zit al vol met eigen uitleg
+  // (jacht, heiligdom, steengroeve, voedselbalans). Streek 2 is de
+  // eerstvolgende streek-ontgrendeling zonder een eigen "zodra streek X
+  // ontgrendelt"-pop-up (vergelijk `toonVijandAanDeHorizonPopup`/
+  // `toonGoddelijkeRaadgevingPopup` hierboven, voor streek 3/4) — een
+  // rustiger moment om het altijd-zichtbare Stadsverbeteringen-paneel
+  // (StadsverbeteringenPaneel.tsx, in het stadsmenu) voor het eerst onder de
+  // aandacht te brengen.
+  const toonStadsverbeteringenUitlegPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    uitlegAan &&
+    !stadsverbeteringenUitlegBevestigd &&
+    hoogsteOntgrendeldeStreek(state.streken) >= 2;
   // Bouw-ritme (hoofdstuk 16): een nieuw bouwproject mag pas weer gestart
   // worden vanaf `volgendeBouwBeurt` — de `?? 1` is puur een veilige default
   // voor een save van vóór dit veld bestond.
@@ -999,6 +1042,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
     uitlegAan &&
     !heiligdomUitlegBevestigd &&
     magBouwUitlegTonen &&
@@ -1029,6 +1073,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
     uitlegAan &&
     !nietBouwenUitlegBevestigd &&
     magBouwUitlegTonen &&
@@ -1060,6 +1105,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
     uitlegAan &&
     !boerderijStreekUitlegBevestigd &&
     magBouwUitlegTonen &&
@@ -1092,6 +1138,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
     uitlegAan &&
     !houtkapStreekUitlegBevestigd &&
     magBouwUitlegTonen &&
@@ -1125,6 +1172,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
     !toonVoedselBalansUitlegPopup &&
     !toonSettlerActiesUitlegPopup &&
     !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
     !toonHeiligdomUitlegPopup &&
     !toonNietBouwenUitlegPopup &&
     !toonBoerderijStreekUitlegPopup &&
@@ -1289,6 +1337,9 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
         {toonBeurtensysteemUitlegPopup && (
           <BeurtensysteemUitlegPopup onDoorgaan={() => setBeurtensysteemUitlegBevestigd(true)} />
         )}
+        {toonStadsverbeteringenUitlegPopup && (
+          <StadsverbeteringenUitlegPopup onDoorgaan={() => setStadsverbeteringenUitlegBevestigd(true)} />
+        )}
         {toonHeiligdomUitlegPopup && (
           <BouwUitlegPopup
             titel={HEILIGDOM_UITLEG_TITEL}
@@ -1372,6 +1423,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
             !toonVoedselBalansUitlegPopup &&
             !toonSettlerActiesUitlegPopup &&
             !toonBeurtensysteemUitlegPopup &&
+            !toonStadsverbeteringenUitlegPopup &&
             !toonHeiligdomUitlegPopup &&
             !toonNietBouwenUitlegPopup &&
             !toonBoerderijStreekUitlegPopup &&
