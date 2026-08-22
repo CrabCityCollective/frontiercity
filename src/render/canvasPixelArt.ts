@@ -33,6 +33,7 @@ import {
   tekenVerkenningBereikbaarMarkering,
   terreinBasisKleur,
 } from "./canvas";
+import { pasTegelSetTint } from "./tegelSets";
 
 export { BAND_WIDTH_TILES };
 
@@ -898,7 +899,10 @@ export function tekenWereldPixelArt(
   verkenningBereikbarePosities?: Settler[],
   // Tweede settler (issue: "Altijd 2e settler" #236) — zelfde toevoeging als
   // in `tekenWereld` (canvas.ts).
-  tweedeSettler?: Settler
+  tweedeSettler?: Settler,
+  // Campagne-tegelset (M20d deelstap 4, `CampaignConfig.tegelSet`) — `undefined`
+  // voor de tutorial, zie `pasTegelSetTint` (tegelSets.ts).
+  tegelSet?: string
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
@@ -1006,4 +1010,6 @@ export function tekenWereldPixelArt(
       tekenTileGrid(ctx, x, 0, tileSize);
     }
   }
+
+  pasTegelSetTint(ctx, width, height, tegelSet);
 }

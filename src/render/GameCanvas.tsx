@@ -49,6 +49,11 @@ interface GameCanvasProps {
   // herteken triggert via de dependency-array van het effect hieronder, in
   // plaats van pas bij de volgende (her)start van dit scherm.
   stijl: GrafischeStijl;
+  // Campagne-tegelset (M20d deelstap 4, hoofdstuk 9/12/13): `CampaignConfig.tegelSet`
+  // van de actieve run (`undefined` voor de tutorial). Geeft, net als `stijl`
+  // hierboven, meteen een herteken via de dependency-array van het effect
+  // hieronder zodra een andere campagne gestart wordt.
+  tegelSet?: string;
   onTileClick: (hoogte: number, positieInStreek: number) => void;
 }
 
@@ -106,6 +111,7 @@ export default function GameCanvas({
   legerkampBereikbarePosities,
   verkenningBereikbarePosities,
   stijl,
+  tegelSet,
   onTileClick,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -134,7 +140,8 @@ export default function GameCanvas({
       settlerBereikbarePosities,
       legerkampBereikbarePosities,
       verkenningBereikbarePosities,
-      tweedeSettler
+      tweedeSettler,
+      tegelSet
     );
   }, [
     streken,
@@ -146,6 +153,7 @@ export default function GameCanvas({
     legerkampBereikbarePosities,
     verkenningBereikbarePosities,
     stijl,
+    tegelSet,
   ]);
 
   function handleClick(event: MouseEvent<HTMLCanvasElement>) {
