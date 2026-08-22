@@ -85,10 +85,13 @@ export function useGameEngine() {
     saveSpel(state);
   }, [state]);
 
+  // M20d deelstap 2: elke campagne heeft nu een eigen save-sleutel
+  // (save.ts), dus moet "laden" weten voor welke campagne — die van de
+  // lopende (nog niet noodzakelijk opgeslagen) run.
   const laden = useCallback(() => {
-    const opgeslagenStatus = laadSpel();
+    const opgeslagenStatus = laadSpel(state.campagneId);
     if (opgeslagenStatus) setState(opgeslagenStatus);
-  }, []);
+  }, [state.campagneId]);
 
   const volgendeBeurt = useCallback(() => {
     setState((huidig) => volgendeBeurtActie(huidig));

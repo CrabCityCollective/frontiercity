@@ -3,28 +3,41 @@
 import { GameState } from "./types";
 
 // M9 (save/load, hoofdstuk 13): "Eén actieve run lokaal opslaan en hervatten".
-// Meerdere gelijktijdige saves zijn expliciet buiten scope voor de MVP
-// (hoofdstuk 8/13) — daarom precies één vaste localStorage-sleutel, geen
-// save-slot-systeem.
-const SAVE_KEY = "frontier-city:tutorial-save";
+// Meerdere gelijktijdige saves binnen dezelfde campagne zijn expliciet buiten
+// scope voor de MVP (hoofdstuk 8/13) — daarom precies één vaste
+// localStorage-sleutel per campagne, geen save-slot-systeem.
+//
+// M20d deelstap 2 (hoofdstuk 9/13/15): vóór Going West bestond er maar één
+// campagne, dus volstond precies één globale sleutel. Eén gedeelde sleutel
+// zou nu betekenen dat het starten van een Going West-run een lopende
+// tutorial-save stilzwijgend overschrijft (en omgekeerd) — onverwacht
+// dataverlies voor de speler, en in strijd met "elke campagne blijft los
+// speelbaar" (CLAUDE.md). Vandaar een eigen sleutel per `GameState.campagneId`
+// (`undefined` → tutorial, ongewijzigd t.o.v. bestaande saves) in plaats van
+// één gedeeld slot.
+function saveSleutel(campagneId?: string): string {
+  return campagneId ? `frontier-city:${campagneId}-save` : "frontier-city:tutorial-save";
+}
 
-// Bewaart de volledige spelstatus. GameState bevat uitsluitend data (geen
-// functies), dus JSON.stringify volstaat. Fouten (privé-browsen, volle
+// Bewaart de volledige spelstatus, onder de sleutel van de campagne waartoe
+// deze run behoort (`state.campagneId`). GameState bevat uitsluitend data
+// (geen functies), dus JSON.stringify volstaat. Fouten (privé-browsen, volle
 // opslag) mogen de speelsessie niet onderbreken — de run gaat dan gewoon
 // door zonder dat de laatste beurt bewaard blijft.
 export function saveSpel(state: GameState): void {
   try {
-    window.localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    window.localStorage.setItem(saveSleutel(state.campagneId), JSON.stringify(state));
   } catch {
     // Zie hierboven: bewust genegeerd.
   }
 }
 
-// Leest de bewaarde run terug, of `null` als er nog geen save is (eerste
-// bezoek) of de opgeslagen data niet te lezen valt.
-export function laadSpel(): GameState | null {
+// Leest de bewaarde run voor de gegeven campagne terug (zelfde `campagneId`
+// als bij `saveSpel`/`heeftOpgeslagenSpel`), of `null` als er nog geen save is
+// voor die campagne (eerste bezoek) of de opgeslagen data niet te lezen valt.
+export function laadSpel(campagneId?: string): GameState | null {
   try {
-    const ruw = window.localStorage.getItem(SAVE_KEY);
+    const ruw = window.localStorage.getItem(saveSleutel(campagneId));
     if (!ruw) return null;
     return metGemigreerdeSteden(JSON.parse(ruw) as GameState);
   } catch {
@@ -43,21 +56,30 @@ function metGemigreerdeSteden(state: GameState): GameState {
   return { ...state, stad, steden: [stad] };
 }
 
-// Of er iets te laden valt (issue: "menu-icoontje ... opslaan en oudere
-// games ... inladen") — gebruikt om de "Laden"-knop uit te schakelen zolang
-// de speler nog niets bewust heeft opgeslagen.
-export function heeftOpgeslagenSpel(): boolean {
+// Of er iets te laden valt voor de gegeven campagne (issue: "menu-icoontje
+// ... opslaan en oudere games ... inladen") — gebruikt om de "Laden"-knop uit
+// te schakelen zolang de speler voor déze campagne nog niets bewust heeft
+// opgeslagen.
+export function heeftOpgeslagenSpel(campagneId?: string): boolean {
   try {
-    return window.localStorage.getItem(SAVE_KEY) !== null;
+    return window.localStorage.getItem(saveSleutel(campagneId)) !== null;
   } catch {
     return false;
   }
 }
 
 // Losse sleutel (issue: "vinkje bij de tutorial als teken dat je hem gehaald
-// hebt") — een bewuste tweede vlag naast `SAVE_KEY`: de tutorial blijft
+// hebt") — een bewuste tweede vlag naast de save zelf: de tutorial blijft
 // altijd opnieuw speelbaar (dus geen deel van de op-te-slaan `GameState`),
 // maar of hij ooit gehaald is, moet een herstart/nieuwe run overleven.
+//
+// M20d deelstap 2: bewust nog geen analoge vlag voor Going West. Het vinkje
+// hoort bij een afsluitend "voltooid"-moment (zie `markeerTutorialVoltooid`
+// hieronder, gezet vanuit `TutorialVoltooidPopup`/GameRoot bij het stichten
+// van een nieuwe stad) — Going West heeft dat afsluitmoment nog niet: de drie
+// ankers (hoofdstuk 9) zijn nog niet inhoudelijk uitgewerkt (zie M20d-issue).
+// Dat toevoegen zonder een echt eindpunt zou een vinkje opleveren dat nooit
+// (bewust) gezet kan worden — dat komt pas met die latere milestone.
 const TUTORIAL_VOLTOOID_KEY = "frontier-city:tutorial-voltooid";
 
 // Gezet zodra de speler de afsluitende samenvatting bij het stichten van een
