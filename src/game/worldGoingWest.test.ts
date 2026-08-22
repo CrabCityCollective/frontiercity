@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { vindStichtingskansGaten } from "./stad";
 import { GOING_WEST_STREEK_AANTAL, maakInitieleWereldGoingWest } from "./worldGoingWest";
 
 test("maakInitieleWereldGoingWest levert de volledige Normaal-lengte kaart, ononderbroken van hoogte 1", () => {
@@ -63,5 +64,20 @@ test("vers water staat nooit op het stad-vakje (positie 4) en de vondsten liggen
   assert.ok(
     versWaterHoogten[versWaterHoogten.length - 1] > GOING_WEST_STREEK_AANTAL - 5,
     "geen vers water dicht bij het einde van de kaart"
+  );
+});
+
+test("M20c: gegarandeerdeStichtingskansHoogten() heeft op elke bereikbare stichtingshoogte een vers-water-treffer in alle drie de kans-vensters", () => {
+  const streken = maakInitieleWereldGoingWest();
+  const versWaterHoogten = streken
+    .flatMap((streek) => streek.tiles.map((tile) => (tile.versWater ? streek.hoogte : null)))
+    .filter((hoogte): hoogte is number => hoogte !== null);
+
+  const gaten = vindStichtingskansGaten(1, versWaterHoogten, GOING_WEST_STREEK_AANTAL);
+
+  assert.deepEqual(
+    gaten,
+    [],
+    `de kaart laat het herhalende drie-stichtingsmomenten-patroon niet overal zien: ${JSON.stringify(gaten)}`
   );
 });

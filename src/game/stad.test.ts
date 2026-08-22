@@ -7,6 +7,7 @@ import {
   gegarandeerdeStichtingskansHoogten,
   stadEffectiviteit,
   stadVervalZone,
+  vindStichtingskansGaten,
 } from "./stad";
 
 // Ontgrendelt alle streken t/m `hoogte`, zodat `hoogsteOntgrendeldeStreek`
@@ -78,4 +79,32 @@ test("gegarandeerdeStichtingskansHoogten geeft één kans-hoogte per zone-venste
   // patroon vanaf de nieuwe stad.
   const vanafLatereStad = gegarandeerdeStichtingskansHoogten(20);
   assert.deepEqual(vanafLatereStad, { kans1: 23, kans2: 28, kans3: 33 });
+});
+
+test("vindStichtingskansGaten vindt geen gaten als elk kans-venster ergens een vers-water-treffer heeft (interval 4, laatste vakje op de laatste streek)", () => {
+  // Starthoogte 1, daarna om de 4 streken een vers-water-vakje, met het
+  // laatste exact op de laatste streek — zelfde patroon als de M20b-kaart
+  // (35 streken). Ruim genoeg dichtheid voor alle drie de vensters
+  // (0-4/5-12/13+) op elke bereikbare stichtingshoogte.
+  const versWaterHoogten = [4, 8, 12, 16, 20, 24, 28, 32, 35];
+  const gaten = vindStichtingskansGaten(1, versWaterHoogten, 35);
+  assert.deepEqual(gaten, []);
+});
+
+test("vindStichtingskansGaten signaleert een gat als een kans-venster geen vers-water-vakje bevat", () => {
+  // Na hoogte 4 volgt pas weer vers water op 20: kans1 (5-8) en kans2 (9-16)
+  // vanaf stad-hoogte 4 missen dus allebei een treffer.
+  const versWaterHoogten = [4, 20, 24, 28, 32];
+  const gaten = vindStichtingskansGaten(1, versWaterHoogten, 33);
+
+  assert.ok(gaten.some((g) => g.vanafHoogte === 4 && g.kans === "kans1"));
+  assert.ok(gaten.some((g) => g.vanafHoogte === 4 && g.kans === "kans2"));
+});
+
+test("vindStichtingskansGaten slaat vensters over die al voorbij het einde van de kaart vallen", () => {
+  // Gesticht op de laatste streek van een kaart van 10 streken: alle drie de
+  // vensters beginnen ná streek 10 — de run is dan sowieso al voorbij, dus
+  // geen van de drie hoort als gat gemeld te worden.
+  const gaten = vindStichtingskansGaten(10, [10], 10);
+  assert.deepEqual(gaten.filter((g) => g.vanafHoogte === 10), []);
 });
