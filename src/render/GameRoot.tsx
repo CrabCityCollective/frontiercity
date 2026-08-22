@@ -1151,7 +1151,7 @@ export default function GameRoot({ onVerlaten, onTutorialAfgerond }: GameRootPro
       <HoofdMenu
         onOpslaan={opslaan}
         onLaden={laden}
-        kanLaden={heeftOpgeslagenSpel()}
+        kanLaden={heeftOpgeslagenSpel(state.campagneId)}
         onVerlaten={onVerlaten}
         uitlegAan={uitlegAan}
         onToggleUitleg={() => zetUitlegPopups(!uitlegAan)}
