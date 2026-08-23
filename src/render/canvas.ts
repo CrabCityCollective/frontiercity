@@ -1543,6 +1543,13 @@ export function tekenWereld(
   streken: Streek[],
   stad: City,
   plaatsingsStreekHoogte?: number,
+  // `bouwbaarBuitenFrontier`-improvements (Wachttoren/Legerkamp, hoofdstuk
+  // 6/11) mogen op elke ontgrendelde streek geplaatst worden, niet alleen op
+  // `plaatsingsStreekHoogte` (de actieve/frontier-streek) — issue "wachttoren
+  // bouwen: alle vakjes oplichten". Zolang dit gezet is, lichten alle lege
+  // vakjes van elke ontgrendelde streek op i.p.v. uitsluitend die van de
+  // frontier-streek.
+  plaatsingsAlleStreken?: boolean,
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
   legerkampBereikbarePosities?: Settler[],
@@ -1600,7 +1607,10 @@ export function tekenWereld(
 
       tekenTileGrid(ctx, x, y, tileSize);
 
-      if (streek.hoogte === plaatsingsStreekHoogte && isBebouwbaarLeeg(streek.tiles[col])) {
+      const isPlaatsingsDoelStreek = plaatsingsAlleStreken
+        ? streek.ontgrendeld
+        : streek.hoogte === plaatsingsStreekHoogte;
+      if (isPlaatsingsDoelStreek && isBebouwbaarLeeg(streek.tiles[col])) {
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
       }
 

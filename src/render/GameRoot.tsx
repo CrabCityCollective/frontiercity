@@ -1457,6 +1457,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           streken={zichtbareStrekenState}
           stad={state.stad}
           plaatsingsStreekHoogte={plaatsingsImprovement ? actieveStreek.hoogte : undefined}
+          plaatsingsAlleStreken={Boolean(plaatsingsImprovement?.bouwbaarBuitenFrontier)}
           settler={state.settler}
           tweedeSettler={state.tweedeSettler}
           settlerBereikbarePosities={settlerBereikbarePosities}
