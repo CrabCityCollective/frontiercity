@@ -1,7 +1,7 @@
 "use client";
 
+import { introContentVoorCampagne } from "@/game/campagnes";
 import { CampagneStatistieken } from "@/game/save";
-import { INTRO_FLAVOR_TEKST, INTRO_SUBTITEL, INTRO_TITEL } from "@/game/tutorialContent";
 
 interface IntroSchermProps {
   onBeginnen: () => void;
@@ -9,6 +9,9 @@ interface IntroSchermProps {
   // "voortgang verschillende campagnes tonen" — "dat alles mag op het
   // campagne intro scherm worden getoond"), zie GameRoot: `campagneStats`.
   statistieken: CampagneStatistieken;
+  // Campagne-bewuste titel/subtitel/flavor-tekst (hoofdstuk 19 design-doc,
+  // blocker 1) — `undefined` voor de tutorial, net als `GameState.campagneId`.
+  campagneId?: string;
 }
 
 // Introscherm (issue: "intro en game over scherm"), getoond vóór de speler
@@ -17,7 +20,8 @@ interface IntroSchermProps {
 // speler bevestigt — dat gebeurt bij elke start van de tutorial opnieuw (zie
 // GameRoot: `toonIntro`), niet slechts één keer per browser (issue: "als ik
 // de tutorial aanklik vanuit het menu, zie ik het introscherm niet meer").
-export default function IntroScherm({ onBeginnen, statistieken }: IntroSchermProps) {
+export default function IntroScherm({ onBeginnen, statistieken, campagneId }: IntroSchermProps) {
+  const { titel, subtitel, flavorTekst } = introContentVoorCampagne(campagneId);
   return (
     <div
       style={{
@@ -48,11 +52,9 @@ export default function IntroScherm({ onBeginnen, statistieken }: IntroSchermPro
         }}
       />
       <div className="fc-paneel" style={{ textAlign: "center", maxWidth: "540px", padding: "1.25rem 1.5rem" }}>
-        <h1 style={{ margin: "0 0 0.25rem", fontSize: "1.6rem", color: "var(--kleur-oker)" }}>{INTRO_TITEL}</h1>
-        <p style={{ margin: "0 0 1rem", fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>
-          {INTRO_SUBTITEL}
-        </p>
-        <p style={{ margin: 0, whiteSpace: "pre-line", lineHeight: 1.6 }}>{INTRO_FLAVOR_TEKST}</p>
+        <h1 style={{ margin: "0 0 0.25rem", fontSize: "1.6rem", color: "var(--kleur-oker)" }}>{titel}</h1>
+        <p style={{ margin: "0 0 1rem", fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>{subtitel}</p>
+        <p style={{ margin: 0, whiteSpace: "pre-line", lineHeight: 1.6 }}>{flavorTekst}</p>
         <div
           style={{
             display: "flex",

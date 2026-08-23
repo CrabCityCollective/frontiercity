@@ -35,6 +35,23 @@ export function goingWestStreekContent(hoogte: number): StreekContent | undefine
   return GOING_WEST_STREEK_CONTENT[hoogte];
 }
 
+// Introscherm & oceaan-uitleg-pop-up (hoofdstuk 19 design-doc, blocker 1,
+// laatste twee openstaande stukken): zelfde plaatsvervangende-titel-met-
+// "todo"-flavor-tekst-patroon als hierboven — de titel/subtitel hergebruiken
+// de al vastgelegde campagnenaam (`GOING_WEST_CAMPAGNE`/`CampagneSelectScherm`,
+// hier als losse string herhaald i.p.v. geïmporteerd om een circulaire
+// import met campagnes.ts te vermijden), de flavor-tekst is "todo" totdat de
+// speler die zelf aanvult (issue #278, vraag 1).
+export const GOING_WEST_INTRO_TITEL = "Going West";
+export const GOING_WEST_INTRO_SUBTITEL = "American Expansion";
+export const GOING_WEST_INTRO_FLAVOR_TEKST = "todo";
+
+// De laatste streek van de Going West-kaart is een afdaling naar de kust
+// (`worldGoingWest.ts`, streek 28-35) — net als de tutorial dus de enige
+// plek met vers water waar de afsluitende stad gesticht kan worden.
+export const GOING_WEST_OCEAAN_UITLEG_TITEL = "De kust van de Stille Oceaan";
+export const GOING_WEST_OCEAAN_UITLEG_TEKST = "todo";
+
 // Stichtingsmoment-pop-up (issue #278, antwoord op vraag 2): eigen, kortere
 // Going West-versie van `TutorialVoltooidPopup`, maar dan bij élke stichting
 // binnen het herhalende drie-stichtingsmomenten-patroon (hoofdstuk 9 Deel 2),

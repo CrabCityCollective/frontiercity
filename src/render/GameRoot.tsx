@@ -1420,7 +1420,8 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
-  if (toonIntro) return <IntroScherm onBeginnen={bevestigIntro} statistieken={campagneStats} />;
+  if (toonIntro)
+    return <IntroScherm onBeginnen={bevestigIntro} statistieken={campagneStats} campagneId={state.campagneId} />;
   if (state.laatsteIneenstorting) {
     // Na een ineenstorting terug naar het beginscherm van het spel (issue:
     // "na het game over scherm terug naar het begin scherm, niet naar het
@@ -1510,7 +1511,9 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
         {toonVijandelijkHeiligdomVeroverdPopup && (
           <VijandelijkHeiligdomPopup fase="veroverd" onSluiten={sluitVijandelijkHeiligdomVeroverdMelding} />
         )}
-        {toonOceaanUitlegPopup && <OceaanUitlegPopup onDoorgaan={() => setOceaanUitlegBevestigd(true)} />}
+        {toonOceaanUitlegPopup && (
+          <OceaanUitlegPopup onDoorgaan={() => setOceaanUitlegBevestigd(true)} campagneId={state.campagneId} />
+        )}
         {toonIndringersPopup && state.indringersEvent && (
           <IndringersPopup
             event={state.indringersEvent}

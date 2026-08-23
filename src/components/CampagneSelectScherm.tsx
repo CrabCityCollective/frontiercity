@@ -18,13 +18,16 @@ interface Campagne {
 // voor deze campagnes: dat blijft buiten de MVP-scope (CLAUDE.md), dit is
 // zuiver navigatie-UI.
 //
-// M20d deelstap 3 (hoofdstuk 9/13/15): "Going West" heeft nu al zijn
-// `CampaignConfig`-id ("going-west", zie campagnes.ts) staan, zodat
-// `onKiesCampagne` 'm door kan geven zodra deze op `beschikbaar: true` gaat —
-// tot die laatste M20d-deelstap blijft hij hier bewust nog uitgegrijsd.
+// M20g (hoofdstuk 9/13/15/19): "Going West" staat nu op `beschikbaar: true` —
+// de laatste blocker uit hoofdstuk 19 (intro-/oceaan-uitleg-tekst nog
+// tutorial-specifiek) is opgelost met dezelfde campagne-bewuste
+// placeholder-aanpak als de rest van Going West's content (M20f,
+// `introContentVoorCampagne()`/`oceaanUitlegVoorCampagne()`, campagnes.ts).
+// De drie Anker-verhalen blijven bewust nog open, los, doorlopend werk
+// (hoofdstuk 15) — geen poort voor `beschikbaar: true`.
 const CAMPAGNES: Campagne[] = [
   { naam: "To the Elusive Coast", ondertitel: "Tutorial", beschikbaar: true },
-  { id: "going-west", naam: "Going West", ondertitel: "American Expansion", beschikbaar: false },
+  { id: "going-west", naam: "Going West", ondertitel: "American Expansion", beschikbaar: true },
   { naam: "Through the Taiga", ondertitel: "Russian Expansion", beschikbaar: false },
   { naam: "Into the Footsteps of Alexander", ondertitel: "Grieks-Macedonische Veroveringen", beschikbaar: false },
 ];
