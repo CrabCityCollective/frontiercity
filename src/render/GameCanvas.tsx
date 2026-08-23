@@ -19,6 +19,12 @@ interface GameCanvasProps {
   // (klik-op-tile-plaatsing) — zolang dit gezet is markeert de canvas de
   // lege tiles op die streek en stuurt elke klik naar `onTileClick`.
   plaatsingsStreekHoogte?: number;
+  // `bouwbaarBuitenFrontier`-improvements (Wachttoren/Legerkamp, hoofdstuk
+  // 6/11) mogen op elke ontgrendelde streek geplaatst worden — issue
+  // "wachttoren bouwen: alle vakjes oplichten". Zolang dit gezet is,
+  // markeert de canvas de lege tiles van élke ontgrendelde streek i.p.v.
+  // uitsluitend `plaatsingsStreekHoogte`.
+  plaatsingsAlleStreken?: boolean;
   // Positie van de settler-eenheid (M10, hoofdstuk 16) — `undefined` tot
   // beurt 2, zie economie.ts `volgendeBeurt`.
   settler?: Settler;
@@ -105,6 +111,7 @@ export default function GameCanvas({
   streken,
   stad,
   plaatsingsStreekHoogte,
+  plaatsingsAlleStreken,
   settler,
   tweedeSettler,
   settlerBereikbarePosities,
@@ -136,6 +143,7 @@ export default function GameCanvas({
       streken,
       stad,
       plaatsingsStreekHoogte,
+      plaatsingsAlleStreken,
       settler,
       settlerBereikbarePosities,
       legerkampBereikbarePosities,
@@ -147,6 +155,7 @@ export default function GameCanvas({
     streken,
     stad,
     plaatsingsStreekHoogte,
+    plaatsingsAlleStreken,
     settler,
     tweedeSettler,
     settlerBereikbarePosities,

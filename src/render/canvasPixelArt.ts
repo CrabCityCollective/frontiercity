@@ -893,6 +893,9 @@ export function tekenWereldPixelArt(
   streken: Streek[],
   stad: City,
   plaatsingsStreekHoogte?: number,
+  // Zie canvas.ts (`tekenWereld`) voor de volledige toelichting — issue
+  // "wachttoren bouwen: alle vakjes oplichten".
+  plaatsingsAlleStreken?: boolean,
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
   legerkampBereikbarePosities?: Settler[],
@@ -951,7 +954,10 @@ export function tekenWereldPixelArt(
       blit(ctx, tileCanvas, x, y, tileSize);
       tekenTileGrid(ctx, x, y, tileSize);
 
-      if (streek.hoogte === plaatsingsStreekHoogte && isBebouwbaarLeeg(streek.tiles[col])) {
+      const isPlaatsingsDoelStreek = plaatsingsAlleStreken
+        ? streek.ontgrendeld
+        : streek.hoogte === plaatsingsStreekHoogte;
+      if (isPlaatsingsDoelStreek && isBebouwbaarLeeg(streek.tiles[col])) {
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
       }
 
