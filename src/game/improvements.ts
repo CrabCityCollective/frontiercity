@@ -83,6 +83,9 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
   if (effect.type === "stad-legerwaarde" && effect.waarde) {
     return `Geeft de hele stad +${effect.waarde} legerwaarde bij een militaire confrontatie, zonder dat hier bemanning voor nodig is.`;
   }
+  if (effect.type === "groeidrempel-verlaging" && effect.waarde) {
+    return `Verlaagt de voedseldrempel om naar Groot te groeien met ${effect.waarde}.`;
+  }
   if (effect.type === "stad") {
     return "Het centrum van je nederzetting.";
   }
@@ -624,12 +627,17 @@ export const OPSLAGPLAATS: Improvement = {
 // het nooit-gebouwde relic-slot-concept uit een eerdere versie van hoofdstuk
 // 4 vervangt. Opslagplaats hierboven en de groei-tier-improvements
 // (WOONWIJK/GROTE_WOONWIJK) tellen bewust niet mee (zie hoofdstuk 11): die
-// hebben allebei al hun eigen wachtrij/functie, dit zijn de vijf improvements
-// die om een slot concurreren. Elk heeft een eigen `productie`-effect dat
-// `verwerkProductie`/`berekenCultuurProductieDitBeurt` in economie.ts
-// meetellen zodra hij in `City.cityImprovements` staat — zonder
+// hebben allebei al hun eigen wachtrij/functie, dit zijn de zes improvements
+// die om een slot concurreren. Bibliotheek/Markt/Barakken/Tempel/Grote Tempel
+// hebben elk een eigen `productie`-/`stad-legerwaarde`-effect dat
+// `verwerkProductie`/`berekenCultuurProductieDitBeurt`/`berekenLegerwaarde` in
+// economie.ts meetellen zodra hij in `City.cityImprovements` staat — zonder
 // wegverbinding-eis (net als Opslagplaats): een city improvement staat niet
-// op een land-vakje.
+// op een land-vakje. Aquaduct (hieronder, na Grote Tempel) wijkt hierin af:
+// géén doorlopende productie, maar een eenmalige, blijvende verlaging van de
+// groeidrempel (zie `aquaductVoedseldrempelVerlaging` verderop) — zelfde
+// "staat in de array, telt mee voor de cap"-behandeling, andere
+// effect-verwerking.
 export const BIBLIOTHEEK: Improvement = {
   id: "bibliotheek",
   naam: "Bibliotheek",
@@ -682,6 +690,39 @@ export const TEMPEL: Improvement = {
   stadsgrootteEis: "middel",
 };
 
+// Aquaduct (hoofdstuk 3/4/13, issue: "Aquaduct city improvement" #285): het
+// Civiel-category-gat uit de tabel in hoofdstuk 3 ("Aquaduct, riolering,
+// woonwijk + grote woonwijk") — Woonwijk/Grote Woonwijk (de groei-tier-stappen
+// zelf, hierboven) waren al gebouwd, maar Civiel had tot nu toe geen enkel
+// gecapt city improvement zoals de andere vier categorieën (Bibliotheek/Markt/
+// Barakken/Tempel). Zelfde `stadsgrootteEis: "middel"`-patroon als Barakken/
+// Tempel. Effect-type "groeidrempel-verlaging" is nieuw: verlaagt
+// `VOEDSEL_DREMPEL_GROEI_GROOT` (world.ts, momenteel 100) met `waarde` zodra
+// het in `City.cityImprovements` staat — zie `aquaductVoedseldrempelVerlaging`
+// hieronder, gebruikt door `groeiTierVoedselDrempel` (groeiEnRekrutering.ts)
+// en de gelijknamige weergave-functie in CivielPaneel.tsx. -40 is een
+// bewuste MVP-placeholder (hoofdstuk 14: "flink" uit het issue) die de
+// drempel van 100 naar 60 brengt — in dezelfde orde van grootte als de eerste
+// groei-drempel (`VOEDSEL_DREMPEL_GROEI`, 40).
+export const AQUADUCT: Improvement = {
+  id: "aquaduct",
+  naam: "Aquaduct",
+  categorie: "civiel",
+  soort: "city",
+  kosten: { hout: 4, steen: 10 },
+  bouwtijdBeurten: 3,
+  effect: { type: "groeidrempel-verlaging", waarde: 40 },
+  stadsgrootteEis: "middel",
+};
+
+// Hoeveel het Aquaduct (indien gebouwd) de voedseldrempel voor groei naar
+// Groot verlaagt — 0 zonder Aquaduct. Gedeeld tussen `groeiTierVoedselDrempel`
+// (groeiEnRekrutering.ts) en de weergave in CivielPaneel.tsx zodat beide
+// dezelfde drempel tonen/hanteren.
+export function aquaductVoedseldrempelVerlaging(cityImprovements: Improvement[]): number {
+  return cityImprovements.find((ci) => ci.id === "aquaduct")?.effect.waarde ?? 0;
+}
+
 // Grote Tempel: een aparte, tweede cultureel-improvement-slot naast een al
 // gebouwde Tempel (geen vervanging) — beide hebben een ander `id`, dus
 // `startCityVerbetering`/de cap-telling in economie.ts behandelen ze als
@@ -700,11 +741,11 @@ export const GROTE_TEMPEL: Improvement = {
   stadsgrootteEis: "groot",
 };
 
-// Alle vijf gecapte city improvements — de opties voor de nieuwe
+// Alle zes gecapte city improvements — de opties voor de nieuwe
 // stadsverbeteringen-UI (StadsverbeteringenPaneel.tsx), gefilterd daar
 // verder op stadsgrootte-eis/al-gebouwd/cap (groeiEnRekrutering.ts:
 // `kanCityVerbeteringBouwen`).
-export const CAPPED_CITY_IMPROVEMENTS: Improvement[] = [BIBLIOTHEEK, MARKT, BARAKKEN, TEMPEL, GROTE_TEMPEL];
+export const CAPPED_CITY_IMPROVEMENTS: Improvement[] = [BIBLIOTHEEK, MARKT, BARAKKEN, TEMPEL, GROTE_TEMPEL, AQUADUCT];
 
 // City-improvement-capaciteit per stadsgrootte (hoofdstuk 3/4/11/14, issue:
 // "city improvements" Deel 1) — hoeveel van de vijf improvements hierboven

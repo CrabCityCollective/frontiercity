@@ -14,6 +14,7 @@
 // `stuurVerkenner` in streekOntgrendeling.ts.
 
 import {
+  aquaductVoedseldrempelVerlaging,
   cityImprovementCap,
   GROTE_WOONWIJK,
   MISSIONARIS,
@@ -359,13 +360,18 @@ function groeiTierImprovement(grootte: City["grootte"]): Improvement | undefined
   return undefined;
 }
 
-function groeiTierVoedselDrempel(grootte: City["grootte"]): number {
-  return grootte === "klein" ? VOEDSEL_DREMPEL_GROEI : VOEDSEL_DREMPEL_GROEI_GROOT;
+// `stad` (i.p.v. alleen `grootte`) omdat de tweede drempel — anders dan de
+// eerste — een Aquaduct (issue #285, hoofdstuk 3/4/13) kan verlagen: een
+// gecapt Civiel city improvement in `stad.cityImprovements`, zie
+// `aquaductVoedseldrempelVerlaging` in improvements.ts.
+function groeiTierVoedselDrempel(stad: City): number {
+  if (stad.grootte === "klein") return VOEDSEL_DREMPEL_GROEI;
+  return VOEDSEL_DREMPEL_GROEI_GROOT - aquaductVoedseldrempelVerlaging(stad.cityImprovements);
 }
 
 export function startGroei(state: GameState): GameState {
   const improvement = groeiTierImprovement(state.stad.grootte);
-  if (!improvement || state.stad.civielInAanbouw || state.voedsel < groeiTierVoedselDrempel(state.stad.grootte)) {
+  if (!improvement || state.stad.civielInAanbouw || state.voedsel < groeiTierVoedselDrempel(state.stad)) {
     return state;
   }
 

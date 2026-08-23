@@ -1,20 +1,26 @@
 "use client";
 
 import { kanTweedeSettlerBouwen } from "@/game/groeiEnRekrutering";
-import { GROTE_WOONWIJK, NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
+import { aquaductVoedseldrempelVerlaging, GROTE_WOONWIJK, NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
 import { City, GameState } from "@/game/types";
 import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "@/game/world";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
 
-// Groei-tier-improvement/-drempel voor de huidige stadsgrootte (hoofdstuk 3/
-// 4/13/14, issue: "city improvements" Deel 2 — de tweede groei-stap,
-// middel→groot, ontbrak nog volledig). Zelfde keuze als `groeiTierImprovement`/
-// `groeiTierVoedselDrempel` in economie.ts, hier puur voor de weergave.
-function groeiTierVoorGrootte(grootte: City["grootte"]) {
-  if (grootte === "klein") return { improvement: WOONWIJK, drempel: VOEDSEL_DREMPEL_GROEI, naarGrootte: "middel" };
-  if (grootte === "middel")
-    return { improvement: GROTE_WOONWIJK, drempel: VOEDSEL_DREMPEL_GROEI_GROOT, naarGrootte: "groot" };
+// Groei-tier-improvement/-drempel voor de huidige stad (hoofdstuk 3/4/13/14,
+// issue: "city improvements" Deel 2 — de tweede groei-stap, middel→groot,
+// ontbrak nog volledig). Zelfde keuze als `groeiTierImprovement`/
+// `groeiTierVoedselDrempel` in groeiEnRekrutering.ts, hier puur voor de
+// weergave — inclusief de Aquaduct-verlaging (issue #285) van de tweede
+// drempel, zodat dit paneel dezelfde drempel toont als `startGroei` hanteert.
+function groeiTierVoorGrootte(stad: City) {
+  if (stad.grootte === "klein") return { improvement: WOONWIJK, drempel: VOEDSEL_DREMPEL_GROEI, naarGrootte: "middel" };
+  if (stad.grootte === "middel")
+    return {
+      improvement: GROTE_WOONWIJK,
+      drempel: VOEDSEL_DREMPEL_GROEI_GROOT - aquaductVoedseldrempelVerlaging(stad.cityImprovements),
+      naarGrootte: "groot",
+    };
   return undefined;
 }
 
@@ -44,7 +50,7 @@ export default function CivielPaneel({
 }: CivielPaneelProps) {
   const { stad, voedsel, settler } = state;
 
-  const groeiTier = groeiTierVoorGrootte(stad.grootte);
+  const groeiTier = groeiTierVoorGrootte(stad);
   const kanGroeien = groeiTier !== undefined;
   // Hoofdstuk 11: "de settler verschijnt alleen als optie in de civiele pool
   // als het huidige aantal settlers lager is dan het aantal steden" — in de
