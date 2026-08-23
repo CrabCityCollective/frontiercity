@@ -600,11 +600,12 @@ export function kiesGeefTribuut(state: GameState): GameState {
   return { ...state, indringersEvent: { ...event, fase: "betaald" } };
 }
 
-// Weigert het tribuut (hoofdstuk 6): normaal verwoesten de indringers de stad
-// en valt de speler terug op de vorige stad, als die er is. De MVP kent nog
-// maar één stad (hoofdstuk 13) — zonder toevlucht wordt het tribuut alsnog
-// betaald, wat hier eerst zichtbaar wordt gemaakt (`fase: "geforceerd"`)
-// zodat de pop-up dat kan uitleggen vóór `bevestigGedwongenTribuut` verder gaat.
+// Weigert het tribuut (hoofdstuk 6, issue: "indringers pakken altijd tribuut,
+// geen stad-vernietiging"): weigeren heeft bewust hetzelfde gevolg als geven
+// — er is geen "stad vernietigd"-uitkomst, ook niet zodra er meerdere steden
+// bestaan (hoofdstuk 9). Het tribuut wordt hoe dan ook alsnog opgeëist, wat
+// hier eerst zichtbaar wordt gemaakt (`fase: "geforceerd"`) zodat de pop-up
+// dat kan uitleggen vóór `bevestigGedwongenTribuut` verder gaat.
 export function weigerTribuut(state: GameState): GameState {
   const event = state.indringersEvent;
   if (!event?.tribuut) return state;
