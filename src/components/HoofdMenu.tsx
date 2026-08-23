@@ -30,6 +30,10 @@ interface HoofdMenuProps {
   // erbij maken om de tech tree in te zien"): zelfde plek/patroon als
   // "Historie" hierboven.
   onToonTechboom: () => void;
+  // Economie-overzicht-knop (issue: "Economie overzicht" — "bij het menu een
+  // knop waarop je een economie overzicht kunt inzien"): zelfde plek/patroon
+  // als "Historie"/"Techboom" hierboven.
+  onToonEconomie: () => void;
 }
 
 // Zwevend menu-icoontje rechtsboven (issue: "niet automatisch opslaan, maar
@@ -47,6 +51,7 @@ export default function HoofdMenu({
   onToggleStijl,
   onToonHistorie,
   onToonTechboom,
+  onToonEconomie,
 }: HoofdMenuProps) {
   const [open, setOpen] = useState(false);
   const [toonInstellingen, setToonInstellingen] = useState(false);
@@ -116,6 +121,16 @@ export default function HoofdMenu({
             style={{ padding: "0.35rem 0.75rem" }}
           >
             Techboom
+          </button>
+          <button
+            className="fc-knop"
+            onClick={() => {
+              onToonEconomie();
+              setOpen(false);
+            }}
+            style={{ padding: "0.35rem 0.75rem" }}
+          >
+            Economie
           </button>
           <button
             className="fc-knop"

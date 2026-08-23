@@ -7,8 +7,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { verplaatsSettlerNaar } from "./acties";
-import { beurtMagAutomatischDoorgaan, maakInitieleSpelStatus, volgendeBeurt } from "./economie";
+import { beurtMagAutomatischDoorgaan, berekenEconomieOverzicht, maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { sluitBouwKeuze } from "./infrastructuurEnBouw";
+import { metActiefHeiligdomOpStreek1 } from "./testHelpers";
 
 test("beurtMagAutomatischDoorgaan: vóór beurt 2 (nog geen settler) telt alleen de bouwkeuze van beurt 1 mee (issue: beurt button helemaal weg)", () => {
   const state = maakInitieleSpelStatus();
@@ -67,4 +68,23 @@ test("beurtMagAutomatischDoorgaan: op een bouwmoment moet zowel de settler-actie
 
   const naBeide = { ...naSettlerActie, bouwKeuzeGedaanDitBeurt: true };
   assert.equal(beurtMagAutomatischDoorgaan(naBeide), true);
+});
+
+// Economie-overzicht (issue: "Economie overzicht" — "hoeveel resources er
+// volgende beurt vanaf of en bij komen"): puur informatief, `state` zelf mag
+// niet muteren.
+test("berekenEconomieOverzicht: op de startstatus is er alleen voedselverbruik, verder nog geen productie", () => {
+  const state = maakInitieleSpelStatus();
+  const overzicht = berekenEconomieOverzicht(state);
+
+  assert.deepEqual(overzicht, { hout: 0, steen: 0, erts: 0, goud: 0, voedsel: -2, cultuur: 0, wetenschap: 0 });
+  // Geen mutatie van de meegegeven status (issue: puur een voorspelling).
+  assert.equal(state.voedsel, 20);
+});
+
+test("berekenEconomieOverzicht: telt de opbrengst van een actieve, wegverbonden improvement mee (Heiligdom, +2 cultuur)", () => {
+  const state = metActiefHeiligdomOpStreek1(maakInitieleSpelStatus());
+  const overzicht = berekenEconomieOverzicht(state);
+
+  assert.equal(overzicht.cultuur, 2);
 });

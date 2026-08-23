@@ -34,7 +34,7 @@
 // (hoofdstuk 14) — de waarden in deze modules zijn bewuste MVP-placeholders,
 // geen definitieve balans.
 
-import { GameState } from "./types";
+import { GameState, ResourceType } from "./types";
 import { STAD_POSITIE } from "./world";
 import { verwerkUitputting, verwerkVerval } from "./uitputtingEnVerval";
 import { verwerkBouwwachtrij } from "./bouwwachtrij";
@@ -74,6 +74,44 @@ export { CITY_IMPROVEMENT_CAP, cityImprovementCap } from "./improvements";
 // blijft ongemoeid.
 export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
   return { ...state, uitlegPopupsAan: aan };
+}
+
+// Economie-overzicht (issue: "Economie overzicht" — "hoeveel resources er
+// volgende beurt vanaf of en bij komen ... alle grondstoffen, voedsel,
+// cultuur en wetenschap"): een read-only voorspelling van de netto
+// resource-verandering komende beurt, bereikbaar via het hoofdmenu
+// (EconomieOverzichtPaneel). Herhaalt exact de deterministische,
+// resource-rakende stappen van `volgendeBeurt` hieronder — uitputting (kan
+// productie deze beurt al stopzetten), de land-tile-bouwwachtrij, productie,
+// en de stad-brede bouwwachtrijen (civiel/tweede settler/opslagplaats/
+// stadsverbetering/rekrutering/missionaris) — maar laat de kans-gebaseerde
+// stappen (streek-ontgrendeling, tech-drempel, verval, indringers, kuddes,
+// roofdieren) bewust achterwege: die veranderen deze zeven resources zelf
+// niet direct (streek-ontgrendeling/tech-drempel tonen alleen een
+// keuze-pop-up; indringers-tribuut wordt pas verrekend zodra de speler daar
+// zelf voor kiest, zie `verwerkIndringers` in indringersEnDieren.ts) — en
+// zouden de uitkomst door hun `Math.random()` bij elke render laten
+// wisselen.
+export function berekenEconomieOverzicht(state: GameState): Record<ResourceType, number> {
+  const naUitputting = verwerkUitputting(state);
+  const naBouw = verwerkBouwwachtrij(naUitputting);
+  const naProductie = verwerkProductie(naBouw);
+  const naCiviel = verwerkCivielInAanbouw(naProductie);
+  const naTweedeSettler = verwerkTweedeSettlerInAanbouw(naCiviel);
+  const naOpslagplaats = verwerkOpslagplaats(naTweedeSettler);
+  const naCityVerbetering = verwerkCityVerbetering(naOpslagplaats);
+  const naRecrutering = verwerkRecrutering(naCityVerbetering);
+  const uitkomst = verwerkMissionarisRecrutering(naRecrutering);
+
+  return {
+    hout: uitkomst.voorraad.hout - state.voorraad.hout,
+    steen: uitkomst.voorraad.steen - state.voorraad.steen,
+    erts: uitkomst.voorraad.erts - state.voorraad.erts,
+    goud: uitkomst.voorraad.goud - state.voorraad.goud,
+    voedsel: uitkomst.voedsel - state.voedsel,
+    cultuur: uitkomst.cultuur - state.cultuur,
+    wetenschap: uitkomst.wetenschap - state.wetenschap,
+  };
 }
 
 // Verwerkt één spelbeurt: eerst uitputting van de actieve tiles (M4), dan
