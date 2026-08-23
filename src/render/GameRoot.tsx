@@ -65,6 +65,7 @@ import {
   SETTLER_WEG_SNELHEID_UITLEG_TITEL,
   TWEEDE_SETTLER_UITLEG_TEKST,
   TWEEDE_SETTLER_UITLEG_TITEL,
+  streekContent,
 } from "@/game/tutorialContent";
 import { TWEEDE_SETTLER_MIN_STREEK } from "@/game/groeiEnRekrutering";
 import { berekenLegerwaarde, kanConfrontatieBezetteStreek, onbemandeLegerkampPosities } from "@/game/militair";
@@ -78,7 +79,6 @@ import { aantalAangelegdeWegen, bereikbarePosities } from "@/game/wegen";
 import {
   EINDE_OCEAAN_HOOGTE,
   ROOFDIER_MIN_STREEK,
-  TUTORIAL_STREEK_AANTAL,
   VOEDSEL_DREMPEL_GROEI,
   hoogsteOntgrendeldeStreek,
   zichtbareStreken,
@@ -581,7 +581,14 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
   // kerninhoud, geen uitleg.
   const uitlegAan = state.uitlegPopupsAan;
 
-  const toonStreekPopup = actieveStreek.hoogte > laatstBevestigdeStreek;
+  // Blocker 3 (hoofdstuk 19, design-doc): een streek-popup alleen tonen als er
+  // ook daadwerkelijk streek-content voor bestaat — zonder deze eis blijft
+  // `laatstBevestigdeStreek` (alleen bijgewerkt via de "Doorgaan"-knop van deze
+  // popup) permanent achter zodra een campagnekaart verder komt dan de
+  // beschikbare content, wat via de `!toonStreekPopup`-keten hieronder alle
+  // lager-prioriteit pop-ups blokkeert, inclusief de verplichte tech-keuze.
+  const toonStreekPopup =
+    actieveStreek.hoogte > laatstBevestigdeStreek && streekContent(actieveStreek.hoogte) !== undefined;
   // Openings-uitleg bij het begin van beurt 1 (issue: "uitleg pop-ups
   // dynamisch tonen") — geen vast beurtbereik meer, één vaste pop-up.
   const toonUitlegPopup = !toonStreekPopup && uitlegAan && state.beurt === 1 && !openingsUitlegBevestigd;
@@ -706,7 +713,12 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
     !toonStrijdersOpleidenPopup &&
     !toonBezetteStreekOntdektPopup &&
     uitlegAan &&
-    actieveStreek.hoogte === TUTORIAL_STREEK_AANTAL &&
+    // Blocker 2 (hoofdstuk 19, design-doc): per-campagne streek-aantal i.p.v.
+    // de tutorial-constante `TUTORIAL_STREEK_AANTAL` — `state.streken.length`
+    // is al de lengte van de actieve campagnekaart (zie ook `acties.ts`:
+    // `isAfsluitendeStichting`), dus deze popup verschijnt nu op de laatste
+    // streek van elke campagne, niet alleen op streek 14.
+    actieveStreek.hoogte === state.streken.length &&
     !oceaanUitlegBevestigd;
   // Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen"):
   // zodra er voor het eerst genoeg voedsel is voor de groei-tier klein→middel

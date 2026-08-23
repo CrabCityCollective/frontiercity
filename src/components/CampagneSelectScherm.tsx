@@ -88,7 +88,14 @@ export default function CampagneSelectScherm({ onKiesCampagne }: CampagneSelectS
           >
             <strong className="fc-heading" style={{ fontSize: "1.1rem" }}>
               {campagne.naam}
-              {campagne.beschikbaar && heeftTutorialVoltooid() && (
+              {/* Hoofdstuk 19 (design-doc), "Samenhang met het herhalende
+                  stichtingspatroon": `heeftTutorialVoltooid()` gaat alleen over
+                  de tutorial-save, dus het vinkje mag ook uitsluitend bij de
+                  tutorial-entry zelf (campagne.id === undefined) verschijnen —
+                  anders krijgt elke andere beschikbare campagne hetzelfde
+                  vinkje zodra de tutorial ooit voltooid is, zonder een eigen
+                  voltooid-signaal te hebben. */}
+              {campagne.beschikbaar && campagne.id === undefined && heeftTutorialVoltooid() && (
                 <span
                   aria-label="Voltooid"
                   title="Voltooid — nog altijd opnieuw te spelen"
