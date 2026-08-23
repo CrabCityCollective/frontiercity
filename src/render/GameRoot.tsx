@@ -160,6 +160,9 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     bemanWachttoren,
     haalStrijderTerug,
     zetUitlegPopups,
+    markeerUitlegGezien,
+    bevestigStreekPopup,
+    bevestigStichtingsMomentPopup,
     kiesTech,
     stuurVerkenner,
     stuurMissionaris,
@@ -250,7 +253,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // dan de laatst bevestigde, blokkeert deze popup de bouw-pop-up totdat de
   // speler 'm wegklikt. Begint op 1 (de startstreek, al geïntroduceerd via
   // IntroScherm) zodat hij niet meteen bij de eerste streek verschijnt.
-  const [laatstBevestigdeStreek, setLaatstBevestigdeStreek] = useState(1);
+  const laatstBevestigdeStreek = state.laatstBevestigdeStreek;
 
   // Stichtingsmoment-pop-up (issue #278, hoofdstuk 9 Deel 2/hoofdstuk 19
   // "Samenhang"): onthoudt hoeveel steden de speler al bevestigd heeft gezien
@@ -258,13 +261,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // `initieleSpelStatus.ts`), dus elke stichting daarna verhoogt
   // `state.steden.length` voorbij deze teller. Alleen relevant voor
   // niet-tutorial-campagnes, zie `toonStichtingsMomentPopup` hieronder.
-  const [laatsteBevestigdeStedenAantal, setLaatsteBevestigdeStedenAantal] = useState(1);
+  const laatsteBevestigdeStedenAantal = state.laatsteBevestigdeStedenAantal;
 
   // Openings-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"): los van
   // de streek-popup hierboven, toont dit één vaste pop-up bij het begin van
   // beurt 1 — een eenmalige-confirm-vlag, zelfde patroon als de overige
   // uitleg-pop-ups hieronder (settler/voedsel/boerderij/militair).
-  const [openingsUitlegBevestigd, setOpeningsUitlegBevestigd] = useState(false);
+  const openingsUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("opening");
 
   // Tutorial-voltooid-pop-up (issue: "pop-up met summary na het halen
   // ervan"): eenmalige confirm-vlag per sessie, zelfde patroon als
@@ -277,26 +280,26 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // Oceaan-uitleg-pop-up (issue: "tutorial laatste stad aan oceaan"): zelfde
   // eenmalige-confirm-vlag, getoond zodra de laatste streek (de oceaan aan de
   // overkant) bereikt is.
-  const [oceaanUitlegBevestigd, setOceaanUitlegBevestigd] = useState(false);
+  const oceaanUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("oceaan");
   const [tutorialVoltooidBevestigd, setTutorialVoltooidBevestigd] = useState(false);
   // Settler-uitleg-pop-up (M10, hoofdstuk 16): zelfde eenmalige-confirm-vlag
   // als de twee hierboven, getoond zodra de settler in beurt 2 verschijnt.
-  const [settlerUitlegBevestigd, setSettlerUitlegBevestigd] = useState(false);
+  const settlerUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("settler");
   // Boerderij-klaar-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"):
   // zelfde eenmalige-confirm-vlag, getoond zodra er voor het eerst een
   // actieve, wegverbonden boerderij meeproduceert (zie economie.ts
   // `heeftWerkendeBoerderij`) — sinds "Tweede streek boerderij" ten vroegste
   // streek 2.
-  const [boerderijKlaarBevestigd, setBoerderijKlaarBevestigd] = useState(false);
+  const boerderijKlaarBevestigd = state.gezieneEenmaligeUitleg.includes("boerderijKlaar");
   // Strijders-opleiden-uitleg-pop-up (issue: "pop-ups wijzigen"): zelfde
   // eenmalige-confirm-vlag, getoond zodra er voor het eerst een gebouwde mijn
   // staat (zie economie.ts `heeftGebouwdeMijn`).
-  const [strijdersOpleidenBevestigd, setStrijdersOpleidenBevestigd] = useState(false);
+  const strijdersOpleidenBevestigd = state.gezieneEenmaligeUitleg.includes("strijdersOpleiden");
   // Stad-upgrade-uitleg-pop-up (issue: "city improvement menu toevoegen"):
   // zelfde eenmalige-confirm-vlag, getoond zodra er voor het eerst genoeg
   // voedsel is voor de groei-tier klein→middel (zie `toonStadUpgradeUitlegPopup`
   // hieronder).
-  const [stadUpgradeUitlegBevestigd, setStadUpgradeUitlegBevestigd] = useState(false);
+  const stadUpgradeUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("stadUpgrade");
   // "De vijand aan de horizon"- en "Goddelijke raadgeving"-pop-ups (issue:
   // "tutorial popups wijzigen", trigger van de eerste verschoven van streek 2
   // naar 3 door "Tweede streek boerderij", trigger van de laatste verschoven
@@ -305,54 +308,54 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // (Militair/Wachttoren, Economisch/Mijn) en streek 4
   // (Wetenschappelijk/Sterrencirkel) voor het eerst ontgrendeld worden — zie
   // `toonVijandAanDeHorizonPopup`/`toonGoddelijkeRaadgevingPopup` hieronder.
-  const [vijandAanDeHorizonBevestigd, setVijandAanDeHorizonBevestigd] = useState(false);
-  const [goddelijkeRaadgevingBevestigd, setGoddelijkeRaadgevingBevestigd] = useState(false);
+  const vijandAanDeHorizonBevestigd = state.gezieneEenmaligeUitleg.includes("vijandAanDeHorizon");
+  const goddelijkeRaadgevingBevestigd = state.gezieneEenmaligeUitleg.includes("goddelijkeRaadgeving");
   // Roofdier-intro-uitleg-pop-up (hoofdstuk 14/17, issue: "Eerste streek geen
   // roofdieren"): zelfde eenmalige-confirm-vlag als de twee hierboven,
   // getoond zodra streek `ROOFDIER_MIN_STREEK` (world.ts) voor het eerst
   // ontgrendelt — zie `toonRoofdierIntroPopup` hieronder.
-  const [roofdierIntroBevestigd, setRoofdierIntroBevestigd] = useState(false);
+  const roofdierIntroBevestigd = state.gezieneEenmaligeUitleg.includes("roofdierIntro");
   // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
   // van streek 2 naar 3 door "Tweede streek boerderij"): zelfde
   // eenmalige-confirm-vlag, getoond zodra streek 3 voor het eerst ontgrendelt
   // — legt uit waarom de Wachttoren (anders dan alle andere bouwwerken) op
   // elke ontgrendelde streek te plaatsen is.
-  const [wachttorenOveralUitlegBevestigd, setWachttorenOveralUitlegBevestigd] = useState(false);
+  const wachttorenOveralUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("wachttorenOveral");
   // Voedsel-balans-uitleg-pop-up (issue: "meer uitleg", trigger verschoven van
   // streek 4 naar streek 1 door "jagen en farmen omdraaien"): zelfde
   // eenmalige-confirm-vlag, getoond zodra streek 1 voor het eerst ontgrendelt
   // — vrijwel meteen, het moment waarop de jacht de enige voedselbron is (de
   // boerderij komt pas later bij, uitgelegd via BoerderijKlaarUitlegPopup).
-  const [voedselBalansUitlegBevestigd, setVoedselBalansUitlegBevestigd] = useState(false);
+  const voedselBalansUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("voedselBalans");
   // Settler-acties-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-
   // confirm-vlag, getoond zodra de settler in beurt 2 verschijnt — legt de
   // drie losse settler-acties uit (wegaanleg, jacht, houtkap), en dat bouwen
   // zelf niet vereist dat de settler op de bouwplek staat.
-  const [settlerActiesUitlegBevestigd, setSettlerActiesUitlegBevestigd] = useState(false);
+  const settlerActiesUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("settlerActies");
   // Beurtensysteem-uitleg-pop-up (issue: "meer uitleg"): zelfde eenmalige-
   // confirm-vlag, getoond zodra beurt 2 begint — het eerste moment waarop een
   // volledige beurt (verbruik + productie) al is doorgerekend.
-  const [beurtensysteemUitlegBevestigd, setBeurtensysteemUitlegBevestigd] = useState(false);
+  const beurtensysteemUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("beurtensysteem");
   // Stadsverbeteringen-uitleg-pop-up (issue: "Uitleg city improvements"):
   // zelfde eenmalige-confirm-vlag, getoond zodra streek 2 voor het eerst
   // ontgrendelt — zie `toonStadsverbeteringenUitlegPopup` hieronder.
-  const [stadsverbeteringenUitlegBevestigd, setStadsverbeteringenUitlegBevestigd] = useState(false);
+  const stadsverbeteringenUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("stadsverbeteringen");
   // Tweede-settler-uitleg-pop-up (issue #261, "Uitleg 2e settler"): zelfde
   // eenmalige-confirm-vlag, getoond zodra `TWEEDE_SETTLER_MIN_STREEK` voor
   // het eerst ontgrendelt — zie `toonTweedeSettlerUitlegPopup` hieronder.
-  const [tweedeSettlerUitlegBevestigd, setTweedeSettlerUitlegBevestigd] = useState(false);
+  const tweedeSettlerUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("tweedeSettler");
   // Bouw-pop-up-vervangende uitleg-pop-ups (issue: "Teksten aanpassen (nog
   // meer)"): zelfde eenmalige-confirm-vlaggen, getoond in plaats van de
   // gewone bouw-pop-up op de tweede/derde bouw-beurt van streek 1 en de
   // eerste/tweede van streek 2 — zie `toonHeiligdomUitlegPopup` e.a. hieronder.
-  const [heiligdomUitlegBevestigd, setHeiligdomUitlegBevestigd] = useState(false);
-  const [nietBouwenUitlegBevestigd, setNietBouwenUitlegBevestigd] = useState(false);
-  const [boerderijStreekUitlegBevestigd, setBoerderijStreekUitlegBevestigd] = useState(false);
-  const [houtkapStreekUitlegBevestigd, setHoutkapStreekUitlegBevestigd] = useState(false);
+  const heiligdomUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("heiligdom");
+  const nietBouwenUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("nietBouwen");
+  const boerderijStreekUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("boerderijStreek");
+  const houtkapStreekUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("houtkapStreek");
   // Settler-wegsnelheid-uitleg-pop-up (issue: "Settlers verplaatsen sneller
   // over wegen"): zelfde eenmalige-confirm-vlag, getoond zodra er minstens 2
   // wegvakjes liggen — zie `toonSettlerWegSnelheidUitlegPopup` hieronder.
-  const [settlerWegSnelheidUitlegBevestigd, setSettlerWegSnelheidUitlegBevestigd] = useState(false);
+  const settlerWegSnelheidUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("settlerWegSnelheid");
   // Voedselwaarschuwing-pop-up (issue: "aparte pop-up ... zodra de dreiging
   // van te weinig voedsel 5 beurten ver weg is"): anders dan de
   // eenmalige-confirm-vlaggen hierboven mag deze wél opnieuw verschijnen —
@@ -1516,7 +1519,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           <StreekPopup
             hoogte={actieveStreek.hoogte}
             campagneId={state.campagneId}
-            onDoorgaan={() => setLaatstBevestigdeStreek(actieveStreek.hoogte)}
+            onDoorgaan={() => bevestigStreekPopup(actieveStreek.hoogte)}
           />
         )}
         {toonBezetteStreekOntdektPopup && <BezetteStreekPopup onDoorgaan={sluitBezetteStreekOntdektMelding} />}
@@ -1527,7 +1530,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           <VijandelijkHeiligdomPopup fase="veroverd" onSluiten={sluitVijandelijkHeiligdomVeroverdMelding} />
         )}
         {toonOceaanUitlegPopup && (
-          <OceaanUitlegPopup onDoorgaan={() => setOceaanUitlegBevestigd(true)} campagneId={state.campagneId} />
+          <OceaanUitlegPopup onDoorgaan={() => markeerUitlegGezien("oceaan")} campagneId={state.campagneId} />
         )}
         {toonIndringersPopup && state.indringersEvent && (
           <IndringersPopup
@@ -1562,8 +1565,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             onKiesTech={kiesTech}
           />
         )}
-        {toonUitlegPopup && <UitlegPopup onDoorgaan={() => setOpeningsUitlegBevestigd(true)} />}
-        {toonSettlerUitlegPopup && <SettlerUitlegPopup onDoorgaan={() => setSettlerUitlegBevestigd(true)} />}
+        {toonUitlegPopup && <UitlegPopup onDoorgaan={() => markeerUitlegGezien("opening")} />}
+        {toonSettlerUitlegPopup && <SettlerUitlegPopup onDoorgaan={() => markeerUitlegGezien("settler")} />}
         {toonVoedselWaarschuwingPopup && (
           <VoedselWaarschuwingPopup
             beurtenResterend={state.stad.vervalBeurtenResterend}
@@ -1571,76 +1574,76 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           />
         )}
         {toonVijandAanDeHorizonPopup && (
-          <VijandAanDeHorizonPopup onDoorgaan={() => setVijandAanDeHorizonBevestigd(true)} />
+          <VijandAanDeHorizonPopup onDoorgaan={() => markeerUitlegGezien("vijandAanDeHorizon")} />
         )}
         {toonGoddelijkeRaadgevingPopup && (
-          <GoddelijkeRaadgevingPopup onDoorgaan={() => setGoddelijkeRaadgevingBevestigd(true)} />
+          <GoddelijkeRaadgevingPopup onDoorgaan={() => markeerUitlegGezien("goddelijkeRaadgeving")} />
         )}
-        {toonRoofdierIntroPopup && <RoofdierIntroPopup onDoorgaan={() => setRoofdierIntroBevestigd(true)} />}
+        {toonRoofdierIntroPopup && <RoofdierIntroPopup onDoorgaan={() => markeerUitlegGezien("roofdierIntro")} />}
         {toonBoerderijKlaarUitlegPopup && (
-          <BoerderijKlaarUitlegPopup onDoorgaan={() => setBoerderijKlaarBevestigd(true)} />
+          <BoerderijKlaarUitlegPopup onDoorgaan={() => markeerUitlegGezien("boerderijKlaar")} />
         )}
         {toonStrijdersOpleidenPopup && (
-          <StrijdersOpleidenPopup onDoorgaan={() => setStrijdersOpleidenBevestigd(true)} />
+          <StrijdersOpleidenPopup onDoorgaan={() => markeerUitlegGezien("strijdersOpleiden")} />
         )}
         {toonStadUpgradeUitlegPopup && (
-          <StadUpgradeUitlegPopup onDoorgaan={() => setStadUpgradeUitlegBevestigd(true)} />
+          <StadUpgradeUitlegPopup onDoorgaan={() => markeerUitlegGezien("stadUpgrade")} />
         )}
         {toonWachttorenOveralUitlegPopup && (
-          <WachttorenOveralUitlegPopup onDoorgaan={() => setWachttorenOveralUitlegBevestigd(true)} />
+          <WachttorenOveralUitlegPopup onDoorgaan={() => markeerUitlegGezien("wachttorenOveral")} />
         )}
         {toonVoedselBalansUitlegPopup && (
-          <VoedselBalansUitlegPopup onDoorgaan={() => setVoedselBalansUitlegBevestigd(true)} />
+          <VoedselBalansUitlegPopup onDoorgaan={() => markeerUitlegGezien("voedselBalans")} />
         )}
         {toonSettlerActiesUitlegPopup && (
-          <SettlerActiesUitlegPopup onDoorgaan={() => setSettlerActiesUitlegBevestigd(true)} />
+          <SettlerActiesUitlegPopup onDoorgaan={() => markeerUitlegGezien("settlerActies")} />
         )}
         {toonBeurtensysteemUitlegPopup && (
-          <BeurtensysteemUitlegPopup onDoorgaan={() => setBeurtensysteemUitlegBevestigd(true)} />
+          <BeurtensysteemUitlegPopup onDoorgaan={() => markeerUitlegGezien("beurtensysteem")} />
         )}
         {toonStadsverbeteringenUitlegPopup && (
-          <StadsverbeteringenUitlegPopup onDoorgaan={() => setStadsverbeteringenUitlegBevestigd(true)} />
+          <StadsverbeteringenUitlegPopup onDoorgaan={() => markeerUitlegGezien("stadsverbeteringen")} />
         )}
         {toonTweedeSettlerUitlegPopup && (
           <BouwUitlegPopup
             titel={TWEEDE_SETTLER_UITLEG_TITEL}
             tekst={TWEEDE_SETTLER_UITLEG_TEKST}
-            onDoorgaan={() => setTweedeSettlerUitlegBevestigd(true)}
+            onDoorgaan={() => markeerUitlegGezien("tweedeSettler")}
           />
         )}
         {toonHeiligdomUitlegPopup && (
           <BouwUitlegPopup
             titel={HEILIGDOM_UITLEG_TITEL}
             tekst={HEILIGDOM_UITLEG_TEKST}
-            onDoorgaan={() => setHeiligdomUitlegBevestigd(true)}
+            onDoorgaan={() => markeerUitlegGezien("heiligdom")}
           />
         )}
         {toonNietBouwenUitlegPopup && (
           <BouwUitlegPopup
             titel={NIET_BOUWEN_UITLEG_TITEL}
             tekst={NIET_BOUWEN_UITLEG_TEKST}
-            onDoorgaan={() => setNietBouwenUitlegBevestigd(true)}
+            onDoorgaan={() => markeerUitlegGezien("nietBouwen")}
           />
         )}
         {toonBoerderijStreekUitlegPopup && (
           <BouwUitlegPopup
             titel={BOERDERIJ_STREEK_UITLEG_TITEL}
             tekst={BOERDERIJ_STREEK_UITLEG_TEKST}
-            onDoorgaan={() => setBoerderijStreekUitlegBevestigd(true)}
+            onDoorgaan={() => markeerUitlegGezien("boerderijStreek")}
           />
         )}
         {toonHoutkapStreekUitlegPopup && (
           <BouwUitlegPopup
             titel={HOUTKAP_STREEK_UITLEG_TITEL}
             tekst={HOUTKAP_STREEK_UITLEG_TEKST}
-            onDoorgaan={() => setHoutkapStreekUitlegBevestigd(true)}
+            onDoorgaan={() => markeerUitlegGezien("houtkapStreek")}
           />
         )}
         {toonSettlerWegSnelheidUitlegPopup && (
           <BouwUitlegPopup
             titel={SETTLER_WEG_SNELHEID_UITLEG_TITEL}
             tekst={SETTLER_WEG_SNELHEID_UITLEG_TEKST}
-            onDoorgaan={() => setSettlerWegSnelheidUitlegBevestigd(true)}
+            onDoorgaan={() => markeerUitlegGezien("settlerWegSnelheid")}
           />
         )}
         {legerkampKiesModusStrijderId && (
@@ -1671,7 +1674,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
         {toonStichtingsMomentPopup && (
           <StichtingsMomentPopup
             stadNaam={state.stad.naam}
-            onDoorgaan={() => setLaatsteBevestigdeStedenAantal(state.steden.length)}
+            onDoorgaan={() => bevestigStichtingsMomentPopup(state.steden.length)}
           />
         )}
         <BouwPopup

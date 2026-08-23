@@ -34,7 +34,7 @@
 // (hoofdstuk 14) — de waarden in deze modules zijn bewuste MVP-placeholders,
 // geen definitieve balans.
 
-import { GameState, ResourceType } from "./types";
+import { EenmaligeUitlegKey, GameState, ResourceType } from "./types";
 import { STAD_POSITIE } from "./world";
 import { verwerkUitputting, verwerkVerval } from "./uitputtingEnVerval";
 import { verwerkBouwwachtrij } from "./bouwwachtrij";
@@ -74,6 +74,30 @@ export { CITY_IMPROVEMENT_CAP, cityImprovementCap } from "./improvements";
 // blijft ongemoeid.
 export function zetUitlegPopups(state: GameState, aan: boolean): GameState {
   return { ...state, uitlegPopupsAan: aan };
+}
+
+// Markeert één van de eenmalige uitleg-pop-ups als gezien (issue: "Bij laden
+// niet alle pop-ups tonen") — aangeroepen vanuit GameRoot's `onDoorgaan`-
+// handlers in plaats van de vroegere lokale `useState`-setters, zodat de
+// "al gezien"-status meegaat in de save (zie types.ts:
+// `gezieneEenmaligeUitleg`).
+export function markeerUitlegGezien(state: GameState, key: EenmaligeUitlegKey): GameState {
+  if (state.gezieneEenmaligeUitleg.includes(key)) return state;
+  return { ...state, gezieneEenmaligeUitleg: [...state.gezieneEenmaligeUitleg, key] };
+}
+
+// Onthoudt tot en met welke streek de speler de streek-pop-up (StreekPopup)
+// al heeft weggeklikt — zelfde reden als `markeerUitlegGezien` hierboven,
+// vervangt de vroegere lokale `useState(1)` in GameRoot.
+export function bevestigStreekPopup(state: GameState, hoogte: number): GameState {
+  return { ...state, laatstBevestigdeStreek: Math.max(state.laatstBevestigdeStreek, hoogte) };
+}
+
+// Onthoudt voor hoeveel steden de speler de Stichtingsmoment-pop-up
+// (StichtingsMomentPopup, Going West) al heeft weggeklikt — zelfde reden en
+// patroon als `bevestigStreekPopup` hierboven.
+export function bevestigStichtingsMomentPopup(state: GameState, stedenAantal: number): GameState {
+  return { ...state, laatsteBevestigdeStedenAantal: Math.max(state.laatsteBevestigdeStedenAantal, stedenAantal) };
 }
 
 // Economie-overzicht (issue: "Economie overzicht" — "hoeveel resources er
