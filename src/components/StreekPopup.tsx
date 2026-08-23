@@ -1,9 +1,13 @@
 "use client";
 
-import { streekContent } from "@/game/tutorialContent";
+import { streekContentVoorCampagne } from "@/game/campagnes";
 
 interface StreekPopupProps {
   hoogte: number;
+  // Campagne-bewuste content-keuze (hoofdstuk 19 design-doc, blocker 1
+  // vervolg, issue #278) — `undefined` betekent tutorial, net als overal
+  // elders (`campagnes.ts`: `streekContentVoorCampagne`).
+  campagneId?: string;
   onDoorgaan: () => void;
 }
 
@@ -13,8 +17,8 @@ interface StreekPopupProps {
 // blokje onderaan (StreekIntroPaneel) herhaalt alleen de streek en wat er nieuw
 // is, zonder flavor-tekst. Blokkeert net als IntroScherm de rest van de UI
 // tot de speler doorklikt.
-export default function StreekPopup({ hoogte, onDoorgaan }: StreekPopupProps) {
-  const content = streekContent(hoogte);
+export default function StreekPopup({ hoogte, campagneId, onDoorgaan }: StreekPopupProps) {
+  const content = streekContentVoorCampagne(campagneId, hoogte);
   if (!content) return null;
 
   return (

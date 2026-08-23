@@ -27,6 +27,7 @@ import SettlerUitlegPopup from "@/components/SettlerUitlegPopup";
 import StadMenuPopup from "@/components/StadMenuPopup";
 import StadsverbeteringenUitlegPopup from "@/components/StadsverbeteringenUitlegPopup";
 import StadUpgradeUitlegPopup from "@/components/StadUpgradeUitlegPopup";
+import StichtingsMomentPopup from "@/components/StichtingsMomentPopup";
 import StichtStadPopup from "@/components/StichtStadPopup";
 import StrijdersOpleidenPopup from "@/components/StrijdersOpleidenPopup";
 import TechboomPaneel from "@/components/TechboomPaneel";
@@ -41,7 +42,7 @@ import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
 import { SettlerSlot } from "@/game/acties";
-import { campagneConfig } from "@/game/campagnes";
+import { campagneConfig, streekContentVoorCampagne } from "@/game/campagnes";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import {
   BELEGERINGSDREMPEL,
@@ -65,7 +66,6 @@ import {
   SETTLER_WEG_SNELHEID_UITLEG_TITEL,
   TWEEDE_SETTLER_UITLEG_TEKST,
   TWEEDE_SETTLER_UITLEG_TITEL,
-  streekContent,
 } from "@/game/tutorialContent";
 import { TWEEDE_SETTLER_MIN_STREEK } from "@/game/groeiEnRekrutering";
 import { berekenLegerwaarde, kanConfrontatieBezetteStreek, onbemandeLegerkampPosities } from "@/game/militair";
@@ -214,6 +214,14 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
   // speler 'm wegklikt. Begint op 1 (de startstreek, al geïntroduceerd via
   // IntroScherm) zodat hij niet meteen bij de eerste streek verschijnt.
   const [laatstBevestigdeStreek, setLaatstBevestigdeStreek] = useState(1);
+
+  // Stichtingsmoment-pop-up (issue #278, hoofdstuk 9 Deel 2/hoofdstuk 19
+  // "Samenhang"): onthoudt hoeveel steden de speler al bevestigd heeft gezien
+  // — elke run begint met precies 1 stad (zowel tutorial als Going West, zie
+  // `initieleSpelStatus.ts`), dus elke stichting daarna verhoogt
+  // `state.steden.length` voorbij deze teller. Alleen relevant voor
+  // niet-tutorial-campagnes, zie `toonStichtingsMomentPopup` hieronder.
+  const [laatsteBevestigdeStedenAantal, setLaatsteBevestigdeStedenAantal] = useState(1);
 
   // Openings-uitleg-pop-up (issue: "uitleg pop-ups dynamisch tonen"): los van
   // de streek-popup hierboven, toont dit één vaste pop-up bij het begin van
@@ -588,7 +596,8 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
   // beschikbare content, wat via de `!toonStreekPopup`-keten hieronder alle
   // lager-prioriteit pop-ups blokkeert, inclusief de verplichte tech-keuze.
   const toonStreekPopup =
-    actieveStreek.hoogte > laatstBevestigdeStreek && streekContent(actieveStreek.hoogte) !== undefined;
+    actieveStreek.hoogte > laatstBevestigdeStreek &&
+    streekContentVoorCampagne(state.campagneId, actieveStreek.hoogte) !== undefined;
   // Openings-uitleg bij het begin van beurt 1 (issue: "uitleg pop-ups
   // dynamisch tonen") — geen vast beurtbereik meer, één vaste pop-up.
   const toonUitlegPopup = !toonStreekPopup && uitlegAan && state.beurt === 1 && !openingsUitlegBevestigd;
@@ -1329,8 +1338,60 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
     !toonBoerderijStreekUitlegPopup &&
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
+    // Blijft uitsluitend de tutorial (hoofdstuk 19 design-doc, "Samenhang"):
+    // zonder deze eis zou een Going West-run bij de allerlaatste, afsluitende
+    // stichting (acties.ts: `isAfsluitendeStichting`) dit tutorial-specifieke
+    // scherm te zien krijgen — `stadGesticht` zelf is campagne-agnostisch
+    // (elke afsluitende stichting zet 'm, zie `stichtStad`). Going West krijgt
+    // in plaats daarvan `toonStichtingsMomentPopup` hieronder, bij elke
+    // stichting, zonder de run te beëindigen.
+    state.campagneId === undefined &&
     state.stadGesticht === true &&
     !tutorialVoltooidBevestigd;
+
+  // Stichtingsmoment-pop-up (issue #278, antwoord op vraag 2, hoofdstuk 9
+  // Deel 2/hoofdstuk 19 "Samenhang"): Going West-equivalent van
+  // `toonTutorialVoltooidPopup` hierboven, maar bij élke stichting binnen het
+  // herhalende drie-stichtingsmomenten-patroon — niet alleen de allerlaatste
+  // — en de run gaat hierna gewoon door (`onDoorgaan` sluit de pop-up alleen,
+  // roept anders dan bij de tutorial nooit `onTutorialAfgerond` aan). Elke
+  // run begint met 1 stad, dus elke stijging van `state.steden.length` voorbij
+  // `laatsteBevestigdeStedenAantal` is een echte stichting.
+  const toonStichtingsMomentPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    state.campagneId !== undefined &&
+    state.steden.length > laatsteBevestigdeStedenAantal;
 
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
@@ -1386,7 +1447,7 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
             setToonStichtStadPopup(true);
           }}
         />
-        <StreekIntroPaneel streken={state.streken} />
+        <StreekIntroPaneel streken={state.streken} campagneId={state.campagneId} />
         <BezetteStreekPaneel state={state} />
         {toonStadMenuPopup && (
           <StadMenuPopup
@@ -1412,7 +1473,11 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
           />
         )}
         {toonStreekPopup && (
-          <StreekPopup hoogte={actieveStreek.hoogte} onDoorgaan={() => setLaatstBevestigdeStreek(actieveStreek.hoogte)} />
+          <StreekPopup
+            hoogte={actieveStreek.hoogte}
+            campagneId={state.campagneId}
+            onDoorgaan={() => setLaatstBevestigdeStreek(actieveStreek.hoogte)}
+          />
         )}
         {toonBezetteStreekOntdektPopup && <BezetteStreekPopup onDoorgaan={sluitBezetteStreekOntdektMelding} />}
         {toonVijandelijkHeiligdomOnthuldPopup && (
@@ -1561,6 +1626,12 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
             }}
           />
         )}
+        {toonStichtingsMomentPopup && (
+          <StichtingsMomentPopup
+            stadNaam={state.stad.naam}
+            onDoorgaan={() => setLaatsteBevestigdeStedenAantal(state.steden.length)}
+          />
+        )}
         <BouwPopup
           streek={actieveStreek}
           alleStreken={state.streken}
@@ -1600,6 +1671,7 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
             !toonHoutkapStreekUitlegPopup &&
             !toonSettlerWegSnelheidUitlegPopup &&
             !toonTutorialVoltooidPopup &&
+            !toonStichtingsMomentPopup &&
             !legerkampKiesModusStrijderId &&
             !toonStichtStadPopup &&
             !toonStadMenuPopup &&

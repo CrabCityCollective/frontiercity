@@ -8,6 +8,8 @@
 // campagnekaart) en `CampagneSelectScherm.tsx` blijft "Going West" tonen als
 // nog niet beschikbaar totdat die kaart er is.
 
+import { goingWestStreekContent } from "./goingWestContent";
+import { StreekContent, streekContent as tutorialStreekContent } from "./tutorialContent";
 import { CampaignConfig } from "./types";
 
 // Weergavenamen-tabel uit hoofdstuk 9 ("Weergavenamen"). Sleutels zijn
@@ -64,4 +66,15 @@ const CAMPAGNES: Record<string, CampaignConfig> = {
 // id) geeft bewust `undefined` terug in plaats van te gooien.
 export function campagneConfig(campagneId?: string): CampaignConfig | undefined {
   return campagneId ? CAMPAGNES[campagneId] : undefined;
+}
+
+// Campagne-bewuste streek-content-dispatch (hoofdstuk 19 design-doc, blocker
+// 1 vervolg, issue #278): `StreekPopup`/`StreekIntroPaneel`/`GameRoot` riepen
+// tot nu toe uitsluitend de tutorial-content aan (`tutorialContent.ts`), wat
+// op een Going West-run letterlijk Hertenpad-volk-lore zou tonen. Zelfde
+// val-terug-op-tutorial-conventie als `campagneConfig` hierboven: een
+// onbekende/tutorial-`campagneId` geeft de tutorial-content terug.
+export function streekContentVoorCampagne(campagneId: string | undefined, hoogte: number): StreekContent | undefined {
+  if (campagneId === GOING_WEST_CAMPAGNE.id) return goingWestStreekContent(hoogte);
+  return tutorialStreekContent(hoogte);
 }
