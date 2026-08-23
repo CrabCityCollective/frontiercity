@@ -31,6 +31,7 @@ import StichtingsMomentPopup from "@/components/StichtingsMomentPopup";
 import StichtStadPopup from "@/components/StichtStadPopup";
 import StrijdersOpleidenPopup from "@/components/StrijdersOpleidenPopup";
 import TechboomPaneel from "@/components/TechboomPaneel";
+import EconomieOverzichtPaneel from "@/components/EconomieOverzichtPaneel";
 import TechKeuzePopup from "@/components/TechKeuzePopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
@@ -190,6 +191,12 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // volledig-schermige pop-up als het historiescherm hierboven, bereikbaar
   // via hetzelfde hoofdmenu.
   const [toonTechboom, setToonTechboom] = useState(false);
+
+  // Economie-overzicht (issue: "Economie overzicht" — "bij het menu een knop
+  // waarop je een economie overzicht kunt inzien"): zelfde soort losse,
+  // volledig-schermige pop-up als het historie-/techboomscherm hierboven,
+  // bereikbaar via hetzelfde hoofdmenu.
+  const [toonEconomie, setToonEconomie] = useState(false);
 
   // Grafische stijl (issue: "Settings uitbreiden" — "on the fly kunnen
   // wisselen tussen pixel art en vector art"): als losse state hier i.p.v.
@@ -1451,6 +1458,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
         onToggleStijl={toggleStijl}
         onToonHistorie={() => setToonHistorie((open) => !open)}
         onToonTechboom={() => setToonTechboom((open) => !open)}
+        onToonEconomie={() => setToonEconomie((open) => !open)}
       />
       <div className="game-scroll-area" ref={scrollRef}>
         <GameCanvas
@@ -1814,6 +1822,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             onSluiten={() => setToonTechboom(false)}
           />
         )}
+        {toonEconomie && <EconomieOverzichtPaneel state={state} onSluiten={() => setToonEconomie(false)} />}
       </div>
       <ResourceHud state={state} />
     </div>
