@@ -99,6 +99,12 @@ interface GameRootProps {
   // uitsluitend naar `useGameEngine()` voor het opzetten van de initiële
   // status — de lopende run zelf leest verder overal `state.campagneId`.
   campagneId?: string;
+  // Issue: "loading button per campagne op het campagne select screen,
+  // waarmee je een eerdere save kunt inladen" — true als de speler op
+  // CampagneSelectScherm bewust de Laden-knop van deze campagne aanklikte in
+  // plaats van de campagne zelf. Gaat, net als `campagneId` hierboven,
+  // uitsluitend naar `useGameEngine()` voor de initiële status.
+  laadBijStart?: boolean;
   // Terug naar het startscherm (issue: "spel verlaten, waarmee je weer naar
   // het start scherm gaat") — navigatie zelf blijft bij AppRoot, GameRoot
   // roept dit alleen aan.
@@ -120,7 +126,7 @@ interface GameRootProps {
 // grondstoffenbalk als vaste footer eronder — die scrolt dus nooit mee weg en
 // de stad staat meteen in beeld zonder te scrollen (issue: sticky
 // grondstoffenbalk onderaan, stad direct zichtbaar).
-export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }: GameRootProps) {
+export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutorialAfgerond }: GameRootProps) {
   const {
     state,
     startBouw,
@@ -164,7 +170,7 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
     sluitVijandelijkHeiligdomVeroverdMelding,
     opslaan,
     laden,
-  } = useGameEngine(campagneId);
+  } = useGameEngine(campagneId, laadBijStart);
 
   // Actieve campagne (hoofdstuk 9/13, M20d deelstap 3): `state.campagneId` is
   // nu de door `CampagneSelectScherm`/AppRoot gekozen campagne (zie de

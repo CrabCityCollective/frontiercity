@@ -24,6 +24,12 @@ export default function AppRoot() {
   // een verse `useGameEngine()`-status, de lopende run zelf onthoudt zijn
   // eigen `campagneId` (`GameState.campagneId`, sinds M20d deelstap 1).
   const [actieveCampagneId, setActieveCampagneId] = useState<string | undefined>(undefined);
+  // Issue: "loading button per campagne op het campagne select screen,
+  // waarmee je een eerdere save kunt inladen" — puur navigatie-state, net als
+  // `actieveCampagneId` hierboven: geeft aan of de aankomende GameRoot-mount
+  // de bewaarde save van `actieveCampagneId` moet terughalen (Laden-knop) of
+  // een verse run moet starten (campagne zelf aanklikken, bestaand gedrag).
+  const [laadBijStart, setLaadBijStart] = useState(false);
 
   if (scherm === "titel") return <TitelScherm onStart={() => setScherm("navigatie")} />;
 
@@ -44,6 +50,12 @@ export default function AppRoot() {
       <CampagneSelectScherm
         onKiesCampagne={(campagneId) => {
           setActieveCampagneId(campagneId);
+          setLaadBijStart(false);
+          setScherm("spel");
+        }}
+        onLaadCampagne={(campagneId) => {
+          setActieveCampagneId(campagneId);
+          setLaadBijStart(true);
           setScherm("spel");
         }}
       />
@@ -52,6 +64,7 @@ export default function AppRoot() {
   return (
     <GameRoot
       campagneId={actieveCampagneId}
+      laadBijStart={laadBijStart}
       onVerlaten={() => setScherm("titel")}
       onTutorialAfgerond={() => setScherm("campagne")}
     />
