@@ -17,7 +17,17 @@ import {
 } from "./groeiEnRekrutering";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
 import { bemanWachttoren, berekenLegerwaarde, confrontatieBezetteStreek } from "./militair";
-import { BARAKKEN, BIBLIOTHEEK, GROTE_TEMPEL, GROTE_WOONWIJK, MARKT, SOLDAAT, TEMPEL, VIJANDELIJKE_WACHTTOREN } from "./improvements";
+import {
+  AQUADUCT,
+  BARAKKEN,
+  BIBLIOTHEEK,
+  GROTE_TEMPEL,
+  GROTE_WOONWIJK,
+  MARKT,
+  SOLDAAT,
+  TEMPEL,
+  VIJANDELIJKE_WACHTTOREN,
+} from "./improvements";
 import { GameState } from "./types";
 import { STAD_POSITIE, VOEDSEL_DREMPEL_GROEI_GROOT } from "./world";
 import {
@@ -172,11 +182,12 @@ test("kanCityVerbeteringBouwen respecteert de city-improvement-cap per stadsgroo
   assert.equal(kanCityVerbeteringBouwen(state, MARKT), false);
 });
 
-test("stadsgrootte-eis blokkeert Barakken/Tempel voor een kleine stad en Grote Tempel voor een niet-grote stad (Deel 3)", () => {
+test("stadsgrootte-eis blokkeert Barakken/Tempel/Aquaduct voor een kleine stad en Grote Tempel voor een niet-grote stad (Deel 3, Aquaduct: issue #285)", () => {
   const klein = maakInitieleSpelStatus();
   assert.equal(kanCityVerbeteringBouwen(klein, BARAKKEN), false);
   assert.equal(kanCityVerbeteringBouwen(klein, TEMPEL), false);
   assert.equal(kanCityVerbeteringBouwen(klein, GROTE_TEMPEL), false);
+  assert.equal(kanCityVerbeteringBouwen(klein, AQUADUCT), false, "Aquaduct vereist minstens een middelgrote stad");
   assert.equal(kanCityVerbeteringBouwen(klein, BIBLIOTHEEK), true, "Bibliotheek heeft geen stadsgrootte-eis");
   assert.equal(kanCityVerbeteringBouwen(klein, MARKT), true, "Markt heeft geen stadsgrootte-eis");
 
@@ -184,6 +195,7 @@ test("stadsgrootte-eis blokkeert Barakken/Tempel voor een kleine stad en Grote T
   assert.equal(kanCityVerbeteringBouwen(middel, BARAKKEN), true);
   assert.equal(kanCityVerbeteringBouwen(middel, TEMPEL), true);
   assert.equal(kanCityVerbeteringBouwen(middel, GROTE_TEMPEL), false, "Grote Tempel vereist een grote stad");
+  assert.equal(kanCityVerbeteringBouwen(middel, AQUADUCT), true);
 
   const groot: GameState = { ...klein, stad: { ...klein.stad, grootte: "groot" } };
   assert.equal(kanCityVerbeteringBouwen(groot, GROTE_TEMPEL), true);
@@ -303,4 +315,22 @@ test("startGroei kiest Grote Woonwijk (middel→groot) met de hogere voedseldrem
   assert.equal(state.stad.civielInAanbouw, undefined);
   // Deel 1: de cap gaat automatisch mee omhoog met de nieuwe stadsgrootte.
   assert.equal(cityImprovementCap(state.stad.grootte), CITY_IMPROVEMENT_CAP.groot);
+});
+
+test("een gebouwd Aquaduct verlaagt de voedseldrempel voor groei naar Groot (issue #285)", () => {
+  const verlaagdeDrempel = VOEDSEL_DREMPEL_GROEI_GROOT - (AQUADUCT.effect.waarde ?? 0);
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    stad: { ...state.stad, grootte: "middel", cityImprovements: [AQUADUCT] },
+    voedsel: verlaagdeDrempel - 1,
+  };
+  assert.equal(startGroei(state), state, "nog onder de verlaagde drempel: geen effect");
+
+  state = { ...state, voedsel: verlaagdeDrempel };
+  // De volledige, niet-verlaagde drempel is met dit voedsel nog niet gehaald
+  // — de verlaging moet dus daadwerkelijk het verschil maken.
+  assert.ok(verlaagdeDrempel < VOEDSEL_DREMPEL_GROEI_GROOT);
+  state = startGroei(state);
+  assert.equal(state.stad.civielInAanbouw?.improvement.id, "grote-woonwijk");
 });

@@ -967,6 +967,7 @@ De hoofdtekst hierboven beschrijft steeds alleen de huidige stand van het ontwer
 
 **Hoofdstuk 3/4/6/14 — city improvements**
 - Vier nieuwe, gecapte city improvements (Bibliotheek, Markt, Barakken, Tempel, Grote Tempel) en de Grote Woonwijk (tweede groei-tier) toegevoegd; Legerkamp/Offer Altaar van vrij bouwbaar naar een infrastructuur-eis (5 actieve Wachttorens/Heiligdommen + de bijbehorende city improvement) — issue: "city improvements".
+- Aquaduct toegevoegd als zesde gecapte city improvement en het eerste Civiel-category-lid van die groep (stadsgrootte-eis Middel, zelfde patroon als Barakken/Tempel) — vulde het gat dat sinds hoofdstuk 3 al in de categorie-tabel stond maar nooit gebouwd was. Effect: verlaagt de voedseldrempel voor groei naar Groot (`VOEDSEL_DREMPEL_GROEI_GROOT`) met 40 — issue #285.
 
 **Hoofdstuk 3/9/13 — technologie & wetenschap**
 - Wetenschap had aanvankelijk geen enkele functie in de MVP; Sterrencirkel en de vertakkende technologie-boom (3 drempels) toegevoegd — issue: "tech tree toevoegen".
