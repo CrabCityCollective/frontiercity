@@ -763,4 +763,54 @@ export interface GameState {
   // kennen dit veld nog niet; `undefined` daar betekent, net als bij een
   // nieuwe tutorial-run, gewoon "tutorial".
   campagneId?: string;
+  // Welke van de eenmalige uitleg-pop-ups (openings-uitleg, settler, voedsel-
+  // balans, boerderij-klaar, enz. — zie GameRoot.tsx) de speler in déze run al
+  // heeft weggeklikt (issue: "Bij laden niet alle pop-ups tonen"). Stond
+  // voorheen uitsluitend als React-`useState` in GameRoot, dus verdween bij
+  // elke (her)mount — een save laden toonde daardoor alle uitleg-pop-ups
+  // opnieuw, ook de allang geziene. Door dit in `GameState` zelf bij te
+  // houden overleeft de "al gezien"-status het opslaan/laden, net als
+  // `uitlegPopupsAan` hierboven. Oudere saves kennen dit veld nog niet, zie
+  // `metGemigreerdeSpelStatus` in save.ts.
+  gezieneEenmaligeUitleg: EenmaligeUitlegKey[];
+  // Hoogste streek waarvoor de speler de streek-pop-up (StreekPopup) al heeft
+  // weggeklikt — zelfde reden als `gezieneEenmaligeUitleg` hierboven: stond
+  // voorheen als losse `useState(1)` in GameRoot, dus verdween bij het laden
+  // van een save, waardoor de streek-pop-up van elke allang bezochte streek
+  // opnieuw verscheen. Begint op 1 (de startstreek, al geïntroduceerd via
+  // IntroScherm), net als de oorspronkelijke `useState`-default.
+  laatstBevestigdeStreek: number;
+  // Aantal steden waarvoor de speler de Stichtingsmoment-pop-up
+  // (StichtingsMomentPopup, Going West) al heeft weggeklikt — zelfde reden en
+  // patroon als `laatstBevestigdeStreek` hierboven. Begint op 1 (elke run
+  // begint al met 1 stad, zie `maakInitieleSpelStatus`).
+  laatsteBevestigdeStedenAantal: number;
 }
+
+// Sleutels van de eenmalige uitleg-pop-ups (issue: "Bij laden niet alle
+// pop-ups tonen") — één per `Bevestigd`-vlag die voorheen in GameRoot.tsx als
+// losse `useState(false)` leefde. Bewust geen sleutel voor
+// `voedselWaarschuwingBevestigd` (mag wél opnieuw verschijnen, zie GameRoot.tsx)
+// of `tutorialVoltooidBevestigd` (GameRoot unmount't meteen na bevestigen,
+// hoeft dus nooit een save te overleven).
+export type EenmaligeUitlegKey =
+  | "opening"
+  | "settler"
+  | "vijandAanDeHorizon"
+  | "goddelijkeRaadgeving"
+  | "roofdierIntro"
+  | "boerderijKlaar"
+  | "strijdersOpleiden"
+  | "oceaan"
+  | "stadUpgrade"
+  | "wachttorenOveral"
+  | "voedselBalans"
+  | "settlerActies"
+  | "beurtensysteem"
+  | "stadsverbeteringen"
+  | "tweedeSettler"
+  | "heiligdom"
+  | "nietBouwen"
+  | "boerderijStreek"
+  | "houtkapStreek"
+  | "settlerWegSnelheid";

@@ -40,7 +40,7 @@ export function laadSpel(campagneId?: string): GameState | null {
   try {
     const ruw = window.localStorage.getItem(saveSleutel(campagneId));
     if (!ruw) return null;
-    return metGemigreerdeSteden(JSON.parse(ruw) as GameState);
+    return metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState));
   } catch {
     return null;
   }
@@ -55,6 +55,38 @@ function metGemigreerdeSteden(state: GameState): GameState {
   if (Array.isArray(state.steden) && state.steden.length > 0) return state;
   const stad = { ...state.stad, streekHoogte: state.stad.streekHoogte ?? 0 };
   return { ...state, stad, steden: [stad] };
+}
+
+// Migratie voor saves van vóór `gezieneEenmaligeUitleg`/`laatstBevestigdeStreek`/
+// `laatsteBevestigdeStedenAantal` (issue: "Bij laden niet alle pop-ups
+// tonen") — die drie velden leefden voorheen uitsluitend als React-`useState`
+// in GameRoot, dus oudere saves kennen ze nog niet. Zonder deze migratie zou
+// zo'n save `laatstBevestigdeStreek`/`laatsteBevestigdeStedenAantal` op
+// `undefined` laten staan (waardoor bijvoorbeeld `actieveStreek.hoogte >
+// laatstBevestigdeStreek` altijd `true` is) — daarom hier meteen op de al
+// bereikte stand gezet, in plaats van terug op 1: de speler kan de streken/
+// stichtingen die deze save al voorbij is per definitie alleen bereikt hebben
+// door de bijbehorende pop-up in een eerdere sessie al weg te klikken (die
+// blokkeert verder spelen totdat hij bevestigd is). `gezieneEenmaligeUitleg`
+// kán niet met dezelfde zekerheid worden afgeleid (geen van de bijbehorende
+// pop-ups blokkeert verder spelen) — die begint hier daarom leeg, dus een
+// save van vóór deze migratie toont elke nog openstaande eenmalige
+// uitleg-pop-up nog precies één keer opnieuw, waarna hij (net als bij een
+// nieuwe run) voorgoed bevestigd blijft.
+function metGemigreerdePopupStatus(state: GameState): GameState {
+  if (
+    Array.isArray(state.gezieneEenmaligeUitleg) &&
+    typeof state.laatstBevestigdeStreek === "number" &&
+    typeof state.laatsteBevestigdeStedenAantal === "number"
+  ) {
+    return state;
+  }
+  return {
+    ...state,
+    gezieneEenmaligeUitleg: state.gezieneEenmaligeUitleg ?? [],
+    laatstBevestigdeStreek: state.laatstBevestigdeStreek ?? hoogsteOntgrendeldeStreek(state.streken),
+    laatsteBevestigdeStedenAantal: state.laatsteBevestigdeStedenAantal ?? state.steden.length,
+  };
 }
 
 // Of er iets te laden valt voor de gegeven campagne (issue: "menu-icoontje

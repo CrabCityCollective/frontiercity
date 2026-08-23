@@ -106,6 +106,11 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     // bepaalt de startwaarde; de per-run toggle in het hoofdmenu wijzigt
     // daarna alleen deze ene run.
     uitlegPopupsAan: standaardUitlegAan(),
+    // Zie types.ts: `EenmaligeUitlegKey`/`gezieneEenmaligeUitleg` — nog geen
+    // enkele eenmalige uitleg-pop-up gezien bij een verse run.
+    gezieneEenmaligeUitleg: [],
+    laatstBevestigdeStreek: 1,
+    laatsteBevestigdeStedenAantal: 1,
     // Zie types.ts: `IndringersStatistieken` — begint leeg bij elke nieuwe run.
     indringersStatistieken: {
       aanvallenTotaal: 0,

@@ -12,7 +12,10 @@ import {
 import { versnelBouwMetGoud as versnelBouwMetGoudActie } from "./bouwwachtrij";
 import {
   beurtMagAutomatischDoorgaan,
+  bevestigStichtingsMomentPopup as bevestigStichtingsMomentPopupActie,
+  bevestigStreekPopup as bevestigStreekPopupActie,
   maakInitieleSpelStatus,
+  markeerUitlegGezien as markeerUitlegGezienActie,
   volgendeBeurt as volgendeBeurtActie,
   zetUitlegPopups as zetUitlegPopupsActie,
 } from "./economie";
@@ -57,7 +60,7 @@ import {
 import { laadSpel, saveSpel } from "./save";
 import { kiesTech as kiesTechActie } from "./tech";
 import { bevestigIneenstorting as bevestigIneenstortingActie } from "./uitputtingEnVerval";
-import { GameState, Improvement, TechId } from "./types";
+import { EenmaligeUitlegKey, GameState, Improvement, TechId } from "./types";
 
 // Ketent een `volgendeBeurt` vast aan het resultaat van een settler-actie of
 // bouwkeuze zodra er niets meer te doen valt deze beurt (issue: "beurt
@@ -254,6 +257,22 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => zetUitlegPopupsActie(huidig, aan));
   }, []);
 
+  // Issue: "Bij laden niet alle pop-ups tonen" — vervangt de vroegere lokale
+  // `useState`-setters in GameRoot voor de eenmalige uitleg-pop-ups en de
+  // streek-/stichtingsmoment-pop-ups, zodat de "al gezien"-status meegaat in
+  // de save (zie economie.ts/types.ts).
+  const markeerUitlegGezien = useCallback((key: EenmaligeUitlegKey) => {
+    setState((huidig) => markeerUitlegGezienActie(huidig, key));
+  }, []);
+
+  const bevestigStreekPopup = useCallback((hoogte: number) => {
+    setState((huidig) => bevestigStreekPopupActie(huidig, hoogte));
+  }, []);
+
+  const bevestigStichtingsMomentPopup = useCallback((stedenAantal: number) => {
+    setState((huidig) => bevestigStichtingsMomentPopupActie(huidig, stedenAantal));
+  }, []);
+
   const kiesTech = useCallback((techId: TechId) => {
     setState((huidig) => kiesTechActie(huidig, techId));
   }, []);
@@ -323,6 +342,9 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     bemanWachttoren,
     haalStrijderTerug,
     zetUitlegPopups,
+    markeerUitlegGezien,
+    bevestigStreekPopup,
+    bevestigStichtingsMomentPopup,
     kiesTech,
     stuurVerkenner,
     stuurMissionaris,
