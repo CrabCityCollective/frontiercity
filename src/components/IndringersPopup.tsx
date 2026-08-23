@@ -124,7 +124,7 @@ export default function IndringersPopup({
             <p style={{ margin: 0, lineHeight: 1.6 }}>
               {event.stamNaam} dringt streek {event.streekHoogte} binnen. Er staat geen bemande wachttoren — ze eisen{" "}
               {event.tribuut.aantal} {resourceLabel} als tribuut. Geef je het, dan trekken ze zich terug. Weiger je,
-              dan verwoesten ze de stad.
+              dan eisen ze het hoe dan ook op.
             </p>
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
               <button className="fc-knop" onClick={onGeefTribuut} style={{ padding: "0.5rem 1.5rem" }}>
@@ -140,8 +140,7 @@ export default function IndringersPopup({
         {!event.heeftWachttoren && event.tribuut && event.fase === "geforceerd" && (
           <>
             <p style={{ margin: 0, lineHeight: 1.6 }}>
-              Ze verwoesten de stad — maar er is geen vorige stad om je op terug te trekken. Zonder toevlucht wordt
-              het tribuut alsnog betaald: {event.tribuut.aantal} {resourceLabel}.
+              Weigeren helpt niet — ze eisen het tribuut hoe dan ook op: {event.tribuut.aantal} {resourceLabel}.
             </p>
             <button
               className="fc-knop"
