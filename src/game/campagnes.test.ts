@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { campagneConfig, GOING_WEST_CAMPAGNE } from "./campagnes";
+import { campagneConfig, GOING_WEST_CAMPAGNE, streekContentVoorCampagne } from "./campagnes";
+import { streekContent } from "./tutorialContent";
+import { GOING_WEST_STREEK_AANTAL } from "./worldGoingWest";
 import {
   AMBERADER,
   BARAKKEN,
@@ -63,4 +65,19 @@ test("campagneConfig zoekt een CampaignConfig op via GameState.campagneId, undef
   assert.equal(campagneConfig("going-west"), GOING_WEST_CAMPAGNE);
   assert.equal(campagneConfig(undefined), undefined);
   assert.equal(campagneConfig("onbekende-campagne"), undefined);
+});
+
+test("streekContentVoorCampagne geeft de tutorial-content terug zonder campagne (hoofdstuk 19, blocker 1 vervolg, issue #278)", () => {
+  assert.deepEqual(streekContentVoorCampagne(undefined, 1), streekContent(1));
+  assert.equal(streekContentVoorCampagne(undefined, 999), undefined);
+});
+
+test("streekContentVoorCampagne geeft Going West-content voor alle 35 streken, met placeholder-flavor-tekst (issue #278, vraag 1)", () => {
+  for (let hoogte = 1; hoogte <= GOING_WEST_STREEK_AANTAL; hoogte++) {
+    const content = streekContentVoorCampagne(GOING_WEST_CAMPAGNE.id, hoogte);
+    assert.ok(content, `streek ${hoogte} moet content hebben`);
+    assert.equal(content!.flavorTekst, "todo");
+    assert.notEqual(content!.naam, "");
+  }
+  assert.equal(streekContentVoorCampagne(GOING_WEST_CAMPAGNE.id, GOING_WEST_STREEK_AANTAL + 1), undefined);
 });

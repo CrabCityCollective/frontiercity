@@ -72,7 +72,10 @@ const GOING_WEST_TERREINTYPES = [
   "pacifische kust",
 ];
 
-function terreinTypeVoorStreek(hoogte: number): string {
+// Geëxporteerd (M20f, hoofdstuk 9/19 design-doc): `goingWestContent.ts`
+// hergebruikt deze namen als streek-`naam` zolang er nog geen echte
+// flavor-tekst per streek geschreven is (issue #278, blocker 1 vervolg).
+export function terreinTypeVoorStreek(hoogte: number): string {
   return GOING_WEST_TERREINTYPES[hoogte - 1] ?? "onbekend";
 }
 

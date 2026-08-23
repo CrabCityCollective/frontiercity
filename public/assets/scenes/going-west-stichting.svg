@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <!-- Placeholder-plaatje (CLAUDE.md: grove/simpele placeholders zijn prima)
+       voor het Going West-stichtingsmoment (issue #278, vraag 2). Donker,
+       stoffig palet i.p.v. de warme Riven/Myst-tutorialsfeer, conform
+       hoofdstuk 12 design-doc (Fallout/Diablo II-referentie voor de
+       Amerikaanse campagne). Wordt later vervangen door echte artwork per
+       stichting. -->
+  <defs>
+    <linearGradient id="lucht" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a2a22" />
+      <stop offset="55%" stop-color="#6b4a30" />
+      <stop offset="100%" stop-color="#8a5a34" />
+    </linearGradient>
+    <radialGradient id="gloed" cx="50%" cy="70%" r="35%">
+      <stop offset="0%" stop-color="#f2a84a" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#f2a84a" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#lucht)" />
+
+  <!-- verre bergketen -->
+  <polygon points="0,420 160,300 340,400 520,280 700,410 900,320 1080,420 1280,360 1280,720 0,720" fill="#2c1c14" opacity="0.85" />
+  <!-- naaste heuvels -->
+  <polygon points="0,480 220,400 460,470 720,390 980,470 1280,420 1280,720 0,720" fill="#241510" />
+
+  <!-- kampvuur-gloed -->
+  <circle cx="640" cy="520" r="220" fill="url(#gloed)" />
+
+  <!-- huifkar-silhouet -->
+  <g fill="#150c08">
+    <rect x="520" y="470" width="200" height="70" rx="6" />
+    <path d="M520 470 q100 -70 200 0 z" />
+    <circle cx="555" cy="548" r="24" />
+    <circle cx="685" cy="548" r="24" />
+  </g>
+
+  <!-- eerste, ruwe blokhutten van de nieuwe stad -->
+  <g fill="#0f0906">
+    <rect x="760" y="500" width="70" height="55" />
+    <polygon points="755,500 795,465 835,500" />
+    <rect x="850" y="515" width="55" height="40" />
+    <polygon points="846,515 877,488 908,515" />
+  </g>
+
+  <!-- voorgrond-duisternis -->
+  <rect x="0" y="600" width="1280" height="120" fill="#0a0605" />
+</svg>
