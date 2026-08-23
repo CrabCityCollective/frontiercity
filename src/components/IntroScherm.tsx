@@ -1,9 +1,14 @@
 "use client";
 
+import { CampagneStatistieken } from "@/game/save";
 import { INTRO_FLAVOR_TEKST, INTRO_SUBTITEL, INTRO_TITEL } from "@/game/tutorialContent";
 
 interface IntroSchermProps {
   onBeginnen: () => void;
+  // Voortgangstellers voor de campagne die net gestart wordt (issue:
+  // "voortgang verschillende campagnes tonen" — "dat alles mag op het
+  // campagne intro scherm worden getoond"), zie GameRoot: `campagneStats`.
+  statistieken: CampagneStatistieken;
 }
 
 // Introscherm (issue: "intro en game over scherm"), getoond vóór de speler
@@ -12,7 +17,7 @@ interface IntroSchermProps {
 // speler bevestigt — dat gebeurt bij elke start van de tutorial opnieuw (zie
 // GameRoot: `toonIntro`), niet slechts één keer per browser (issue: "als ik
 // de tutorial aanklik vanuit het menu, zie ik het introscherm niet meer").
-export default function IntroScherm({ onBeginnen }: IntroSchermProps) {
+export default function IntroScherm({ onBeginnen, statistieken }: IntroSchermProps) {
   return (
     <div
       style={{
@@ -48,6 +53,21 @@ export default function IntroScherm({ onBeginnen }: IntroSchermProps) {
           {INTRO_SUBTITEL}
         </p>
         <p style={{ margin: 0, whiteSpace: "pre-line", lineHeight: 1.6 }}>{INTRO_FLAVOR_TEKST}</p>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "1.5rem",
+            margin: "1rem 0 0",
+            fontSize: "0.9rem",
+            flexWrap: "wrap",
+            color: "var(--kleur-tekst-gedempt)",
+          }}
+        >
+          <span>Gestart: {statistieken.gestart}×</span>
+          <span>Game over gezien: {statistieken.gameOverGezien}×</span>
+          <span>Uitgespeeld: {statistieken.uitgespeeld}×</span>
+        </div>
       </div>
       <button className="fc-knop" onClick={onBeginnen} style={{ padding: "0.6rem 1.5rem", fontSize: "1rem" }}>
         Beginnen
