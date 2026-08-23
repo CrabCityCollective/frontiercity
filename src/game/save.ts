@@ -1,6 +1,7 @@
 "use client";
 
 import { GameState } from "./types";
+import { hoogsteOntgrendeldeStreek } from "./world";
 
 // M9 (save/load, hoofdstuk 13): "Eén actieve run lokaal opslaan en hervatten".
 // Meerdere gelijktijdige saves binnen dezelfde campagne zijn expliciet buiten
@@ -66,6 +67,18 @@ export function heeftOpgeslagenSpel(campagneId?: string): boolean {
   } catch {
     return false;
   }
+}
+
+// Op welke streek de opgeslagen run van deze campagne staat (issue:
+// "loading button per campagne op het campagne select screen ... aangeeft op
+// welke streek de save zich bevindt") — gebruikt door CampagneSelectScherm
+// om dat direct bij de Laden-knop te tonen, zonder eerst de run te starten.
+// Zelfde "hoogste ontgrendelde streek" als de frontier-streek binnen een
+// lopende run (world.ts). `null` als er niets te laden valt.
+export function opgeslagenSpelStreek(campagneId?: string): number | null {
+  const opgeslagenStatus = laadSpel(campagneId);
+  if (!opgeslagenStatus) return null;
+  return hoogsteOntgrendeldeStreek(opgeslagenStatus.streken);
 }
 
 // Per-campagne voortgangstellers (issue: "voortgang verschillende campagnes

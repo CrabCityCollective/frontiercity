@@ -76,16 +76,26 @@ function metAutomatischeVolgendeBeurt(state: GameState): GameState {
 // bewaarde run klaarstaat (issue: "als je op SpelVerlaten hebt geklikt en
 // daarna opnieuw de tutorial begint, dat je dan helemaal bij het begin
 // begint"). Een bewaarde run wordt uitsluitend teruggehaald als de speler
-// zelf bewust op "Spel laden" drukt (`laden` hieronder) — geen automatisch
-// laden bij mount.
+// zelf bewust op "Spel laden" drukt (`laden` hieronder, of de "Laden"-knop op
+// CampagneSelectScherm via `laadBijStart` — evengoed een bewuste klik, alleen
+// vóór in plaats van ná het mounten) — geen automatisch laden bij mount.
 //
 // `campagneId` (M20d deelstap 3, hoofdstuk 9/13/15): `undefined` (tutorial)
 // of een `CampaignConfig.id` (campagnes.ts) — bepaalt uitsluitend de
 // éénmalige initiële status; latere wijzigingen aan deze prop (GameRoot
 // unmount/remount't bij elke campagnewissel via AppRoot) hebben geen effect
 // op een al lopende run.
-export function useGameEngine(campagneId?: string) {
-  const [state, setState] = useState(() => maakInitieleSpelStatus(campagneId));
+// `laadBijStart` (issue: "loading button per campagne op het campagne select
+// screen"): true wanneer de speler op CampagneSelectScherm bewust "Laden" in
+// plaats van de campagne zelf aanklikte. Alleen gelezen bij de eerste render
+// (`useState`-initializer) — valt terug op een verse status als er (toch)
+// niets opgeslagen bleek, zodat de knop nooit op een kapotte/lege save vast
+// blijft zitten.
+export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
+  const [state, setState] = useState(() => {
+    const opgeslagenStatus = laadBijStart ? laadSpel(campagneId) : null;
+    return opgeslagenStatus ?? maakInitieleSpelStatus(campagneId);
+  });
 
   const opslaan = useCallback(() => {
     saveSpel(state);

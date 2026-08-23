@@ -1,6 +1,6 @@
 "use client";
 
-import { campagneStatistieken } from "@/game/save";
+import { campagneStatistieken, heeftOpgeslagenSpel, opgeslagenSpelStreek } from "@/game/save";
 
 interface Campagne {
   // `undefined` voor de tutorial (zelfde betekenis als `GameState.campagneId`,
@@ -38,11 +38,17 @@ interface CampagneSelectSchermProps {
   // `CampaignConfig.id` (zie campagnes.ts), zelfde betekenis als
   // `GameState.campagneId`.
   onKiesCampagne: (campagneId?: string) => void;
+  // Issue: "een loading button per campagne op het campagne select screen,
+  // waarmee je een eerdere save kunt inladen" — apart van `onKiesCampagne`
+  // hierboven (dat altijd een verse run begint, zie useGameEngine.ts), en
+  // alleen aangeroepen vanaf de Laden-knop hieronder, die alleen verschijnt
+  // als er voor die campagne al een save bestaat.
+  onLaadCampagne: (campagneId?: string) => void;
 }
 
 // Campagne-select-scherm (issue: "font en style" — na het beginscherm kiest
 // de speler een campagne; in de MVP is alleen de tutorial speelbaar).
-export default function CampagneSelectScherm({ onKiesCampagne }: CampagneSelectSchermProps) {
+export default function CampagneSelectScherm({ onKiesCampagne, onLaadCampagne }: CampagneSelectSchermProps) {
   return (
     <div
       style={{
@@ -116,6 +122,27 @@ export default function CampagneSelectScherm({ onKiesCampagne }: CampagneSelectS
               <div style={{ color: "var(--kleur-tekst-gedempt)", marginTop: "0.25rem", fontSize: "0.8rem" }}>
                 {campagneStatistieken(campagne.id).gestart}× gestart
               </div>
+            )}
+            {/* Issue: "loading button per campagne op het campagne select
+                screen, waarmee je een eerdere save kunt inladen ... geeft
+                aan op welke streek de save zich bevindt" — alleen zichtbaar
+                als er voor déze campagne al een save bestaat. `stopPropagation`
+                op zowel click als keydown: de omringende kaart heeft zelf al
+                een klik-/toetsenbord-handler die een verse run start
+                (`onKiesCampagne`), en die mag niet ook meelopen met deze knop. */}
+            {campagne.beschikbaar && heeftOpgeslagenSpel(campagne.id) && (
+              <button
+                type="button"
+                className="fc-knop"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onLaadCampagne(campagne.id);
+                }}
+                onKeyDown={(event) => event.stopPropagation()}
+                style={{ marginTop: "0.5rem", padding: "0.3rem 0.75rem", fontSize: "0.85rem" }}
+              >
+                Laden — streek {opgeslagenSpelStreek(campagne.id)}
+              </button>
             )}
             {!campagne.beschikbaar && (
               <div
