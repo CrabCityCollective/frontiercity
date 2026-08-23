@@ -68,40 +68,85 @@ export function heeftOpgeslagenSpel(campagneId?: string): boolean {
   }
 }
 
-// Losse sleutel (issue: "vinkje bij de tutorial als teken dat je hem gehaald
-// hebt") — een bewuste tweede vlag naast de save zelf: de tutorial blijft
-// altijd opnieuw speelbaar (dus geen deel van de op-te-slaan `GameState`),
-// maar of hij ooit gehaald is, moet een herstart/nieuwe run overleven.
+// Per-campagne voortgangstellers (issue: "voortgang verschillende campagnes
+// tonen" — vervangt de eerdere, tutorial-specifieke `TUTORIAL_VOLTOOID_KEY`-
+// vlag door drie tellers die voor elke campagne gelden). Eigen sleutel per
+// `campagneId`, zelfde patroon als `saveSleutel` hierboven — dus ook hier
+// geen gedeelde sleutel die de tutorial en Going West door elkaar zou halen.
 //
-// M20d deelstap 2: bewust nog geen analoge vlag voor Going West. Het vinkje
-// hoort bij een afsluitend "voltooid"-moment (zie `markeerTutorialVoltooid`
-// hieronder, gezet vanuit `TutorialVoltooidPopup`/GameRoot bij het stichten
-// van een nieuwe stad) — Going West heeft dat afsluitmoment nog niet: de drie
-// ankers (hoofdstuk 9) zijn nog niet inhoudelijk uitgewerkt (zie M20d-issue).
-// Dat toevoegen zonder een echt eindpunt zou een vinkje opleveren dat nooit
-// (bewust) gezet kan worden — dat komt pas met die latere milestone.
-const TUTORIAL_VOLTOOID_KEY = "frontier-city:tutorial-voltooid";
+// M20d deelstap 2/vervolg: Going West heeft nog geen afsluitend
+// "voltooid"-moment (de drie ankers, hoofdstuk 9, zijn nog niet inhoudelijk
+// uitgewerkt) — `uitgespeeld` blijft voor die campagne dus vanzelf op 0 tot
+// die latere milestone er een aanroept naar `registreerCampagneUitgespeeld`
+// aan toevoegt. Geen mechaniek hier vooruit gebouwd voor dat moment.
+export interface CampagneStatistieken {
+  gestart: number;
+  gameOverGezien: number;
+  uitgespeeld: number;
+}
 
-// Gezet zodra de speler de afsluitende samenvatting bij het stichten van een
-// nieuwe stad wegklikt (zie
-// TutorialVoltooidPopup/GameRoot). Fouten worden net als bij `saveSpel`
-// bewust genegeerd — een ontbrekend vinkje breekt de speelsessie niet.
-export function markeerTutorialVoltooid(): void {
+const LEGE_STATISTIEKEN: CampagneStatistieken = { gestart: 0, gameOverGezien: 0, uitgespeeld: 0 };
+
+function campagneStatistiekenSleutel(campagneId?: string): string {
+  return campagneId ? `frontier-city:${campagneId}-statistieken` : "frontier-city:tutorial-statistieken";
+}
+
+// Losse, oude sleutel van vóór deze tellers (issue: "vinkje bij de tutorial
+// als teken dat je hem gehaald hebt") — uitsluitend nog gelezen zodat een
+// speler die de tutorial vóór deze wijziging al gehaald had, dat vinkje niet
+// kwijtraakt. Wordt nergens meer geschreven.
+const LEGACY_TUTORIAL_VOLTOOID_KEY = "frontier-city:tutorial-voltooid";
+
+// Huidige stand van de drie tellers voor de gegeven campagne (gebruikt door
+// CampagneSelectScherm voor het vinkje/aantal keer gestart, en door
+// IntroScherm voor alle drie op het campagne-introscherm). Nooit `null` —
+// een campagne zonder ooit opgeslagen tellers levert gewoon nullen op.
+export function campagneStatistieken(campagneId?: string): CampagneStatistieken {
   try {
-    window.localStorage.setItem(TUTORIAL_VOLTOOID_KEY, "1");
+    const ruw = window.localStorage.getItem(campagneStatistiekenSleutel(campagneId));
+    const statistieken = ruw ? (JSON.parse(ruw) as CampagneStatistieken) : { ...LEGE_STATISTIEKEN };
+    if (
+      campagneId === undefined &&
+      statistieken.uitgespeeld === 0 &&
+      window.localStorage.getItem(LEGACY_TUTORIAL_VOLTOOID_KEY) === "1"
+    ) {
+      return { ...statistieken, uitgespeeld: 1 };
+    }
+    return statistieken;
   } catch {
-    // Zie hierboven: bewust genegeerd.
+    return { ...LEGE_STATISTIEKEN };
   }
 }
 
-// Of de tutorial ooit voltooid is — gebruikt door CampagneSelectScherm om
-// het vinkje te tonen.
-export function heeftTutorialVoltooid(): boolean {
+function verhoogStatistiek(campagneId: string | undefined, veld: keyof CampagneStatistieken): CampagneStatistieken {
+  const huidig = campagneStatistieken(campagneId);
+  const nieuw = { ...huidig, [veld]: huidig[veld] + 1 };
   try {
-    return window.localStorage.getItem(TUTORIAL_VOLTOOID_KEY) === "1";
+    window.localStorage.setItem(campagneStatistiekenSleutel(campagneId), JSON.stringify(nieuw));
   } catch {
-    return false;
+    // Zie hierboven bij saveSpel: bewust genegeerd — de teller mist dan
+    // gewoon deze verhoging, dat breekt de speelsessie niet.
   }
+  return nieuw;
+}
+
+// Gezet bij elke start van de campagne (zie GameRoot: elke keer dat het
+// introscherm getoond wordt, net als voorheen bij `toonIntro`).
+export function registreerCampagneGestart(campagneId?: string): CampagneStatistieken {
+  return verhoogStatistiek(campagneId, "gestart");
+}
+
+// Gezet zodra het ineenstortingsscherm (game-over) voor deze campagne
+// verschijnt (zie GameRoot: `state.laatsteIneenstorting`).
+export function registreerGameOverGezien(campagneId?: string): CampagneStatistieken {
+  return verhoogStatistiek(campagneId, "gameOverGezien");
+}
+
+// Gezet zodra de speler de afsluitende samenvatting van een run wegklikt
+// (voor de tutorial: TutorialVoltooidPopup, bij het stichten van een nieuwe
+// stad — zie GameRoot).
+export function registreerCampagneUitgespeeld(campagneId?: string): CampagneStatistieken {
+  return verhoogStatistiek(campagneId, "uitgespeeld");
 }
 
 // Losse sleutel (issue: "uitleg pop-ups aan en uit ... standaard voor alle

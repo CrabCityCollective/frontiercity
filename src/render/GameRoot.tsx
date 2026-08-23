@@ -70,7 +70,14 @@ import {
 import { TWEEDE_SETTLER_MIN_STREEK } from "@/game/groeiEnRekrutering";
 import { berekenLegerwaarde, kanConfrontatieBezetteStreek, onbemandeLegerkampPosities } from "@/game/militair";
 import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij } from "@/game/productie";
-import { grafischeStijl, heeftOpgeslagenSpel, markeerTutorialVoltooid, zetGrafischeStijl } from "@/game/save";
+import {
+  grafischeStijl,
+  heeftOpgeslagenSpel,
+  registreerCampagneGestart,
+  registreerCampagneUitgespeeld,
+  registreerGameOverGezien,
+  zetGrafischeStijl,
+} from "@/game/save";
 import { beschrijfEindeOceaanTile, beschrijfOceaanTile, beschrijfTile } from "@/game/tileInfo";
 import { Improvement } from "@/game/types";
 import { berekenHistorieStatistieken } from "@/game/uitputtingEnVerval";
@@ -207,6 +214,23 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
   function bevestigIntro() {
     setToonIntro(false);
   }
+
+  // Per-campagne voortgangstellers (issue: "voortgang verschillende
+  // campagnes tonen"): een start telt op precies hetzelfde moment als
+  // `toonIntro` hierboven — elke (her)mount van GameRoot is een nieuwe start
+  // van deze campagne, ongeacht of het een verse run is of een hervatte save.
+  // Lazy `useState`-initializer (zelfde patroon als `stijl` hierboven, dat
+  // ook een keer synchroon uit localStorage leest) zodat het introscherm
+  // meteen bij de eerste render het bijgewerkte aantal toont, zonder een
+  // extra her-render na een `useEffect`.
+  const [campagneStats, setCampagneStats] = useState(() => registreerCampagneGestart(campagneId));
+  // Game-over-teller: verhoogt zodra `state.laatsteIneenstorting` voor het
+  // eerst binnen deze mount `true` wordt (zie de blokkerende
+  // `IneenstortingScherm`-return verderop) — niet bij elke her-render zolang
+  // die vlag aan blijft staan.
+  useEffect(() => {
+    if (state.laatsteIneenstorting) setCampagneStats(registreerGameOverGezien(state.campagneId));
+  }, [state.laatsteIneenstorting, state.campagneId]);
 
   // Streek-popup (issue: "als je naar een nieuwe streek gaat, een popup vóór het
   // bouwcategorie-schermpje"): zodra de hoogst ontgrendelde streek verder komt
@@ -1396,7 +1420,7 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
-  if (toonIntro) return <IntroScherm onBeginnen={bevestigIntro} />;
+  if (toonIntro) return <IntroScherm onBeginnen={bevestigIntro} statistieken={campagneStats} />;
   if (state.laatsteIneenstorting) {
     // Na een ineenstorting terug naar het beginscherm van het spel (issue:
     // "na het game over scherm terug naar het begin scherm, niet naar het
@@ -1616,7 +1640,7 @@ export default function GameRoot({ campagneId, onVerlaten, onTutorialAfgerond }:
         {toonTutorialVoltooidPopup && (
           <TutorialVoltooidPopup
             onDoorgaan={() => {
-              markeerTutorialVoltooid();
+              setCampagneStats(registreerCampagneUitgespeeld(state.campagneId));
               setTutorialVoltooidBevestigd(true);
               // Hoofdstuk 9/10/16: "daarna het campagnemenu" — GameRoot
               // unmount hierdoor (zie AppRoot), dus geen frontier-

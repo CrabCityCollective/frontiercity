@@ -1,6 +1,6 @@
 "use client";
 
-import { heeftTutorialVoltooid } from "@/game/save";
+import { campagneStatistieken } from "@/game/save";
 
 interface Campagne {
   // `undefined` voor de tutorial (zelfde betekenis als `GameState.campagneId`,
@@ -88,14 +88,12 @@ export default function CampagneSelectScherm({ onKiesCampagne }: CampagneSelectS
           >
             <strong className="fc-heading" style={{ fontSize: "1.1rem" }}>
               {campagne.naam}
-              {/* Hoofdstuk 19 (design-doc), "Samenhang met het herhalende
-                  stichtingspatroon": `heeftTutorialVoltooid()` gaat alleen over
-                  de tutorial-save, dus het vinkje mag ook uitsluitend bij de
-                  tutorial-entry zelf (campagne.id === undefined) verschijnen —
-                  anders krijgt elke andere beschikbare campagne hetzelfde
-                  vinkje zodra de tutorial ooit voltooid is, zonder een eigen
-                  voltooid-signaal te hebben. */}
-              {campagne.beschikbaar && campagne.id === undefined && heeftTutorialVoltooid() && (
+              {/* Issue: "voortgang verschillende campagnes tonen" — elke
+                  campagne heeft nu haar eigen sleutel in `campagneStatistieken`
+                  (save.ts, gesleuteld op `campagne.id`, `undefined` voor de
+                  tutorial), dus het vinkje geldt per campagne in plaats van
+                  uitsluitend de tutorial. */}
+              {campagne.beschikbaar && campagneStatistieken(campagne.id).uitgespeeld > 0 && (
                 <span
                   aria-label="Voltooid"
                   title="Voltooid — nog altijd opnieuw te spelen"
@@ -108,6 +106,14 @@ export default function CampagneSelectScherm({ onKiesCampagne }: CampagneSelectS
             <div style={{ color: "var(--kleur-tekst-gedempt)", marginTop: "0.25rem" }}>
               {campagne.ondertitel}
             </div>
+            {/* Issue: "hoevaak hij hem gestart heeft" — alleen bij beschikbare
+                campagnes, net als het vinkje hierboven; een uitgegrijsde,
+                nog niet klikbare campagne heeft nooit een run gestart. */}
+            {campagne.beschikbaar && (
+              <div style={{ color: "var(--kleur-tekst-gedempt)", marginTop: "0.25rem", fontSize: "0.8rem" }}>
+                {campagneStatistieken(campagne.id).gestart}× gestart
+              </div>
+            )}
             {!campagne.beschikbaar && (
               <div
                 className="fc-heading"
