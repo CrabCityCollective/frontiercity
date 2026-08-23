@@ -1,15 +1,19 @@
 "use client";
 
-import { OCEAAN_UITLEG_TEKST, OCEAAN_UITLEG_TITEL } from "@/game/tutorialContent";
+import { oceaanUitlegVoorCampagne } from "@/game/campagnes";
 
 interface OceaanUitlegPopupProps {
   onDoorgaan: () => void;
+  // Campagne-bewuste titel/tekst (hoofdstuk 19 design-doc, blocker 1) —
+  // `undefined` voor de tutorial, net als `GameState.campagneId`.
+  campagneId?: string;
 }
 
 // Oceaan-uitleg-pop-up (issue: "tutorial laatste stad aan oceaan"), getoond
 // direct na de streek-pop-up van de laatste streek — zelfde blokkerende overlay
 // als StreekPopup/MilitairUitlegPopup.
-export default function OceaanUitlegPopup({ onDoorgaan }: OceaanUitlegPopupProps) {
+export default function OceaanUitlegPopup({ onDoorgaan, campagneId }: OceaanUitlegPopupProps) {
+  const { titel, tekst } = oceaanUitlegVoorCampagne(campagneId);
   return (
     <div
       style={{
@@ -35,9 +39,9 @@ export default function OceaanUitlegPopup({ onDoorgaan }: OceaanUitlegPopupProps
         }}
       >
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
-          {OCEAAN_UITLEG_TITEL}
+          {titel}
         </strong>
-        <p style={{ margin: 0, lineHeight: 1.6 }}>{OCEAAN_UITLEG_TEKST}</p>
+        <p style={{ margin: 0, lineHeight: 1.6 }}>{tekst}</p>
         <button className="fc-knop" onClick={onDoorgaan} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Begrepen
         </button>

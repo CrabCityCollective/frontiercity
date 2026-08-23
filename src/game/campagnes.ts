@@ -8,8 +8,23 @@
 // campagnekaart) en `CampagneSelectScherm.tsx` blijft "Going West" tonen als
 // nog niet beschikbaar totdat die kaart er is.
 
-import { goingWestStreekContent } from "./goingWestContent";
-import { StreekContent, streekContent as tutorialStreekContent } from "./tutorialContent";
+import {
+  goingWestStreekContent,
+  GOING_WEST_INTRO_FLAVOR_TEKST,
+  GOING_WEST_INTRO_SUBTITEL,
+  GOING_WEST_INTRO_TITEL,
+  GOING_WEST_OCEAAN_UITLEG_TEKST,
+  GOING_WEST_OCEAAN_UITLEG_TITEL,
+} from "./goingWestContent";
+import {
+  INTRO_FLAVOR_TEKST,
+  INTRO_SUBTITEL,
+  INTRO_TITEL,
+  OCEAAN_UITLEG_TEKST,
+  OCEAAN_UITLEG_TITEL,
+  StreekContent,
+  streekContent as tutorialStreekContent,
+} from "./tutorialContent";
 import { CampaignConfig } from "./types";
 
 // Weergavenamen-tabel uit hoofdstuk 9 ("Weergavenamen"). Sleutels zijn
@@ -77,4 +92,37 @@ export function campagneConfig(campagneId?: string): CampaignConfig | undefined 
 export function streekContentVoorCampagne(campagneId: string | undefined, hoogte: number): StreekContent | undefined {
   if (campagneId === GOING_WEST_CAMPAGNE.id) return goingWestStreekContent(hoogte);
   return tutorialStreekContent(hoogte);
+}
+
+// Campagne-bewust introscherm (hoofdstuk 19 design-doc, blocker 1, laatste
+// openstaande stuk): zelfde val-terug-op-tutorial-conventie als hierboven.
+export interface IntroContent {
+  titel: string;
+  subtitel: string;
+  flavorTekst: string;
+}
+
+export function introContentVoorCampagne(campagneId: string | undefined): IntroContent {
+  if (campagneId === GOING_WEST_CAMPAGNE.id) {
+    return {
+      titel: GOING_WEST_INTRO_TITEL,
+      subtitel: GOING_WEST_INTRO_SUBTITEL,
+      flavorTekst: GOING_WEST_INTRO_FLAVOR_TEKST,
+    };
+  }
+  return { titel: INTRO_TITEL, subtitel: INTRO_SUBTITEL, flavorTekst: INTRO_FLAVOR_TEKST };
+}
+
+// Campagne-bewuste oceaan-uitleg-pop-up (zelfde blocker als hierboven, tweede
+// en laatste openstaande stuk).
+export interface OceaanUitlegContent {
+  titel: string;
+  tekst: string;
+}
+
+export function oceaanUitlegVoorCampagne(campagneId: string | undefined): OceaanUitlegContent {
+  if (campagneId === GOING_WEST_CAMPAGNE.id) {
+    return { titel: GOING_WEST_OCEAAN_UITLEG_TITEL, tekst: GOING_WEST_OCEAAN_UITLEG_TEKST };
+  }
+  return { titel: OCEAAN_UITLEG_TITEL, tekst: OCEAAN_UITLEG_TEKST };
 }

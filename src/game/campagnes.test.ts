@@ -1,7 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { campagneConfig, GOING_WEST_CAMPAGNE, streekContentVoorCampagne } from "./campagnes";
-import { streekContent } from "./tutorialContent";
+import {
+  campagneConfig,
+  GOING_WEST_CAMPAGNE,
+  introContentVoorCampagne,
+  oceaanUitlegVoorCampagne,
+  streekContentVoorCampagne,
+} from "./campagnes";
+import { INTRO_TITEL, OCEAAN_UITLEG_TITEL, streekContent } from "./tutorialContent";
 import { GOING_WEST_STREEK_AANTAL } from "./worldGoingWest";
 import {
   AMBERADER,
@@ -80,4 +86,21 @@ test("streekContentVoorCampagne geeft Going West-content voor alle 35 streken, m
     assert.notEqual(content!.naam, "");
   }
   assert.equal(streekContentVoorCampagne(GOING_WEST_CAMPAGNE.id, GOING_WEST_STREEK_AANTAL + 1), undefined);
+});
+
+test("introContentVoorCampagne geeft de tutorial-content terug zonder campagne, en eigen Going West-content met de campagne-id (hoofdstuk 19, blocker 1 afronding)", () => {
+  assert.equal(introContentVoorCampagne(undefined).titel, INTRO_TITEL);
+
+  const goingWestIntro = introContentVoorCampagne(GOING_WEST_CAMPAGNE.id);
+  assert.equal(goingWestIntro.titel, "Going West");
+  assert.notEqual(goingWestIntro.titel, INTRO_TITEL);
+  assert.equal(goingWestIntro.flavorTekst, "todo");
+});
+
+test("oceaanUitlegVoorCampagne geeft de tutorial-content terug zonder campagne, en eigen Going West-content met de campagne-id (hoofdstuk 19, blocker 1 afronding)", () => {
+  assert.equal(oceaanUitlegVoorCampagne(undefined).titel, OCEAAN_UITLEG_TITEL);
+
+  const goingWestOceaanUitleg = oceaanUitlegVoorCampagne(GOING_WEST_CAMPAGNE.id);
+  assert.notEqual(goingWestOceaanUitleg.titel, OCEAAN_UITLEG_TITEL);
+  assert.equal(goingWestOceaanUitleg.tekst, "todo");
 });
