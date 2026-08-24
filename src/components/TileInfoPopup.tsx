@@ -269,7 +269,7 @@ export default function TileInfoPopup({
             title={
               confrontatieVraag.kan
                 ? undefined
-                : "Vereist een voltooid, wegverbonden eigen Legerkamp op de streek direct onder de Bezette Streek"
+                : "Vereist een voltooid, wegverbonden eigen Legerkamp op de streek direct onder De Stam van de Mammoet"
             }
             style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start", opacity: confrontatieVraag.kan ? 1 : 0.5 }}
           >

@@ -68,7 +68,7 @@ export function beschrijfTile(
     if (tile.verhuld) {
       return {
         titel: "Verhuld vakje",
-        ondertitel: `Bezette Streek ${streek.hoogte}`,
+        ondertitel: `De Stam van de Mammoet — ${streek.hoogte}`,
         tekst: tile.verkenningInGang
           ? `Een verkenner is onderweg — nog ${tile.verkenningInGang.beurtenResterend} ${tile.verkenningInGang.beurtenResterend === 1 ? "beurt" : "beurten"} tot dit vakje onthuld wordt.`
           : "Dit vakje is nog niet verkend. Stuur er een verkenner heen om te zien wat hier ligt.",
@@ -92,7 +92,7 @@ export function beschrijfTile(
     return {
       titel: "Ruïne",
       ondertitel: "Voormalige Wachttoren",
-      tekst: "Een verloren Confrontatie tegen een Bezette Streek verwoestte deze Wachttoren. Herbouwbaar tegen de normale kosten en bouwtijd.",
+      tekst: "Een verloren Confrontatie tegen De Stam van de Mammoet verwoestte deze Wachttoren. Herbouwbaar tegen de normale kosten en bouwtijd.",
     };
   }
 
@@ -198,7 +198,7 @@ export function beschrijfTile(
   if (streek.bezet) {
     return {
       titel: "Leeg vakje",
-      ondertitel: `Bezette Streek ${streek.hoogte}`,
+      ondertitel: `De Stam van de Mammoet — ${streek.hoogte}`,
       tekst: "Hier ligt geen vijandelijke of cosmetische inhoud. Zolang de streek bezet is, kun je hier niet bouwen.",
     };
   }
