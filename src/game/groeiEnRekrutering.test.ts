@@ -77,7 +77,7 @@ test("versnelOpslagplaatsMetGoud koopt de resterende bouwtijd van een Opslagplaa
 });
 
 test("een Smederij zet 'heeftSmederij' op true na voltooiing, buiten de gecapte stadsverbeteringen-pool om (M21d)", () => {
-  let state = maakInitieleSpelStatus();
+  let state = maakInitieleSpelStatus("going-west");
   state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 20 } };
   state = startSmederij(state);
   const kosten = state.stad.smederijInAanbouw!.improvement.kosten;
@@ -96,14 +96,22 @@ test("een Smederij zet 'heeftSmederij' op true na voltooiing, buiten de gecapte 
 });
 
 test("een tweede startSmederij-aanroep heeft geen effect zodra er al een Smederij staat (niet herhaalbaar, anders dan Opslagplaats)", () => {
-  let state = maakInitieleSpelStatus();
+  let state = maakInitieleSpelStatus("going-west");
   state = { ...state, stad: { ...state.stad, heeftSmederij: true } };
   state = startSmederij(state);
   assert.equal(state.stad.smederijInAanbouw, undefined);
 });
 
-test("versnelSmederijMetGoud koopt de resterende bouwtijd van een Smederij af en zet 'heeftSmederij' meteen op true", () => {
+test("startSmederij heeft geen effect in de tutorial (issue: 'Smederij niet in tutorial')", () => {
   let state = maakInitieleSpelStatus();
+  state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 20 } };
+  state = startSmederij(state);
+  assert.equal(state.stad.smederijInAanbouw, undefined);
+  assert.equal(state.stad.heeftSmederij, false);
+});
+
+test("versnelSmederijMetGoud koopt de resterende bouwtijd van een Smederij af en zet 'heeftSmederij' meteen op true", () => {
+  let state = maakInitieleSpelStatus("going-west");
   state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 0 } };
   state = startSmederij(state);
   const kosten = rushKostenGoud(state.stad.smederijInAanbouw!.improvement, state.stad.smederijInAanbouw!.voortgang);

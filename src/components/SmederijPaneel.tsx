@@ -12,15 +12,18 @@ interface SmederijPaneelProps {
 }
 
 // Smederij (Going West, M21d, opdracht-wampanoag-opening.md §3): economische
-// city improvement, buiten de city-improvement-cap — zelfde uitzondering en
-// altijd-zichtbare-paneel-patroon als OpslagplaatsPaneel. Anders dan
-// Opslagplaats niet herhaalbaar: eenmaal gebouwd toont dit paneel alleen nog
-// de lopende conversie-status. Blijft, net als OpslagplaatsPaneel, ook buiten
-// Going West gewoon in het stadsmenu staan — de tutorial ziet 'm alleen nooit
-// gebouwd worden (geen erts-gedreven reden om dat te doen daar).
+// city improvement, buiten de city-improvement-cap — zelfde uitzondering als
+// OpslagplaatsPaneel. Anders dan Opslagplaats niet herhaalbaar: eenmaal
+// gebouwd toont dit paneel alleen nog de lopende conversie-status. Anders dan
+// OpslagplaatsPaneel niet campagne-onafhankelijk zichtbaar: de
+// erts→gereedschap-conversie hoort bij Going West, dus dit paneel (en de
+// bijbehorende `startSmederij`-gate, groeiEnRekrutering.ts) blijft in de
+// tutorial verborgen (issue: "Smederij niet in tutorial").
 export default function SmederijPaneel({ state, onStartSmederij, onVersnelSmederij }: SmederijPaneelProps) {
   const { smederijInAanbouw, heeftSmederij } = state.stad;
   const ertsKosten = SMEDERIJ.effect.waarde ?? 0;
+
+  if (state.campagneId !== "going-west") return null;
 
   return (
     <div
