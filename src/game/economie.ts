@@ -40,7 +40,7 @@ import { verwerkUitputting, verwerkVerval } from "./uitputtingEnVerval";
 import { verwerkBouwwachtrij } from "./bouwwachtrij";
 import { verwerkProductie } from "./productie";
 import { verwerkBelegering, verwerkStreekOntgrendeling, verwerkVerkenningInGang } from "./streekOntgrendeling";
-import { verwerkWampanoagHandel, verwerkWampanoagVerkenningInGang } from "./wampanoag";
+import { verwerkWampanoagFaseAfsluiting, verwerkWampanoagHandel, verwerkWampanoagVerkenningInGang } from "./wampanoag";
 import { verwerkTechDrempel } from "./tech";
 import {
   verwerkCityVerbetering,
@@ -202,10 +202,16 @@ export function volgendeBeurt(state: GameState): GameState {
   // de onthulling zelf), dus de volgorde ertussen maakt niet uit: een vakje
   // is op elk moment óf nog aan het onthullen óf al handelbaar, nooit beide.
   const naWampanoagHandel = verwerkWampanoagHandel(naWampanoagVerkenningInGang);
+  // Wampanoag-fase-afsluiting (Going West, M21g, opdracht-wampanoag-opening.md
+  // §7): controleert de 3-3-3-drempel op de zojuist bijgewerkte
+  // bevervellen/maïs/wampum-voorraad hierboven — moet dus ná
+  // `verwerkWampanoagHandel` draaien, anders zou de drempel pas een beurt te
+  // laat gecontroleerd worden.
+  const naWampanoagFaseAfsluiting = verwerkWampanoagFaseAfsluiting(naWampanoagHandel);
   // Wololo (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 4, herzien door "Bezette streek scherm"): direct na
   // Verkenning-in-gang — zie `verwerkBelegering` hierboven.
-  const naBelegering = verwerkBelegering(naWampanoagHandel);
+  const naBelegering = verwerkBelegering(naWampanoagFaseAfsluiting);
   const naTechDrempel = verwerkTechDrempel(naBelegering);
   const naVerval = verwerkVerval(naTechDrempel);
   if (naVerval.laatsteIneenstorting) return naVerval;

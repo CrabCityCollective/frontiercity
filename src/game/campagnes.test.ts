@@ -5,6 +5,7 @@ import {
   GOING_WEST_CAMPAGNE,
   introContentVoorCampagne,
   oceaanUitlegVoorCampagne,
+  popupContent,
   streekContentVoorCampagne,
 } from "./campagnes";
 import { INTRO_TITEL, OCEAAN_UITLEG_TITEL, streekContent } from "./tutorialContent";
@@ -103,4 +104,23 @@ test("oceaanUitlegVoorCampagne geeft de tutorial-content terug zonder campagne, 
   const goingWestOceaanUitleg = oceaanUitlegVoorCampagne(GOING_WEST_CAMPAGNE.id);
   assert.notEqual(goingWestOceaanUitleg.titel, OCEAAN_UITLEG_TITEL);
   assert.equal(goingWestOceaanUitleg.tekst, "todo");
+});
+
+// M21g (opdracht-wampanoag-opening.md §7/§8): `popupContent` is de
+// "laag 2"-lookup uit de driedeling — campagne-gebonden, geen tutorial-
+// terugval (in tegenstelling tot `introContentVoorCampagne`/
+// `oceaanUitlegVoorCampagne` hierboven).
+test("popupContent geeft het titel/tekst-paar van GOING_WEST_CAMPAGNE.popupTeksten terug voor de Wampanoag-narratieve pop-ups", () => {
+  const eersteContact = popupContent(GOING_WEST_CAMPAGNE, "eersteContactPopup");
+  assert.equal(eersteContact?.titel, GOING_WEST_CAMPAGNE.popupTeksten!.eersteContactPopupTitel);
+  assert.equal(eersteContact?.tekst, GOING_WEST_CAMPAGNE.popupTeksten!.eersteContactPopupTekst);
+
+  const relatieGelegd = popupContent(GOING_WEST_CAMPAGNE, "wampanoagRelatieGelegdPopup");
+  assert.equal(relatieGelegd?.titel, GOING_WEST_CAMPAGNE.popupTeksten!.wampanoagRelatieGelegdPopupTitel);
+  assert.equal(relatieGelegd?.tekst, GOING_WEST_CAMPAGNE.popupTeksten!.wampanoagRelatieGelegdPopupTekst);
+});
+
+test("popupContent geeft undefined terug zonder campagne of bij een onbekende sleutel — geen tutorial-lek/andere-campagne-flavor", () => {
+  assert.equal(popupContent(undefined, "eersteContactPopup"), undefined);
+  assert.equal(popupContent(GOING_WEST_CAMPAGNE, "onbekendeSleutel"), undefined);
 });

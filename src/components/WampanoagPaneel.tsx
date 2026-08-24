@@ -11,10 +11,14 @@ import { WAMPANOAG_STREEK_HOOGTE } from "@/game/worldGoingWest";
 // `verkenningVraag`/`wampanoagHandelVraag`, zie GameRoot). Dit balkje toont
 // de onthullings-voortgang van de drie vaste Wampanoag-vakjes, welke
 // verkenner(s) onderweg zijn, én (M21f) de lopende 3-3-3-handelsvoortgang —
-// blijft daarom ook zichtbaar nadat alle drie vakjes onthuld zijn, i.t.t. de
-// eerdere M21e-versie. De 3-3-3-drempel zelf afdwingen (omslag naar
-// `cultureelOntgrendeld`) is M21g, hier alleen een uitlees-weergave.
+// blijft daarom zichtbaar nadat alle drie vakjes onthuld zijn, i.t.t. de
+// eerdere M21e-versie. Verdwijnt (net als BezetteStreekPaneel bij een
+// opgeloste Bezette Streek) zodra de 3-3-3-drempel gehaald is en de fase
+// afgesloten (`cultureelOntgrendeld`, M21g, opdracht-wampanoag-opening.md
+// §7) — de openingsfase is dan voorbij, dit balkje hoort daarna niet meer op
+// de kaart te staan.
 export default function WampanoagPaneel({ state }: { state: GameState }) {
+  if (state.cultureelOntgrendeld) return null;
   const streek = state.streken.find((s) => s.hoogte === WAMPANOAG_STREEK_HOOGTE);
   if (!streek) return null;
 
