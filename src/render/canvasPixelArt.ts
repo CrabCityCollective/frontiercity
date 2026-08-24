@@ -444,6 +444,57 @@ function tekenVoorraadkuilPixel(ctx: CanvasRenderingContext2D, seed: number): vo
   }
 }
 
+// Wampanoag-vakjes — pixel-art varianten van de vector-tekenaars in
+// canvas.ts (zelfde drie-gebouwen-onderscheid: Maïsboerderij =
+// maïsstengel-rijtjes, Beverjachthut = lage blokhut met beverstaart,
+// Opperhoofdtent = grotere, versierde tipi met veer — hergebruikt
+// `tekenTentPixel`, net als de vector-variant `tekenTent` hergebruikt).
+function tekenMaisboerderijPixel(ctx: CanvasRenderingContext2D, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 11);
+
+  const stalkX = [3, 6, 9, 12];
+  for (const sx of stalkX) {
+    const h = 6 + Math.floor(rng() * 2);
+    vlijn(ctx, sx, baseY - h, baseY, "#3d5c2c");
+    p(ctx, sx - 1, baseY - h + 2, "#4f7a34");
+    p(ctx, sx + 1, baseY - h + 3, "#4f7a34");
+    p(ctx, sx, baseY - h - 1, "#e0b23c");
+  }
+}
+
+function tekenBeverjachthutPixel(ctx: CanvasRenderingContext2D): void {
+  const baseY = 14;
+  schaduw(ctx, 6, baseY + 1, 9);
+
+  const rijen = 6;
+  for (let i = 0; i < rijen; i++) {
+    const half = Math.max(1, Math.round((i / rijen) * 5));
+    blokrij(ctx, 6, baseY - rijen + i, half, "#5c4630");
+  }
+  hlijn(ctx, 2, 10, baseY, "#3a2c1c");
+
+  vlijn(ctx, 13, baseY - 4, baseY - 1, "#4a3626");
+  p(ctx, 13, baseY - 4, "#6b5436");
+
+  hlijn(ctx, 0, 15, baseY + 1, "rgba(120, 195, 220, 0.35)");
+}
+
+function tekenOpperhoofdtentPixel(ctx: CanvasRenderingContext2D): void {
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 8);
+  tekenTentPixel(ctx, 8, baseY, 8, "#a0522d");
+
+  p(ctx, 6, baseY - 9, "#3a2416");
+  p(ctx, 10, baseY - 9, "#3a2416");
+
+  hlijn(ctx, 5, 11, baseY - 3, "rgba(230, 210, 160, 0.5)");
+
+  p(ctx, 10, baseY - 10, "#e8dcc8");
+  p(ctx, 10, baseY - 11, "#8a2a2a");
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, seed: number, bemand: boolean) => void
@@ -462,6 +513,9 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   sterrencirkel: (ctx, seed) => tekenSterrencirkelPixel(ctx, seed),
   goudmijn: (ctx, seed) => tekenAmberaderPixel(ctx, seed),
   voorraadkuil: (ctx, seed) => tekenVoorraadkuilPixel(ctx, seed),
+  maisboerderij: (ctx, seed) => tekenMaisboerderijPixel(ctx, seed),
+  beverjachthut: (ctx) => tekenBeverjachthutPixel(ctx),
+  opperhoofdtent: (ctx) => tekenOpperhoofdtentPixel(ctx),
 };
 
 function tekenLandImprovementPixel(ctx: CanvasRenderingContext2D, id: string, seed: number, bemand: boolean): void {
