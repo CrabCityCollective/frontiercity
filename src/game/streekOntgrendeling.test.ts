@@ -24,6 +24,7 @@ import {
   KUDDE_GROTE_JACHT_BEURTEN,
   ROOFDIER_MIN_STREEK,
   ROOFDIER_STREEK_KUDDE_POSITIE,
+  wetenschapKostenVoorStreekOntgrendeling,
 } from "./world";
 import { metActieveStad } from "./stad";
 import {
@@ -382,4 +383,45 @@ test("Deel 6, uitgebreid (issue: laatste confrontatie tweaken): een nog niet opg
     "leeg",
     "bouwen op de Bezette Streek zelf blijft geblokkeerd (het nog onthulde huisje-vakje blijft ongewijzigd)"
   );
+});
+
+// M21b (opdracht-wampanoag-opening.md §1/§4): tijdens de Going West-
+// openingsfase (`ontgrendelResource: "wetenschap"`, gezet door
+// `maakInitieleSpelStatus` sinds M21a) loopt streek-ontgrendeling op
+// wetenschap i.p.v. cultuur, met de opdracht-drempels streek 2 = 10.
+test("Going West-openingsfase: streek-ontgrendeling loopt op wetenschap, niet op cultuur", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  assert.equal(state.ontgrendelResource, "wetenschap");
+
+  // Veel cultuur, maar geen wetenschap: streek 2 blijft vergrendeld.
+  state = { ...state, cultuur: cultuurKostenVoorStreek(2) + 100, wetenschap: 0 };
+  assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, false);
+
+  // Net genoeg wetenschap voor de opdracht-drempel van streek 2 (10):
+  // ontgrendelt, ongeacht de cultuur hierboven.
+  state = { ...state, wetenschap: wetenschapKostenVoorStreekOntgrendeling(2) };
+  assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, true);
+});
+
+// Zelfde opdracht-paragraaf: de tutorial (`ontgrendelResource: "cultuur"`,
+// ongewijzigd) mag door deze campagne-splitsing niet beïnvloed worden — veel
+// wetenschap alleen mag een tutorial-streek niet ontgrendelen.
+test("tutorial: streek-ontgrendeling blijft op cultuur lopen, ongeacht wetenschap", () => {
+  let state = maakInitieleSpelStatus();
+  assert.equal(state.ontgrendelResource, "cultuur");
+
+  state = { ...state, wetenschap: wetenschapKostenVoorStreekOntgrendeling(2) + 100, cultuur: 0 };
+  assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, false);
+
+  state = { ...state, cultuur: cultuurKostenVoorStreek(2) };
+  assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, true);
+});
+
+// De opdracht noemt drie expliciete drempelwaarden (streek 2 = 10, 3 = 20,
+// 4 = 35) — vastgelegd als regressietest, los van de exacte formule-vorm in
+// world.ts.
+test("wetenschapKostenVoorStreekOntgrendeling geeft de opdracht-drempels voor streek 2/3/4", () => {
+  assert.equal(wetenschapKostenVoorStreekOntgrendeling(2), 10);
+  assert.equal(wetenschapKostenVoorStreekOntgrendeling(3), 20);
+  assert.equal(wetenschapKostenVoorStreekOntgrendeling(4), 35);
 });
