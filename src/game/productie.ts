@@ -20,6 +20,7 @@ import { isTileVerbondenMetStad } from "./wegen";
 import { isMateriaalType } from "./materiaal";
 import { telBemandeWachttorens } from "./militair";
 import { stadEffectiviteit } from "./stad";
+import { SMEDERIJ, SMEDERIJ_GEREEDSCHAP_OPBRENGST } from "./improvements";
 
 // Voedseltekort-tuning (M6, hoofdstuk 4/14; issue: "stad instort of verlaten
 // alleen als er te weinig voedsel is"): bewuste MVP-placeholders, net als de
@@ -265,7 +266,22 @@ export function verwerkProductie(state: GameState): GameState {
 
   voedsel = Math.max(0, voedsel + berekenVoedselNetto(state));
 
-  return { ...state, voorraad, voedsel, cultuur, wetenschap };
+  // Smederij (Going West, M21d, opdracht-wampanoag-opening.md §3): 2 erts → 1
+  // gereedschap per beurt, zolang er genoeg erts voorradig is — anders geen
+  // conversie die beurt en nooit een negatieve voorraad (opdracht §3, "zelfde
+  // regel als tribuut-afhandeling"). Los van de gewone "productie"-lus
+  // hierboven (een ander effect-type), en bewust zonder het afstandsverval/
+  // `stadEffectiviteit` van de overige city improvements: de conversie trekt
+  // rechtstreeks uit de lokale erts-voorraad van de actieve stad, geen
+  // productie op een land-vakje.
+  let gereedschap = state.gereedschap;
+  const ertsKosten = SMEDERIJ.effect.waarde ?? 0;
+  if (state.stad.heeftSmederij && voorraad.erts >= ertsKosten) {
+    voorraad.erts -= ertsKosten;
+    gereedschap += SMEDERIJ_GEREEDSCHAP_OPBRENGST;
+  }
+
+  return { ...state, voorraad, voedsel, cultuur, wetenschap, gereedschap };
 }
 
 // Of er al een actieve, wegverbonden boerderij meeproduceert (issue: "uitleg

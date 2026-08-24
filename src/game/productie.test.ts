@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { maakInitieleSpelStatus, OPSLAG_CAP, volgendeBeurt } from "./economie";
-import { BIBLIOTHEEK, ECONOMISCH_LAND_IMPROVEMENTS, MARKT, STERRENCIRKEL } from "./improvements";
+import { BIBLIOTHEEK, ECONOMISCH_LAND_IMPROVEMENTS, MARKT, SMEDERIJ, STERRENCIRKEL } from "./improvements";
 import { metActieveStad } from "./stad";
 import { metWerkendeSterrencirkel, MIJN } from "./testHelpers";
 
@@ -137,4 +137,60 @@ test("city-improvement-productie van de actieve stad valt volledig weg vanaf afs
 
   assert.equal(state.wetenschap, 0, "afstand 13 → 0% effectiviteit: geen wetenschap");
   assert.equal(state.voorraad.goud, 0, "afstand 13 → 0% effectiviteit: geen goud");
+});
+
+test("een Smederij zet elke beurt 2 erts om in 1 gereedschap, zolang er genoeg erts voorradig is (Going West, M21d)", () => {
+  let state = maakInitieleSpelStatus();
+  state = metActieveStad(state, { ...state.stad, heeftSmederij: true });
+  state = { ...state, voorraad: { ...state.voorraad, erts: 5 } };
+
+  state = volgendeBeurt(state);
+
+  assert.equal(state.gereedschap, 1);
+  assert.equal(state.voorraad.erts, 3, "2 erts gaat elke beurt van de voorraad af");
+
+  state = volgendeBeurt(state);
+
+  assert.equal(state.gereedschap, 2);
+  assert.equal(state.voorraad.erts, 1);
+});
+
+test("de erts→gereedschap-conversie slaat een beurt over zonder genoeg erts, en de erts-voorraad wordt nooit negatief", () => {
+  let state = maakInitieleSpelStatus();
+  state = metActieveStad(state, { ...state.stad, heeftSmederij: true });
+  state = { ...state, voorraad: { ...state.voorraad, erts: 1 } };
+
+  state = volgendeBeurt(state);
+
+  assert.equal(state.gereedschap, 0, "1 erts is niet genoeg voor de conversie (2 erts nodig)");
+  assert.equal(state.voorraad.erts, 1, "erts blijft ongemoeid, geen negatieve voorraad");
+});
+
+test("zonder Smederij vindt er nooit een erts→gereedschap-conversie plaats", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, voorraad: { ...state.voorraad, erts: 10 } };
+
+  state = volgendeBeurt(state);
+
+  assert.equal(state.gereedschap, 0);
+  assert.equal(state.voorraad.erts, 10);
+});
+
+test("Smederij-conversie is niet gevoelig voor het afstandsverval van een tweede stad (bewuste keuze, opdracht-wampanoag-opening.md §3)", () => {
+  let state = maakInitieleSpelStatus();
+  const eersteStad = { ...state.stad, streekHoogte: 0 };
+  const actieveStad = { ...state.stad, naam: "Nieuwe stad", heeftSmederij: true, streekHoogte: 0 };
+  state = {
+    ...state,
+    steden: [eersteStad, actieveStad],
+    stad: actieveStad,
+    voorraad: { ...state.voorraad, erts: 5 },
+    streken: state.streken.map((streek) => (streek.hoogte <= 13 ? { ...streek, ontgrendeld: true } : streek)),
+  };
+
+  state = volgendeBeurt(state);
+
+  assert.equal(SMEDERIJ.effect.waarde, 2, "aanname van deze test: 2 erts input, ongeacht 0% effectiviteit hier");
+  assert.equal(state.gereedschap, 1, "de conversie loopt voluit door, ook op afstand 13 (0%-zone)");
+  assert.equal(state.voorraad.erts, 3);
 });

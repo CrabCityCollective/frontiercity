@@ -72,6 +72,7 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     strijders: [],
     missionarissen: [],
     cityImprovements: [],
+    heeftSmederij: false,
   };
 
   return {

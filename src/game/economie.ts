@@ -47,6 +47,7 @@ import {
   verwerkMissionarisRecrutering,
   verwerkOpslagplaats,
   verwerkRecrutering,
+  verwerkSmederij,
   verwerkTweedeSettlerInAanbouw,
 } from "./groeiEnRekrutering";
 import {
@@ -123,7 +124,8 @@ export function berekenEconomieOverzicht(state: GameState): Record<ResourceType,
   const naCiviel = verwerkCivielInAanbouw(naProductie);
   const naTweedeSettler = verwerkTweedeSettlerInAanbouw(naCiviel);
   const naOpslagplaats = verwerkOpslagplaats(naTweedeSettler);
-  const naCityVerbetering = verwerkCityVerbetering(naOpslagplaats);
+  const naSmederij = verwerkSmederij(naOpslagplaats);
+  const naCityVerbetering = verwerkCityVerbetering(naSmederij);
   const naRecrutering = verwerkRecrutering(naCityVerbetering);
   const uitkomst = verwerkMissionarisRecrutering(naRecrutering);
 
@@ -156,7 +158,9 @@ export function berekenEconomieOverzicht(state: GameState): Record<ResourceType,
 // instort-check), dan de civiele stadsbouwwachtrij (M6/hoofdstuk 16: groei óf
 // een nieuwe settler), de tweede-settler-wachtrij (issue: "Altijd 2e
 // settler" #236 — eigen, onafhankelijke wachtrij), de Opslagplaats-wachtrij
-// (hoofdstuk 14), de stadsverbeteringen-wachtrij (Bibliotheek/Markt/Barakken/
+// (hoofdstuk 14), de Smederij-wachtrij (Going West, M21d, eigen wachtrij,
+// zelfde "buiten de cap"-uitzondering als Opslagplaats), de
+// stadsverbeteringen-wachtrij (Bibliotheek/Markt/Barakken/
 // Tempel/Grote Tempel, hoofdstuk 3/4/11/14) en de Soldaat-rekruteringswachtrij
 // (M7), dan de indringers-kans (hoofdstuk 6) en
 // de kuddes-kans (hoofdstuk 16/17), dan de beurtteller ophogen. Zet ook de
@@ -200,9 +204,13 @@ export function volgendeBeurt(state: GameState): GameState {
   // tegelijk laten lopen.
   const naTweedeSettler = verwerkTweedeSettlerInAanbouw(naCiviel);
   const naOpslagplaats = verwerkOpslagplaats(naTweedeSettler);
+  // Smederij (Going West, M21d, opdracht-wampanoag-opening.md §3): eigen
+  // wachtrij, los van civiel/opslagplaats hierboven — zelfde uitzondering als
+  // Opslagplaats.
+  const naSmederij = verwerkSmederij(naOpslagplaats);
   // Stadsverbeteringen (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
-  // 1/3): eigen wachtrij, los van civiel/opslagplaats hierboven.
-  const naCityVerbetering = verwerkCityVerbetering(naOpslagplaats);
+  // 1/3): eigen wachtrij, los van civiel/opslagplaats/smederij hierboven.
+  const naCityVerbetering = verwerkCityVerbetering(naSmederij);
   const naRecrutering = verwerkRecrutering(naCityVerbetering);
   const naMissionarisRecrutering = verwerkMissionarisRecrutering(naRecrutering);
   const naIndringers = verwerkIndringers(naMissionarisRecrutering);

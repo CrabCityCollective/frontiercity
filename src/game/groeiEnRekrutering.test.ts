@@ -11,9 +11,11 @@ import {
   startNieuweSettler,
   startOpslagplaats,
   startRecrutering,
+  startSmederij,
   startTweedeSettler,
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
+  versnelSmederijMetGoud,
 } from "./groeiEnRekrutering";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
 import { bemanWachttoren, berekenLegerwaarde, confrontatieBezetteStreek } from "./militair";
@@ -71,6 +73,45 @@ test("versnelOpslagplaatsMetGoud koopt de resterende bouwtijd van een Opslagplaa
   const naVersnellen = versnelOpslagplaatsMetGoud(state);
   assert.equal(naVersnellen.stad.opslagplaatsInAanbouw, undefined);
   assert.equal(naVersnellen.opslagCap, OPSLAG_CAP + 20);
+  assert.equal(naVersnellen.voorraad.goud, 0);
+});
+
+test("een Smederij zet 'heeftSmederij' op true na voltooiing, buiten de gecapte stadsverbeteringen-pool om (M21d)", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 20 } };
+  state = startSmederij(state);
+  const kosten = state.stad.smederijInAanbouw!.improvement.kosten;
+  const bouwtijd = state.stad.smederijInAanbouw!.improvement.bouwtijdBeurten;
+
+  for (let i = 0; i < bouwtijd; i++) {
+    state = volgendeBeurt(state);
+  }
+
+  assert.equal(state.stad.smederijInAanbouw, undefined);
+  assert.equal(state.stad.heeftSmederij, true);
+  assert.equal(state.stad.cityImprovements.length, 0, "de Smederij telt niet mee in de gecapte pool");
+  for (const [type, bedrag] of Object.entries(kosten)) {
+    assert.equal(state.voorraad[type as keyof typeof state.voorraad], 20 - (bedrag ?? 0));
+  }
+});
+
+test("een tweede startSmederij-aanroep heeft geen effect zodra er al een Smederij staat (niet herhaalbaar, anders dan Opslagplaats)", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, stad: { ...state.stad, heeftSmederij: true } };
+  state = startSmederij(state);
+  assert.equal(state.stad.smederijInAanbouw, undefined);
+});
+
+test("versnelSmederijMetGoud koopt de resterende bouwtijd van een Smederij af en zet 'heeftSmederij' meteen op true", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 0 } };
+  state = startSmederij(state);
+  const kosten = rushKostenGoud(state.stad.smederijInAanbouw!.improvement, state.stad.smederijInAanbouw!.voortgang);
+  state = { ...state, voorraad: { ...state.voorraad, goud: kosten } };
+
+  const naVersnellen = versnelSmederijMetGoud(state);
+  assert.equal(naVersnellen.stad.smederijInAanbouw, undefined);
+  assert.equal(naVersnellen.stad.heeftSmederij, true);
   assert.equal(naVersnellen.voorraad.goud, 0);
 });
 

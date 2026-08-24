@@ -108,6 +108,12 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
   if (effect.type === "decoratief") {
     return "Een verlaten huisje. Geen functie, niet interactief.";
   }
+  // Smederij (Going West, M21d, opdracht-wampanoag-opening.md §3): het enige
+  // "conversie"-effect in de MVP — hardcoded "gereedschap" als uitkomst i.p.v.
+  // een generiek tweede resource-veld, want er is (nog) maar één zo'n gebouw.
+  if (effect.type === "conversie" && effect.resource && effect.waarde) {
+    return `Zet elke beurt ${effect.waarde} ${RESOURCE_LABELS[effect.resource].toLowerCase()} om in ${SMEDERIJ_GEREEDSCHAP_OPBRENGST} gereedschap, zolang er genoeg ${RESOURCE_LABELS[effect.resource].toLowerCase()} voorradig is (anders geen conversie die beurt).`;
+  }
   return "";
 }
 
@@ -619,6 +625,31 @@ export const OPSLAGPLAATS: Improvement = {
   kosten: { hout: 8, steen: 6 },
   bouwtijdBeurten: 3,
   effect: { type: "opslag", waarde: 20 },
+};
+
+// Smederij (Going West, M21d, opdracht-wampanoag-opening.md §3): economische
+// city improvement, buiten de city-improvement-cap — zelfde uitzondering als
+// Opslagplaats hierboven (reden: zou bij een kleine stad de facto verplicht
+// zijn). Anders dan Opslagplaats niet herhaalbaar (`City.heeftSmederij`,
+// types.ts): één Smederij volstaat, meer heeft in de MVP geen extra effect.
+// `effect.waarde` is de erts-input per beurt; de gereedschap-opbrengst staat
+// hardcoded in `SMEDERIJ_GEREEDSCHAP_OPBRENGST` hieronder (er is nog maar één
+// conversie-gebouw, dus geen apart "output"-veld op `EffectDefinition`
+// nodig). `verwerkProductie` (productie.ts) past de conversie toe: zolang er
+// genoeg erts voorradig is, anders geen conversie die beurt en nooit een
+// negatieve voorraad (opdracht §3, "zelfde regel als tribuut-afhandeling").
+// Kosten/bouwtijd (MVP-richtwaarde, tunebaar): vergelijkbaar met de overige
+// vroege economische city improvements.
+export const SMEDERIJ_GEREEDSCHAP_OPBRENGST = 1;
+
+export const SMEDERIJ: Improvement = {
+  id: "smederij",
+  naam: "Smederij",
+  categorie: "economisch",
+  soort: "city",
+  kosten: { hout: 6, steen: 4 },
+  bouwtijdBeurten: 2,
+  effect: { type: "conversie", resource: "erts", waarde: 2 },
 };
 
 // Gecapte city improvements (hoofdstuk 3/4/11/14, issue: "city improvements"
