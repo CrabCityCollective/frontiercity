@@ -98,21 +98,23 @@ function telLandTiles(state: GameState): { totaal: number; ghostTowns: number } 
 // verhoogt anderszins de netto voedselproductie), dan wordt de stad weer
 // "gezond" en blijft alles behouden. Bereikt de voorraad daadwerkelijk nul,
 // dan stort de stad in — de centrale risk/reward-gok van elke stad-episode.
-// Omdat de MVP maar één stad kent (hoofdstuk 13), is er geen volgende stad om
-// de run mee door te laten lopen: de hele run eindigt en de tutorial herstart
-// vanaf een verse spelstatus (hoofdstuk 4/11).
+// Omdat een stad-episode geen volgende stad meekrijgt om de run mee door te
+// laten lopen (hoofdstuk 13), eindigt de hele run hier: een verse spelstatus
+// voor dezelfde campagne (hoofdstuk 4/11).
 export function verwerkVerval(state: GameState): GameState {
   if (state.voedsel <= 0) {
     // Volledige ineenstorting (issue: "run eindigen wanneer stad uitgeput
     // is" / "stad instort ... als er te weinig voedsel is"): de run zelf
     // eindigt hier, niet alleen de groei-tier/relics van de stad — een verse
-    // spelstatus, met de ineenstortingsvlag erbovenop zodat de UI het
+    // spelstatus voor dezelfde campagne (`state.campagneId`, anders zou een
+    // ineenstorting in Going West de run stilzwijgend terugzetten naar de
+    // tutorial-status), met de ineenstortingsvlag erbovenop zodat de UI het
     // game-over-scherm toont tot de speler bevestigt. `laatsteRunStatistieken`
     // is een momentopname van de net geëindigde run (issue: "beurten/steden/
     // streken tonen op het game-over-scherm") — moet vóór de reset genomen
     // worden, anders is er niets meer over om te tonen.
     return {
-      ...maakInitieleSpelStatus(),
+      ...maakInitieleSpelStatus(state.campagneId),
       laatsteIneenstorting: true,
       laatsteRunStatistieken: {
         beurten: state.beurt,

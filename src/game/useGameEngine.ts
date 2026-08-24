@@ -65,7 +65,7 @@ import {
   confrontatieBezetteStreek as confrontatieBezetteStreekActie,
   haalStrijderTerug as haalStrijderTerugActie,
 } from "./militair";
-import { laadSpel, saveSpel } from "./save";
+import { laadSpel, saveSpel, verwijderSpel } from "./save";
 import { kiesTech as kiesTechActie } from "./tech";
 import { bevestigIneenstorting as bevestigIneenstortingActie } from "./uitputtingEnVerval";
 import { EenmaligeUitlegKey, GameState, Improvement, TechId, WampanoagHandelKeuze } from "./types";
@@ -117,7 +117,19 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
   // Autosave (issue #306): bewaart de status bij elke wijziging, onder de
   // sleutel van de campagne waartoe deze run behoort (zie save.ts:
   // `saveSleutel`) — geen handmatige "Opslaan"-knop meer nodig.
+  //
+  // Bij een ineenstorting (issue: "Bij game over moet de save verwijderd
+  // worden") slaat dit juist níets op: `state` is dan al de verse status ná
+  // reset (zie verwerkVerval), met alleen `laatsteIneenstorting: true`
+  // erbovenop. Zou die alsnog ge-autosaved worden, dan zet "Laden" op
+  // CampagneSelectScherm de speler bij de volgende sessie regelrecht weer op
+  // het game-over-scherm. De opgeslagen run van de zojuist ingestorte
+  // campagne heeft toch niets meer om te hervatten, dus die mag weg.
   useEffect(() => {
+    if (state.laatsteIneenstorting) {
+      verwijderSpel(state.campagneId);
+      return;
+    }
     saveSpel(state);
   }, [state]);
 
