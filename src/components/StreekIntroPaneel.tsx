@@ -1,9 +1,10 @@
 "use client";
 
-import { streekContentVoorCampagne } from "@/game/campagnes";
+import { GOING_WEST_CAMPAGNE, streekContentVoorCampagne } from "@/game/campagnes";
 import { AFSLUITENDE_SCENE } from "@/game/tutorialContent";
 import { hoogsteOntgrendeldeStreek } from "@/game/world";
 import { Streek } from "@/game/types";
+import KompasIcoon from "./KompasIcoon";
 
 interface StreekIntroPaneelProps {
   streken: Streek[];
@@ -46,9 +47,15 @@ export default function StreekIntroPaneel({ streken, campagneId }: StreekIntroPa
         margin: "0.5rem",
       }}
     >
-      <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
-        Streek {hoogte} — {content.naam}
-      </strong>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
+          Streek {hoogte} — {content.naam}
+        </strong>
+        {/* Alleen bij Going West (issue: "Compas in beeld bij Going West") —
+            de tutorial krijgt hier bewust geen kompas, dat blijft losstaand
+            van de Amerikaanse campagne (CLAUDE.md). */}
+        {campagneId === GOING_WEST_CAMPAGNE.id && <KompasIcoon />}
+      </div>
       <span style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>Nieuw: {content.mechaniek}</span>
       {isLaatsteStreek && campagneId === undefined && <p style={{ margin: 0 }}>{AFSLUITENDE_SCENE}</p>}
     </div>
