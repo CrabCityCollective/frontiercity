@@ -1,15 +1,19 @@
 "use client";
 
 import { GameState } from "@/game/types";
+import { WAMPANOAG_GOED_LABELS, WAMPANOAG_HANDELSDREMPEL } from "@/game/wampanoag";
 import { WAMPANOAG_STREEK_HOOGTE } from "@/game/worldGoingWest";
 
-// Wampanoag-statusbalk (Going West, M21e, opdracht-wampanoag-opening.md §5) —
-// zelfde "puur status, rechtstreeks op de kaart, geen pop-up"-patroon als
-// BezetteStreekPaneel: alle acties (verkenner sturen) lopen via een klik op
-// het vakje zelf (TileInfoPopup: `verkenningVraag`, zie GameRoot). Dit
-// balkje toont alleen de onthullings-voortgang van de drie vaste
-// Wampanoag-vakjes en welke verkenner(s) onderweg zijn — er is in deze slice
-// nog geen handel (M21f), dus geen ruilstatus te tonen.
+// Wampanoag-statusbalk (Going West, M21e/M21f, opdracht-wampanoag-opening.md
+// §5/§6) — zelfde "puur status, rechtstreeks op de kaart, geen pop-up"-
+// patroon als BezetteStreekPaneel: alle acties (verkenner sturen,
+// grondstofkeuze) lopen via een klik op het vakje zelf (TileInfoPopup:
+// `verkenningVraag`/`wampanoagHandelVraag`, zie GameRoot). Dit balkje toont
+// de onthullings-voortgang van de drie vaste Wampanoag-vakjes, welke
+// verkenner(s) onderweg zijn, én (M21f) de lopende 3-3-3-handelsvoortgang —
+// blijft daarom ook zichtbaar nadat alle drie vakjes onthuld zijn, i.t.t. de
+// eerdere M21e-versie. De 3-3-3-drempel zelf afdwingen (omslag naar
+// `cultureelOntgrendeld`) is M21g, hier alleen een uitlees-weergave.
 export default function WampanoagPaneel({ state }: { state: GameState }) {
   const streek = state.streken.find((s) => s.hoogte === WAMPANOAG_STREEK_HOOGTE);
   if (!streek) return null;
@@ -22,11 +26,6 @@ export default function WampanoagPaneel({ state }: { state: GameState }) {
   if (wampanoagTiles.length === 0) return null;
 
   const onthuldAantal = wampanoagTiles.filter((tile) => !tile.wampanoagVerhuld).length;
-  // Zodra alles onthuld is, valt er in deze slice niets meer te melden — geen
-  // handel-UI hier (M21f), dus het balkje verdwijnt net als BezetteStreekPaneel
-  // verdwijnt zodra de Bezette Streek is opgelost.
-  if (onthuldAantal === wampanoagTiles.length) return null;
-
   const onderwegTiles = wampanoagTiles.filter((tile) => tile.wampanoagVerkenningInGang);
 
   return (
@@ -44,9 +43,11 @@ export default function WampanoagPaneel({ state }: { state: GameState }) {
       <strong className="fc-heading" style={{ color: "var(--kleur-mos)" }}>
         Wampanoag — streek {streek.hoogte}
       </strong>
-      <span style={{ color: "var(--kleur-tekst-gedempt)" }}>
-        Klik een verhuld vakje om een verkenner te sturen. {onthuldAantal}/{wampanoagTiles.length} vakjes onthuld.
-      </span>
+      {onthuldAantal < wampanoagTiles.length && (
+        <span style={{ color: "var(--kleur-tekst-gedempt)" }}>
+          Klik een verhuld vakje om een verkenner te sturen. {onthuldAantal}/{wampanoagTiles.length} vakjes onthuld.
+        </span>
+      )}
 
       {onderwegTiles.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
@@ -58,6 +59,15 @@ export default function WampanoagPaneel({ state }: { state: GameState }) {
           ))}
         </div>
       )}
+
+      {/* Handelsvoortgang (M21f, opdracht-wampanoag-opening.md §6) — klikbaar
+          via het vakje zelf, hier alleen de uitlees-status, ook als er nog
+          niets gehandeld wordt (alle waarden beginnen op 0). */}
+      <span style={{ color: "var(--kleur-tekst-gedempt)" }}>
+        Handel: {WAMPANOAG_GOED_LABELS.bevervellen} {state.bevervellen}/{WAMPANOAG_HANDELSDREMPEL}, {" "}
+        {WAMPANOAG_GOED_LABELS.mais} {state.mais}/{WAMPANOAG_HANDELSDREMPEL}, {" "}
+        {WAMPANOAG_GOED_LABELS.wampum} {state.wampum}/{WAMPANOAG_HANDELSDREMPEL}
+      </span>
     </div>
   );
 }

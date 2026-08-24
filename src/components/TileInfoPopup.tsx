@@ -5,7 +5,8 @@ import { KostenIcons } from "./ResourceIcoon";
 import { VERKENNER } from "@/game/improvements";
 import { VERKENNING_KOSTEN_WETENSCHAP } from "@/game/streekOntgrendeling";
 import { TileInfo } from "@/game/tileInfo";
-import { Improvement, Missionaris, ResourceType, Strijder } from "@/game/types";
+import { WAMPANOAG_HANDEL_KEUZE_LABELS } from "@/game/wampanoag";
+import { Improvement, Missionaris, ResourceType, Strijder, WampanoagHandelKeuze } from "@/game/types";
 
 interface TileInfoPopupProps {
   tileInfo: TileInfo | null;
@@ -58,6 +59,18 @@ interface TileInfoPopupProps {
     kan: boolean;
     onConfrontatieAangaan: () => void;
   };
+  // Gezet als de aangeklikte tile een al onthuld Wampanoag-vakje is (Going
+  // West, M21f, opdracht-wampanoag-opening.md §6): "geen aparte
+  // Handelaar-unit" — een klik opent direct de grondstofkeuze. `huidigeKeuze`
+  // markeert de actief lopende ruil (of `undefined` als er nog geen gekozen
+  // is, of de handel gepauzeerd staat); nogmaals op dezelfde knop klikken
+  // pauzeert (zelfde interactiepatroon als Wachttoren-bemanning).
+  wampanoagHandelVraag?: {
+    opties: WampanoagHandelKeuze[];
+    huidigeKeuze?: WampanoagHandelKeuze;
+    onKiesResource: (keuze: WampanoagHandelKeuze) => void;
+    onPauzeer: () => void;
+  };
   // Gezet als de aangeklikte tile een onthuld vijandelijk Heiligdom is (issue:
   // "Bezette streek scherm" — een Missionaris sturen gebeurt nu met een klik
   // op het Heiligdom zelf, i.p.v. via een streek-brede belegeringsmeter).
@@ -84,6 +97,7 @@ export default function TileInfoPopup({
   rushVraag,
   wachttorenVraag,
   verkenningVraag,
+  wampanoagHandelVraag,
   confrontatieVraag,
   missionarisVraag,
   onBevestigBouw,
@@ -257,6 +271,35 @@ export default function TileInfoPopup({
               >
                 Verkenner sturen (<KostenIcons kosten={VERKENNER.kosten} />, {VERKENNING_KOSTEN_WETENSCHAP} wetenschap)
               </button>
+            )}
+          </div>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && wampanoagHandelVraag && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+            <p style={{ margin: 0, fontWeight: "bold" }}>Kies een grondstof om mee te handelen:</p>
+            <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+              {wampanoagHandelVraag.opties.map((optie) => {
+                const actief = wampanoagHandelVraag.huidigeKeuze === optie;
+                return (
+                  <button
+                    key={optie}
+                    className="fc-knop"
+                    onClick={() => (actief ? wampanoagHandelVraag.onPauzeer() : wampanoagHandelVraag.onKiesResource(optie))}
+                    title={actief ? "Klik om de handel te pauzeren" : `Ruil elke beurt 1 ${WAMPANOAG_HANDEL_KEUZE_LABELS[optie].toLowerCase()}`}
+                    style={{ padding: "0.35rem 0.6rem", fontWeight: actief ? "bold" : "normal" }}
+                  >
+                    {WAMPANOAG_HANDEL_KEUZE_LABELS[optie]}
+                    {actief ? " ✓" : ""}
+                  </button>
+                );
+              })}
+            </div>
+            {wampanoagHandelVraag.huidigeKeuze && (
+              <p style={{ margin: 0, color: "var(--kleur-tekst-gedempt)" }}>
+                Elke beurt 1 {WAMPANOAG_HANDEL_KEUZE_LABELS[wampanoagHandelVraag.huidigeKeuze].toLowerCase()} geruild,
+                zolang de voorraad het toelaat.
+              </p>
             )}
           </div>
         )}

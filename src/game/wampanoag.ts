@@ -23,7 +23,7 @@
 
 import { BEVERJACHTHUT, MAISBOERDERIJ, OPPERHOOFDTENT, VERKENNER } from "./improvements";
 import { VERKENNING_KOSTEN_WETENSCHAP } from "./streekOntgrendeling";
-import { GameState, Improvement, Settler, WampanoagInhoud } from "./types";
+import { GameState, Improvement, Settler, WampanoagHandelKeuze, WampanoagInhoud } from "./types";
 import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 
 // Vaste inhoud-sleutel → daadwerkelijk `Improvement`-object — worldGoingWest.ts
@@ -136,4 +136,132 @@ export function verwerkWampanoagVerkenningInGang(state: GameState): GameState {
 
   const streken = state.streken.map((s) => (s.hoogte === streek.hoogte ? { ...s, tiles } : s));
   return { ...state, streken };
+}
+
+// Handel (Going West, M21f, opdracht-wampanoag-opening.md §6): "geen aparte
+// Handelaar-unit" — een klik op een al onthuld Wampanoag-vakje kiest
+// rechtstreeks een grondstof om per beurt 1:1 om te ruilen tegen het
+// handelswaar van dat vakje, instant en omkeerbaar (zelfde interactiepatroon
+// als Wachttoren-bemanning), i.p.v. de Verkenner-machinery hierboven, die
+// alleen voor de onthulling zelf is.
+
+// Geldige handelskeuzes per Wampanoag-inhoud (opdracht §6, tabel):
+// Maïsboerderij/Beverjachthut ruilen erts óf gereedschap, Opperhoofdtent
+// (Cultureel/diplomatiek van aard, opdracht §2) alleen goud.
+const WAMPANOAG_HANDEL_OPTIES: Record<WampanoagInhoud, WampanoagHandelKeuze[]> = {
+  maisboerderij: ["erts", "gereedschap"],
+  beverjachthut: ["erts", "gereedschap"],
+  opperhoofdtent: ["goud"],
+};
+
+// Welk handelswaar dit Wampanoag-vakje oplevert (opdracht §6) — losstaand van
+// `WAMPANOAG_IMPROVEMENT_VOOR_INHOUD` hierboven, dat is voor de
+// onthullings-resolutie, dit voor de lopende handelsconversie.
+const WAMPANOAG_GOED_VOOR_INHOUD: Record<WampanoagInhoud, "bevervellen" | "mais" | "wampum"> = {
+  maisboerderij: "mais",
+  beverjachthut: "bevervellen",
+  opperhoofdtent: "wampum",
+};
+
+// Weergavelabels voor de grondstofkeuze-knoppen (TileInfoPopup:
+// `wampanoagHandelVraag`) — "gereedschap" is geen `ResourceType`/
+// `MateriaalType`, dus geen hergebruik van `MATERIAAL_LABELS` (improvements.ts)
+// mogelijk voor deze drie samen.
+export const WAMPANOAG_HANDEL_KEUZE_LABELS: Record<WampanoagHandelKeuze, string> = {
+  erts: "Erts",
+  gereedschap: "Gereedschap",
+  goud: "Goud",
+};
+
+// Weergavelabels voor de drie handelswaren, gebruikt door WampanoagPaneel.tsx
+// om de lopende 3-3-3-voortgang te tonen (de drempel-afdwinging zelf is M21g).
+export const WAMPANOAG_GOED_LABELS: Record<"bevervellen" | "mais" | "wampum", string> = {
+  bevervellen: "Bevervellen",
+  mais: "Maïs",
+  wampum: "Wampum",
+};
+
+// Harde drempel, elk van de drie apart (opdracht §6/§7: "niet cumulatief").
+// Nog niet afgedwongen hier — de omslag naar `cultureelOntgrendeld`/
+// `ontgrendelResource` bij het bereiken ervan is M21g; alvast beschikbaar
+// voor de statusweergave (WampanoagPaneel.tsx) en die latere stap.
+export const WAMPANOAG_HANDELSDREMPEL = 3;
+
+// Geldige handelskeuzes voor een vakje met deze inhoud — gebruikt door zowel
+// `stelWampanoagHandelIn` (validatie) als de UI (welke knoppen tonen).
+export function wampanoagHandelOpties(inhoud: WampanoagInhoud): WampanoagHandelKeuze[] {
+  return WAMPANOAG_HANDEL_OPTIES[inhoud];
+}
+
+// Zet, wijzigt of pauzeert (`keuze: undefined`) de handelskeuze op een
+// onthuld Wampanoag-vakje (opdracht §6: "instant, omkeerbaar ... zelfde
+// interactiepatroon als Wachttoren-bemanning"). Geen kosten om te kiezen —
+// de conversie zelf loopt via `verwerkWampanoagHandel` hieronder bij elke
+// volgende beurtverwerking, direct vanaf de klik-beurt, zonder
+// opstart-vertraging. Negeert de aanroep stilzwijgend bij een nog verhuld
+// vakje, een vakje zonder Wampanoag-inhoud, of een ongeldige keuze voor dit
+// vakje — zelfde veilige-aanroep-conventie als `stuurVerkennerWampanoag`.
+export function stelWampanoagHandelIn(
+  state: GameState,
+  positieInStreek: number,
+  keuze: WampanoagHandelKeuze | undefined
+): GameState {
+  const streek = vindWampanoagStreek(state);
+  if (!streek) return state;
+  const tile = streek.tiles[positieInStreek];
+  if (!tile?.wampanoagInhoud || tile.wampanoagVerhuld) return state;
+  if (keuze !== undefined && !WAMPANOAG_HANDEL_OPTIES[tile.wampanoagInhoud].includes(keuze)) return state;
+
+  const streken = state.streken.map((s) =>
+    s.hoogte !== streek.hoogte
+      ? s
+      : {
+          ...s,
+          tiles: s.tiles.map((t, index) => (index !== positieInStreek ? t : { ...t, wampanoagHandelKeuze: keuze })),
+        }
+  );
+
+  return { ...state, streken };
+}
+
+// Past elke beurt de lopende handelsconversies toe op alle onthulde
+// Wampanoag-vakjes met een actieve keuze (opdracht §6): 1 eenheid van de
+// gekozen grondstof uit de voorraad, 1 eenheid handelswaar erbij. Onvoldoende
+// voorraad = geen conversie die beurt, geen negatieve waarden — zelfde regel
+// als de Smederij-conversie (productie.ts: "zelfde regel als
+// tribuut-afhandeling"). Elk vakje wordt onafhankelijk verwerkt, zodat één
+// vakje zonder voorraad de handel op de andere twee niet blokkeert.
+export function verwerkWampanoagHandel(state: GameState): GameState {
+  const streek = vindWampanoagStreek(state);
+  if (!streek) return state;
+
+  const handelendeTiles = streek.tiles.filter(
+    (tile) => tile.wampanoagInhoud && !tile.wampanoagVerhuld && tile.wampanoagHandelKeuze
+  );
+  if (handelendeTiles.length === 0) return state;
+
+  const voorraad = { ...state.voorraad };
+  let gereedschap = state.gereedschap;
+  let bevervellen = state.bevervellen;
+  let mais = state.mais;
+  let wampum = state.wampum;
+
+  for (const tile of handelendeTiles) {
+    const keuze = tile.wampanoagHandelKeuze!;
+
+    if (keuze === "gereedschap") {
+      if (gereedschap < 1) continue;
+      gereedschap -= 1;
+    } else {
+      if (voorraad[keuze] < 1) continue;
+      voorraad[keuze] -= 1;
+    }
+
+    const goed = WAMPANOAG_GOED_VOOR_INHOUD[tile.wampanoagInhoud!];
+    if (goed === "bevervellen") bevervellen += 1;
+    else if (goed === "mais") mais += 1;
+    else wampum += 1;
+  }
+
+  return { ...state, voorraad, gereedschap, bevervellen, mais, wampum };
 }
