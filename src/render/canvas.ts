@@ -844,6 +844,117 @@ function tekenVoorraadkuil(ctx: CanvasRenderingContext2D, x: number, y: number, 
   });
 }
 
+// Wampanoag-vakjes (Going West, M21e/opdracht-wampanoag-opening.md §2/§5) —
+// eigen iconografie i.p.v. de kale placeholder-vierkant die
+// `tekenLandImprovement` hieronder toont voor onbekende improvement-id's,
+// zelfde aanpak als de andere improvement-tekenaars hierboven. Bewust drie
+// duidelijk verschillende silhouetten/kleuren, zonder tile-info-popup te
+// onderscheiden: Maïsboerderij (rijen maïsstengels, i.p.v. de geploegde
+// akker-rijen van de gewone Boerderij), Beverjachthut (lage blokhut met
+// beverstaart/-vacht en een waterlijntje), Opperhoofdtent (grote, verder
+// versierde tipi met vlaggenmast-veer — hergebruikt `tekenTent`, maar groter
+// en met een ander palet dan de kleine Bezette-Streek-/Legerkamp-tenten).
+function tekenMaisboerderij(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.72);
+
+  const rijen = 5;
+  for (let i = 0; i < rijen; i++) {
+    const sx = x + size * (0.14 + (i / (rijen - 1)) * 0.72);
+    const h = size * (0.5 + rng() * 0.14);
+
+    ctx.strokeStyle = "#3d5c2c";
+    ctx.lineWidth = Math.max(1.4, size * 0.035);
+    ctx.beginPath();
+    ctx.moveTo(sx, baseY);
+    ctx.lineTo(sx, baseY - h);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#4f7a34";
+    ctx.lineWidth = Math.max(1, size * 0.025);
+    ctx.beginPath();
+    ctx.moveTo(sx, baseY - h * 0.55);
+    ctx.lineTo(sx + size * 0.1, baseY - h * 0.68);
+    ctx.moveTo(sx, baseY - h * 0.4);
+    ctx.lineTo(sx - size * 0.1, baseY - h * 0.52);
+    ctx.stroke();
+
+    ctx.fillStyle = "#e0b23c";
+    ctx.beginPath();
+    ctx.ellipse(sx + size * 0.03, baseY - h * 0.75, size * 0.035, size * 0.08, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function tekenBeverjachthut(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.42;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.62);
+
+  ctx.fillStyle = "#5c4630";
+  ctx.beginPath();
+  ctx.moveTo(cx, baseY - size * 0.44);
+  ctx.lineTo(cx + size * 0.3, baseY - size * 0.12);
+  ctx.lineTo(cx - size * 0.3, baseY - size * 0.12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#6b5436";
+  ctx.fillRect(cx - size * 0.28, baseY - size * 0.12, size * 0.56, size * 0.12);
+  ctx.strokeStyle = "#3a2c1c";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx - size * 0.28, baseY - size * 0.12, size * 0.56, size * 0.12);
+
+  // Beverstaart/-vacht die naast de hut te drogen hangt.
+  ctx.fillStyle = "#4a3626";
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.78, baseY - size * 0.2, size * 0.08, size * 0.16, 0.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(20, 12, 6, 0.4)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(120, 195, 220, 0.65)";
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.06, baseY + size * 0.03);
+  ctx.quadraticCurveTo(x + size * 0.5, baseY + size * 0.08, x + size * 0.94, baseY + size * 0.03);
+  ctx.stroke();
+}
+
+function tekenOpperhoofdtent(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.5;
+  tekenContactschaduw(ctx, cx, baseY, size * 0.52);
+
+  tekenTent(ctx, cx, baseY, size * 0.64, "#a0522d");
+
+  ctx.strokeStyle = "#3a2416";
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.03, baseY - size * 0.62);
+  ctx.lineTo(cx - size * 0.09, baseY - size * 0.76);
+  ctx.moveTo(cx + size * 0.03, baseY - size * 0.62);
+  ctx.lineTo(cx + size * 0.09, baseY - size * 0.76);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(230, 210, 160, 0.5)";
+  ctx.lineWidth = Math.max(1, size * 0.03);
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.22, baseY - size * 0.18);
+  ctx.lineTo(cx + size * 0.22, baseY - size * 0.18);
+  ctx.stroke();
+
+  ctx.fillStyle = "#e8dcc8";
+  ctx.beginPath();
+  ctx.ellipse(cx + size * 0.11, baseY - size * 0.7, size * 0.03, size * 0.09, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#8a2a2a";
+  ctx.beginPath();
+  ctx.ellipse(cx + size * 0.12, baseY - size * 0.75, size * 0.022, size * 0.032, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number, bemand: boolean) => void
@@ -862,6 +973,9 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   sterrencirkel: (ctx, x, y, size, seed) => tekenSterrencirkel(ctx, x, y, size, seed),
   goudmijn: (ctx, x, y, size, seed) => tekenAmberader(ctx, x, y, size, seed),
   voorraadkuil: (ctx, x, y, size, seed) => tekenVoorraadkuil(ctx, x, y, size, seed),
+  maisboerderij: (ctx, x, y, size, seed) => tekenMaisboerderij(ctx, x, y, size, seed),
+  beverjachthut: (ctx, x, y, size) => tekenBeverjachthut(ctx, x, y, size),
+  opperhoofdtent: (ctx, x, y, size) => tekenOpperhoofdtent(ctx, x, y, size),
 };
 
 function tekenLandImprovement(
