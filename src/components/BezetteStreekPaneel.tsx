@@ -40,7 +40,7 @@ export default function BezetteStreekPaneel({ state }: { state: GameState }) {
       }}
     >
       <strong className="fc-heading" style={{ color: "var(--kleur-gevaar)" }}>
-        Bezette Streek — {bezetteStreek.hoogte}
+        De Stam van de Mammoet — {bezetteStreek.hoogte}
       </strong>
       <span style={{ color: "var(--kleur-tekst-gedempt)" }}>
         Klik een verhuld vakje om een verkenner te sturen, een vijandelijke wachttoren voor een confrontatie, of een

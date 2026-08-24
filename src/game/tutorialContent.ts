@@ -211,9 +211,9 @@ export const BEURTENSYSTEEM_UITLEG_TEKST =
 // gegarandeerde Amberader-vondst op streek 8), direct na de gewone
 // streek-pop-up hierboven — vervangt de eerdere, kleinere MILITAIR_UITLEG_*-
 // pop-up volledig.
-export const BEZETTE_STREEK_TITEL = "De Bergkam is bezet";
+export const BEZETTE_STREEK_TITEL = "De Stam van de Mammoet";
 export const BEZETTE_STREEK_TEKST =
-  "Op de bergkam staan een wachttoren en een heiligdom die niet van het Hertenpad-volk zijn — en her en der een verlaten huisje. Hier kun je niet zomaar bouwen, en cultuur werkt hier anders: ze stapelt niet meer op zolang deze streek bezet blijft. Klik op een verhuld vakje om er een verkenner heen te sturen. Klik op het vijandelijke heiligdom om er een Missionaris heen te sturen — die laat een wololo-meter vollopen die het heiligdom uiteindelijk van jou maakt. Klik op de vijandelijke wachttoren voor een Confrontatie — daarvoor heb je eerst een eigen legerkamp op de streek eronder nodig. Pas als zowel het heiligdom veroverd als de wachttoren opgeruimd is, gaat de bergkam open voor je settler en voor nieuwe bebouwing.";
+  "Op de bergkam woont De Stam van de Mammoet — een bezette streek, waar vijandige wachttorens en heiligdommen kunnen voorkomen. Er staan een wachttoren en een heiligdom die niet van het Hertenpad-volk zijn — en her en der een verlaten huisje. Hier kun je niet zomaar bouwen, en cultuur werkt hier anders: ze stapelt niet meer op zolang deze streek bezet blijft. Klik op een verhuld vakje om er een verkenner heen te sturen. Klik op het vijandelijke heiligdom om er een Missionaris heen te sturen — die laat een wololo-meter vollopen die het heiligdom uiteindelijk van jou maakt. Klik op de vijandelijke wachttoren voor een Confrontatie — daarvoor heb je eerst een eigen legerkamp op de streek eronder nodig. Pas als zowel het heiligdom veroverd als de wachttoren opgeruimd is, gaat de bergkam open voor je settler en voor nieuwe bebouwing.";
 
 // Vijandelijk-Heiligdom-onthuld-/veroverd-pop-up (Deel 4, herzien door
 // "Bezette streek scherm") — zelfde blokkerende overlay als hierboven, maar

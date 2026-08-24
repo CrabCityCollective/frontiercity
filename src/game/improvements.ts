@@ -100,7 +100,7 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
     return "Een vijandelijk Heiligdom. Stuur er een Missionaris heen om de wololo-meter te laten vollopen.";
   }
   if (effect.type === "legerkamp") {
-    return "Elke hieraan toegewezen Soldaat telt mee als legerwaarde bij een Confrontatie tegen een Bezette Streek, ongeacht op welke streek dit Legerkamp staat.";
+    return "Elke hieraan toegewezen Soldaat telt mee als legerwaarde bij een Confrontatie tegen De Stam van de Mammoet, ongeacht op welke streek dit Legerkamp staat.";
   }
   if (effect.type === "ontgrendelt-missionaris") {
     return "Ontgrendelt de Missionaris als trainbare eenheid.";
