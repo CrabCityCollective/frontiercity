@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   SettlerSlot,
   hakHout as hakHoutActie,
@@ -73,15 +73,21 @@ function metAutomatischeVolgendeBeurt(state: GameState): GameState {
 // React-hook rond de spelstatus (M3). Geen aparte state-library nodig voor
 // de MVP-omvang — één useState met pure update-functies uit economie.ts.
 //
-// Save/load (M9, hoofdstuk 13; issue: "niet automatisch opslaan, maar bewust
-// via een menu"): elke keer dat een run start (GameRoot mount, zie AppRoot)
-// begint de run bij het begin, met een verse spelstatus — ook als er een
-// bewaarde run klaarstaat (issue: "als je op SpelVerlaten hebt geklikt en
-// daarna opnieuw de tutorial begint, dat je dan helemaal bij het begin
-// begint"). Een bewaarde run wordt uitsluitend teruggehaald als de speler
-// zelf bewust op "Spel laden" drukt (`laden` hieronder, of de "Laden"-knop op
-// CampagneSelectScherm via `laadBijStart` — evengoed een bewuste klik, alleen
-// vóór in plaats van ná het mounten) — geen automatisch laden bij mount.
+// Save/load (M9, hoofdstuk 13; issue #306 "Auto save implementeren", die de
+// eerdere "niet automatisch opslaan, maar bewust via een menu"-keuze
+// vervangt): past beter bij het permadeath-idee (hoofdstuk 11) — zonder een
+// handmatige "Opslaan"-knop kan de speler niet meer bewust vlak vóór een
+// risico opslaan om na een tegenvaller terug te laden. In plaats daarvan
+// bewaart de `useEffect` hieronder de status na elke wijziging, zodat de save
+// altijd de actuele stand van de lopende run is.
+//
+// Elke keer dat een run start (GameRoot mount, zie AppRoot) begint de run bij
+// het begin, met een verse spelstatus — ook als er een bewaarde run
+// klaarstaat (issue: "als je op SpelVerlaten hebt geklikt en daarna opnieuw
+// de tutorial begint, dat je dan helemaal bij het begin begint"). Een
+// bewaarde run wordt uitsluitend teruggehaald als de speler zelf bewust op de
+// "Laden"-knop op CampagneSelectScherm drukt (`laadBijStart` hieronder) —
+// geen automatisch laden bij mount.
 //
 // `campagneId` (M20d deelstap 3, hoofdstuk 9/13/15): `undefined` (tutorial)
 // of een `CampaignConfig.id` (campagnes.ts) — bepaalt uitsluitend de
@@ -100,17 +106,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     return opgeslagenStatus ?? maakInitieleSpelStatus(campagneId);
   });
 
-  const opslaan = useCallback(() => {
+  // Autosave (issue #306): bewaart de status bij elke wijziging, onder de
+  // sleutel van de campagne waartoe deze run behoort (zie save.ts:
+  // `saveSleutel`) — geen handmatige "Opslaan"-knop meer nodig.
+  useEffect(() => {
     saveSpel(state);
   }, [state]);
-
-  // M20d deelstap 2: elke campagne heeft nu een eigen save-sleutel
-  // (save.ts), dus moet "laden" weten voor welke campagne — die van de
-  // lopende (nog niet noodzakelijk opgeslagen) run.
-  const laden = useCallback(() => {
-    const opgeslagenStatus = laadSpel(state.campagneId);
-    if (opgeslagenStatus) setState(opgeslagenStatus);
-  }, [state.campagneId]);
 
   const volgendeBeurt = useCallback(() => {
     setState((huidig) => volgendeBeurtActie(huidig));
@@ -354,7 +355,5 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     sluitBezetteStreekOntdektMelding,
     sluitVijandelijkHeiligdomOnthuldMelding,
     sluitVijandelijkHeiligdomVeroverdMelding,
-    opslaan,
-    laden,
   };
 }

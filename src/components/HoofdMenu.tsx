@@ -5,15 +5,12 @@ import { GrafischeStijl } from "@/game/save";
 import SpelInstellingenPopup from "./SpelInstellingenPopup";
 
 interface HoofdMenuProps {
-  onOpslaan: () => void;
-  onLaden: () => void;
-  kanLaden: boolean;
   onVerlaten: () => void;
   // Per-run uitleg-pop-ups-toggle (issue: "een nieuwe optie erbij in het
-  // menu waar nu ook 'opslaan' en 'spel verlaten' staat, waarmee je voor
-  // deze run specifiek de uitleg popups aan kunt zetten, en uit") — sinds
-  // issue "Settings uitbreiden" bereikbaar via de "Instellingen"-knop
-  // hieronder in plaats van een losse knop hier in het menu zelf.
+  // menu waar nu ook 'spel verlaten' staat, waarmee je voor deze run
+  // specifiek de uitleg popups aan kunt zetten, en uit") — sinds issue
+  // "Settings uitbreiden" bereikbaar via de "Instellingen"-knop hieronder in
+  // plaats van een losse knop hier in het menu zelf.
   uitlegAan: boolean;
   onToggleUitleg: () => void;
   // On-the-fly grafische-stijl-toggle (issue: "Settings uitbreiden" — "een
@@ -38,12 +35,11 @@ interface HoofdMenuProps {
 
 // Zwevend menu-icoontje rechtsboven (issue: "niet automatisch opslaan, maar
 // een menu-icoontje ... opslaan en oudere games ... inladen ... spel
-// verlaten"). Puur een klein pop-overpaneel — geen navigatie-state, dat blijft
-// bij AppRoot/GameRoot.
+// verlaten"; issue #306 "Auto save implementeren": de "Opslaan"- en
+// "Laden"-knoppen zijn hier weer weg — de run wordt nu automatisch bewaard,
+// zie useGameEngine.ts). Puur een klein pop-overpaneel — geen navigatie-state,
+// dat blijft bij AppRoot/GameRoot.
 export default function HoofdMenu({
-  onOpslaan,
-  onLaden,
-  kanLaden,
   onVerlaten,
   uitlegAan,
   onToggleUitleg,
@@ -81,27 +77,6 @@ export default function HoofdMenu({
             minWidth: "10rem",
           }}
         >
-          <button
-            className="fc-knop"
-            onClick={() => {
-              onOpslaan();
-              setOpen(false);
-            }}
-            style={{ padding: "0.35rem 0.75rem" }}
-          >
-            Opslaan
-          </button>
-          <button
-            className="fc-knop"
-            disabled={!kanLaden}
-            onClick={() => {
-              onLaden();
-              setOpen(false);
-            }}
-            style={{ padding: "0.35rem 0.75rem" }}
-          >
-            Laden
-          </button>
           <button
             className="fc-knop"
             onClick={() => {
