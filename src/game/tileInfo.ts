@@ -57,16 +57,21 @@ export function beschrijfTile(
 ): TileInfo {
   const tile = streek.tiles[positieInStreek];
 
-  // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md §5): een
-  // parallelle verhullingslaag op een normaal ontgrendelde streek (streek 4
-  // wordt niet `bezet` en niet `ontgrendeld: false` gehouden zoals de
-  // Bezette Streek hieronder) — moet dus vóór die keten gecontroleerd worden,
-  // anders zou dit vakje gewoon als een leeg, bebouwbaar vakje beschreven
-  // worden. Nooit gezet buiten Going West streek 4 (worldGoingWest.ts), dus
-  // geen effect op de tutorial.
+  // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md §5;
+  // blokkerend gemaakt door issue "Wampanoag streek blokkerend"): een eigen,
+  // per-tegel verhullingslaag — moet dus vóór de gewone fog-of-war-check
+  // hieronder afgehandeld worden, anders zou dit vakje als "nog niet
+  // ontgrendeld" beschreven worden i.p.v. zijn eigen verkennings-status. Een
+  // onthuld vakje (`tile.wampanoagVerhuld === false`) valt gewoon door naar
+  // de normale tile-detail-logica verderop (via de `!streek.ontgrendeld &&
+  // !streek.wampanoagBezet`-guard hieronder), want `tile.status`/
+  // `tile.improvement` zijn dan al echt gezet, net als bij een onthuld
+  // Bezette-Streek-vakje. Nooit gezet buiten de Going West Wampanoag-streek
+  // (worldGoingWest.ts), dus geen effect op de tutorial.
   if (tile.wampanoagVerhuld) {
     return {
       titel: "Verhuld vakje",
+      ondertitel: `Massasoit — streek ${streek.hoogte}`,
       tekst: tile.wampanoagVerkenningInGang
         ? `Een verkenner is onderweg — nog ${tile.wampanoagVerkenningInGang.beurtenResterend} ${tile.wampanoagVerkenningInGang.beurtenResterend === 1 ? "beurt" : "beurten"} tot dit vakje onthuld wordt.`
         : "Dit vakje is nog niet verkend. Stuur er een verkenner heen om te zien wat hier ligt.",
@@ -90,7 +95,7 @@ export function beschrijfTile(
           : "Dit vakje is nog niet verkend. Stuur er een verkenner heen om te zien wat hier ligt.",
       };
     }
-  } else if (!streek.ontgrendeld) {
+  } else if (!streek.ontgrendeld && !streek.wampanoagBezet) {
     if (isVooruitkijkStreek(streek, streken)) {
       return {
         titel: `Streek ${streek.hoogte} — nog niet ontgrendeld`,
@@ -208,14 +213,15 @@ export function beschrijfTile(
   }
 
   // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
-  // verkenner", Deel 1/2): het neutrale, onthulde vakje (geen vijandelijke/
-  // cosmetische inhoud, zie world.ts) — bouwen blijft hier onmogelijk zolang
-  // de streek bezet is, ongeacht de normale frontier-only-regel hieronder.
-  if (streek.bezet) {
+  // verkenner", Deel 1/2) & Wampanoag-laag (issue: "Wampanoag streek
+  // blokkerend"): het neutrale, onthulde vakje (geen vijandelijke/cosmetische/
+  // Wampanoag-inhoud) — bouwen blijft hier onmogelijk zolang de streek bezet
+  // is, ongeacht de normale frontier-only-regel hieronder.
+  if (streek.bezet || streek.wampanoagBezet) {
     return {
       titel: "Leeg vakje",
-      ondertitel: `De Stam van de Mammoet — ${streek.hoogte}`,
-      tekst: "Hier ligt geen vijandelijke of cosmetische inhoud. Zolang de streek bezet is, kun je hier niet bouwen.",
+      ondertitel: streek.wampanoagBezet ? `Massasoit — streek ${streek.hoogte}` : `De Stam van de Mammoet — ${streek.hoogte}`,
+      tekst: "Hier ligt geen bijzondere inhoud. Zolang de streek bezet is, kun je hier niet bouwen.",
     };
   }
 

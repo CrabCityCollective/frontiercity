@@ -429,16 +429,23 @@ export function cultuurKostenVoorStreek(hoogte: number): number {
 // ('in beeld') = 35"). Alleen gebruikt zolang `GameState.ontgrendelResource`
 // op `"wetenschap"` staat (zie streekOntgrendeling.ts) — de tutorial en Going
 // West ná de 3-3-3-drempel (M21g) blijven op `cultuurKostenVoorStreek`
-// hierboven draaien. De drie opdracht-waarden staan als expliciete lookup
-// (geen kwadratische pasvorm gevonden die alle drie tegelijk raakt); voorbij
-// streek 4 specificeert de opdracht niets, dus die zet dezelfde kwadratische
-// vorm als `cultuurKostenVoorStreek` voort, verankerd op de streek 4-waarde —
-// puur een niet-crashende MVP-extrapolatie, normaliter schakelt de fase vóór
-// die tijd al om naar cultuur.
+// hierboven draaien. Uitgebreid met streek 4 en 5 (issue: "Wampanoag streek
+// blokkerend" — de Wampanoag-streek zelf verschoof van 4 naar 6, zie
+// `WAMPANOAG_STREEK_HOOGTE`, worldGoingWest.ts) door de bestaande
+// opdracht-waarden (2=10, 3=20) door te trekken naar een nieuwe "in beeld"-
+// waarde van 35 op streek 6, met twee tussenliggende, evenredig oplopende
+// drempels — nog altijd een expliciete lookup (geen kwadratische pasvorm
+// gevonden die alle vijf tegelijk raakt); voorbij streek 6 specificeert de
+// opdracht niets, dus die zet dezelfde kwadratische vorm als
+// `cultuurKostenVoorStreek` voort, verankerd op de streek 6-waarde — puur een
+// niet-crashende MVP-extrapolatie, normaliter schakelt de fase vóór die tijd
+// al om naar cultuur.
 const GOING_WEST_WETENSCHAP_KOSTEN_STREEK: Partial<Record<number, number>> = {
   2: 10,
-  3: 20,
-  4: 35,
+  3: 18,
+  4: 25,
+  5: 30,
+  6: 35,
 };
 const GOING_WEST_WETENSCHAP_KOSTEN_BASIS = 35;
 const GOING_WEST_WETENSCHAP_KOSTEN_KWADRATISCHE_FACTOR = 15;
@@ -446,7 +453,7 @@ const GOING_WEST_WETENSCHAP_KOSTEN_KWADRATISCHE_FACTOR = 15;
 export function wetenschapKostenVoorStreekOntgrendeling(hoogte: number): number {
   return (
     GOING_WEST_WETENSCHAP_KOSTEN_STREEK[hoogte] ??
-    GOING_WEST_WETENSCHAP_KOSTEN_BASIS + GOING_WEST_WETENSCHAP_KOSTEN_KWADRATISCHE_FACTOR * (hoogte - 4) ** 2
+    GOING_WEST_WETENSCHAP_KOSTEN_BASIS + GOING_WEST_WETENSCHAP_KOSTEN_KWADRATISCHE_FACTOR * (hoogte - 6) ** 2
   );
 }
 

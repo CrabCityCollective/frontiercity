@@ -983,25 +983,24 @@ export function tekenWereldPixelArt(
       tileCtx.clearRect(0, 0, PIX, PIX);
 
       // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
-      // verkenner", Deel 1) — zelfde per-tegel-verhullingslaag als
+      // verkenner", Deel 1) & Wampanoag-laag (Going West, M21e, issue:
+      // "Wampanoag streek blokkerend") — zelfde per-tegel-verhullingslaag als
       // `tekenWereld` in canvas.ts.
-      if (streek.bezet) {
+      if (streek.bezet || streek.wampanoagBezet) {
         const tile = streek.tiles[col];
-        if (tile.verhuld) {
+        if (tile.verhuld || tile.wampanoagVerhuld) {
           tekenVerhuldeTilePixel(tileCtx, tileSeed(col, streek.hoogte));
         } else {
           const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
           tekenActieveTilePixel(tileCtx, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+          if (tile.versWater) {
+            tekenVersWaterMarkeringPixel(tileCtx, tileSeed(col, streek.hoogte, 2));
+          }
         }
       } else if (!streek.ontgrendeld && !vooruitkijk) {
         tekenFogTilePixel(tileCtx, tileSeed(col, streek.hoogte));
       } else if (!streek.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTilePixel(tileCtx, streek.terreinType);
-      } else if (streek.tiles[col].wampanoagVerhuld) {
-        // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md
-        // §5) — zelfde parallelle verhullingslaag als in canvas.ts, hier de
-        // pixel-art variant van dezelfde generieke "verhuld vakje"-tekenaar.
-        tekenVerhuldeTilePixel(tileCtx, tileSeed(col, streek.hoogte));
       } else {
         const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
         tekenActieveTilePixel(tileCtx, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken);

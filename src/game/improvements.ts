@@ -560,12 +560,13 @@ export const BEZETTE_STREEK_HUISJE: Improvement = {
 };
 
 // Wampanoag-vakjes (Going West, M21e, opdracht-wampanoag-opening.md §5): drie
-// vaste vakjes op streek 4, verhuld tot onthuld via Verkenning (wampanoag.ts)
-// — zelfde uitsluitingspatroon als de vijandelijke Bezette-Streek-varianten
+// vaste vakjes op de Wampanoag-streek (`WAMPANOAG_STREEK_HOOGTE`,
+// worldGoingWest.ts), verhuld tot onthuld via Verkenning (wampanoag.ts) —
+// zelfde uitsluitingspatroon als de vijandelijke Bezette-Streek-varianten
 // hierboven (nooit onderdeel van IMPROVEMENT_POOLS/beschikbareOpties, nooit
 // door de speler gebouwd, geen bouwkosten/-tijd), maar zonder de
 // `vijandelijk`-vlag: dit zijn geen Confrontatie-/Belegeringsdoelen, maar
-// (vanaf M21f) handelspartners. Welk gebouw op welk vakje van streek 4 ligt,
+// (vanaf M21f) handelspartners. Welk gebouw op welk vakje ligt,
 // staat vast in `WAMPANOAG_STREEK_INHOUD` (worldGoingWest.ts) — dat is
 // terrein-afgeleid (opdracht §2: Maïsboerderij op vlakke grond, Beverjachthut
 // op vers water), dus deze drie hebben zelf geen `terreinEisen`-afdwinging
@@ -888,11 +889,14 @@ const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
 // gewoon leeg vakje — tegen de normale kosten/bouwtijd van welk improvement
 // dan ook (niet uitsluitend de Wachttoren die er ooit stond).
 export function isBebouwbaarLeeg(tile: Tile): boolean {
-  // Wampanoag-vakjes (Going West, M21e, opdracht-wampanoag-opening.md §5):
-  // streek 4 wordt normaal `ontgrendeld`, dus een nog verhuld Wampanoag-vakje
-  // (`status: "leeg"`) zou hier anders per ongeluk een geldig plaatsingsdoel
-  // zijn — de speler mag hier pas na onthulling (via Verkenning, zie
-  // wampanoag.ts) weer bouwen, net als de rest van de streek.
+  // Wampanoag-vakjes (Going West, M21e, opdracht-wampanoag-opening.md §5): een
+  // nog verhuld Wampanoag-vakje (`status: "leeg"`) zou hier anders per
+  // ongeluk een geldig plaatsingsdoel zijn — de speler mag hier pas na
+  // onthulling (via Verkenning, zie wampanoag.ts) weer bouwen. Zolang de
+  // streek als geheel nog bezet is (`Streek.wampanoagBezet`), houdt
+  // `beschrijfTile`/canvas' plaatsingsmarkering (die op `streek.ontgrendeld`
+  // let, issue: "Wampanoag streek blokkerend") bouwen sowieso al tegen — deze
+  // check dekt specifiek het per-vakje geval.
   return (tile.status === "leeg" || tile.status === "ruine") && !tile.wampanoagVerhuld;
 }
 

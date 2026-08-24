@@ -70,7 +70,8 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   // hieronder, maar via `CampaignConfig.popupTeksten` in plaats van een eigen
   // interface, omdat dit er ná de MVP meerdere kunnen worden zonder steeds een
   // nieuw functie-paar nodig te hebben — zie `popupContent()` onderaan dit
-  // bestand). `eersteContactPopup` triggert zodra streek 4 "in beeld" komt
+  // bestand). `eersteContactPopup` triggert zodra de Wampanoag-streek
+  // (`WAMPANOAG_STREEK_HOOGTE`, worldGoingWest.ts) "in beeld" komt
   // (`wampanoagLaagOntdektEvent`, streekOntgrendeling.ts);
   // `wampanoagRelatieGelegdPopup` zodra de 3-3-3-handelsdrempel gehaald is
   // (`wampanoagRelatieGelegdEvent`, wampanoag.ts).

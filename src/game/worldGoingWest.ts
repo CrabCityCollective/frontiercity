@@ -31,12 +31,14 @@ export const STAD_POSITIE = 4; // middelste vakje van de band = stad — zelfde 
 export const GOING_WEST_STREEK_AANTAL = 35;
 
 // Streek-hoogte van de Wampanoag-laag (M21e, opdracht-wampanoag-opening.md
-// §5) — het einde van de openingsfase (streek 1-3 lopen op wetenschap, zie
-// `wetenschapKostenVoorStreekOntgrendeling` in world.ts). Gedeeld met
+// §5) — het einde van de openingsfase, lopend op wetenschap (zie
+// `wetenschapKostenVoorStreekOntgrendeling` in world.ts). Verschoven van 4
+// naar 6 (issue: "Wampanoag streek blokkerend") om de speler meer van de
+// openingsfase te laten spelen vóór de streek "in beeld" komt. Gedeeld met
 // streekOntgrendeling.ts (de trigger, in de wetenschap-gedreven
-// ontgrendel-lus) en wampanoag.ts (de Verkenning-flow zelf) zodat beide
-// dezelfde hoogte hanteren.
-export const WAMPANOAG_STREEK_HOOGTE = 4;
+// ontgrendel-lus, en de blokkering zelf) en wampanoag.ts (de Verkenning-flow
+// zelf) zodat beide dezelfde hoogte hanteren.
+export const WAMPANOAG_STREEK_HOOGTE = 6;
 
 // Vaste, beschrijvende terreinnaam per streek (flavor, geen invloed op
 // spelmechaniek — zelfde rol als TUTORIAL_TERREINTYPES in world.ts). Volgt de
@@ -105,18 +107,21 @@ export function terreinTypeVoorStreek(hoogte: number): string {
 // ruimere heuvel/berg-mix (3 in plaats van 1) gekregen, zodat "alle
 // grondstoffen komen in principe al op streek 1 voor" ook daadwerkelijk
 // tegelijk bouwbaar is — zie ook `GOING_WEST_AMBER` hieronder voor de
-// bijbehorende amber-vondst op streek 1. Streek 4 houdt positie 0/1/2 bewust
-// ongewijzigd (vlak/vlak/bos): die liggen vast voor de Wampanoag-laag
-// (`WAMPANOAG_STREEK_INHOUD` hieronder). Streek 5 en verder blijven
-// ongewijzigd — de kaart verschuift daar toch al vanzelf naar meer
-// heuvel/berg (canyons/mesa's, zie de modulekop).
+// bijbehorende amber-vondst op streek 1. Streek 6 houdt positie 0/2 bewust
+// vlak/heuvel (issue: "Wampanoag streek blokkerend" — verschoven van streek 4
+// naar 6): positie 0 moet vlak zijn voor de Maïsboerderij, positie 1 (al
+// vlak) krijgt zijn vers-water-vondst via `GOING_WEST_VERS_WATER` hieronder
+// voor de Beverjachthut, positie 2 heeft geen terrein-eis (Opperhoofdtent) —
+// zie `WAMPANOAG_STREEK_INHOUD` hieronder. Overige streken blijven
+// ongewijzigd — de kaart verschuift toch al vanzelf naar meer heuvel/berg
+// (canyons/mesa's, zie de modulekop).
 const GOING_WEST_TILE_TERREIN: Record<number, TerreinType[]> = {
   1: ["heuvel", "bos", "vlak", "bos", "vlak", "vlak", "heuvel", "vlak", "berg"],
   2: ["heuvel", "bos", "vlak", "heuvel", "bos", "vlak", "berg", "bos", "vlak"],
   3: ["bos", "heuvel", "vlak", "bos", "berg", "vlak", "heuvel", "bos", "vlak"],
   4: ["vlak", "vlak", "bos", "heuvel", "berg", "vlak", "bos", "heuvel", "vlak"],
   5: ["vlak", "bos", "vlak", "vlak", "bos", "heuvel", "vlak", "vlak", "bos"],
-  6: ["bos", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "heuvel", "vlak"],
+  6: ["vlak", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "heuvel", "vlak"],
   7: ["vlak", "heuvel", "vlak", "bos", "vlak", "heuvel", "vlak", "vlak", "bos"],
   8: ["heuvel", "vlak", "bos", "vlak", "heuvel", "vlak", "bos", "vlak", "vlak"],
   9: ["vlak", "bos", "heuvel", "vlak", "vlak", "heuvel", "vlak", "bos", "vlak"],
@@ -165,8 +170,16 @@ function terreinVoorTile(hoogte: number, positieInStreek: number): TerreinType {
 // van deze hoogten daadwerkelijk gesticht wordt. Op een `vlak`-vakje gekozen
 // (nooit het stad-centrum, positie 4), zelfde reden als de tutorial: ook
 // bruikbaar als Boerderij-kandidaat.
+//
+// Streek 6, positie 1 (issue: "Wampanoag streek blokkerend"): een extra
+// vondst, bovenop — niet in plaats van — het bestaande 4/8/12/...-ritme
+// hierboven, puur voor de Beverjachthut van de (verschoven) Wampanoag-laag op
+// `WAMPANOAG_STREEK_HOOGTE` (worldGoingWest.ts). Verhoogt de dichtheid alleen
+// maar, dus de M20c-stichtingskans-garantie (`vindStichtingskansGaten()`,
+// getoetst in worldGoingWest.test.ts) blijft hierdoor gewoon gehaald.
 const GOING_WEST_VERS_WATER: Record<number, number[]> = {
   4: [1],
+  6: [1],
   8: [3],
   12: [2],
   16: [1],
@@ -182,42 +195,47 @@ function versWaterVoorTile(hoogte: number, positieInStreek: number): boolean {
 }
 
 // Vaste inhoud-verdeling van de Wampanoag-laag (M21e, opdracht-wampanoag-
-// opening.md §5): drie vaste vakjes op `WAMPANOAG_STREEK_HOOGTE` (streek 4),
+// opening.md §5): drie vaste vakjes op `WAMPANOAG_STREEK_HOOGTE` (streek 6),
 // met het terrein-subtype van dat vakje (`GOING_WEST_TILE_TERREIN` hierboven)
 // bepalend voor welk gebouw er ligt zodra het onthuld wordt (opdracht:
 // "terrein bepaalt welk van de drie gebouwen ergens kán liggen ... geen
 // aparte trekking/keuze-UI nodig"):
-// - Beverjachthut vereist vers water — `GOING_WEST_VERS_WATER[4]` heeft maar
+// - Beverjachthut vereist vers water — `GOING_WEST_VERS_WATER[6]` heeft maar
 //   één zo'n vakje (positie 1), dus die ligt hier vast.
 // - Maïsboerderij vereist vlakke grond — positie 0 (`vlak`, geen vers water).
 // - Opperhoofdtent heeft geen terrein-eis (Cultureel/diplomatiek van aard,
-//   opdracht §2) — positie 2 (toevallig `bos`, maakt voor dit gebouw niet uit).
-// Positie 4 (het middelste vakje) blijft bewust neutraal, zelfde conventie
-// als `TUTORIAL_BEZETTE_STREEK_INHOUD` in world.ts: niet elk vakje van een
-// verhullingslaag hoeft bijzondere inhoud te dragen.
+//   opdracht §2) — positie 2 (`heuvel`, maakt voor dit gebouw niet uit).
+// De overige zes posities dragen bewust geen inhoud — zelfde conventie als
+// `TUTORIAL_BEZETTE_STREEK_INHOUD` in world.ts: niet elk vakje van een
+// verhullingslaag hoeft bijzondere inhoud te dragen. Ze worden, net als bij
+// de Bezette Streek, wél mee verhuld (`initialiseerWampanoagLaag` hieronder)
+// en tellen als "neutraal" zodra onthuld.
 const WAMPANOAG_STREEK_INHOUD: Record<number, WampanoagInhoud> = {
   0: "maisboerderij",
   1: "beverjachthut",
   2: "opperhoofdtent",
 };
 
-// Initialiseert de Wampanoag-laag zodra streek 4 ontgrendelt tijdens de
+// Initialiseert de Wampanoag-laag zodra de streek "in beeld" komt tijdens de
 // Going West-openingsfase (streekOntgrendeling.ts:
-// `verwerkStreekOntgrendeling`) — mirroring van `initialiseerBezetteStreek`
-// (world.ts), maar bewust géén `Streek.bezet`-achtige vlag: streek 4 blijft
-// in elk ander opzicht een heel normale, ontgrendelde streek (M21e,
-// opdracht-wampanoag-opening.md §5 — "eigen, parallelle onthullings-flow, los
-// van de bestaande Bezette-Streek-toestandsmachine"). Alleen de drie vakjes
-// uit `WAMPANOAG_STREEK_INHOUD` hierboven krijgen `wampanoagVerhuld: true` —
-// de overige zes vakjes blijven ongewijzigd, gewoon meteen bebouwbaar zodra
-// de speler ze bereikt.
+// `verwerkStreekOntgrendeling`) — zelfde blokkerende opzet als
+// `initialiseerBezetteStreek` (world.ts): `wampanoagBezet: true` houdt de
+// streek `ontgrendeld: false` (issue: "Wampanoag streek blokkerend" — vóór
+// deze wijziging ontgrendelde de streek juist gewoon normaal, zie de git-
+// geschiedenis van dit bestand voor die eerdere, niet-blokkerende opzet). Net
+// als bij de Bezette Streek worden alle negen vakjes verhuld, niet alleen de
+// drie uit `WAMPANOAG_STREEK_INHOUD` hierboven — de zes overige onthullen
+// vanzelf mee zodra die drie klaar zijn (`verwerkWampanoagVerkenningInGang`,
+// wampanoag.ts), maar zijn ook individueel al verkenbaar.
 export function initialiseerWampanoagLaag(streek: Streek): Streek {
   return {
     ...streek,
-    tiles: streek.tiles.map((tile) => {
-      const inhoud = WAMPANOAG_STREEK_INHOUD[tile.positieInStreek];
-      return inhoud ? { ...tile, wampanoagVerhuld: true, wampanoagInhoud: inhoud } : tile;
-    }),
+    wampanoagBezet: true,
+    tiles: streek.tiles.map((tile) => ({
+      ...tile,
+      wampanoagVerhuld: true,
+      wampanoagInhoud: WAMPANOAG_STREEK_INHOUD[tile.positieInStreek],
+    })),
   };
 }
 

@@ -1,12 +1,15 @@
 # Opdracht: Openingsfase Amerikaanse campagne — Wampanoag/Massasoit
 
 ## Context
-Dit implementeert de eerste vier streken van de Amerikaanse frontier-campagne
+Dit implementeert de eerste zes streken van de Amerikaanse frontier-campagne
 ("Going West"), vóór de bestaande Anker-verhalen. De speler landt, heeft nog
 geen cultuur-economie, en moet via wetenschap streken ontgrendelen tot hij de
-Wampanoag-laag op streek 4 bereikt. Daar moet hij drie handelsvakjes onthullen
-en tot een vaste drempel handelen voordat de normale cultuur-gedreven
-streek-ontgrendeling en de volledige stadsverbeteringen-pool weer opengaan.
+Wampanoag-laag op streek 6 bereikt. Die streek is (issue: "Wampanoag streek
+blokkerend") volledig bezet — de settler kan er niet doorheen, en wetenschap
+ontgrendelt geen streken meer verderop — tot hij daar drie handelsvakjes heeft
+onthuld met Verkenners. Pas daarna kan hij tot een vaste drempel handelen
+voordat de normale cultuur-gedreven streek-ontgrendeling en de volledige
+stadsverbeteringen-pool weer opengaan.
 
 Bouwt voort op bestaande patronen: de Bezette-Streek-Verkenning (hoofdstuk 6),
 de city-improvement-cap (hoofdstuk 3/4/11), en de campagne-specifieke
@@ -45,7 +48,7 @@ van nieuwe systemen te bouwen.
 | Opperhoofdtent | geen | Wampanoag-vakje, onthuld — Cultureel/diplomatiek van aard |
 
 Deze drie zijn **geen normale, bouwbare land improvements** via de
-categorie-keuze-flow. Ze bestaan alleen op streek 4 (Wampanoag-laag), verhuld
+categorie-keuze-flow. Ze bestaan alleen op streek 6 (Wampanoag-laag), verhuld
 tot onthuld via Verkenner-actie, exact zoals vijandelijke Wachttoren/Heiligdom-
 tiles bij de bestaande Bezette Streek. Visueel apart skinnen (niet als gewone
 Boerderij/vergelijkbaar).
@@ -59,7 +62,7 @@ Boerderij/vergelijkbaar).
   als tribuut-afhandeling).
 - Blijft na deze openingsfase gewoon staan/nuttig voor latere campagne-lagen.
 
-## 4. Openingsfase streek 1-3
+## 4. Openingsfase streek 1-5
 
 - **Update (issue "Going west campaign geen tutorial")**: Militair stond hier
   eerder ook als verborgen categorie, en de gedeelde `minStreek`-velden op
@@ -69,28 +72,40 @@ Boerderij/vergelijkbaar).
   bouwbaar). Beide zijn losgelaten: `beschikbareOpties` negeert `minStreek`
   zodra er een campagne actief is, en `OPENINGSFASE_VERBORGEN_CATEGORIEEN`
   bevat alleen nog Cultureel. Zichtbare categorieën in land-improvement-keuze
-  tijdens streek 1-4: **alles, behalve Cultureel** (Civiel toont sowieso geen
+  tijdens streek 1-6: **alles, behalve Cultureel** (Civiel toont sowieso geen
   losse land-improvement-opties, zie `IMPROVEMENT_POOLS.civiel`).
 - Stadsverbeteringen-scherm (gecapte pool): **alleen Smederij** zichtbaar.
 - Civiele wachtrij (los, bestaand mechanisme): Woonwijk + settler, ongewijzigd.
 - Streek-ontgrendeling loopt op **wetenschap**, niet cultuur. Wetenschap komt uit
   Sterrencirkel zoals gewoonlijk (put niet uit, volle opbrengst op frontier,
   helft eronder).
-- Drempels (MVP-richtwaarde, tunebaar): streek 2 = 10, streek 3 = 20,
-  streek 4 ("in beeld") = 35.
+- Drempels (MVP-richtwaarde, tunebaar): streek 2 = 10, streek 3 = 18,
+  streek 4 = 25, streek 5 = 30, streek 6 ("in beeld") = 35.
 
-## 5. Streek 4 — Wampanoag-laag
+## 5. Streek 6 — Wampanoag-laag (issue: "Wampanoag streek blokkerend")
 
 - Trigger bij 35 wetenschap: narratieve pop-up (`CampaignConfig.popupTeksten`,
   sleutel bijv. `eersteContactPopup`) — introduceert Massasoit/Wampanoag.
-- Streek toont drie **verhulde** vakjes, per-tegel verhullingslaag zoals
-  bestaande Bezette-Streek-tiles.
+- **Blokkerend**, net als de bestaande Bezette Streek: de streek komt "in
+  beeld" met `ontgrendeld: false` en blijft dat tot de fase hieronder is
+  opgelost — de settler kan er niet doorheen lopen, en de wetenschap-gedreven
+  streek-ontgrendeling (§4) stopt hier (ontgrendelt geen streken meer
+  verderop). Wetenschap blijft wél bruikbaar om vakjes binnen deze streek te
+  onthullen (Verkenner-actie hieronder kost immers wetenschap).
+- Streek toont **alle negen vakjes verhuld** (niet alleen de drie
+  handelsvakjes), per-tegel verhullingslaag zoals bestaande
+  Bezette-Streek-tiles — de zes vakjes zonder bijzondere inhoud zijn
+  "neutraal" (net als bij de Bezette Streek) en onthullen automatisch mee
+  zodra de drie handelsvakjes onthuld zijn.
 - **Onthullen**: klik op verhuld vakje = directe Verkenner-actie. **Hergebruik
   exact de bestaande tutorial-Verkenner-kosten/bouwtijd/max-1-per-beurt-limiet**
   — geen nieuwe kostenbalans hiervoor bouwen.
 - Terrein bepaalt welk van de drie gebouwen ergens kán liggen (zie tabel
   hierboven) — geen aparte trekking/keuze-UI nodig, terreinsubtype van het
   vakje bepaalt het resultaat.
+- **Opgelost** zodra de drie handelsvakjes onthuld zijn: de streek telt
+  vanaf dan weer als normaal ontgrendeld (frontier/settler mogen verder), de
+  resterende neutrale vakjes onthullen in één keer mee.
 - Statusbalkje op de kaart (buiten stadsmenu, zelfde patroon als bestaande
   Bezette-Streek-balkje) toont voortgang van onthullingen + handel.
 
@@ -147,11 +162,13 @@ en andersom.
 
 ## Acceptatiecriteria
 
-- [ ] Speler kan op streek 1-3 alleen Economisch/Wetenschappelijk bouwen, plus
+- [ ] Speler kan op streek 1-5 alleen Economisch/Wetenschappelijk bouwen, plus
       Smederij (city, buiten cap) en Woonwijk/settler (civiele wachtrij).
-- [ ] Streek-ontgrendeling 1→4 loopt aantoonbaar op wetenschap, niet cultuur.
-- [ ] Bij 35 wetenschap verschijnt de Massasoit-pop-up en toont streek 4 drie
-      verhulde vakjes.
+- [ ] Streek-ontgrendeling 1→6 loopt aantoonbaar op wetenschap, niet cultuur.
+- [ ] Bij 35 wetenschap verschijnt de Massasoit-pop-up en toont streek 6 negen
+      verhulde vakjes; de streek zelf blijft `ontgrendeld: false` (settler kan
+      er niet doorheen, streek-ontgrendeling ontgrendelt geen streken meer
+      verderop) tot de drie handelsvakjes onthuld zijn.
 - [ ] Onthullen via klik + Verkenner-tellertje werkt met de bestaande
       tutorial-Verkenner-kosten, max 1 gestart per beurt.
 - [ ] Terrein-subtype van het vakje bepaalt welk gebouw onthuld wordt.

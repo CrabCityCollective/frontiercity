@@ -1,15 +1,21 @@
-// Wampanoag-Verkenning (Going West, M21e, opdracht-wampanoag-opening.md §5):
-// een parallelle, niet-blokkerende onthullings-flow op streek 4, expliciet
-// los van de Bezette-Streek-toestandsmachine (streekOntgrendeling.ts).
-// Streek 4 zelf wordt gewoon normaal `ontgrendeld: true` zodra de
-// wetenschapsdrempel gehaald is (`verwerkStreekOntgrendeling`) — er is geen
-// `Streek.bezet`-achtige vlag die de streek bevriest. Alleen de drie vaste
-// Wampanoag-vakjes (worldGoingWest.ts: `initialiseerWampanoagLaag`) blijven
-// daarna nog individueel verhuld tot de speler er een Verkenner naartoe
-// stuurt — vandaar de eigen `Tile.wampanoagVerhuld`/`wampanoagInhoud`/
-// `wampanoagVerkenningInGang`-velden (types.ts) in plaats van de bestaande
-// `verhuld`/`bezetteStreekInhoud`/`verkenningInGang`, die semantisch aan de
-// Bezette Streek gekoppeld zijn.
+// Wampanoag-Verkenning (Going West, M21e, opdracht-wampanoag-opening.md §5;
+// blokkerend gemaakt door issue "Wampanoag streek blokkerend"): de
+// Wampanoag-streek (`WAMPANOAG_STREEK_HOOGTE`, worldGoingWest.ts) komt "in
+// beeld" met alle negen vakjes verhuld en blijft `ontgrendeld: false` —
+// zelfde blokkerende rol als de Bezette Streek (`Streek.bezet`,
+// streekOntgrendeling.ts: settler/frontier komen er niet voorbij, wetenschap
+// ontgrendelt geen streken meer verderop) — maar met een eigen
+// `Streek.wampanoagBezet`-vlag i.p.v. `Streek.bezet` zelf, en eigen
+// `Tile.wampanoagVerhuld`/`wampanoagInhoud`/`wampanoagVerkenningInGang`-velden
+// (types.ts) i.p.v. de bestaande `verhuld`/`bezetteStreekInhoud`/
+// `verkenningInGang`: de Bezette Streek lost zichzelf op via
+// `verwerkBelegering` (vijandelijke Heiligdom-/Wachttoren-inhoud), en die
+// resolutielogica past niet op Wampanoag-inhoud. De streek lost hier in
+// plaats daarvan op zodra de drie handelsvakjes (met `wampanoagInhoud`)
+// onthuld zijn — zie `verwerkWampanoagVerkenningInGang` hieronder — de
+// overige zes "neutrale" vakjes onthullen op dat moment automatisch mee,
+// maar zijn ook eerder al individueel verkenbaar (net als een "huisje"-vakje
+// bij de Bezette Streek).
 //
 // Hergebruikt bewust dezelfde kosten/bouwtijd (`VERKENNER.kosten`/
 // `VERKENNER.bouwtijdBeurten`, improvements.ts) en de EXACT ZELFDE
@@ -19,7 +25,8 @@
 // kostenbalans hiervoor bouwen" (§5). Het delen van de 1x-per-beurt-vlag met
 // de Bezette Streek is een bewuste, veilige vereenvoudiging — de twee
 // reveal-lagen draaien in de praktijk nooit tegelijk (Bezette Streek is
-// tutorial-only op streek 13, Wampanoag is Going-West-only op streek 4).
+// tutorial-only op streek 13, Wampanoag is Going-West-only op
+// `WAMPANOAG_STREEK_HOOGTE`).
 
 import { BEVERJACHTHUT, MAISBOERDERIJ, OPPERHOOFDTENT, VERKENNER } from "./improvements";
 import { VERKENNING_KOSTEN_WETENSCHAP } from "./streekOntgrendeling";
@@ -111,14 +118,24 @@ export function stuurVerkennerWampanoag(state: GameState, positieInStreek: numbe
 // het vakje onthuld: `wampanoagInhoud` (vastgelegd bij het ontstaan van de
 // laag, zie `initialiseerWampanoagLaag` in worldGoingWest.ts) bepaalt via
 // `WAMPANOAG_IMPROVEMENT_VOOR_INHOUD` hierboven welk van de drie improvements
-// hier komt te staan. Zelfde "meerdere vakjes tegelijk onderweg"-gedrag als
-// `verwerkVerkenningInGang` (streekOntgrendeling.ts): elk vakje telt
-// onafhankelijk af, ongeacht op welke beurt de verkenner gestuurd is.
+// hier komt te staan (`undefined` op een neutraal vakje, precies zoals de
+// "huisje"-loze vakjes van de Bezette Streek). Zelfde "meerdere vakjes
+// tegelijk onderweg"-gedrag als `verwerkVerkenningInGang`
+// (streekOntgrendeling.ts): elk vakje telt onafhankelijk af, ongeacht op
+// welke beurt de verkenner gestuurd is.
+//
+// Resolutie (issue: "Wampanoag streek blokkerend", zelfde soort omslag als
+// `verwerkBelegering` voor de Bezette Streek): zodra alle drie de vakjes met
+// `wampanoagInhoud` onthuld zijn, onthullen de resterende, neutrale verhulde
+// vakjes in één keer mee en telt de streek vanaf nu als normaal ontgrendeld
+// (`wampanoagBezet: false`, `ontgrendeld: true`) — de settler mag er dan
+// weer doorheen, en de wetenschap-gedreven streek-ontgrendeling
+// (streekOntgrendeling.ts) gaat weer verder.
 export function verwerkWampanoagVerkenningInGang(state: GameState): GameState {
   const streek = vindWampanoagStreek(state);
   if (!streek || !streek.tiles.some((tile) => tile.wampanoagVerkenningInGang)) return state;
 
-  const tiles = streek.tiles.map((tile) => {
+  let tiles = streek.tiles.map((tile) => {
     if (!tile.wampanoagVerkenningInGang) return tile;
 
     const beurtenResterend = tile.wampanoagVerkenningInGang.beurtenResterend - 1;
@@ -134,7 +151,16 @@ export function verwerkWampanoagVerkenningInGang(state: GameState): GameState {
     };
   });
 
-  const streken = state.streken.map((s) => (s.hoogte === streek.hoogte ? { ...s, tiles } : s));
+  const nogInhoudVerhuld = tiles.some((tile) => tile.wampanoagInhoud && tile.wampanoagVerhuld);
+  if (!nogInhoudVerhuld) {
+    tiles = tiles.map((tile) => (tile.wampanoagVerhuld ? { ...tile, wampanoagVerhuld: false } : tile));
+  }
+
+  const streken = state.streken.map((s) =>
+    s.hoogte === streek.hoogte
+      ? { ...s, tiles, wampanoagBezet: nogInhoudVerhuld, ontgrendeld: nogInhoudVerhuld ? s.ontgrendeld : true }
+      : s
+  );
   return { ...state, streken };
 }
 

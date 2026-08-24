@@ -96,27 +96,36 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
       break;
     }
 
+    // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md §5;
+    // blokkerend gemaakt door issue "Wampanoag streek blokkerend"): zelfde
+    // bevriezings-patroon als de Bezette Streek hierboven — de streek komt
+    // "in beeld" met alle negen vakjes verhuld (`initialiseerWampanoagLaag`,
+    // worldGoingWest.ts) en blijft `ontgrendeld: false` (dus geen frontier-
+    // voortgang, geen verdere wetenschap-gedreven streek-ontgrendeling) tot
+    // de drie handelsvakjes onthuld zijn (`verwerkWampanoagVerkenningInGang`,
+    // wampanoag.ts, dat op dat moment ook `ontgrendeld: true` zet). Een eigen
+    // `Streek.wampanoagBezet`-vlag i.p.v. `Streek.bezet` hergebruiken: die
+    // laatste wordt hieronder door `verwerkBelegering` opgelost aan de hand
+    // van vijandelijke Heiligdom-/Wachttoren-inhoud, die een Wampanoag-streek
+    // niet heeft. De `campagneId`-check is nodig omdat de tutorial toevallig
+    // ook een streek met dezelfde hoogte heeft (ontgrendeld via de gewone
+    // cultuurdrempel, of — als `ontgrendelResource` ooit per ongeluk op
+    // "wetenschap" zou staan — via `wetenschapKostenVoorStreekOntgrendeling`
+    // hierboven) — zonder deze check zou die tutorial-streek hier per ongeluk
+    // ook bevroren worden.
+    if (volgendeHoogte === WAMPANOAG_STREEK_HOOGTE && state.campagneId === "going-west") {
+      if (!huidigeStreek.wampanoagBezet) {
+        streken = streken.map((streek) =>
+          streek.hoogte === WAMPANOAG_STREEK_HOOGTE ? initialiseerWampanoagLaag(streek) : streek
+        );
+        wampanoagLaagOntdektEvent = true;
+      }
+      break;
+    }
+
     streken = streken.map((streek) =>
       streek.hoogte === volgendeHoogte ? { ...streek, ontgrendeld: true } : streek
     );
-    // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md §5):
-    // een parallelle, niet-blokkerende onthullings-flow, expliciet los van de
-    // Bezette-Streek-toestandsmachine hierboven — streek 4 ontgrendelt hier
-    // gewoon normaal door (geen `break`, geen `Streek.bezet`), alleen de drie
-    // vaste Wampanoag-vakjes (`initialiseerWampanoagLaag`, worldGoingWest.ts)
-    // blijven daarna nog individueel verhuld tot Verkenning (wampanoag.ts).
-    // De `campagneId`-check is nodig omdat de tutorial toevallig ook een
-    // streek 4 heeft (ontgrendeld via de gewone cultuurdrempel, of — als
-    // `ontgrendelResource` ooit per ongeluk op "wetenschap" zou staan — via
-    // `wetenschapKostenVoorStreekOntgrendeling` hierboven) — zonder deze
-    // check zou die tutorial-streek 4 hier per ongeluk ook Wampanoag-vakjes
-    // krijgen.
-    if (volgendeHoogte === WAMPANOAG_STREEK_HOOGTE && state.campagneId === "going-west") {
-      streken = streken.map((streek) =>
-        streek.hoogte === WAMPANOAG_STREEK_HOOGTE ? initialiseerWampanoagLaag(streek) : streek
-      );
-      wampanoagLaagOntdektEvent = true;
-    }
     // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
     // gegarandeerde eerste Amberader-locatie ligt op `AMBER_ONTDEKKING_STREEK`
     // (world.ts) — deze `while`-lus loopt precies één keer door die hoogte
