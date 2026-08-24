@@ -174,117 +174,9 @@ Een generiek, herbruikbaar mechanisme (ook voor latere campagnes) voor een stree
 
 ## 9. Amerikaanse frontier-campagne ("Going West") — uitgewerkte ankers
 
-**Status**: de drie ankers hieronder zijn inhoudelijk beschreven, maar nog niet technisch/inhoudelijk uitgewerkt in code (issue #278, vraag 3). Dit is bewust een **doorlopend, incrementeel proces zonder vaste opleverdatum** — geen aparte milestone die dit in één keer "afrondt"; de ankers worden gaandeweg, stap voor stap opgepakt. Ze zijn geen onderdeel van blocker 1 (hoofdstuk 19) en vormen geen poort voor `beschikbaar: true`.
+De volledige, uitgewerkte campagne-content voor Going West (de drie Anker-verhalen, het afstandsverval- & herhalende-drie-stichtingsmomenten-patroon, de flavor-tekststijlgids en de weergavenamen-tabel) staat niet langer in dit hoofddocument, maar in [`campaigns/going-west/ontwerp.md`](campaigns/going-west/ontwerp.md) — zodat alle campagne-specifieke content bij elkaar staat in plaats van vermengd met de algemene, campagne-onafhankelijke spelmechanica hierboven. De technische opdracht voor de openingsfase (streek 1-4, Wampanoag/Massasoit) staat in [`campaigns/going-west/opdracht-wampanoag-opening.md`](campaigns/going-west/opdracht-wampanoag-opening.md); de implementatiestatus/opgeloste blockers uit het voormalige hoofdstuk 19 staan in [`campaigns/going-west/implementatie-status.md`](campaigns/going-west/implementatie-status.md).
 
-**Toon**: donkerder en minder heroïsch dan klassieke western-verhalen — geïnspireerd op de sfeer van *Blood Meridian*. Geen morele framing door het spel zelf; geweld en keuzes worden beschreven, niet beoordeeld.
-
-### Anker 1 (streek 8-10) — Eerste contact
-Twee keuzes (geen neutrale derde optie):
-- **Handel aanbieden** → kleine economische bonus nu; de tribe groeit sterker mee met jouw voortgang.
-- **Land claimen** → gratis land improvement-vakje nu; start een **zichtbare wrokmeter** die oploopt tot Anker 2.
-
-### Anker 2 (streek 16-18) — vertakt per keuze uit Anker 1
-
-*Vanuit Handel:*
-- **Verdrag sluiten** → permanente/vergrote economische relic; tribe blijft neutrale sterke buur.
-- **Ruil ondermijnen** → grote eenmalige economische boost; tribe wordt blijvend vijandig.
-
-*Vanuit Land claimen (wrokmeter vol):*
-- **Terugvechten** → directe militaire confrontatie; winst = lagere wrok maar beschadigde streek (versnelde uitputting); verlies = richting stadsverval.
-- **Tribuut aanbieden** → wrok daalt fors, eenmalig fors verlies van huidige opbrengst; geen garantie voor de toekomst.
-
-### Anker 3 (richting oceaan) — vier tonale/mechanisch verschillende varianten
-Gedeelde flavor-kern, uitkomst (winnen) gelijk voor iedereen, maar elk pad krijgt een eigen soort obstakel:
-- **Na Verdrag**: tolgang-onderhandeling (resource-management, geen gevecht) — bijv. met Comanche onder Buffalo Hump.
-- **Na Ruil ondermijnen**: pure militaire confrontatie, zwaarste directe slag — bijv. Apache onder Mangas Coloradas.
-- **Na Terugvechten**: lange, uitputtende tocht over meerdere half-uitgeputte streken (uithoudingstest, geen piekmoment).
-- **Na Tribuut**: moreel/strategisch dilemma — permanent relic-verlies voor gegarandeerde doorgang, óf onvoorbereid gevecht.
-
-### Afstandsverval & het herhalende drie-stichtingsmomenten-patroon
-
-Zodra een speler meerdere steden heeft (vanaf deze campagne), geldt voor elke stad die niet meer de actieve frontier is een geleidelijk, afstandsafhankelijk verval van haar city-improvement-productie, hieronder uitgewerkt.
-
-**Deel 1 — Afstandsverval van city improvements**
-
-Voor elke gestichte stad wordt de **afstand** bijgehouden: het aantal streken tussen die stad en de huidige frontier-streek. De frontier beweegt alleen vooruit, dus deze afstand kan alleen groeien. De doorlopende productie van de city improvements van die stad (Bibliotheek, Markt, Barakken, Tempel, Grote Tempel — hoofdstuk 3/13/14) wordt vermenigvuldigd met een effectiviteitspercentage dat van die afstand afhangt, in vier zones:
-
-| Afstand tot de stad | Effectiviteit |
-|---|---|
-| 0-4 streken | 100% ("gezond") |
-| 5-8 streken | 65% (begint te verminderen) |
-| 9-12 streken | 30% (flink verminderd) |
-| 13+ streken ("de grens") | 0% — werkt niet meer, stad is volledig uitgeput qua city-improvement-nut |
-
-MVP-richtwaarden, tunebaar (hoofdstuk 14) — doorgerekend tegen de campagne-continentlengte van 30-60 streken (hoofdstuk 14).
-
-Dit verval raakt uitsluitend de stad-brede city-improvement-productie. **Niet aangeraakt**: land improvements (mijn, boerderij, Sterrencirkel, Amberader, etc.) blijven gewoon normaal produceren zolang ze wegverbonden zijn (hoofdstuk 16), ongeacht afstand. Ook het stadsverval/permadeath-risico (hoofdstuk 4) blijft ongewijzigd — een stad op 0% city-improvement-effectiviteit kan nog gewoon blijven bestaan, ze levert alleen niets meer op via haar gebouwen. Bij meerdere gelijktijdig actieve steden wordt dit per stad apart berekend.
-
-**Deel 2 — Drie gegarandeerde stichtingskansen per stad, herhalend**
-
-Geen eenmalige, vaste telling van 3 stichtingen over de hele run, maar een **patroon dat zich herhaalt voor elke actieve stad**. Zodra een stad gesticht is, garandeert de worldgen drie momenten waarop de speler een nieuwe stad **kán** stichten, gekoppeld aan de afstandszones hierboven — telkens een gegarandeerd vers-water-vakje (hoofdstuk 2):
-
-1. **Vóór de stad begint te verminderen**: een gegarandeerd vers-water-vakje ergens binnen afstand 0-4 van de huidige stad (de "gezonde" zone). Vroeg stichten, met een gezonde buffer.
-2. **Terwijl de stad al aan het verminderen is**: een gegarandeerd vers-water-vakje ergens binnen afstand 5-12 (één van beide verval-zones). Stichten met minder buffer, maar nog niet acuut.
-3. **Zodra de stad volledig is uitgeput**: een gegarandeerd vers-water-vakje zodra afstand 13+ bereikt wordt (de 0%-zone). De oude stad levert dan al niets meer op via city improvements — de speler voelt de noodzaak, maar wordt niet hard geblokkeerd (hij kan in theorie nog verder trekken zonder te stichten, alleen zonder city-improvement-voordeel).
-
-Of de speler bij kans 1, 2 of 3 daadwerkelijk sticht, is aan hem — dat hangt af van hoeveel voorraad hij nog heeft en hoeveel risico hij wil nemen door langer te wachten. Zodra hij sticht, begint dit hele patroon (Deel 1 + Deel 2) opnieuw voor de nieuwe stad.
-
-Bij een campagnelengte van 30-40 streken (Normaal, hoofdstuk 14) herhaalt dit patroon zich met deze afstandszones typisch ongeveer 3 keer over een hele run — vandaar het "verhaal in 3 delen"-gevoel — maar dit is een natuurlijk gevolg van de gekozen getallen, geen harde limiet. Bij een lange "Moeilijk"-campagne (45-60 streken) kan het vaker gebeuren. Het is dus een herhalend mechanisme, geen geharde "maximaal/precies 3 keer"-teller.
-
-Stad stichten blijft een **settler-actie** (hoofdstuk 6/13, inclusief de bestaande "maximaal één settler per gestichte stad"-regel), mogelijk op **elke** al ontgrendelde streek — een uitzondering op de frontier-only-bouwregel, zoals Wachttoren/Legerkamp al hebben (hoofdstuk 6/11) — mits er vers water direct naast ligt (hoofdstuk 2) en de settler er fysiek naartoe reist. De allerlaatste, verplichte stichting blijft bij de oceaan aan het einde van de campagne (bestaande win-conditie, hoofdstuk 1) — die telt gewoon mee als een van deze cykli, in de 0%-zone van de laatst gestichte stad als de speler tot dan toe heeft doorgetrokken.
-
-Hoe dit precies samenvalt met de bestaande Anker-verhalen hierboven (rond streek 8-10/16-18/eindspel) moet nog op elkaar afgestemd worden in een latere opdracht — dit mechanisme is hier op zichzelf staand uitgewerkt.
-
-**Implementatiestatus**: zie de milestone-tabel in hoofdstuk 13 (M16 t/m M20d) voor de volledige, actuele stand van de code voor dit mechanisme.
-
-### Flavor-tekststijlgids
-1. Korte, vaak enkelvoudige zinnen — kracht in understatement.
-2. Geen emotie-bijvoeglijke naamwoorden ("verschrikkelijk", "triomfantelijk").
-3. Geen moreel oordeel in de tekst ("helaas", "terecht").
-4. Concreet/zintuiglijk boven abstract (geur, geluid, licht i.p.v. sfeerbeschrijving).
-5. Herhaling/cadans als bewust stijlmiddel ("geen X, geen Y").
-6. Historische namen/volken mogen gebruikt worden, functioneel beschreven — geen karikatuur.
-7. Stiltes toegestaan — een flavor-tekst hoeft niet samen te vatten wat er net gebeurde.
-
-### Weergavenamen (functionele sleutel ongewijzigd)
-
-Zelfde herbruikbaarheidspatroon als de technologie-boom en de tegel-sets uit hoofdstuk 13 (`CampaignConfig.techNamen`/`improvementNamen`, types.ts): de functionele sleutel (`Improvement.id`/`TechId`) en alle bijbehorende kosten/effecten/gating blijven ongewijzigd — alleen de naam die de speler te zien krijgt, verandert per campagne (`improvementNaam()`/`techNaam()`). Ontbreekt een sleutel (of heeft de campagne geen override), dan valt de weergave terug op de tutorial-naam. De `CampaignConfig`-instantie voor deze campagne (`GOING_WEST_CAMPAGNE`, `src/game/campagnes.ts`) gebruikt onderstaande tabel al als `improvementNamen` (hoofdstuk 13, M20a).
-
-**Land improvements**
-
-| Functionele sleutel (tutorial-naam) | Amerikaanse weergavenaam |
-|---|---|
-| Sterrencirkel | Observatorium |
-| Amberader/goudmijn | Goudmijn |
-| Wachttoren | Blokhuis |
-| Legerkamp | Fort |
-| Heiligdom | Kapel |
-| Offer Altaar | Opwekkingstent |
-
-Boerderij, Mijn, Houtkap, Steengroeve en Voorraadkuil krijgen geen aparte Amerikaanse naam — generiek genoeg voor beide settings, blijven de tutorial-naam tonen via de bestaande fallback.
-
-**City improvements**
-
-| Functionele sleutel (tutorial-naam) | Amerikaanse weergavenaam |
-|---|---|
-| Markt | Handelspost |
-| Opslagplaats | Pakhuis |
-| Bibliotheek | Schoolhuis |
-| Barakken | Garnizoen |
-| Tempel | Kerk |
-| Grote Tempel | Kathedraal |
-| Woonwijk (klein → middel) | Hoofdstraat |
-| Grote Woonwijk (middel → groot) | Spoorwegstation |
-
-**Units**
-
-| Functionele sleutel (tutorial-naam) | Amerikaanse weergavenaam |
-|---|---|
-| Verkenner | Spoorzoeker |
-| Missionaris | Prediker |
-| Karavaan (post-MVP, meerdere steden — zie hoofdstuk 13) | Handelswagen |
-
-De Huifkar (settler) krijgt geen aparte naam — al generiek/thematisch passend, blijft ongewijzigd.
+**Status**: de drie ankers zijn inhoudelijk beschreven, maar nog niet technisch/inhoudelijk uitgewerkt in code (issue #278, vraag 3). Dit is bewust een **doorlopend, incrementeel proces zonder vaste opleverdatum**. Zie hoofdstuk 15 voor de huidige bouwprioriteit.
 
 ---
 
@@ -783,21 +675,8 @@ Alle kosten/effecten hierboven zijn MVP-richtwaarden, expliciet tunebaar (issue:
 
 *Rush-bouwen-prijs*: **5 goud per weggekochte beurt** (`RUSH_GOUD_PER_BEURT`, tunebaar). Van toepassing op elke lopende land- of city-improvement in de bouwwachtrij (hoofdstuk 5); nooit op de technologieboom (hoofdstuk 11).
 
-**Lange mars (Anker 3, na Terugvechten — Amerikaanse campagne)**
-- Uitgestrekt over 3-4 opeenvolgende streken in plaats van één piekmoment.
-- Vooruitkijk-bereik tijdelijk teruggezet naar 0 extra streken tijdens deze reeks.
-- Alle land improvements in deze streken hebben standaard verlaagde opbrengst (het beschadigde land werkt door).
-- Geen nieuwe stad te stichten binnen deze reeks.
-- Zichtbare voorraadmeter (materiaal tegenover resterende streken) i.p.v. een harde timer.
-- Bij te weinig voorraad aan het einde: geen instant game-over, maar een verzwakte aankomst (kleinere stad-status bij de oceaan, beïnvloedt slotscène/flavor) — consistent met "hard maar eerlijk" bij nederlagen.
-
-**Afstandsverval & herhalend stichtingspatroon (hoofdstuk 9/11, Amerikaanse campagne)**
-
-*Afstandszones en effectiviteit* (volledige uitleg in hoofdstuk 9): 0-4 streken = 100%, 5-8 = 65%, 9-12 = 30%, 13+ = 0%. MVP-richtwaarden, tunebaar.
-
-*Doorrekening tegen de campagnelengte*: een speler die telkens pas bij kans 3 (afstand 13+) sticht, legt tussen twee stichtingen ten minste 13 streken frontier-voortgang af — bij Normaal (30-40 streken) past dat ruwweg **3 cycli** (3 × 13 ≈ 39, aan de bovenkant van de range), bij Moeilijk (45-60 streken) **3-4 cycli**, bij Makkelijk (20-25 streken) **1-2 cycli**. Een speler die eerder sticht (kans 1 of 2) start een nieuwe cyclus sneller, dus dit is een ondergrens-schatting van het aantal cycli, geen exacte voorspelling — vandaar "typisch ~3 keer" in hoofdstuk 9, niet een harde teller.
-
-*Implementatiestatus (M18)*: de drie kans-hoogten zelf liggen inmiddels vast als pure functie, `gegarandeerdeStichtingskansHoogten()` (`src/game/stad.ts`) — vaste, deterministische offsets t.o.v. de streekHoogte van de stichtende stad: **+3** (kans 1, binnen de 0-4-zone), **+8** (kans 2, het midden van de 5-12-verval-zones), **+13** (kans 3, exact de drempel van de uitgeputte zone). Deze functie is nog niet gekoppeld aan een daadwerkelijke, handgeschreven plaatsing van vers-water-vakjes (hoofdstuk 2) op een echte, vaste campagnewereld — dat is voorgesteld als M20b/M20c (hoofdstuk 13/15). Omdat een vaste kaart niet vooraf kan weten op welke hoogte de speler daadwerkelijk zal stichten, gebeurt die koppeling via voldoende dichte, vooraf geplaatste vers-water-vakjes (M20c) in plaats van vakjes die pas ná de stichting op de berekende hoogte verschijnen. Tot die tijd bepaalt deze functie dus alleen de streek-hóógtes waarop de drie kansen zouden moeten vallen, geen concrete `positieInStreek` of daadwerkelijk geplaatst vakje.
+**Going West-specifieke balansgetallen (Lange mars, afstandsverval-doorrekening)**
+Verhuisd naar [`campaigns/going-west/ontwerp.md`](campaigns/going-west/ontwerp.md), samen met de rest van de Going West-campagne-content (hoofdstuk 9).
 
 **Volgorde/unlock-logica overige campagnes**
 Na het voltooien van de Amerikaanse frontier-campagne worden alle overige campagnes **in één keer ontgrendeld** — geen verdere gedwongen volgorde, omdat er geen inhoudelijke leercurve-afhankelijkheid tussen de latere campagnes bestaat (in tegenstelling tot tutorial → Amerika). **Besloten: geen cross-campagne relic-bonussen of ander meta-progressiesysteem tussen campagnes** — elke campagne staat op zichzelf, om de rogue-like puurheid (elke run is een eigen uitdaging, zonder consolatieprijzen of stapelende voordelen) niet te verwateren.
@@ -917,24 +796,7 @@ Nieuw, kleine UX-toevoeging (in de MVP, zie hoofdstuk 13): vóórdat een klik op
 
 ## 19. Going West — resterende blockers vóór `beschikbaar: true` (vervolg op M20d, opgelost in M20g)
 
-Bij het afronden van M20d (hoofdstuk 13, issue: "M20d voorstel") is de spel-opstart-architectuur zelf campagne-bewust gemaakt (`GameState.campagneId`, per-campagne save-sleutel, de `CampagneSelectScherm` → `AppRoot` → `GameRoot` → `useGameEngine`-campagnekeuze-doorgifte, en een placeholder-tegelset-koppeling in de renderer). Bij het volledig doorlezen van `GameRoot.tsx` om de laatste stap te zetten — Going West op `beschikbaar: true` — bleek dat de streek-flavor- en uitleg-pop-up-laag daar nog los van staat: die is nog vrijwel volledig tutorial-specifiek, en één van de gevonden problemen is een echte functionele bug, geen contentkeuze. Dit hoofdstuk legt de drie blockers vast als uitgangspunt voor een nog voor te stellen vervolg-milestone (CLAUDE.md: architectuur-/content-rakende bevindingen eerst apart voorstellen in plaats van ze blind in dezelfde sessie mee te nemen). **Update (M20e, hoofdstuk 13)**: blockers 2 en 3 zijn inmiddels opgelost, samen met de losstaande vinkje-bug uit de "Samenhang"-paragraaf hieronder — geen van drieën vergde een contentkeuze. **Update (M20f, hoofdstuk 13, issue #278)**: van blocker 1 is de streek-flavor-content en het per-stichting-"voltooid"-signaal uit de "Samenhang"-paragraaf inmiddels opgepakt, met placeholder-tekst ("todo") — zie hieronder. **Update (M20g, hoofdstuk 13, issue #292)**: het laatste stuk van blocker 1 (intro-/oceaan-uitleg-tekst) is nu ook campagne-bewust gemaakt, met dezelfde placeholder-aanpak — alle drie blockers zijn hiermee opgelost en Going West staat op `beschikbaar: true`. De drie Anker-verhalen (issue #278, vraag 3) blijven bewust nog open, los, doorlopend werk (hoofdstuk 15) — dat was al zo bepaald, geen poort voor `beschikbaar: true`.
-
-**1. Tutorial-narratieve content is niet campagne-bewust (opgelost, M20f + M20g)**
-`tutorialContent.ts` (`TUTORIAL_STREEK_CONTENT`, `INTRO_TITEL`/`INTRO_FLAVOR_TEKST`, `TUTORIAL_VOLTOOID_TITEL`, `BEZETTE_STREEK_TITEL`/`_TEKST`, `STICHTING_AFSLUITENDE_SCENE`, e.a.) bevat expliciete Hertenpad-volk-/Oer-stad-lore (hoofdstuk 10) en keek nergens naar `state.campagneId`. Op `beschikbaar: true` zou een Going West-run dus letterlijk tutorial-teksten tonen ("De Bergkam is bezet", "De Eerste Vuren — voltooid", enz.) — inhoudelijk fout, geen technisch detail. **M20f** loste het per-streek-deel op met een eigen, losstaand bestand (`goingWestContent.ts`) — alle 35 streken hebben nu een `StreekContent`-entry, met de naam van het al bestaande terreintype en `"todo"` als mechaniek/flavor-tekst (issue #278, vraag 1: bewust een generieke placeholder, later gaandeweg aan te vullen door de speler zelf) — en met een eigen `StichtingsMomentPopup` die bij élke stichting verschijnt in plaats van het tutorial-"voltooid"-scherm (vraag 2, zie "Samenhang" hieronder). **M20g** rondde dit af: `introContentVoorCampagne()`/`oceaanUitlegVoorCampagne()` (`campagnes.ts`, zelfde dispatch-patroon als `streekContentVoorCampagne()`) geven `IntroScherm`/`OceaanUitlegPopup` nu een eigen Going West-titel ("Going West"/"American Expansion", "De kust van de Stille Oceaan") mee, met de flavor-/uitleg-tekst zelf nog "todo" — zelfde bewuste placeholder als de rest van blocker 1.
-
-**2. `TUTORIAL_STREEK_AANTAL` hard-coded voor de oceaan-uitleg (opgelost, M20e)**
-`GameRoot.tsx` gebruikte de tutorial-constante `TUTORIAL_STREEK_AANTAL` (14, `world.ts`) om te bepalen wanneer de oceaan-uitleg-pop-up moet verschijnen. Bij `beschikbaar: true` zou dit op streek 14 van de 35-streken Going West-kaart (hoofdstuk 13 M20b) afgaan, niet aan het echte einde van die kaart. Opgelost door `state.streken.length` te gebruiken (de lengte van de actieve campagnekaart, zelfde bron als `isAfsluitendeStichting` in `acties.ts`) in plaats van de tutorial-constante. De tekst van de pop-up zelf (`OCEAAN_UITLEG_TEKST`) is nog steeds tutorial-specifiek ("vers water... sinds Oer-stad") — dat hoort bij blocker 1.
-
-**3. Streek-popup-softlock voorbij streek 14 (functionele bug, geen contentkeuze) (opgelost, M20e; content-koppeling voltooid, M20f)**
-`TUTORIAL_STREEK_CONTENT` kent alleen entries voor streek 1-14; `StreekPopup` rendert `null` zodra er voor de huidige streek geen content gevonden wordt. `laatstBevestigdeStreek` (`GameRoot.tsx`) wordt echter uitsluitend bijgewerkt via de "Doorgaan"-knop in diezelfde popup. Zodra een campagnekaart langer is dan 14 streken (Going West: 35) bleef `laatstBevestigdeStreek` dus permanent achter vanaf streek 15 — en via de bestaande `!toonStreekPopup`-gating-keten blokkeerde dat daarmee alle lager-prioriteit pop-ups voor de rest van de run, inclusief de **verplichte** tech-keuze-pop-up (hoofdstuk 13 M13). Anders dan blocker 1/2 was dit geen inhoudelijke tutorial-koppeling maar een echte bug: hij treft elke toekomstige campagnekaart die langer is dan 14 streken, niet specifiek Going West. Fix (M20e): `toonStreekPopup` vereist nu ook dat er daadwerkelijk streek-content bestaat voor de huidige streek, niet alleen dat de streek nog niet bevestigd is. **M20f** rondde dit af: `streekContentVoorCampagne()` (`campagnes.ts`) vervangt de rechtstreekse `TUTORIAL_STREEK_CONTENT`-aanroep in zowel deze gating als in `StreekPopup`/`StreekIntroPaneel` zelf — zonder die laatste stap zou de softlock zijn opgelost qua gating, maar `StreekPopup` zelf had nog steeds `null` gerenderd voor Going West-streken (dezelfde softlock, één laag dieper).
-
-**Samenhang met het herhalende stichtingspatroon (opgelost, M20f)**
-Los van bovenstaande drie, maar bij hetzelfde onderzoek gevonden: `TutorialVoltooidPopup` ("De Eerste Vuren — voltooid") zou bij de allerlaatste, afsluitende stichting van een Going West-run verschijnen (`stadGesticht` wordt campagne-agnostisch gezet, `acties.ts`) — inhoudelijk fout (tutorial-tekst) en zou de run bovendien beëindigen, wat voor Going West niet de bedoeling is. **M20f** loste dit op met een eigen `StichtingsMomentPopup` (issue #278, antwoord op vraag 2: "iedere stichting... krijgt een mooi momentje... het verschil met de tutorial is dat het spel niet eindigt dan") die bij élke stichting binnen het patroon verschijnt voor niet-tutorial-campagnes, met een placeholder-plaatje en -tekst; `toonTutorialVoltooidPopup` is nu expliciet tot `state.campagneId === undefined` beperkt. Het "voltooid"-vinkje in `CampagneSelectScherm.tsx` (`heeftTutorialVoltooid()`) is al eerder opgelost (M20e): het verschijnt uitsluitend bij de tutorial-entry zelf (`campagne.id === undefined`).
-
-**Wat dit niet verandert**
-De in M20d gebouwde spel-opstart-architectuur (campagne-bewuste `GameState`/save-sleutel/campagnekeuze-doorgifte/placeholder-tegelset, hoofdstuk 13) blijft ongewijzigd en werkt. Met M20g is de laatste stap gezet: Going West staat nu op `beschikbaar: true` in `CampagneSelectScherm.tsx`.
-
-De drie Anker-verhalen (hoofdstuk 9, issue #278 vraag 3) zijn **geen** onderdeel van blocker 1 en vormden dus ook geen poort voor `beschikbaar: true` — ze zijn inhoudelijk beschreven maar nog niet technisch uitgewerkt, en worden bewust als een los, doorlopend/incrementeel proces zonder vaste opleverdatum opgepakt (zie de statusregel bovenaan hoofdstuk 9). Datzelfde geldt voor de resterende "todo"-placeholder-flavor-tekst (per streek en bij de intro-/oceaan-uitleg, M20f/M20g): die wordt gaandeweg aangevuld, zonder dat dat de campagne opnieuw op `beschikbaar: false` hoeft te zetten.
+Deze content (de drie technische blockers die zijn opgelost tussen M20d en M20g, en hun samenhang met het herhalende stichtingspatroon) is verhuisd naar [`campaigns/going-west/implementatie-status.md`](campaigns/going-west/implementatie-status.md), samen met de rest van de Going West-campagne-content (hoofdstuk 9). Alle drie blockers zijn inmiddels opgelost; Going West staat sinds M20g op `beschikbaar: true` in `CampagneSelectScherm.tsx` — zie de milestone-tabel in hoofdstuk 13.
 
 ---
 
