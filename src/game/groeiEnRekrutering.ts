@@ -20,6 +20,7 @@ import {
   MISSIONARIS,
   NIEUWE_SETTLER,
   OPSLAGPLAATS,
+  SMEDERIJ,
   SOLDAAT,
   WOONWIJK,
 } from "./improvements";
@@ -484,6 +485,70 @@ export function startOpslagplaats(state: GameState): GameState {
     ...state.stad,
     opslagplaatsInAanbouw: { improvement: OPSLAGPLAATS, voortgang: { ...OPSLAGPLAATS.kosten } },
   });
+}
+
+// Start het bouwen van de Smederij (Going West, M21d, opdracht-wampanoag-
+// opening.md §3). Eigen wachtrij, los van `cityVerbeteringInAanbouw` — zelfde
+// "buiten de cap"-uitzondering als Opslagplaats hierboven. Anders dan
+// Opslagplaats niet herhaalbaar: negeert de aanroep zodra er al één staat of
+// in aanbouw is.
+export function startSmederij(state: GameState): GameState {
+  if (state.stad.smederijInAanbouw || state.stad.heeftSmederij) return state;
+
+  return metActieveStad(state, {
+    ...state.stad,
+    smederijInAanbouw: { improvement: SMEDERIJ, voortgang: { ...SMEDERIJ.kosten } },
+  });
+}
+
+// Betaalt de bouwkosten van een lopende Smederij — zelfde wachtrij-patroon
+// als `verwerkOpslagplaats` hierboven, maar voltooiing zet `heeftSmederij` op
+// `true` in plaats van een cap/voorraad-effect direct toe te passen: de
+// erts→gereedschap-conversie zelf loopt via `verwerkProductie` (productie.ts),
+// elke beurt opnieuw, zolang deze vlag aan staat.
+export function verwerkSmederij(state: GameState): GameState {
+  const smederijInAanbouw = state.stad.smederijInAanbouw;
+  if (!smederijInAanbouw) return state;
+
+  const voorraad = { ...state.voorraad };
+  const resultaat = investeerInBouwkosten(smederijInAanbouw.improvement, smederijInAanbouw.voortgang, voorraad);
+  if (!resultaat) return state;
+
+  if (resultaat.voltooid) {
+    return {
+      ...metActieveStad(state, { ...state.stad, smederijInAanbouw: undefined, heeftSmederij: true }),
+      voorraad,
+    };
+  }
+
+  return {
+    ...metActieveStad(state, { ...state.stad, smederijInAanbouw: { ...smederijInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
+    voorraad,
+  };
+}
+
+// Koopt de resterende bouwtijd van een lopende Smederij af met goud — zelfde
+// patroon als `versnelOpslagplaatsMetGoud` hierboven.
+export function versnelSmederijMetGoud(state: GameState): GameState {
+  const smederijInAanbouw = state.stad.smederijInAanbouw;
+  if (!smederijInAanbouw) return state;
+
+  const resultaat = pasVersnellingToe(smederijInAanbouw.improvement, smederijInAanbouw.voortgang, state.voorraad.goud);
+  if (!resultaat) return state;
+
+  const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };
+
+  if (resultaat.voltooid) {
+    return {
+      ...metActieveStad(state, { ...state.stad, smederijInAanbouw: undefined, heeftSmederij: true }),
+      voorraad,
+    };
+  }
+
+  return {
+    ...metActieveStad(state, { ...state.stad, smederijInAanbouw: { ...smederijInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
+    voorraad,
+  };
 }
 
 // Start het rekruteren van een Soldaat (M7), als er niet al een rekrutering

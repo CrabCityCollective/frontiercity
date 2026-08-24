@@ -400,6 +400,24 @@ export interface City {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
+  // Smederij (Going West, M21d, opdracht-wampanoag-opening.md §3): eigen
+  // wachtrij, los van `cityVerbeteringInAanbouw` — zelfde "buiten de cap"-
+  // uitzondering als Opslagplaats hierboven (reden: zou bij een kleine stad
+  // de facto verplicht zijn), dus ook een eigen wachtrij in plaats van de
+  // gedeelde gecapte pool. Anders dan Opslagplaats niet herhaalbaar: één
+  // Smederij per stad volstaat (`heeftSmederij` hieronder), meer heeft in de
+  // MVP geen extra effect.
+  smederijInAanbouw?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+  };
+  // Of deze stad al een voltooide Smederij heeft (Going West, M21d) — bepaalt
+  // of de erts→gereedschap-conversie (`verwerkProductie`, productie.ts) elke
+  // beurt meedraait. Blijft `false` in de tutorial (nooit gebouwd, geen UI-pad
+  // ernaartoe daar) en blijft, net als de Smederij zelf, ook na de Wampanoag-
+  // openingsfase gewoon staan (opdracht-wampanoag-opening.md §3: "blijft
+  // nuttig voor latere campagne-lagen").
+  heeftSmederij: boolean;
 }
 
 // Uitkomst van een militaire confrontatie (M7, hoofdstuk 6): een vergelijking

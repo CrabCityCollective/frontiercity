@@ -26,10 +26,12 @@ import {
   startNieuweSettler as startNieuweSettlerActie,
   startOpslagplaats as startOpslagplaatsActie,
   startRecrutering as startRecruteringActie,
+  startSmederij as startSmederijActie,
   startTweedeSettler as startTweedeSettlerActie,
   versnelCityVerbeteringMetGoud as versnelCityVerbeteringMetGoudActie,
   versnelCivielMetGoud as versnelCivielMetGoudActie,
   versnelOpslagplaatsMetGoud as versnelOpslagplaatsMetGoudActie,
+  versnelSmederijMetGoud as versnelSmederijMetGoudActie,
 } from "./groeiEnRekrutering";
 import {
   bevestigAmberOnderVuur as bevestigAmberOnderVuurActie,
@@ -146,6 +148,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => startOpslagplaatsActie(huidig));
   }, []);
 
+  // Smederij (Going West, M21d) — zelfde dunne wrapper-conventie als
+  // `startOpslagplaats` hierboven.
+  const startSmederij = useCallback(() => {
+    setState((huidig) => startSmederijActie(huidig));
+  }, []);
+
   // Stadsverbeteringen (hoofdstuk 3/4/11/14, issue: "city improvements" Deel
   // 1/3) — zelfde dunne wrapper-conventie als hierboven.
   const startCityVerbetering = useCallback((improvement: Improvement) => {
@@ -228,6 +236,10 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
 
   const versnelOpslagplaatsMetGoud = useCallback(() => {
     setState((huidig) => versnelOpslagplaatsMetGoudActie(huidig));
+  }, []);
+
+  const versnelSmederijMetGoud = useCallback(() => {
+    setState((huidig) => versnelSmederijMetGoudActie(huidig));
   }, []);
 
   const geefTribuut = useCallback(() => {
@@ -318,6 +330,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     startNieuweSettler,
     startTweedeSettler,
     startOpslagplaats,
+    startSmederij,
     startCityVerbetering,
     versnelCityVerbeteringMetGoud,
     stichtStad,
@@ -336,6 +349,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     versnelBouwMetGoud,
     versnelCivielMetGoud,
     versnelOpslagplaatsMetGoud,
+    versnelSmederijMetGoud,
     geefTribuut,
     kiesGeefTribuut,
     weigerTribuut,

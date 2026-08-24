@@ -40,7 +40,9 @@ export function laadSpel(campagneId?: string): GameState | null {
   try {
     const ruw = window.localStorage.getItem(saveSleutel(campagneId));
     if (!ruw) return null;
-    return metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)));
+    return metGemigreerdeSmederijVeld(
+      metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+    );
   } catch {
     return null;
   }
@@ -120,6 +122,18 @@ function metGemigreerdeWampanoagVelden(state: GameState): GameState {
     cultureelOntgrendeld: state.cultureelOntgrendeld ?? true,
     ontgrendelResource: state.ontgrendelResource ?? "cultuur",
   };
+}
+
+// Migratie voor saves van vóór de Smederij (Going West, M21d,
+// opdracht-wampanoag-opening.md §3): oudere saves kennen `City.heeftSmederij`
+// nog niet, op zowel `stad` als elke stad in `steden`. Valt terug op `false`
+// (nooit gebouwd) op elke stad — geen enkele oudere save kan 'm al gehad
+// hebben, deze migratie voegt alleen het ontbrekende veld toe.
+function metGemigreerdeSmederijVeld(state: GameState): GameState {
+  if (typeof state.stad.heeftSmederij === "boolean") return state;
+  const stad = { ...state.stad, heeftSmederij: state.stad.heeftSmederij ?? false };
+  const steden = state.steden.map((s) => ({ ...s, heeftSmederij: s.heeftSmederij ?? false }));
+  return { ...state, stad, steden };
 }
 
 // Of er iets te laden valt voor de gegeven campagne (issue: "menu-icoontje
