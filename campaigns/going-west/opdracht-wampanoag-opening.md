@@ -61,8 +61,16 @@ Boerderij/vergelijkbaar).
 
 ## 4. Openingsfase streek 1-3
 
-- Zichtbare categorieën in land-improvement-keuze: **Economisch,
-  Wetenschappelijk** alleen. Militair/Civiel(op Woonwijk na)/Cultureel: verborgen.
+- **Update (issue "Going west campaign geen tutorial")**: Militair stond hier
+  eerder ook als verborgen categorie, en de gedeelde `minStreek`-velden op
+  Houtkap/Boerderij/Mijn/Wachttoren/Sterrencirkel (improvements.ts, oorspronkelijk
+  tutorial-pacing) golden ook voor Going West — dat bleek een ongewenste
+  tutorial-achtige beperking (op streek 1 was letterlijk alleen de Steengroeve
+  bouwbaar). Beide zijn losgelaten: `beschikbareOpties` negeert `minStreek`
+  zodra er een campagne actief is, en `OPENINGSFASE_VERBORGEN_CATEGORIEEN`
+  bevat alleen nog Cultureel. Zichtbare categorieën in land-improvement-keuze
+  tijdens streek 1-4: **alles, behalve Cultureel** (Civiel toont sowieso geen
+  losse land-improvement-opties, zie `IMPROVEMENT_POOLS.civiel`).
 - Stadsverbeteringen-scherm (gecapte pool): **alleen Smederij** zichtbaar.
 - Civiele wachtrij (los, bestaand mechanisme): Woonwijk + settler, ongewijzigd.
 - Streek-ontgrendeling loopt op **wetenschap**, niet cultuur. Wetenschap komt uit

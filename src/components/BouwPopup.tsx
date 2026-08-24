@@ -145,7 +145,7 @@ export default function BouwPopup({
 
   function kiesCategorie(categorie: Categorie) {
     setGekozenCategorie(categorie);
-    setOpties(beschikbareOpties(categorie, streek, alleStreken, technologieen));
+    setOpties(beschikbareOpties(categorie, streek, alleStreken, technologieen, campagne?.id));
   }
 
   return (
@@ -189,7 +189,8 @@ export default function BouwPopup({
                 // improvements (Wachttoren) ook naar andere ontgrendelde
                 // streken, dus dit hoeft niet af te hangen van lege vakjes op
                 // déze (frontier-)streek specifiek.
-                const kanBouwen = beschikbareOpties(categorie, streek, alleStreken, technologieen).length > 0;
+                const kanBouwen =
+                  beschikbareOpties(categorie, streek, alleStreken, technologieen, campagne?.id).length > 0;
                 return (
                   <button
                     key={categorie}

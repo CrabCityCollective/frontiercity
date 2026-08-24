@@ -94,11 +94,27 @@ export function terreinTypeVoorStreek(hoogte: number): string {
 // (zelfde mix-conventie als de tutorial), terwijl de verhouding duidelijk
 // verschuift met de hoogte: vlakke prairie (streek 1-9) → canyons/mesa's
 // (10-18) → hooggebergte (19-27) → afdaling naar de kust (28-35).
+// Streek 1-4 (opdracht-wampanoag-opening.md, de openingsfase vóór de eerste
+// Anker) kregen oorspronkelijk vrijwel dezelfde krappe mix als de tutorial —
+// op elke streek maar één heuvel-vakje en (voor streek 1) helemaal geen
+// berg-vakje. Sinds `beschikbareOpties` (improvements.ts) de tutorial-
+// `minStreek`-tempobeperking niet meer toepast op Going West (issue: "Going
+// west campaign geen tutorial") kan de speler daardoor al vanaf streek 1
+// tegelijk Steengroeve, Mijn, Amberader en Wachttoren willen bouwen, terwijl
+// er maar één geschikt vakje voor was. Streek 1-4 hebben daarom hier een
+// ruimere heuvel/berg-mix (3 in plaats van 1) gekregen, zodat "alle
+// grondstoffen komen in principe al op streek 1 voor" ook daadwerkelijk
+// tegelijk bouwbaar is — zie ook `GOING_WEST_AMBER` hieronder voor de
+// bijbehorende amber-vondst op streek 1. Streek 4 houdt positie 0/1/2 bewust
+// ongewijzigd (vlak/vlak/bos): die liggen vast voor de Wampanoag-laag
+// (`WAMPANOAG_STREEK_INHOUD` hieronder). Streek 5 en verder blijven
+// ongewijzigd — de kaart verschuift daar toch al vanzelf naar meer
+// heuvel/berg (canyons/mesa's, zie de modulekop).
 const GOING_WEST_TILE_TERREIN: Record<number, TerreinType[]> = {
-  1: ["vlak", "vlak", "vlak", "bos", "vlak", "vlak", "heuvel", "vlak", "vlak"],
-  2: ["vlak", "bos", "vlak", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak"],
-  3: ["bos", "vlak", "vlak", "heuvel", "vlak", "vlak", "vlak", "bos", "vlak"],
-  4: ["vlak", "vlak", "bos", "vlak", "heuvel", "vlak", "bos", "vlak", "vlak"],
+  1: ["heuvel", "bos", "vlak", "bos", "vlak", "vlak", "heuvel", "vlak", "berg"],
+  2: ["heuvel", "bos", "vlak", "heuvel", "bos", "vlak", "berg", "bos", "vlak"],
+  3: ["bos", "heuvel", "vlak", "bos", "berg", "vlak", "heuvel", "bos", "vlak"],
+  4: ["vlak", "vlak", "bos", "heuvel", "berg", "vlak", "bos", "heuvel", "vlak"],
   5: ["vlak", "bos", "vlak", "vlak", "bos", "heuvel", "vlak", "vlak", "bos"],
   6: ["bos", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "heuvel", "vlak"],
   7: ["vlak", "heuvel", "vlak", "bos", "vlak", "heuvel", "vlak", "vlak", "bos"],
@@ -207,10 +223,16 @@ export function initialiseerWampanoagLaag(streek: Streek): Streek {
 
 // Amberader/goudmijn-vondsten (hoofdstuk 3/14) — vast en niet-procedureel,
 // net als TUTORIAL_AMBER in world.ts. Altijd op een heuvel/bergvakje (de
-// gewone mijn-terreineis, zie `improvementPastOpTile` in improvements.ts),
-// verspreid over de canyon/mesa- en hooggebergte-zones waar die vakjes
-// veruit het talrijkst zijn.
+// gewone mijn-terreineis, zie `improvementPastOpTile` in improvements.ts).
+// Streek 1 heeft, anders dan de tutorial (waar Amberader pas op streek 8
+// verschijnt, zie AMBER_ONTDEKKING_STREEK in world.ts), meteen al een vondst
+// op het berg-vakje (positie 8, GOING_WEST_TILE_TERREIN hierboven) — issue:
+// "Going west campaign geen tutorial", "alle grondstoffen moeten in principe
+// voorkomen op streek 1" (dus ook goud). De rest van de vondsten blijft
+// verspreid over de canyon/mesa- en hooggebergte-zones waar heuvel/berg-
+// vakjes veruit het talrijkst zijn.
 const GOING_WEST_AMBER: Record<number, number[]> = {
+  1: [8],
   11: [0],
   15: [1],
   19: [2],
