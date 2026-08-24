@@ -447,6 +447,17 @@ export interface CampaignConfig {
   // sleutellijst. Ontbreekt een sleutel (of de hele campagne heeft geen
   // override), dan valt `improvementNaam()` terug op `Improvement.naam`.
   improvementNamen?: Partial<Record<string, string>>;
+  // Narratieve/flavor-pop-up-teksten, gesleuteld op een functionele sleutel
+  // (bijv. `eersteContactPopup`) — M21a (opdracht-wampanoag-opening.md,
+  // hoofdstuk 8/9), zelfde terugval-patroon als `techNamen`/`improvementNamen`
+  // hierboven: ontbreekt de sleutel (of heeft de campagne geen override), dan
+  // toont de aanroepende code bewust geen tekst in plaats van op een andere
+  // campagne se flavor terug te vallen — dat zou tutorial-lore in de
+  // Amerikaanse campagne (of andersom) lekken. Puur narratieve pop-ups; de
+  // universele mechaniek-uitleg-pop-ups (streek-tutorial-teksten) en de
+  // generieke systeem-pop-ups (bevestigingsschermen) blijven bewust buiten
+  // `CampaignConfig` — zie opdracht-wampanoag-opening.md §8 voor de driedeling.
+  popupTeksten?: Partial<Record<string, string>>;
 }
 
 // Gedeelde-opslag-grondstoffen (hoofdstuk 5): hout, steen, erts, goud delen
@@ -785,6 +796,36 @@ export interface GameState {
   // patroon als `laatstBevestigdeStreek` hierboven. Begint op 1 (elke run
   // begint al met 1 stad, zie `maakInitieleSpelStatus`).
   laatsteBevestigdeStedenAantal: number;
+  // Wampanoag-openingsfase, streek 1-4 van Going West (M21a,
+  // opdracht-wampanoag-opening.md §1/§6): drie handelswaren, elk een eigen,
+  // cap-loze voorraad naast `voorraad` hierboven — zelfde soort aparte
+  // telling als `voedsel`/`cultuur`/`wetenschap`, geen onderlinge of
+  // gedeelde-opslag-cap-koppeling. Blijven op 0 staan (en blijven ongebruikt)
+  // buiten de Going West-campagne; nog door geen enkele productie- of
+  // handelsstap gevuld — dat volgt in een latere M21-stap. Oudere saves
+  // kennen deze velden nog niet, zie `metGemigreerdeWampanoagVelden` in
+  // save.ts.
+  bevervellen: number;
+  mais: number;
+  wampum: number;
+  // Afgeleide grondstof (opdracht-wampanoag-opening.md §3): output van de
+  // nog te bouwen Smederij (2 erts → 1 gereedschap/beurt). Eigen kleine
+  // voorraad, geen koppeling aan `opslagCap` (lage volumes, zelfde reden als
+  // hierboven).
+  gereedschap: number;
+  // Bepaalt of de Cultureel-categorie zichtbaar is in de
+  // land-improvement-categoriekeuze (opdracht-wampanoag-opening.md §1/§7) —
+  // nog door geen enkele UI gelezen (dat volgt in M21c). Tutorial start op
+  // `true` (ongewijzigd, bestaande tutorial kent geen fase-gating); Going
+  // West start op `false` tot de 3-3-3-Wampanoag-drempel gehaald is.
+  cultureelOntgrendeld: boolean;
+  // Welke voortgangs-valuta streek-ontgrendeling aandrijft
+  // (opdracht-wampanoag-opening.md §1/§4/§7) — nog door
+  // `verwerkStreekOntgrendeling` (economie.ts) gelezen noch geschreven (dat
+  // is hardcoded op cultuur, ongeacht dit veld, tot M21b). Tutorial en
+  // bestaande saves blijven op `"cultuur"` (huidig gedrag); Going West start
+  // op `"wetenschap"` en schakelt na de 3-3-3-drempel naar `"cultuur"`.
+  ontgrendelResource: "wetenschap" | "cultuur";
 }
 
 // Sleutels van de eenmalige uitleg-pop-ups (issue: "Bij laden niet alle
