@@ -491,8 +491,11 @@ export function startOpslagplaats(state: GameState): GameState {
 // opening.md §3). Eigen wachtrij, los van `cityVerbeteringInAanbouw` — zelfde
 // "buiten de cap"-uitzondering als Opslagplaats hierboven. Anders dan
 // Opslagplaats niet herhaalbaar: negeert de aanroep zodra er al één staat of
-// in aanbouw is.
+// in aanbouw is. Alleen bouwbaar in Going West (issue: "Smederij niet in
+// tutorial") — de erts→gereedschap-conversie hoort bij die campagne, niet bij
+// de tutorial (hoofdstuk 10: losstaand van de Amerikaanse campagne).
 export function startSmederij(state: GameState): GameState {
+  if (state.campagneId !== "going-west") return state;
   if (state.stad.smederijInAanbouw || state.stad.heeftSmederij) return state;
 
   return metActieveStad(state, {
