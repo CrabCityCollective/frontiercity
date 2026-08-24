@@ -42,6 +42,15 @@ export default function StadsverbeteringenPaneel({
   const { stad } = state;
   const cap = cityImprovementCap(stad.grootte);
   const inAanbouw = stad.cityVerbeteringInAanbouw;
+  // Campagnefase-gating (hoofdstuk 9, M21c, opdracht-wampanoag-opening.md
+  // §4/§7): tijdens de Wampanoag-openingsfase (Going West, vóór de
+  // 3-3-3-handelsdrempel) toont de gecapte pool niets — de Smederij (M21d,
+  // buiten de cap, zelfde uitzondering als Opslagplaats) is dan het enige
+  // bouwbare city improvement. Zodra `cultureelOntgrendeld` true is, opent de
+  // volledige normale pool (Bibliotheek/Markt/Barakken/Tempel/Grote
+  // Tempel/Aquaduct) weer. De tutorial (`cultureelOntgrendeld: true` vanaf de
+  // start) ziet dit gedrag nooit.
+  const zichtbareImprovements = state.cultureelOntgrendeld ? CAPPED_CITY_IMPROVEMENTS : [];
   const effectiviteit = stadEffectiviteit(state, stad);
   const afstand = frontierAfstand(state, stad);
   const zone = stadVervalZone(afstand);
@@ -83,8 +92,14 @@ export default function StadsverbeteringenPaneel({
         </>
       )}
 
+      {zichtbareImprovements.length === 0 && (
+        <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
+          Nog niet beschikbaar tijdens de openingsfase.
+        </span>
+      )}
+
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-        {CAPPED_CITY_IMPROVEMENTS.map((improvement) => {
+        {zichtbareImprovements.map((improvement) => {
           const gebouwd = stad.cityImprovements.some((ci) => ci.id === improvement.id);
           if (gebouwd) {
             return (

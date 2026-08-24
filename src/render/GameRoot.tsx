@@ -1685,6 +1685,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           technologieen={state.technologieen}
           cityImprovements={state.stad.cityImprovements}
           campagne={campagne}
+          cultureelOntgrendeld={state.cultureelOntgrendeld}
           zichtbaar={
             !toonStreekPopup &&
             !toonUitlegPopup &&
