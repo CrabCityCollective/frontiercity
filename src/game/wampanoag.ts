@@ -265,3 +265,43 @@ export function verwerkWampanoagHandel(state: GameState): GameState {
 
   return { ...state, voorraad, gereedschap, bevervellen, mais, wampum };
 }
+
+// Afsluiting van de openingsfase (Going West, M21g, opdracht-wampanoag-opening.md
+// §7): "3-3-3-drempel is hard en per type apart gecontroleerd" — geen
+// cumulatieve som, alle drie moeten onafhankelijk de drempel halen.
+export function heeftWampanoagHandelsdrempelGehaald(state: GameState): boolean {
+  return (
+    state.bevervellen >= WAMPANOAG_HANDELSDREMPEL &&
+    state.mais >= WAMPANOAG_HANDELSDREMPEL &&
+    state.wampum >= WAMPANOAG_HANDELSDREMPEL
+  );
+}
+
+// Zet de omslag zodra de 3-3-3-drempel gehaald is (opdracht §7):
+// `cultureelOntgrendeld` gaat aan (Cultureel-categorie ontgrendelt,
+// `categorieZichtbaar()` in improvements.ts), `ontgrendelResource` schakelt
+// van `"wetenschap"` naar `"cultuur"` voor streek 5 en verder
+// (`verwerkStreekOntgrendeling`, streekOntgrendeling.ts). De `!state.
+// cultureelOntgrendeld`-guard maakt dit vanzelf een eenmalige, onomkeerbare
+// omslag — een keer `true`, blijft `true`, ook al zou een voorraad later weer
+// onder de drempel zakken (de opdracht vraagt geen "terugval"-gedrag). Werkt
+// voor elke campagne die op `ontgrendelResource: "wetenschap"` begint (niet
+// hardcoded op `going-west`) — de tutorial start al op `cultureelOntgrendeld:
+// true`, dus de guard hierboven maakt deze functie daar sowieso een no-op.
+export function verwerkWampanoagFaseAfsluiting(state: GameState): GameState {
+  if (state.cultureelOntgrendeld || !heeftWampanoagHandelsdrempelGehaald(state)) return state;
+
+  return {
+    ...state,
+    cultureelOntgrendeld: true,
+    ontgrendelResource: "cultuur",
+    wampanoagRelatieGelegdEvent: true,
+  };
+}
+
+// Sluit de "Wampanoag-relatie gelegd"-melding (opdracht §7/§8) — puur een
+// UI-bevestiging, zelfde patroon als `sluitWampanoagLaagOntdektMelding`
+// (streekOntgrendeling.ts).
+export function sluitWampanoagRelatieGelegdMelding(state: GameState): GameState {
+  return { ...state, wampanoagRelatieGelegdEvent: undefined };
+}

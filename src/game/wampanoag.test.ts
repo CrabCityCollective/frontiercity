@@ -4,10 +4,13 @@ import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { BEVERJACHTHUT, isBebouwbaarLeeg, MAISBOERDERIJ, OPPERHOOFDTENT, VERKENNER } from "./improvements";
 import { sluitWampanoagLaagOntdektMelding, VERKENNING_KOSTEN_WETENSCHAP } from "./streekOntgrendeling";
 import {
+  heeftWampanoagHandelsdrempelGehaald,
   kanStuurVerkennerWampanoag,
+  sluitWampanoagRelatieGelegdMelding,
   stelWampanoagHandelIn,
   stuurVerkennerWampanoag,
   verhuldeWampanoagPosities,
+  verwerkWampanoagFaseAfsluiting,
   verwerkWampanoagHandel,
   verwerkWampanoagVerkenningInGang,
   wampanoagHandelOpties,
@@ -249,4 +252,76 @@ test("volgendeBeurt verwerkt de lopende Wampanoag-handel mee", () => {
 
   assert.equal(state.mais, 1);
   assert.equal(state.voorraad.erts, ertsVoor - 1);
+});
+
+// M21g (opdracht-wampanoag-opening.md §7): "3-3-3-drempel is hard en per
+// type apart gecontroleerd" — geen cumulatieve som.
+test("heeftWampanoagHandelsdrempelGehaald vereist alle drie handelswaren apart op minstens de drempel", () => {
+  const state = metWampanoagLaagOnthuld();
+  assert.equal(heeftWampanoagHandelsdrempelGehaald({ ...state, bevervellen: 0, mais: 0, wampum: 0 }), false);
+  assert.equal(
+    heeftWampanoagHandelsdrempelGehaald({ ...state, bevervellen: 9, mais: 0, wampum: 0 }),
+    false,
+    "geen cumulatieve som — 9 bevervellen compenseert niet voor 0 mais/wampum"
+  );
+  assert.equal(heeftWampanoagHandelsdrempelGehaald({ ...state, bevervellen: 2, mais: 3, wampum: 3 }), false);
+  assert.equal(heeftWampanoagHandelsdrempelGehaald({ ...state, bevervellen: 3, mais: 3, wampum: 3 }), true);
+});
+
+test("verwerkWampanoagFaseAfsluiting zet cultureelOntgrendeld/ontgrendelResource om en zet het narratieve event zodra de 3-3-3-drempel gehaald is", () => {
+  let state = metWampanoagLaagOnthuld();
+  assert.equal(state.cultureelOntgrendeld, false, "Going West start in de openingsfase");
+  assert.equal(state.ontgrendelResource, "wetenschap");
+
+  const nogNiet = verwerkWampanoagFaseAfsluiting({ ...state, bevervellen: 2, mais: 3, wampum: 3 });
+  assert.equal(nogNiet.cultureelOntgrendeld, false, "nog geen omslag zolang niet alle drie op de drempel staan");
+  assert.equal(nogNiet.wampanoagRelatieGelegdEvent, undefined);
+
+  state = { ...state, bevervellen: 3, mais: 3, wampum: 3 };
+  state = verwerkWampanoagFaseAfsluiting(state);
+  assert.equal(state.cultureelOntgrendeld, true);
+  assert.equal(state.ontgrendelResource, "cultuur");
+  assert.equal(state.wampanoagRelatieGelegdEvent, true);
+
+  const gesloten = sluitWampanoagRelatieGelegdMelding(state);
+  assert.equal(gesloten.wampanoagRelatieGelegdEvent, undefined);
+  assert.equal(gesloten.cultureelOntgrendeld, true, "sluiten van de melding raakt de omslag zelf niet aan");
+
+  // Eenmalig/onomkeerbaar: een latere aanroep met een voorraad weer onder de
+  // drempel valt niet terug naar `cultureelOntgrendeld: false` — de guard is
+  // puur op `cultureelOntgrendeld`, dus deze aanroep is een no-op (zelfde
+  // object terug) ongeacht de voorraad.
+  const onderDrempelStaat = { ...state, bevervellen: 0, mais: 0, wampum: 0 };
+  const onderDrempelDaarna = verwerkWampanoagFaseAfsluiting(onderDrempelStaat);
+  assert.equal(onderDrempelDaarna, onderDrempelStaat, "no-op zodra cultureelOntgrendeld al true is");
+});
+
+// Regressietest: de tutorial begint al op `cultureelOntgrendeld: true`, dus
+// deze functie moet daar altijd een no-op zijn, ongeacht wat er verder in de
+// (voor de tutorial betekenisloze) bevervellen/mais/wampum-velden staat.
+test("verwerkWampanoagFaseAfsluiting is een no-op in de tutorial (cultureelOntgrendeld staat al op true)", () => {
+  const state = maakInitieleSpelStatus();
+  assert.equal(state.cultureelOntgrendeld, true);
+
+  const tutorialMetVolleVoorraad = { ...state, bevervellen: 3, mais: 3, wampum: 3 };
+  const resultaat = verwerkWampanoagFaseAfsluiting(tutorialMetVolleVoorraad);
+  assert.equal(resultaat, tutorialMetVolleVoorraad, "no-op — zelfde object terug, geen omslag/event");
+  assert.equal(resultaat.wampanoagRelatieGelegdEvent, undefined);
+  assert.equal(resultaat.ontgrendelResource, "cultuur");
+});
+
+// Integratietest: `volgendeBeurt` roept `verwerkWampanoagFaseAfsluiting` aan
+// direct nadat diezelfde beurt de handel (`verwerkWampanoagHandel`) de
+// voorraad over de drempel heeft geduwd — geen extra beurt vertraging nodig.
+test("volgendeBeurt sluit de Wampanoag-fase af zodra de handel deze beurt de 3-3-3-drempel bereikt", () => {
+  let state = metWampanoagLaagOnthuld();
+  state = { ...state, bevervellen: 3, mais: 3, wampum: 2, voedsel: 10_000 };
+  state = stelWampanoagHandelIn(state, 2, "goud"); // opperhoofdtent -> wampum, de laatste stap naar 3
+
+  state = volgendeBeurt(state);
+
+  assert.equal(state.wampum, 3);
+  assert.equal(state.cultureelOntgrendeld, true);
+  assert.equal(state.ontgrendelResource, "cultuur");
+  assert.equal(state.wampanoagRelatieGelegdEvent, true);
 });

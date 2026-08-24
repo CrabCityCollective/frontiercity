@@ -887,15 +887,20 @@ export interface GameState {
   // bestaande saves blijven op `"cultuur"` (huidig gedrag); Going West start
   // op `"wetenschap"` en schakelt na de 3-3-3-drempel naar `"cultuur"`.
   ontgrendelResource: "wetenschap" | "cultuur";
-  // Wampanoag-laag ontdekt (Going West, M21e, opdracht-wampanoag-opening.md
-  // §5): gezet door `verwerkStreekOntgrendeling` (streekOntgrendeling.ts)
+  // Wampanoag-laag ontdekt (Going West, M21e/M21g, opdracht-wampanoag-opening.md
+  // §5/§8): gezet door `verwerkStreekOntgrendeling` (streekOntgrendeling.ts)
   // zodra streek 4 voor Going West ontgrendelt — zelfde eenmalige
-  // meldings-vlag-patroon als `bezetteStreekOntdektEvent` hierboven, maar
-  // puur voorbereid voor een latere narratieve pop-up (M21g, §8: de
-  // eigenlijke `eersteContactPopup`-tekst/UI hoort niet bij deze milestone).
-  // `sluitWampanoagLaagOntdektMelding` (streekOntgrendeling.ts) is alvast
-  // aanwezig voor die latere UI, maar wordt nog door niets aangeroepen.
+  // meldings-vlag-patroon als `bezetteStreekOntdektEvent` hierboven. Drijft
+  // sinds M21g de narratieve `eersteContactPopup`-tekst (`GameRoot.tsx`, via
+  // `CampaignConfig.popupTeksten`/`popupContent` in campagnes.ts).
   wampanoagLaagOntdektEvent?: boolean;
+  // Wampanoag-3-3-3-drempel gehaald (Going West, M21g,
+  // opdracht-wampanoag-opening.md §7): gezet door
+  // `verwerkWampanoagFaseAfsluiting` (wampanoag.ts) op hetzelfde moment als de
+  // `cultureelOntgrendeld`/`ontgrendelResource`-omslag — zelfde eenmalige
+  // meldings-vlag-patroon als `wampanoagLaagOntdektEvent` hierboven, drijft de
+  // narratieve `wampanoagRelatieGelegdPopup`-tekst.
+  wampanoagRelatieGelegdEvent?: boolean;
 }
 
 // Sleutels van de eenmalige uitleg-pop-ups (issue: "Bij laden niet alle

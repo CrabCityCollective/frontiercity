@@ -44,7 +44,7 @@ import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
 import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
-import { campagneConfig, streekContentVoorCampagne } from "@/game/campagnes";
+import { campagneConfig, popupContent, streekContentVoorCampagne } from "@/game/campagnes";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import {
   BELEGERINGSDREMPEL,
@@ -178,6 +178,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     sluitBezetteStreekOntdektMelding,
     sluitVijandelijkHeiligdomOnthuldMelding,
     sluitVijandelijkHeiligdomVeroverdMelding,
+    sluitWampanoagLaagOntdektMelding,
+    sluitWampanoagRelatieGelegdMelding,
   } = useGameEngine(campagneId, laadBijStart);
 
   // Actieve campagne (hoofdstuk 9/13, M20d deelstap 3): `state.campagneId` is
@@ -1461,6 +1463,87 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     state.campagneId !== undefined &&
     state.steden.length > laatsteBevestigdeStedenAantal;
 
+  // Wampanoag-narratieve pop-ups (Going West, M21g, opdracht-wampanoag-opening.md
+  // §7/§8): campagne-gebonden flavor-tekst uit `CampaignConfig.popupTeksten`
+  // (campagnes.ts: `popupContent`). Bewust helemaal onderaan deze keten
+  // toegevoegd (laagste prioriteit) i.p.v. tussen de bestaande pop-ups: dat
+  // voorkomt dat elk van de vele negatie-lijsten hierboven aangepast moet
+  // worden. Onschadelijk, want de onderliggende events
+  // (`wampanoagLaagOntdektEvent`/`wampanoagRelatieGelegdEvent`) blijven `true`
+  // staan tot de speler ze wegklikt — bij toevallige samenloop verschijnt de
+  // pop-up hooguit een beurt later, nooit helemaal niet.
+  const toonEersteContactPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    !toonStichtingsMomentPopup &&
+    Boolean(state.wampanoagLaagOntdektEvent);
+  const toonWampanoagRelatieGelegdPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    !toonStichtingsMomentPopup &&
+    !toonEersteContactPopup &&
+    Boolean(state.wampanoagRelatieGelegdEvent);
+
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -1591,6 +1674,20 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             opties={state.techKeuzeEvent.opties}
             campagne={campagne}
             onKiesTech={kiesTech}
+          />
+        )}
+        {toonEersteContactPopup && (
+          <AmberOntdektPopup
+            titel={popupContent(campagne, "eersteContactPopup")?.titel}
+            tekst={popupContent(campagne, "eersteContactPopup")?.tekst}
+            onSluiten={sluitWampanoagLaagOntdektMelding}
+          />
+        )}
+        {toonWampanoagRelatieGelegdPopup && (
+          <AmberOntdektPopup
+            titel={popupContent(campagne, "wampanoagRelatieGelegdPopup")?.titel}
+            tekst={popupContent(campagne, "wampanoagRelatieGelegdPopup")?.tekst}
+            onSluiten={sluitWampanoagRelatieGelegdMelding}
           />
         )}
         {toonUitlegPopup && <UitlegPopup onDoorgaan={() => markeerUitlegGezien("opening")} />}

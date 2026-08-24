@@ -49,10 +49,12 @@ import {
   sluitTweedeAmberOntdektMelding as sluitTweedeAmberOntdektMeldingActie,
   sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
   sluitVijandelijkHeiligdomVeroverdMelding as sluitVijandelijkHeiligdomVeroverdMeldingActie,
+  sluitWampanoagLaagOntdektMelding as sluitWampanoagLaagOntdektMeldingActie,
   stuurMissionaris as stuurMissionarisActie,
   stuurVerkenner as stuurVerkennerActie,
 } from "./streekOntgrendeling";
 import {
+  sluitWampanoagRelatieGelegdMelding as sluitWampanoagRelatieGelegdMeldingActie,
   stelWampanoagHandelIn as stelWampanoagHandelActie,
   stuurVerkennerWampanoag as stuurVerkennerWampanoagActie,
 } from "./wampanoag";
@@ -339,6 +341,17 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => sluitVijandelijkHeiligdomVeroverdMeldingActie(huidig));
   }, []);
 
+  // Wampanoag-narratieve pop-ups (Going West, M21g, opdracht-wampanoag-opening.md
+  // §7/§8) — zelfde dunne wrapper-conventie als de overige `sluit...Melding`-
+  // acties hierboven.
+  const sluitWampanoagLaagOntdektMelding = useCallback(() => {
+    setState((huidig) => sluitWampanoagLaagOntdektMeldingActie(huidig));
+  }, []);
+
+  const sluitWampanoagRelatieGelegdMelding = useCallback(() => {
+    setState((huidig) => sluitWampanoagRelatieGelegdMeldingActie(huidig));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -389,5 +402,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     sluitBezetteStreekOntdektMelding,
     sluitVijandelijkHeiligdomOnthuldMelding,
     sluitVijandelijkHeiligdomVeroverdMelding,
+    sluitWampanoagLaagOntdektMelding,
+    sluitWampanoagRelatieGelegdMelding,
   };
 }

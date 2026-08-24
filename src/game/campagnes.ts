@@ -64,6 +64,26 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
     verkenner: "Spoorzoeker",
     missionaris: "Prediker",
   },
+  // Narratieve pop-up-teksten (opdracht-wampanoag-opening.md §7/§8, M21g) —
+  // gesleuteld per functioneel moment, telkens een `...Titel`/`...Tekst`-paar
+  // (zelfde titel/tekst-opsplitsing als `IntroContent`/`OceaanUitlegContent`
+  // hieronder, maar via `CampaignConfig.popupTeksten` in plaats van een eigen
+  // interface, omdat dit er ná de MVP meerdere kunnen worden zonder steeds een
+  // nieuw functie-paar nodig te hebben — zie `popupContent()` onderaan dit
+  // bestand). `eersteContactPopup` triggert zodra streek 4 "in beeld" komt
+  // (`wampanoagLaagOntdektEvent`, streekOntgrendeling.ts);
+  // `wampanoagRelatieGelegdPopup` zodra de 3-3-3-handelsdrempel gehaald is
+  // (`wampanoagRelatieGelegdEvent`, wampanoag.ts).
+  popupTeksten: {
+    eersteContactPopupTitel: "Eerste contact",
+    eersteContactPopupTekst:
+      "Aan de rand van de nieuwe streek liggen drie kampementen van het volk van Massasoit. Stuur verkenners om ze " +
+      "te ontdekken — daarna kun je met ze handelen in bevervellen, maïs en wampum.",
+    wampanoagRelatieGelegdPopupTitel: "Een verbond met de Wampanoag",
+    wampanoagRelatieGelegdPopupTekst:
+      "Door eerlijke handel is er vertrouwen gegroeid tussen jouw nederzetting en het volk van Massasoit. Cultuur " +
+      "stuurt vanaf nu je verdere groei, en de eerste culturele gebouwen worden beschikbaar.",
+  },
 };
 
 // Alle bestaande, niet-tutorial `CampaignConfig`-instanties, gesleuteld op
@@ -125,4 +145,24 @@ export function oceaanUitlegVoorCampagne(campagneId: string | undefined): Oceaan
     return { titel: GOING_WEST_OCEAAN_UITLEG_TITEL, tekst: GOING_WEST_OCEAAN_UITLEG_TEKST };
   }
   return { titel: OCEAAN_UITLEG_TITEL, tekst: OCEAAN_UITLEG_TEKST };
+}
+
+// Narratieve/flavor-pop-up-tekst uit `CampaignConfig.popupTeksten` (M21g,
+// opdracht-wampanoag-opening.md §8, "laag 2" van de driedeling: campagne-
+// gebonden, generieke trigger-logica in de aanroepende code, alleen de
+// tekst-invulling verschilt per campagne). Anders dan `introContentVoorCampagne`/
+// `oceaanUitlegVoorCampagne` hierboven bewust geen tutorial-terugval: ontbreekt
+// de sleutel (of heeft de campagne geen `popupTeksten`), dan geeft dit
+// `undefined` terug — de aanroepende pop-up toont dan gewoon geen tekst in
+// plaats van per ongeluk andere-campagne-flavor te lenen (zie `CampaignConfig.
+// popupTeksten` in types.ts).
+export interface PopupContent {
+  titel: string;
+  tekst: string;
+}
+
+export function popupContent(campagne: CampaignConfig | undefined, sleutel: string): PopupContent | undefined {
+  const titel = campagne?.popupTeksten?.[`${sleutel}Titel`];
+  const tekst = campagne?.popupTeksten?.[`${sleutel}Tekst`];
+  return titel && tekst ? { titel, tekst } : undefined;
 }
