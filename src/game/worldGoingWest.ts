@@ -42,15 +42,22 @@ export const WAMPANOAG_STREEK_HOOGTE = 6;
 
 // Vaste, beschrijvende terreinnaam per streek (flavor, geen invloed op
 // spelmechaniek — zelfde rol als TUTORIAL_TERREINTYPES in world.ts). Volgt de
-// reisroute van rivierdelta/prairie, via canyons/mesa's, over het hooggebergte,
-// en weer naar beneden richting de Pacifische kust.
+// reisroute van het groene, kustnabije Wampanoag-thuisland (streek 1-6, tot en
+// met `WAMPANOAG_STREEK_HOOGTE` hieronder — issue: "Going west terrein in
+// eerste instantie groener"), via prairie/canyons/mesa's, over het
+// hooggebergte, en weer naar beneden richting de Pacifische kust. Streek 1-6
+// gebruiken bewust namen uit het zuidoostelijke New England-kustlandschap
+// waar de Wampanoag woonden (kreken, zoutmoerassen, cederswamps, eikenbos)
+// i.p.v. de drogere prairie/korenveld-namen die de rest van de kaart
+// kenmerken; streek 6 sluit af met de maisakker die ook de Maïsboerderij van
+// de Wampanoag-laag draagt (`WAMPANOAG_STREEK_INHOUD` hieronder).
 const GOING_WEST_TERREINTYPES = [
-  "rivierdelta",
-  "grasvlakte",
-  "prairie",
-  "wilgenbosjes",
-  "rollende heuvels",
-  "korenvelden",
+  "kreekmonding",
+  "zoutmoeras",
+  "cederswamp",
+  "eikenbos",
+  "beboste heuvelrug",
+  "maisakker",
   "essenbos",
   "heuvelrug",
   "kalksteenrichel",

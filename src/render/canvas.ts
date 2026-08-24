@@ -13,7 +13,7 @@ import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Streek, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import { BAND_WIDTH_TILES, eindeOceaanZichtbaar, isVooruitkijkStreek } from "@/game/world";
-import { pasTegelSetTint } from "./tegelSets";
+import { GROENE_STREKEN_AANTAL, pasTegelSetTint } from "./tegelSets";
 
 export { BAND_WIDTH_TILES };
 
@@ -1795,5 +1795,10 @@ export function tekenWereld(
     }
   }
 
-  pasTegelSetTint(ctx, width, height, tegelSet);
+  // Groene band voor de eerste `GROENE_STREKEN_AANTAL` streken (issue: "Going
+  // west terrein in eerste instantie groener") — die staan onderaan het
+  // canvas (streek 1 heeft de hoogste rijIndex), vlak boven de startoceaan-rij.
+  const groeneBandVanafY =
+    topOffset + Math.max(0, totaalStreken - GROENE_STREKEN_AANTAL) * tileSize;
+  pasTegelSetTint(ctx, width, height, tegelSet, groeneBandVanafY);
 }
