@@ -11,8 +11,11 @@ interface InstellingenPopupProps {
 // tussen Campagnes en Instellingen. Als je op Instellingen klikt, dan krijg
 // je een popup waarin je standaard voor alle nieuwe potjes de uitleg
 // pop-ups aan en uit kunt zetten"). Zet uitsluitend de globale standaard
-// (save.ts: `standaardUitlegAan`) — de per-run toggle in het hoofdmenu
-// tijdens het spelen zelf is een los, tijdelijk overschrijven daarvan.
+// (save.ts: `standaardUitlegAan`) voor nieuwe tutorial-runs — de per-run
+// toggle in het hoofdmenu tijdens het spelen zelf is een los, tijdelijk
+// overschrijven daarvan. Going West negeert deze instelling bewust en start
+// altijd met uitleg uit (issue: "Uitleg pop-ups standaard uit"), zie
+// initieleSpelStatus.ts.
 export default function InstellingenPopup({ onSluiten }: InstellingenPopupProps) {
   const [uitlegAan, setUitlegAan] = useState(standaardUitlegAan);
   // Grafische stijl (issue: "pixel art style placeholders i.p.v. vector

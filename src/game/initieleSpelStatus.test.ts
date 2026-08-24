@@ -31,3 +31,16 @@ test("een onbekende campagneId valt terug op de tutorial-wereld, maar bewaart we
   assert.equal(state.campagneId, "onbekende-campagne");
   assert.equal(state.streken.length, TUTORIAL_STREEK_AANTAL);
 });
+
+// Issue: "Uitleg pop-ups standaard uit" — bij de tutorial staan de
+// uitleg-pop-ups standaard aan, bij Going West staan ze standaard uit (de
+// speler heeft de basismechanismen dan al via de tutorial gezien).
+test("maakInitieleSpelStatus() start de tutorial met uitlegPopupsAan op true", () => {
+  const state = maakInitieleSpelStatus();
+  assert.equal(state.uitlegPopupsAan, true);
+});
+
+test('maakInitieleSpelStatus("going-west") start met uitlegPopupsAan op false', () => {
+  const state = maakInitieleSpelStatus("going-west");
+  assert.equal(state.uitlegPopupsAan, false);
+});

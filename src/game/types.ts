@@ -837,9 +837,13 @@ export interface GameState {
   // aan en uit kunt zetten ... voor deze run specifiek") — schakelt alle
   // tutorial-uitleg-pop-ups (openings-uitleg, settler, voedsel/boerderij,
   // militair) in of uit via het hoofdmenu, los van de standaard-instelling
-  // (zie save.ts: `standaardUitlegAan`) waarmee elke nieuwe run start. Laat
-  // streek-flavor, indringers-meldingen en de tutorial-voltooid-samenvatting
-  // ongemoeid — dat is kerninhoud, geen uitleg.
+  // (zie save.ts: `standaardUitlegAan`) waarmee elke nieuwe tutorial-run
+  // start. Going West negeert die globale instelling en start altijd met
+  // deze vlag op `false` (issue: "Uitleg pop-ups standaard uit ... bij
+  // andere campaigns staan ze standaard uit", zie initieleSpelStatus.ts) —
+  // de speler kan hem via het hoofdmenu alsnog voor die ene run aanzetten.
+  // Laat streek-flavor, indringers-meldingen en de tutorial-voltooid-
+  // samenvatting ongemoeid — dat is kerninhoud, geen uitleg.
   uitlegPopupsAan: boolean;
   // Cumulatieve indringers-statistieken van deze run (issue: "Settings
   // uitbreiden" — uitgebreid historiescherm), zie `IndringersStatistieken`
