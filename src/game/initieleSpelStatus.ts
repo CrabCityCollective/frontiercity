@@ -115,9 +115,15 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     // (indringersEnDieren.ts) de Steengroeve op streek 1 voltooid ziet.
     // Standaard-instelling (issue: "een setting waarmee je deze uitleg
     // pop-ups aan en uit kunt zetten ... standaard voor alle nieuwe potjes")
-    // bepaalt de startwaarde; de per-run toggle in het hoofdmenu wijzigt
-    // daarna alleen deze ene run.
-    uitlegPopupsAan: standaardUitlegAan(),
+    // bepaalt de startwaarde voor de tutorial; de per-run toggle in het
+    // hoofdmenu wijzigt daarna alleen deze ene run. Going West slaat die
+    // globale instelling bewust over en start altijd met uitleg uit (issue:
+    // "Uitleg pop-ups standaard uit ... bij andere campaigns staan ze
+    // standaard uit") — de speler heeft de basismechanismen dan al via de
+    // tutorial gezien, dus de openings-/settler-/voedsel-uitleg-pop-ups zijn
+    // daar grotendeels herhaling. De per-run toggle blijft ook hier gewoon
+    // beschikbaar om ze alsnog aan te zetten.
+    uitlegPopupsAan: isGoingWest ? false : standaardUitlegAan(),
     // Zie types.ts: `EenmaligeUitlegKey`/`gezieneEenmaligeUitleg` — nog geen
     // enkele eenmalige uitleg-pop-up gezien bij een verse run.
     gezieneEenmaligeUitleg: [],
