@@ -158,9 +158,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     versnelOpslagplaatsMetGoud,
     versnelSmederijMetGoud,
     geefTribuut,
-    kiesGeefTribuut,
     weigerTribuut,
-    bevestigGedwongenTribuut,
     bemanWachttoren,
     haalStrijderTerug,
     zetUitlegPopups,
@@ -1647,10 +1645,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           <IndringersPopup
             event={state.indringersEvent}
             onBevestigAmberOnderVuur={bevestigAmberOnderVuur}
-            onGeefTribuut={kiesGeefTribuut}
+            onGeefTribuut={geefTribuut}
             onWeigerTribuut={weigerTribuut}
-            onBevestigGedwongenTribuut={bevestigGedwongenTribuut}
-            onSluitTribuutBetaling={geefTribuut}
             onSluiten={sluitIndringersMelding}
           />
         )}

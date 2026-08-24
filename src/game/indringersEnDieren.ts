@@ -588,44 +588,25 @@ export function bevestigAmberOnderVuur(state: GameState): GameState {
   return { ...state, indringersEvent: { ...event, fase: volgendeFase } };
 }
 
-// Kiest bewust om het geëiste tribuut te geven (hoofdstuk 6, issue:
-// "wachttoren tweaks" — het bedrag gaat pas van de voorraad af zodra de
-// speler de melding daadwerkelijk sluit): zet de melding op `fase: "betaald"`
-// zodat de pop-up het af te schrijven bedrag nog eens bevestigt, zonder de
-// voorraad al aan te passen. Zie `geefTribuut` hieronder voor de
-// daadwerkelijke afschrijving.
-export function kiesGeefTribuut(state: GameState): GameState {
-  const event = state.indringersEvent;
-  if (!event?.tribuut || event.fase !== "gemeld") return state;
-  return { ...state, indringersEvent: { ...event, fase: "betaald" } };
-}
-
 // Weigert het tribuut (hoofdstuk 6, issue: "indringers pakken altijd tribuut,
 // geen stad-vernietiging"): weigeren heeft bewust hetzelfde gevolg als geven
 // — er is geen "stad vernietigd"-uitkomst, ook niet zodra er meerdere steden
 // bestaan (hoofdstuk 9). Het tribuut wordt hoe dan ook alsnog opgeëist, wat
 // hier eerst zichtbaar wordt gemaakt (`fase: "geforceerd"`) zodat de pop-up
-// dat kan uitleggen vóór `bevestigGedwongenTribuut` verder gaat.
+// dat kan uitleggen vóór de speler `geefTribuut` hieronder afrondt.
 export function weigerTribuut(state: GameState): GameState {
   const event = state.indringersEvent;
   if (!event?.tribuut) return state;
   return { ...state, indringersEvent: { ...event, fase: "geforceerd" } };
 }
 
-// Bevestigt het afgedwongen tribuut na `weigerTribuut` hierboven — zelfde
-// vervolgstap als `kiesGeefTribuut` (naar `fase: "betaald"`, nog geen
-// afschrijving), maar bewust als losse actie zodat de UI het onderscheid kan
-// tonen (bewuste keuze vs. afgedwongen).
-export function bevestigGedwongenTribuut(state: GameState): GameState {
-  const event = state.indringersEvent;
-  if (!event?.tribuut || event.fase !== "geforceerd") return state;
-  return { ...state, indringersEvent: { ...event, fase: "betaald" } };
-}
-
-// Sluit de "betaald"-melding en trekt op dát moment pas het tribuut af van de
-// gedeelde opslag (nooit onder nul) — issue: "wachttoren tweaks": de voorraad
-// mag pas veranderen zodra de speler de pop-up daadwerkelijk wegklikt, niet
-// al bij de keuze om te betalen.
+// Geeft (bewust vanuit `fase: "gemeld"`, of afgedwongen vanuit `fase:
+// "geforceerd"` na `weigerTribuut` hierboven) het geëiste tribuut: trekt het
+// direct van de gedeelde opslag af (nooit onder nul) én sluit de melding in
+// dezelfde stap (issue: "Indringers 2e pop-up samenvoegen" — voorheen ging
+// dit via een tussenliggend `fase: "betaald"`-bevestigingsscherm dat de
+// afschrijving pas bij het sluiten daarvan deed; dat scherm voegde niets toe
+// aan wat de "gemeld"/"geforceerd"-tekst al meldde).
 export function geefTribuut(state: GameState): GameState {
   const event = state.indringersEvent;
   if (!event?.tribuut) return state;
@@ -634,9 +615,7 @@ export function geefTribuut(state: GameState): GameState {
   voorraad[event.tribuut.resource] = Math.max(0, voorraad[event.tribuut.resource] - event.tribuut.aantal);
 
   // Historiescherm-statistieken (issue: "hoevaak tribuut gegeven is (met
-  // exacte aantallen voorraad tribuut)") — telt hier, niet al bij
-  // `kiesGeefTribuut`/`bevestigGedwongenTribuut`, dezelfde reden als de
-  // voorraad-afschrijving hierboven: pas als de speler de melding echt sluit.
+  // exacte aantallen voorraad tribuut)").
   const statistieken = state.indringersStatistieken;
   const indringersStatistieken = {
     ...statistieken,

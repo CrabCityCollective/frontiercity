@@ -35,9 +35,7 @@ import {
 } from "./groeiEnRekrutering";
 import {
   bevestigAmberOnderVuur as bevestigAmberOnderVuurActie,
-  bevestigGedwongenTribuut as bevestigGedwongenTribuutActie,
   geefTribuut as geefTribuutActie,
-  kiesGeefTribuut as kiesGeefTribuutActie,
   sluitIndringersMelding as sluitIndringersMeldingActie,
   sluitKuddeMelding as sluitKuddeMeldingActie,
   sluitRoofdierMelding as sluitRoofdierMeldingActie,
@@ -264,16 +262,8 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => geefTribuutActie(huidig));
   }, []);
 
-  const kiesGeefTribuut = useCallback(() => {
-    setState((huidig) => kiesGeefTribuutActie(huidig));
-  }, []);
-
   const weigerTribuut = useCallback(() => {
     setState((huidig) => weigerTribuutActie(huidig));
-  }, []);
-
-  const bevestigGedwongenTribuut = useCallback(() => {
-    setState((huidig) => bevestigGedwongenTribuutActie(huidig));
   }, []);
 
   const bemanWachttoren = useCallback((strijderId: string, hoogte: number, positieInStreek: number) => {
@@ -394,9 +384,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     versnelOpslagplaatsMetGoud,
     versnelSmederijMetGoud,
     geefTribuut,
-    kiesGeefTribuut,
     weigerTribuut,
-    bevestigGedwongenTribuut,
     bemanWachttoren,
     haalStrijderTerug,
     zetUitlegPopups,
