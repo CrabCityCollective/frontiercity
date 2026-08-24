@@ -40,7 +40,7 @@ export function laadSpel(campagneId?: string): GameState | null {
   try {
     const ruw = window.localStorage.getItem(saveSleutel(campagneId));
     if (!ruw) return null;
-    return metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState));
+    return metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)));
   } catch {
     return null;
   }
@@ -86,6 +86,39 @@ function metGemigreerdePopupStatus(state: GameState): GameState {
     gezieneEenmaligeUitleg: state.gezieneEenmaligeUitleg ?? [],
     laatstBevestigdeStreek: state.laatstBevestigdeStreek ?? hoogsteOntgrendeldeStreek(state.streken),
     laatsteBevestigdeStedenAantal: state.laatsteBevestigdeStedenAantal ?? state.steden.length,
+  };
+}
+
+// Migratie voor saves van vóór de Wampanoag-openingsfase-velden (M21a,
+// opdracht-wampanoag-opening.md §1): oudere saves kennen
+// `bevervellen`/`mais`/`wampum`/`gereedschap`/`cultureelOntgrendeld`/
+// `ontgrendelResource` nog niet. Handelswaren-voorraad begint alsnog op 0
+// (niets vult ze met terugwerkende kracht). `cultureelOntgrendeld`/
+// `ontgrendelResource` vallen terug op het bestaande gedrag — een save van
+// vóór deze velden bestond per definitie vóór de Wampanoag-fase-gating
+// (nog nergens aan gekoppeld, zie types.ts), dus voor élke campagne is
+// `cultureelOntgrendeld: true`/`ontgrendelResource: "cultuur"` de correcte
+// terugval, niet de Going-West-openingsfase-startwaarde
+// (`maakInitieleSpelStatus` gebruikt die alleen voor een gloednieuwe run).
+function metGemigreerdeWampanoagVelden(state: GameState): GameState {
+  if (
+    typeof state.bevervellen === "number" &&
+    typeof state.mais === "number" &&
+    typeof state.wampum === "number" &&
+    typeof state.gereedschap === "number" &&
+    typeof state.cultureelOntgrendeld === "boolean" &&
+    typeof state.ontgrendelResource === "string"
+  ) {
+    return state;
+  }
+  return {
+    ...state,
+    bevervellen: state.bevervellen ?? 0,
+    mais: state.mais ?? 0,
+    wampum: state.wampum ?? 0,
+    gereedschap: state.gereedschap ?? 0,
+    cultureelOntgrendeld: state.cultureelOntgrendeld ?? true,
+    ontgrendelResource: state.ontgrendelResource ?? "cultuur",
   };
 }
 
