@@ -72,6 +72,7 @@ import { TWEEDE_SETTLER_MIN_STREEK } from "@/game/groeiEnRekrutering";
 import { berekenLegerwaarde, kanConfrontatieBezetteStreek, onbemandeLegerkampPosities } from "@/game/militair";
 import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij } from "@/game/productie";
 import {
+  campagneStatistieken,
   grafischeStijl,
   heeftOpgeslagenSpel,
   registreerCampagneGestart,
@@ -220,12 +221,15 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // hierdoor niet meer apart getoggled te worden via SpelActiesMenu.
   const [toonStadMenuPopup, setToonStadMenuPopup] = useState(false);
 
-  // Introscherm (issue: "intro en game over scherm"): getoond bij elke start
-  // van de tutorial vanuit het menu — niet slechts één keer per browser, zodat
-  // de speler 'm ook ziet als hij de tutorial via het campagnemenu opnieuw
-  // opstart (issue: "als ik de tutorial aanklik vanuit het menu, zie ik het
-  // introscherm niet meer").
-  const [toonIntro, setToonIntro] = useState(true);
+  // Introscherm (issue: "intro en game over scherm"): getoond bij elke verse
+  // start van de tutorial vanuit het menu — niet slechts één keer per
+  // browser, zodat de speler 'm ook ziet als hij de tutorial via het
+  // campagnemenu opnieuw opstart (issue: "als ik de tutorial aanklik vanuit
+  // het menu, zie ik het introscherm niet meer"). Bij het laden van een
+  // opgeslagen save vanuit het campagne-select-scherm (`laadBijStart`) is dit
+  // geen nieuwe start, dus dan slaan we het introscherm over (issue: "bij
+  // laden geen intro scherm").
+  const [toonIntro, setToonIntro] = useState(!laadBijStart);
 
   function bevestigIntro() {
     setToonIntro(false);
@@ -233,13 +237,17 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
 
   // Per-campagne voortgangstellers (issue: "voortgang verschillende
   // campagnes tonen"): een start telt op precies hetzelfde moment als
-  // `toonIntro` hierboven — elke (her)mount van GameRoot is een nieuwe start
-  // van deze campagne, ongeacht of het een verse run is of een hervatte save.
-  // Lazy `useState`-initializer (zelfde patroon als `stijl` hierboven, dat
-  // ook een keer synchroon uit localStorage leest) zodat het introscherm
-  // meteen bij de eerste render het bijgewerkte aantal toont, zonder een
-  // extra her-render na een `useEffect`.
-  const [campagneStats, setCampagneStats] = useState(() => registreerCampagneGestart(campagneId));
+  // `toonIntro` hierboven — elke verse (her)mount van GameRoot is een nieuwe
+  // start van deze campagne. Bij het laden van een bestaande save
+  // (`laadBijStart`) lezen we de tellers alleen, zonder de "gestart"-teller
+  // te verhogen (issue: "het hoeft ook niet als 'run gestart' te worden
+  // meegeteld"). Lazy `useState`-initializer (zelfde patroon als `stijl`
+  // hierboven, dat ook een keer synchroon uit localStorage leest) zodat het
+  // introscherm meteen bij de eerste render het bijgewerkte aantal toont,
+  // zonder een extra her-render na een `useEffect`.
+  const [campagneStats, setCampagneStats] = useState(() =>
+    laadBijStart ? campagneStatistieken(campagneId) : registreerCampagneGestart(campagneId)
+  );
   // Game-over-teller: verhoogt zodra `state.laatsteIneenstorting` voor het
   // eerst binnen deze mount `true` wordt (zie de blokkerende
   // `IneenstortingScherm`-return verderop) — niet bij elke her-render zolang
