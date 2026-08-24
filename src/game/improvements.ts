@@ -766,6 +766,24 @@ export function cityImprovementCap(grootte: City["grootte"]): number {
   return CITY_IMPROVEMENT_CAP[grootte];
 }
 
+// Categorieën die verborgen blijven tijdens de Wampanoag-openingsfase (Going
+// West, opdracht-wampanoag-opening.md §4/§7): Militair en Cultureel zijn pas
+// weer zichtbaar zodra `GameState.cultureelOntgrendeld` (M21a) true is, na de
+// 3-3-3-handelsdrempel. Civiel staat hier bewust niet bij: `IMPROVEMENT_POOLS.civiel`
+// is al leeg (Woonwijk/settler lopen via een eigen wachtrij, zie de comment
+// bovenaan dit bestand), dus die categorie toont sowieso al nooit opties in
+// de bouw-pop-up. De tutorial (`cultureelOntgrendeld: true` vanaf de start,
+// initieleSpelStatus.ts) ziet dit gedrag nooit — elke categorie blijft daar
+// zichtbaar zoals voorheen.
+const OPENINGSFASE_VERBORGEN_CATEGORIEEN: Categorie[] = ["militair", "cultureel"];
+
+// Of `categorie` getoond mag worden in de land-improvement-categoriekeuze
+// (BouwPopup) en de gecapte stadsverbeteringen-pool (StadsverbeteringenPaneel)
+// — gedeeld tussen beide zodat ze dezelfde campagnefase-gating hanteren.
+export function categorieZichtbaar(categorie: Categorie, cultureelOntgrendeld: boolean): boolean {
+  return cultureelOntgrendeld || !OPENINGSFASE_VERBORGEN_CATEGORIEEN.includes(categorie);
+}
+
 const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   economisch: ECONOMISCH_LAND_IMPROVEMENTS,
   wetenschappelijk: WETENSCHAPPELIJK_LAND_IMPROVEMENTS,
