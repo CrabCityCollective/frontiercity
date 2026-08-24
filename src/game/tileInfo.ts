@@ -57,6 +57,22 @@ export function beschrijfTile(
 ): TileInfo {
   const tile = streek.tiles[positieInStreek];
 
+  // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md §5): een
+  // parallelle verhullingslaag op een normaal ontgrendelde streek (streek 4
+  // wordt niet `bezet` en niet `ontgrendeld: false` gehouden zoals de
+  // Bezette Streek hieronder) — moet dus vóór die keten gecontroleerd worden,
+  // anders zou dit vakje gewoon als een leeg, bebouwbaar vakje beschreven
+  // worden. Nooit gezet buiten Going West streek 4 (worldGoingWest.ts), dus
+  // geen effect op de tutorial.
+  if (tile.wampanoagVerhuld) {
+    return {
+      titel: "Verhuld vakje",
+      tekst: tile.wampanoagVerkenningInGang
+        ? `Een verkenner is onderweg — nog ${tile.wampanoagVerkenningInGang.beurtenResterend} ${tile.wampanoagVerkenningInGang.beurtenResterend === 1 ? "beurt" : "beurten"} tot dit vakje onthuld wordt.`
+        : "Dit vakje is nog niet verkend. Stuur er een verkenner heen om te zien wat hier ligt.",
+    };
+  }
+
   // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 1): een eigen, per-tegel verhullingslaag — de streek zelf
   // blijft `ontgrendeld: false` zolang ze bezet is, dus dit moet vóór de

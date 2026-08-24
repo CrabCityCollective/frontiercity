@@ -20,7 +20,7 @@
 // echter nog altijd als `beschikbaar: false` ("Binnenkort beschikbaar") —
 // pas de laatste M20d-deelstap zet die knop aan, zie het M20d-issue.
 
-import { Streek, TerreinType, Tile } from "./types";
+import { Streek, TerreinType, Tile, WampanoagInhoud } from "./types";
 
 export const BAND_WIDTH_TILES = 9;
 export const STAD_POSITIE = 4; // middelste vakje van de band = stad — zelfde conventie als de tutorial
@@ -29,6 +29,14 @@ export const STAD_POSITIE = 4; // middelste vakje van de band = stad — zelfde 
 // varianten zijn expliciet geen harde M20b-eis (hoofdstuk 13) en volgen als
 // latere uitbreiding.
 export const GOING_WEST_STREEK_AANTAL = 35;
+
+// Streek-hoogte van de Wampanoag-laag (M21e, opdracht-wampanoag-opening.md
+// §5) — het einde van de openingsfase (streek 1-3 lopen op wetenschap, zie
+// `wetenschapKostenVoorStreekOntgrendeling` in world.ts). Gedeeld met
+// streekOntgrendeling.ts (de trigger, in de wetenschap-gedreven
+// ontgrendel-lus) en wampanoag.ts (de Verkenning-flow zelf) zodat beide
+// dezelfde hoogte hanteren.
+export const WAMPANOAG_STREEK_HOOGTE = 4;
 
 // Vaste, beschrijvende terreinnaam per streek (flavor, geen invloed op
 // spelmechaniek — zelfde rol als TUTORIAL_TERREINTYPES in world.ts). Volgt de
@@ -155,6 +163,46 @@ const GOING_WEST_VERS_WATER: Record<number, number[]> = {
 
 function versWaterVoorTile(hoogte: number, positieInStreek: number): boolean {
   return GOING_WEST_VERS_WATER[hoogte]?.includes(positieInStreek) ?? false;
+}
+
+// Vaste inhoud-verdeling van de Wampanoag-laag (M21e, opdracht-wampanoag-
+// opening.md §5): drie vaste vakjes op `WAMPANOAG_STREEK_HOOGTE` (streek 4),
+// met het terrein-subtype van dat vakje (`GOING_WEST_TILE_TERREIN` hierboven)
+// bepalend voor welk gebouw er ligt zodra het onthuld wordt (opdracht:
+// "terrein bepaalt welk van de drie gebouwen ergens kán liggen ... geen
+// aparte trekking/keuze-UI nodig"):
+// - Beverjachthut vereist vers water — `GOING_WEST_VERS_WATER[4]` heeft maar
+//   één zo'n vakje (positie 1), dus die ligt hier vast.
+// - Maïsboerderij vereist vlakke grond — positie 0 (`vlak`, geen vers water).
+// - Opperhoofdtent heeft geen terrein-eis (Cultureel/diplomatiek van aard,
+//   opdracht §2) — positie 2 (toevallig `bos`, maakt voor dit gebouw niet uit).
+// Positie 4 (het middelste vakje) blijft bewust neutraal, zelfde conventie
+// als `TUTORIAL_BEZETTE_STREEK_INHOUD` in world.ts: niet elk vakje van een
+// verhullingslaag hoeft bijzondere inhoud te dragen.
+const WAMPANOAG_STREEK_INHOUD: Record<number, WampanoagInhoud> = {
+  0: "maisboerderij",
+  1: "beverjachthut",
+  2: "opperhoofdtent",
+};
+
+// Initialiseert de Wampanoag-laag zodra streek 4 ontgrendelt tijdens de
+// Going West-openingsfase (streekOntgrendeling.ts:
+// `verwerkStreekOntgrendeling`) — mirroring van `initialiseerBezetteStreek`
+// (world.ts), maar bewust géén `Streek.bezet`-achtige vlag: streek 4 blijft
+// in elk ander opzicht een heel normale, ontgrendelde streek (M21e,
+// opdracht-wampanoag-opening.md §5 — "eigen, parallelle onthullings-flow, los
+// van de bestaande Bezette-Streek-toestandsmachine"). Alleen de drie vakjes
+// uit `WAMPANOAG_STREEK_INHOUD` hierboven krijgen `wampanoagVerhuld: true` —
+// de overige zes vakjes blijven ongewijzigd, gewoon meteen bebouwbaar zodra
+// de speler ze bereikt.
+export function initialiseerWampanoagLaag(streek: Streek): Streek {
+  return {
+    ...streek,
+    tiles: streek.tiles.map((tile) => {
+      const inhoud = WAMPANOAG_STREEK_INHOUD[tile.positieInStreek];
+      return inhoud ? { ...tile, wampanoagVerhuld: true, wampanoagInhoud: inhoud } : tile;
+    }),
+  };
 }
 
 // Amberader/goudmijn-vondsten (hoofdstuk 3/14) — vast en niet-procedureel,

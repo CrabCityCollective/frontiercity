@@ -52,6 +52,7 @@ import {
   stuurMissionaris as stuurMissionarisActie,
   stuurVerkenner as stuurVerkennerActie,
 } from "./streekOntgrendeling";
+import { stuurVerkennerWampanoag as stuurVerkennerWampanoagActie } from "./wampanoag";
 import { sluitBouwKeuze as sluitBouwKeuzeActie, startBouw as startBouwActie } from "./infrastructuurEnBouw";
 import {
   bemanLegerkamp as bemanLegerkampActie,
@@ -297,6 +298,13 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => stuurVerkennerActie(huidig, positieInStreek));
   }, []);
 
+  // Wampanoag-Verkenning (Going West, M21e, opdracht-wampanoag-opening.md
+  // §5) — zelfde dunne wrapper-conventie als `stuurVerkenner` hierboven, maar
+  // voor de losstaande Wampanoag-laag (wampanoag.ts) i.p.v. de Bezette Streek.
+  const stuurVerkennerWampanoag = useCallback((positieInStreek: number) => {
+    setState((huidig) => stuurVerkennerWampanoagActie(huidig, positieInStreek));
+  }, []);
+
   const stuurMissionaris = useCallback((missionarisId: string, positieInStreek: number) => {
     setState((huidig) => stuurMissionarisActie(huidig, missionarisId, positieInStreek));
   }, []);
@@ -362,6 +370,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     bevestigStichtingsMomentPopup,
     kiesTech,
     stuurVerkenner,
+    stuurVerkennerWampanoag,
     stuurMissionaris,
     startMissionarisRecrutering,
     bemanLegerkamp,

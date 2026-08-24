@@ -60,6 +60,17 @@ export type TerreinType = "vlak" | "bos" | "heuvel" | "berg";
 // van dat alle 9 vakjes vijandelijke/cosmetische inhoud moeten dragen.
 export type BezetteStreekInhoud = "wachttoren" | "heiligdom" | "huisje";
 
+// Vaste inhoud van een Wampanoag-vakje op streek 4 van Going West (M21e,
+// opdracht-wampanoag-opening.md §5): net als `BezetteStreekInhoud` hierboven
+// een functionele sleutel i.p.v. een direct `Improvement`-object, bepaald bij
+// het ontstaan van de laag (`initialiseerWampanoagLaag`, worldGoingWest.ts)
+// en pas naar een echte `Improvement` opgelost zodra Verkenning het vakje
+// onthult (zie `Tile.wampanoagVerhuld` hieronder en wampanoag.ts). Anders dan
+// de Bezette Streek is dit géén losstaande toestandsmachine — streek 4 zelf
+// wordt gewoon normaal `ontgrendeld`, alleen deze drie vakjes blijven
+// individueel verhuld.
+export type WampanoagInhoud = "maisboerderij" | "beverjachthut" | "opperhoofdtent";
+
 export interface EffectDefinition {
   type: string;
   resource?: ResourceType;
@@ -232,6 +243,23 @@ export interface Tile {
   // heuvel/bergvakje mag. De tutorial-worldgen garandeert minstens één zulk
   // vakje vanaf streek 8 (zie world.ts).
   amber?: boolean;
+  // Wampanoag-laag, streek 4 van Going West (M21e, opdracht-wampanoag-
+  // opening.md §5): een eigen, per-tegel verhullingslaag — bewust met eigen
+  // velden i.p.v. het hergebruiken van `verhuld`/`bezetteStreekInhoud`/
+  // `verkenningInGang` hierboven, want die zijn semantisch aan de Bezette-
+  // Streek-toestandsmachine gekoppeld (`Streek.bezet`). Streek 4 zelf blijft
+  // gewoon normaal `ontgrendeld: true` — alleen deze drie vaste vakjes
+  // blijven verhuld tot de speler er een Verkenner naartoe stuurt
+  // (wampanoag.ts, hergebruikt dezelfde kosten/bouwtijd/1x-per-beurt-limiet
+  // als de Bezette-Streek-Verkenning, geen nieuwe kostenbalans). `undefined`
+  // op elk ander vakje (ook buiten streek 4).
+  wampanoagVerhuld?: boolean;
+  wampanoagInhoud?: WampanoagInhoud;
+  // Verkenner onderweg naar een Wampanoag-vakje — zelfde aftel-patroon als
+  // `verkenningInGang` hierboven, maar los geteld zodat de twee lagen elkaar
+  // nooit kunnen overschrijven (ook al draaien ze in de praktijk nooit
+  // tegelijk, zie de comment bij `wampanoagVerhuld` hierboven).
+  wampanoagVerkenningInGang?: { beurtenResterend: number };
 }
 
 // Positie van de settler-eenheid (M10, hoofdstuk 16). Bestaat pas vanaf beurt
@@ -844,6 +872,15 @@ export interface GameState {
   // bestaande saves blijven op `"cultuur"` (huidig gedrag); Going West start
   // op `"wetenschap"` en schakelt na de 3-3-3-drempel naar `"cultuur"`.
   ontgrendelResource: "wetenschap" | "cultuur";
+  // Wampanoag-laag ontdekt (Going West, M21e, opdracht-wampanoag-opening.md
+  // §5): gezet door `verwerkStreekOntgrendeling` (streekOntgrendeling.ts)
+  // zodra streek 4 voor Going West ontgrendelt — zelfde eenmalige
+  // meldings-vlag-patroon als `bezetteStreekOntdektEvent` hierboven, maar
+  // puur voorbereid voor een latere narratieve pop-up (M21g, §8: de
+  // eigenlijke `eersteContactPopup`-tekst/UI hoort niet bij deze milestone).
+  // `sluitWampanoagLaagOntdektMelding` (streekOntgrendeling.ts) is alvast
+  // aanwezig voor die latere UI, maar wordt nog door niets aangeroepen.
+  wampanoagLaagOntdektEvent?: boolean;
 }
 
 // Sleutels van de eenmalige uitleg-pop-ups (issue: "Bij laden niet alle

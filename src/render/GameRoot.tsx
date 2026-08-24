@@ -42,6 +42,7 @@ import VoedselBalansUitlegPopup from "@/components/VoedselBalansUitlegPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
+import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
 import { campagneConfig, streekContentVoorCampagne } from "@/game/campagnes";
 import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
@@ -52,6 +53,7 @@ import {
   kanStuurVerkenner,
   verhuldeBezetteStreekPosities,
 } from "@/game/streekOntgrendeling";
+import { kanStuurVerkennerWampanoag, verhuldeWampanoagPosities } from "@/game/wampanoag";
 import {
   AMBER_ONTDEKKING_TWEEDE_TEKST,
   AMBER_ONTDEKKING_TWEEDE_TITEL,
@@ -167,6 +169,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     bevestigStichtingsMomentPopup,
     kiesTech,
     stuurVerkenner,
+    stuurVerkennerWampanoag,
     stuurMissionaris,
     startMissionarisRecrutering,
     bemanLegerkamp,
@@ -476,6 +479,11 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // `missionarisVraag` hieronder) — zelfde patroon als `wachttorenVraag`
   // hierboven.
   const geselecteerdeTileIsVerhuld = Boolean(geselecteerdeTileVoorRush?.verhuld);
+  // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md §5) —
+  // zelfde soort afgeleide vlag als `geselecteerdeTileIsVerhuld` hierboven,
+  // maar voor de losstaande Wampanoag-verhullingslaag (wampanoag.ts) i.p.v.
+  // de Bezette Streek.
+  const geselecteerdeTileIsWampanoagVerhuld = Boolean(geselecteerdeTileVoorRush?.wampanoagVerhuld);
   const geselecteerdeTileIsVijandelijkeWachttoren =
     geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "vijandelijke-wachttoren";
   const geselecteerdeTileIsVijandelijkHeiligdom =
@@ -582,7 +590,12 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // scherm") — puur een highlight op de canvas, geen losse kies-modus meer:
   // een klik op zo'n vakje opent gewoon de tile-info-pop-up met de
   // `verkenningVraag`-actie erbij (zie `handleTileClick`/`TileInfoPopup`).
-  const verkenningBereikbarePosities = verhuldeBezetteStreekPosities(state);
+  // De Bezette-Streek- en Wampanoag-verhullingslagen draaien in de praktijk
+  // nooit tegelijk (respectievelijk tutorial-only op streek 13 en
+  // Going-West-only op streek 4), dus deze twee highlight-bronnen mogen
+  // zonder conflict samengevoegd worden — geen aparte prop nodig op
+  // GameCanvas (M21e, opdracht-wampanoag-opening.md §5).
+  const verkenningBereikbarePosities = [...verhuldeBezetteStreekPosities(state), ...verhuldeWampanoagPosities(state)];
 
   function handleTileClick(hoogte: number, positieInStreek: number) {
     // Legerkamp-kies-modus (hoofdstuk 6, issue: "De Bezette Streek,
@@ -1496,6 +1509,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
         />
         <StreekIntroPaneel streken={state.streken} campagneId={state.campagneId} />
         <BezetteStreekPaneel state={state} />
+        <WampanoagPaneel state={state} />
         {toonStadMenuPopup && (
           <StadMenuPopup
             state={state}
@@ -1783,7 +1797,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
                   onderweg: geselecteerdeTileVoorRush?.verkenningInGang,
                   onStuurVerkenner: () => stuurVerkenner(geselecteerdeTile.positieInStreek),
                 }
-              : undefined
+              : geselecteerdeTileIsWampanoagVerhuld && geselecteerdeTile
+                ? {
+                    kan: kanStuurVerkennerWampanoag(state, geselecteerdeTile.positieInStreek),
+                    onderweg: geselecteerdeTileVoorRush?.wampanoagVerkenningInGang,
+                    onStuurVerkenner: () => stuurVerkennerWampanoag(geselecteerdeTile.positieInStreek),
+                  }
+                : undefined
           }
           confrontatieVraag={
             geselecteerdeTileIsVijandelijkeWachttoren && geselecteerdeTile

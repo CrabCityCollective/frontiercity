@@ -943,6 +943,11 @@ export function tekenWereldPixelArt(
         tekenFogTilePixel(tileCtx, tileSeed(col, streek.hoogte));
       } else if (!streek.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTilePixel(tileCtx, streek.terreinType);
+      } else if (streek.tiles[col].wampanoagVerhuld) {
+        // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md
+        // §5) — zelfde parallelle verhullingslaag als in canvas.ts, hier de
+        // pixel-art variant van dezelfde generieke "verhuld vakje"-tekenaar.
+        tekenVerhuldeTilePixel(tileCtx, tileSeed(col, streek.hoogte));
       } else {
         const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
         tekenActieveTilePixel(tileCtx, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken);

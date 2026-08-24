@@ -12,7 +12,8 @@ import {
   STERRENCIRKEL,
 } from "./improvements";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
-import { BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek } from "./world";
+import { BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek, wetenschapKostenVoorStreekOntgrendeling } from "./world";
+import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 
 export const HOUTKAP = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "houtkap")!;
 export const STEENGROEVE = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "steengroeve")!;
@@ -197,4 +198,23 @@ export function metLegerkampOpStreek12(state: GameState): GameState {
     ),
   };
   return s;
+}
+
+// Duwt de Going West-wetenschap naar de drempel van WAMPANOAG_STREEK_HOOGTE
+// (streek 4) en verwerkt één beurt, zodat de streek normaal ontgrendelt én de
+// Wampanoag-laag geïnitialiseerd wordt (M21e, opdracht-wampanoag-opening.md
+// §5) — gedeelde opzet voor de Wampanoag-Verkenning-tests, zelfde patroon als
+// `metBezetteStreekInBeeld` hierboven.
+export function metWampanoagLaagInBeeld(): GameState {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, wetenschap: wetenschapKostenVoorStreekOntgrendeling(WAMPANOAG_STREEK_HOOGTE), voedsel: 10_000 };
+  return volgendeBeurt(state);
+}
+
+// Genoeg wetenschap en grondstoffen om `stuurVerkennerWampanoag` te kunnen
+// aanroepen — zelfde patroon als `metBezetteStreekEnVoorraadVoorVerkenning`
+// hierboven.
+export function metWampanoagLaagEnVoorraadVoorVerkenning(): GameState {
+  const state = metWampanoagLaagInBeeld();
+  return { ...state, wetenschap: 100, voorraad: { hout: 100, steen: 100, erts: 100, goud: 100 } };
 }

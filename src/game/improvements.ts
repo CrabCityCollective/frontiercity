@@ -114,6 +114,12 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
   if (effect.type === "conversie" && effect.resource && effect.waarde) {
     return `Zet elke beurt ${effect.waarde} ${RESOURCE_LABELS[effect.resource].toLowerCase()} om in ${SMEDERIJ_GEREEDSCHAP_OPBRENGST} gereedschap, zolang er genoeg ${RESOURCE_LABELS[effect.resource].toLowerCase()} voorradig is (anders geen conversie die beurt).`;
   }
+  // Wampanoag-vakjes (Going West, M21e, opdracht-wampanoag-opening.md §5): een
+  // minimale placeholder-omschrijving — de daadwerkelijke handelsconversie
+  // (grondstofkeuze, 1:1-omzetting) is M21f, expliciet nog niet hier gebouwd.
+  if (effect.type === "wampanoag") {
+    return "Een onthuld Wampanoag-vakje. Handel hierop is nog niet mogelijk in deze fase.";
+  }
   return "";
 }
 
@@ -552,6 +558,54 @@ export const BEZETTE_STREEK_HUISJE: Improvement = {
   effect: { type: "decoratief" },
 };
 
+// Wampanoag-vakjes (Going West, M21e, opdracht-wampanoag-opening.md §5): drie
+// vaste vakjes op streek 4, verhuld tot onthuld via Verkenning (wampanoag.ts)
+// — zelfde uitsluitingspatroon als de vijandelijke Bezette-Streek-varianten
+// hierboven (nooit onderdeel van IMPROVEMENT_POOLS/beschikbareOpties, nooit
+// door de speler gebouwd, geen bouwkosten/-tijd), maar zonder de
+// `vijandelijk`-vlag: dit zijn geen Confrontatie-/Belegeringsdoelen, maar
+// (vanaf M21f) handelspartners. Welk gebouw op welk vakje van streek 4 ligt,
+// staat vast in `WAMPANOAG_STREEK_INHOUD` (worldGoingWest.ts) — dat is
+// terrein-afgeleid (opdracht §2: Maïsboerderij op vlakke grond, Beverjachthut
+// op vers water), dus deze drie hebben zelf geen `terreinEisen`-afdwinging
+// nodig zoals de normale, speler-bouwbare land improvements hierboven: ze
+// worden nooit via `kanImprovementOpStreek`/`beschikbareOpties` geplaatst.
+// `effect: { type: "wampanoag" }` is een minimale placeholder-marker — de
+// daadwerkelijke handelsconversie (grondstofkeuze, 1:1-omzetting per beurt)
+// is M21f, expliciet nog niet hier gebouwd.
+export const MAISBOERDERIJ: Improvement = {
+  id: "maisboerderij",
+  naam: "Maïsboerderij",
+  categorie: "economisch",
+  soort: "land",
+  kosten: {},
+  bouwtijdBeurten: 0,
+  effect: { type: "wampanoag" },
+  terreinEisen: ["vlak"],
+};
+
+export const BEVERJACHTHUT: Improvement = {
+  id: "beverjachthut",
+  naam: "Beverjachthut",
+  categorie: "economisch",
+  soort: "land",
+  kosten: {},
+  bouwtijdBeurten: 0,
+  effect: { type: "wampanoag" },
+};
+
+// Cultureel/diplomatiek van aard (opdracht §2) — geen terrein-eis, ligt op
+// het derde, terrein-onafhankelijke Wampanoag-vakje.
+export const OPPERHOOFDTENT: Improvement = {
+  id: "opperhoofdtent",
+  naam: "Opperhoofdtent",
+  categorie: "cultureel",
+  soort: "land",
+  kosten: {},
+  bouwtijdBeurten: 0,
+  effect: { type: "wampanoag" },
+};
+
 // Stadsgroei-improvement (M6, hoofdstuk 3/4: "Aquaduct, riolering, woonwijk
 // (= groei-tiers)"). Dit is een `soort: "city"`-improvement die de stad zelf
 // upgradet, geen land-vakje — daarom geen onderdeel van IMPROVEMENT_POOLS/
@@ -829,7 +883,12 @@ const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
 // gewoon leeg vakje — tegen de normale kosten/bouwtijd van welk improvement
 // dan ook (niet uitsluitend de Wachttoren die er ooit stond).
 export function isBebouwbaarLeeg(tile: Tile): boolean {
-  return tile.status === "leeg" || tile.status === "ruine";
+  // Wampanoag-vakjes (Going West, M21e, opdracht-wampanoag-opening.md §5):
+  // streek 4 wordt normaal `ontgrendeld`, dus een nog verhuld Wampanoag-vakje
+  // (`status: "leeg"`) zou hier anders per ongeluk een geldig plaatsingsdoel
+  // zijn — de speler mag hier pas na onthulling (via Verkenning, zie
+  // wampanoag.ts) weer bouwen, net als de rest van de streek.
+  return (tile.status === "leeg" || tile.status === "ruine") && !tile.wampanoagVerhuld;
 }
 
 // Of `improvement` een leeg, terrein-geschikt vakje heeft op `streek`, en daar
