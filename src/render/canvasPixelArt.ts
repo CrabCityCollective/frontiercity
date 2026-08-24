@@ -33,7 +33,7 @@ import {
   tekenVerkenningBereikbaarMarkering,
   terreinBasisKleur,
 } from "./canvas";
-import { pasTegelSetTint } from "./tegelSets";
+import { GROENE_STREKEN_AANTAL, pasTegelSetTint } from "./tegelSets";
 
 export { BAND_WIDTH_TILES };
 
@@ -1075,5 +1075,9 @@ export function tekenWereldPixelArt(
     }
   }
 
-  pasTegelSetTint(ctx, width, height, tegelSet);
+  // Groene band voor de eerste `GROENE_STREKEN_AANTAL` streken — zie canvas.ts
+  // (`tekenWereld`) voor de volledige toelichting.
+  const groeneBandVanafY =
+    topOffset + Math.max(0, totaalStreken - GROENE_STREKEN_AANTAL) * tileSize;
+  pasTegelSetTint(ctx, width, height, tegelSet, groeneBandVanafY);
 }

@@ -12,17 +12,34 @@
 // Nieuwe campagnes met een eigen `tegelSet`-waarde kunnen hier gewoon een
 // nieuwe branch toevoegen; de tutorial (`tegelSet === undefined`) blijft
 // altijd ongewijzigd.
+//
+// De eerste `GROENE_STREKEN_AANTAL` streken (het Wampanoag-kustthuisland,
+// `WAMPANOAG_STREEK_HOOGTE` in worldGoingWest.ts) krijgen een groenere,
+// minder stoffige tint dan de rest van de kaart — issue: "Going west terrein
+// in eerste instantie groener". De aanroepers (canvas.ts/canvasPixelArt.ts)
+// geven de pixel-y door waar die groene band begint (onderaan het canvas,
+// waar streek 1 staat); alles daarboven houdt de bestaande stoffige
+// Diablo II-achtige bruine tint (hoofdstuk 12).
+export const GROENE_STREKEN_AANTAL = 6;
+
 export function pasTegelSetTint(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  tegelSet?: string
+  tegelSet?: string,
+  groeneBandVanafY?: number
 ): void {
   if (tegelSet !== "going-west") return;
+
+  const bandY = Math.min(Math.max(groeneBandVanafY ?? height, 0), height);
 
   ctx.save();
   ctx.globalCompositeOperation = "multiply";
   ctx.fillStyle = "#8a7250";
-  ctx.fillRect(0, 0, width, height);
+  ctx.fillRect(0, 0, width, bandY);
+  if (bandY < height) {
+    ctx.fillStyle = "#7fa35c";
+    ctx.fillRect(0, bandY, width, height - bandY);
+  }
   ctx.restore();
 }
