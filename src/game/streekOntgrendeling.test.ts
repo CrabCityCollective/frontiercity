@@ -417,11 +417,15 @@ test("tutorial: streek-ontgrendeling blijft op cultuur lopen, ongeacht wetenscha
   assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, true);
 });
 
-// De opdracht noemt drie expliciete drempelwaarden (streek 2 = 10, 3 = 20,
-// 4 = 35) — vastgelegd als regressietest, los van de exacte formule-vorm in
-// world.ts.
-test("wetenschapKostenVoorStreekOntgrendeling geeft de opdracht-drempels voor streek 2/3/4", () => {
+// De opdracht noemt oorspronkelijk drie expliciete drempelwaarden (streek 2 =
+// 10, 3 = 20, 4 = 35, met 4 destijds de Wampanoag-streek); sinds issue
+// "Wampanoag streek blokkerend" verschoof de Wampanoag-streek naar 6, met
+// twee nieuwe tussenliggende drempels (4 en 5) — vastgelegd als
+// regressietest, los van de exacte formule-vorm in world.ts.
+test("wetenschapKostenVoorStreekOntgrendeling geeft de vastgelegde drempels voor streek 2 t/m 6", () => {
   assert.equal(wetenschapKostenVoorStreekOntgrendeling(2), 10);
-  assert.equal(wetenschapKostenVoorStreekOntgrendeling(3), 20);
-  assert.equal(wetenschapKostenVoorStreekOntgrendeling(4), 35);
+  assert.equal(wetenschapKostenVoorStreekOntgrendeling(3), 18);
+  assert.equal(wetenschapKostenVoorStreekOntgrendeling(4), 25);
+  assert.equal(wetenschapKostenVoorStreekOntgrendeling(5), 30);
+  assert.equal(wetenschapKostenVoorStreekOntgrendeling(6), 35, "streek 6 is de Wampanoag-streek ('in beeld')");
 });

@@ -202,11 +202,12 @@ export function metLegerkampOpStreek12(state: GameState): GameState {
   return s;
 }
 
-// Duwt de Going West-wetenschap naar de drempel van WAMPANOAG_STREEK_HOOGTE
-// (streek 4) en verwerkt één beurt, zodat de streek normaal ontgrendelt én de
-// Wampanoag-laag geïnitialiseerd wordt (M21e, opdracht-wampanoag-opening.md
-// §5) — gedeelde opzet voor de Wampanoag-Verkenning-tests, zelfde patroon als
-// `metBezetteStreekInBeeld` hierboven.
+// Duwt de Going West-wetenschap naar de drempel van WAMPANOAG_STREEK_HOOGTE en
+// verwerkt één beurt, zodat de streek "in beeld" komt als blokkerende streek
+// en de Wampanoag-laag geïnitialiseerd wordt (M21e, opdracht-wampanoag-
+// opening.md §5; blokkerend gemaakt door issue "Wampanoag streek
+// blokkerend") — gedeelde opzet voor de Wampanoag-Verkenning-tests, zelfde
+// patroon als `metBezetteStreekInBeeld` hierboven.
 export function metWampanoagLaagInBeeld(): GameState {
   let state = maakInitieleSpelStatus("going-west");
   state = { ...state, wetenschap: wetenschapKostenVoorStreekOntgrendeling(WAMPANOAG_STREEK_HOOGTE), voedsel: 10_000 };
@@ -221,13 +222,15 @@ export function metWampanoagLaagEnVoorraadVoorVerkenning(): GameState {
   return { ...state, wetenschap: 100, voorraad: { hout: 100, steen: 100, erts: 100, goud: 100 } };
 }
 
-// Alle drie Wampanoag-vakjes onthuld, met genoeg erts/gereedschap/goud om
-// meteen te kunnen handelen — gedeelde opzet voor de M21f-handelstests
-// (opdracht-wampanoag-opening.md §6), bouwt voort op
-// `metWampanoagLaagEnVoorraadVoorVerkenning` hierboven. Stuurt op elke positie
-// een verkenner en telt zijn tellertje meteen volledig af, met de
-// 1x-per-beurt-limiet telkens teruggezet — zelfde volgorde als de M21e-tests
-// in wampanoag.test.ts.
+// De drie Wampanoag-handelsvakjes onthuld (waarmee, sinds issue "Wampanoag
+// streek blokkerend", ook de zes neutrale vakjes automatisch mee onthullen en
+// de streek zelf weer normaal ontgrendelt — zie `verwerkWampanoagVerkenningInGang`),
+// met genoeg erts/gereedschap/goud om meteen te kunnen handelen — gedeelde
+// opzet voor de M21f-handelstests (opdracht-wampanoag-opening.md §6), bouwt
+// voort op `metWampanoagLaagEnVoorraadVoorVerkenning` hierboven. Stuurt op
+// elke positie een verkenner en telt zijn tellertje meteen volledig af, met
+// de 1x-per-beurt-limiet telkens teruggezet — zelfde volgorde als de
+// M21e-tests in wampanoag.test.ts.
 export function metWampanoagLaagOnthuld(): GameState {
   let state = metWampanoagLaagEnVoorraadVoorVerkenning();
   state = { ...state, gereedschap: 100 };

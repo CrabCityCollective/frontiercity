@@ -602,7 +602,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // `verkenningVraag`-actie erbij (zie `handleTileClick`/`TileInfoPopup`).
   // De Bezette-Streek- en Wampanoag-verhullingslagen draaien in de praktijk
   // nooit tegelijk (respectievelijk tutorial-only op streek 13 en
-  // Going-West-only op streek 4), dus deze twee highlight-bronnen mogen
+  // Going-West-only op de Wampanoag-streek), dus deze twee highlight-bronnen mogen
   // zonder conflict samengevoegd worden — geen aparte prop nodig op
   // GameCanvas (M21e, opdracht-wampanoag-opening.md §5).
   const verkenningBereikbarePosities = [...verhuldeBezetteStreekPosities(state), ...verhuldeWampanoagPosities(state)];

@@ -1695,30 +1695,27 @@ export function tekenWereld(
       const x = col * tileSize;
 
       // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
-      // verkenner", Deel 1): een eigen, per-tegel verhullingslaag, los van de
-      // gewone streek-brede fog-of-war hieronder — de streek zelf blijft
-      // `ontgrendeld: false` zolang ze bezet is, maar de losse vakjes worden
-      // hier al individueel getoond zodra ze onthuld zijn.
-      if (streek.bezet) {
+      // verkenner", Deel 1) & Wampanoag-laag (Going West, M21e, issue:
+      // "Wampanoag streek blokkerend"): allebei een eigen, per-tegel
+      // verhullingslaag, los van de gewone streek-brede fog-of-war hieronder
+      // — de streek zelf blijft `ontgrendeld: false` zolang ze bezet is, maar
+      // de losse vakjes worden hier al individueel getoond zodra ze onthuld
+      // zijn.
+      if (streek.bezet || streek.wampanoagBezet) {
         const tile = streek.tiles[col];
-        if (tile.verhuld) {
+        if (tile.verhuld || tile.wampanoagVerhuld) {
           tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
         } else {
           const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
           tekenActieveTile(ctx, x, y, tileSize, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+          if (tile.versWater) {
+            tekenVersWaterMarkering(ctx, x, y, tileSize, tileSeed(col, streek.hoogte, 2));
+          }
         }
       } else if (!streek.ontgrendeld && !vooruitkijk) {
         tekenFogTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
       } else if (!streek.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTile(ctx, x, y, tileSize, streek.terreinType);
-      } else if (streek.tiles[col].wampanoagVerhuld) {
-        // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md
-        // §5): een parallelle, niet-blokkerende verhullingslaag op een
-        // normaal ontgrendelde streek — hergebruikt dezelfde `tekenVerhuldeTile`
-        // als de Bezette Streek hierboven (een generieke "verhuld vakje"-
-        // tekenaar, ondanks de plek van zijn documentatie), maar zonder de
-        // streek zelf als vergrendeld te behandelen.
-        tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
       } else {
         const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
         tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken);

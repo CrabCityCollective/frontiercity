@@ -15,68 +15,95 @@ import {
   verwerkWampanoagVerkenningInGang,
   wampanoagHandelOpties,
 } from "./wampanoag";
-import { cultuurKostenVoorStreek, wetenschapKostenVoorStreekOntgrendeling } from "./world";
+import { cultuurKostenVoorStreek, hoogsteOntgrendeldeStreek, wetenschapKostenVoorStreekOntgrendeling } from "./world";
 import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
+import { magSettlerNaar } from "./wegen";
 import {
   metWampanoagLaagEnVoorraadVoorVerkenning,
   metWampanoagLaagInBeeld,
   metWampanoagLaagOnthuld,
 } from "./testHelpers";
 
-// M21e (opdracht-wampanoag-opening.md §5): streek 4 ontgrendelt normaal
-// (geen Bezette-Streek-achtige bevriezing) zodra de wetenschapsdrempel
-// gehaald wordt, en krijgt daarbovenop drie individueel verhulde
-// Wampanoag-vakjes — terrein bepaalt welk gebouw waar komt te liggen.
-test('streek 4 ontgrendelt normaal en krijgt drie verhulde Wampanoag-vakjes zodra de wetenschapsdrempel gehaald wordt (Going West)', () => {
+// Issue "Wampanoag streek blokkerend": de Wampanoag-streek komt "in beeld"
+// als een blokkerende streek — zelfde soort bevriezing als de Bezette Streek
+// (streekOntgrendeling.ts) — met alle negen vakjes verhuld i.p.v. alleen de
+// drie handelsvakjes; terrein bepaalt welk gebouw op welk vakje komt te
+// liggen.
+test("de Wampanoag-streek komt 'in beeld' als blokkerende streek met negen verhulde vakjes zodra de wetenschapsdrempel gehaald wordt (Going West)", () => {
   const state = metWampanoagLaagInBeeld();
-  const streek4 = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
+  const streek = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
 
-  assert.equal(streek4.ontgrendeld, true, "streek 4 wordt gewoon normaal ontgrendeld, geen bevriezing");
-  assert.equal(streek4.bezet, undefined, "geen Bezette-Streek-achtige vlag — parallelle, niet-blokkerende laag");
+  assert.equal(streek.ontgrendeld, false, "de streek blijft vergrendeld — de frontier blijft op de streek eronder staan");
+  assert.equal(streek.wampanoagBezet, true);
+  assert.equal(streek.bezet, undefined, "geen Bezette-Streek-vlag — eigen, aparte resolutielogica");
   assert.equal(state.wampanoagLaagOntdektEvent, true);
+  assert.equal(streek.tiles.every((t) => t.wampanoagVerhuld), true, "alle negen vakjes zijn individueel verhuld");
 
   // Terrein-afgeleide toewijzing (worldGoingWest.ts: WAMPANOAG_STREEK_INHOUD).
-  assert.equal(streek4.tiles[0].wampanoagVerhuld, true);
-  assert.equal(streek4.tiles[0].wampanoagInhoud, "maisboerderij");
-  assert.equal(streek4.tiles[0].terrein, "vlak", "Maïsboerderij staat op een vlak vakje");
+  assert.equal(streek.tiles[0].wampanoagInhoud, "maisboerderij");
+  assert.equal(streek.tiles[0].terrein, "vlak", "Maïsboerderij staat op een vlak vakje");
 
-  assert.equal(streek4.tiles[1].wampanoagVerhuld, true);
-  assert.equal(streek4.tiles[1].wampanoagInhoud, "beverjachthut");
-  assert.equal(streek4.tiles[1].versWater, true, "Beverjachthut staat op het enige vers-water-vakje van streek 4");
+  assert.equal(streek.tiles[1].wampanoagInhoud, "beverjachthut");
+  assert.equal(streek.tiles[1].versWater, true, "Beverjachthut staat op een vers-water-vakje van de Wampanoag-streek");
 
-  assert.equal(streek4.tiles[2].wampanoagVerhuld, true);
-  assert.equal(streek4.tiles[2].wampanoagInhoud, "opperhoofdtent");
+  assert.equal(streek.tiles[2].wampanoagInhoud, "opperhoofdtent");
 
-  // Positie 4 blijft neutraal, zelfde conventie als TUTORIAL_BEZETTE_STREEK_INHOUD.
-  assert.equal(streek4.tiles[4].wampanoagVerhuld, undefined);
-  assert.equal(streek4.tiles[4].wampanoagInhoud, undefined);
+  // De overige zes vakjes dragen geen bijzondere inhoud, zelfde conventie als
+  // TUTORIAL_BEZETTE_STREEK_INHOUD, maar zijn wél mee verhuld.
+  const inhoudTypes = streek.tiles.map((t) => t.wampanoagInhoud).filter(Boolean);
+  assert.equal(inhoudTypes.length, 3, "maar drie van de negen vakjes dragen vaste Wampanoag-inhoud");
 
   assert.deepEqual(
-    verhuldeWampanoagPosities(state).map((p) => p.positieInStreek).sort(),
-    [0, 1, 2]
+    verhuldeWampanoagPosities(state).map((p) => p.positieInStreek).sort((a, b) => a - b),
+    [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    "alle negen vakjes zijn nog individueel verkenbaar, niet alleen de drie handelsvakjes"
   );
+
+  // De frontier stopt bij de streek eronder — de settler kan er niet doorheen
+  // lopen (issue: "Wampanoag streek blokkerend").
+  assert.equal(hoogsteOntgrendeldeStreek(state.streken), WAMPANOAG_STREEK_HOOGTE - 1);
+  assert.equal(magSettlerNaar(state.streken, { hoogte: WAMPANOAG_STREEK_HOOGTE, positieInStreek: 4 }), false);
 
   const gesloten = sluitWampanoagLaagOntdektMelding(state);
   assert.equal(gesloten.wampanoagLaagOntdektEvent, undefined);
 });
 
-// Regressietest: de tutorial heeft toevallig ook een streek 4 — die mag door
-// deze Going-West-specifieke laag niet geraakt worden, ook al ontgrendelt hij
-// (via de normale cultuurdrempel) net zo goed.
-test("tutorial: streek 4 krijgt geen Wampanoag-vakjes, ongeacht cultuur-gedreven ontgrendeling", () => {
+// Regressietest: de tutorial heeft toevallig ook een streek op dezelfde
+// hoogte — die mag door deze Going-West-specifieke laag niet geraakt worden,
+// ook al ontgrendelt hij (via de normale cultuurdrempel) net zo goed.
+test("tutorial: de Wampanoag-streekhoogte krijgt geen Wampanoag-vakjes en blijft normaal ontgrendelen, ongeacht cultuur-gedreven ontgrendeling", () => {
   let state = maakInitieleSpelStatus();
   assert.equal(state.campagneId, undefined);
 
-  state = { ...state, cultuur: cultuurKostenVoorStreek(4), voedsel: 10_000 };
+  state = { ...state, cultuur: cultuurKostenVoorStreek(WAMPANOAG_STREEK_HOOGTE), voedsel: 10_000 };
   state = volgendeBeurt(state);
 
-  const streek4 = state.streken.find((l) => l.hoogte === 4)!;
-  assert.equal(streek4.ontgrendeld, true, "streek 4 ontgrendelt gewoon, zoals altijd in de tutorial");
+  const streek = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
+  assert.equal(streek.ontgrendeld, true, "de streek ontgrendelt gewoon, zoals altijd in de tutorial — geen bevriezing");
+  assert.equal(streek.wampanoagBezet, undefined);
   assert.equal(state.wampanoagLaagOntdektEvent, undefined, "geen Wampanoag-event in de tutorial");
   assert.equal(
-    streek4.tiles.every((t) => t.wampanoagVerhuld === undefined && t.wampanoagInhoud === undefined),
+    streek.tiles.every((t) => t.wampanoagVerhuld === undefined && t.wampanoagInhoud === undefined),
     true,
-    "geen enkel tutorial-tile-4-vakje krijgt Wampanoag-velden"
+    "geen enkel tutorial-vakje krijgt Wampanoag-velden"
+  );
+});
+
+// De streek lost pas op (net als de Bezette Streek) zodra alle drie de
+// handelsvakjes onthuld zijn — de zes neutrale vakjes onthullen dan
+// automatisch mee, en de frontier/settler kunnen weer verder.
+test("de Wampanoag-streek ontgrendelt pas zodra alle drie de handelsvakjes onthuld zijn, en onthult de neutrale vakjes automatisch mee", () => {
+  const state = metWampanoagLaagOnthuld();
+  const streek = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
+
+  assert.equal(streek.ontgrendeld, true, "opgelost — de streek telt weer als normaal ontgrendeld");
+  assert.equal(streek.wampanoagBezet, false);
+  assert.equal(streek.tiles.every((t) => t.wampanoagVerhuld === false), true, "ook de zes neutrale vakjes zijn nu onthuld");
+  assert.equal(hoogsteOntgrendeldeStreek(state.streken), WAMPANOAG_STREEK_HOOGTE, "de frontier mag weer verder");
+  assert.equal(
+    magSettlerNaar(state.streken, { hoogte: WAMPANOAG_STREEK_HOOGTE, positieInStreek: 4 }),
+    true,
+    "de settler kan er nu doorheen lopen"
   );
 });
 
@@ -97,7 +124,10 @@ test("kanStuurVerkennerWampanoag vereist een verhuld vakje zonder lopende verken
     false,
     "grondstoffen van VERKENNER.kosten moeten betaalbaar zijn"
   );
-  assert.equal(kanStuurVerkennerWampanoag(state, 4), false, "positie 4 draagt geen Wampanoag-inhoud");
+  // Positie 4 draagt geen Wampanoag-inhoud, maar is (issue: "Wampanoag streek
+  // blokkerend") toch verhuld en dus net zo goed verkenbaar — net als een
+  // neutraal vakje bij de Bezette Streek.
+  assert.equal(kanStuurVerkennerWampanoag(state, 4), true, "een neutraal vakje is ook verkenbaar");
 });
 
 test("stuurVerkennerWampanoag betaalt grondstoffen + wetenschap, zet een aftellend tellertje i.p.v. direct te onthullen, en mag maar 1x per beurt (gedeelde limiet met de Bezette-Streek-Verkenning)", () => {
@@ -157,7 +187,7 @@ test("verwerkWampanoagVerkenningInGang onthult het juiste, terrein-afgeleide geb
   );
 });
 
-test("isBebouwbaarLeeg sluit een nog verhuld Wampanoag-vakje uit, ondanks status 'leeg'", () => {
+test("isBebouwbaarLeeg sluit elk nog verhuld Wampanoag-vakje uit, ondanks status 'leeg' — ook de neutrale vakjes zonder inhoud", () => {
   const state = metWampanoagLaagInBeeld();
   const streek4 = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
 
@@ -165,10 +195,12 @@ test("isBebouwbaarLeeg sluit een nog verhuld Wampanoag-vakje uit, ondanks status
   assert.equal(streek4.tiles[0].wampanoagVerhuld, true);
   assert.equal(isBebouwbaarLeeg(streek4.tiles[0]), false, "een verhuld Wampanoag-vakje is geen geldig bouwdoel");
 
-  // Een normaal leeg vakje op dezelfde streek (positie 3, geen Wampanoag-inhoud)
-  // blijft gewoon bebouwbaar.
-  assert.equal(streek4.tiles[3].wampanoagVerhuld, undefined);
-  assert.equal(isBebouwbaarLeeg(streek4.tiles[3]), true);
+  // Positie 3 draagt geen Wampanoag-inhoud, maar is (issue: "Wampanoag streek
+  // blokkerend" — de hele streek is nu bezet, niet alleen de drie
+  // handelsvakjes) toch mee verhuld, en dus ook geen geldig bouwdoel.
+  assert.equal(streek4.tiles[3].wampanoagInhoud, undefined);
+  assert.equal(streek4.tiles[3].wampanoagVerhuld, true);
+  assert.equal(isBebouwbaarLeeg(streek4.tiles[3]), false);
 });
 
 test("wetenschapKostenVoorStreekOntgrendeling(WAMPANOAG_STREEK_HOOGTE) is de opdracht-drempel van 35", () => {

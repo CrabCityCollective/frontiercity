@@ -193,7 +193,7 @@ export function volgendeBeurt(state: GameState): GameState {
   // Wampanoag-verkenning (Going West, M21e, opdracht-wampanoag-opening.md
   // §5): een eigen, parallel aftellend tellertje, los van de Bezette-Streek-
   // verkenning hierboven — raakt nooit dezelfde streek (Bezette Streek is
-  // tutorial-only, Wampanoag Going-West-only op streek 4), dus de volgorde
+  // tutorial-only, Wampanoag Going-West-only op de Wampanoag-streek), dus de volgorde
   // t.o.v. `naVerkenningInGang`/`naBelegering` maakt niet uit.
   const naWampanoagVerkenningInGang = verwerkWampanoagVerkenningInGang(naVerkenningInGang);
   // Wampanoag-handel (Going West, M21f, opdracht-wampanoag-opening.md §6):
