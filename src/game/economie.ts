@@ -40,6 +40,7 @@ import { verwerkUitputting, verwerkVerval } from "./uitputtingEnVerval";
 import { verwerkBouwwachtrij } from "./bouwwachtrij";
 import { verwerkProductie } from "./productie";
 import { verwerkBelegering, verwerkStreekOntgrendeling, verwerkVerkenningInGang } from "./streekOntgrendeling";
+import { verwerkWampanoagVerkenningInGang } from "./wampanoag";
 import { verwerkTechDrempel } from "./tech";
 import {
   verwerkCityVerbetering,
@@ -189,10 +190,16 @@ export function volgendeBeurt(state: GameState): GameState {
   // stond te wachten (kan in de praktijk niet, want sturen vereist een al
   // onthuld doel — puur een consistente volgorde).
   const naVerkenningInGang = verwerkVerkenningInGang(naOntgrendeling);
+  // Wampanoag-verkenning (Going West, M21e, opdracht-wampanoag-opening.md
+  // §5): een eigen, parallel aftellend tellertje, los van de Bezette-Streek-
+  // verkenning hierboven — raakt nooit dezelfde streek (Bezette Streek is
+  // tutorial-only, Wampanoag Going-West-only op streek 4), dus de volgorde
+  // t.o.v. `naVerkenningInGang`/`naBelegering` maakt niet uit.
+  const naWampanoagVerkenningInGang = verwerkWampanoagVerkenningInGang(naVerkenningInGang);
   // Wololo (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 4, herzien door "Bezette streek scherm"): direct na
   // Verkenning-in-gang — zie `verwerkBelegering` hierboven.
-  const naBelegering = verwerkBelegering(naVerkenningInGang);
+  const naBelegering = verwerkBelegering(naWampanoagVerkenningInGang);
   const naTechDrempel = verwerkTechDrempel(naBelegering);
   const naVerval = verwerkVerval(naTechDrempel);
   if (naVerval.laatsteIneenstorting) return naVerval;

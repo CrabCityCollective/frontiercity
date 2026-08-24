@@ -1597,6 +1597,14 @@ export function tekenWereld(
         tekenFogTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
       } else if (!streek.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTile(ctx, x, y, tileSize, streek.terreinType);
+      } else if (streek.tiles[col].wampanoagVerhuld) {
+        // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md
+        // §5): een parallelle, niet-blokkerende verhullingslaag op een
+        // normaal ontgrendelde streek — hergebruikt dezelfde `tekenVerhuldeTile`
+        // als de Bezette Streek hierboven (een generieke "verhuld vakje"-
+        // tekenaar, ondanks de plek van zijn documentatie), maar zonder de
+        // streek zelf als vergrendeld te behandelen.
+        tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
       } else {
         const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
         tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken);

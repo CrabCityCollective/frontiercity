@@ -32,6 +32,7 @@ import {
   ROOFDIER_STREEK_KUDDE_POSITIE,
   wetenschapKostenVoorStreekOntgrendeling,
 } from "./world";
+import { initialiseerWampanoagLaag, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 import { metActieveStad } from "./stad";
 
 // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
@@ -68,6 +69,7 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
   let amberOntdektEvent = state.amberOntdektEvent;
   let tweedeAmberOntdektEvent = state.tweedeAmberOntdektEvent;
   let bezetteStreekOntdektEvent = state.bezetteStreekOntdektEvent;
+  let wampanoagLaagOntdektEvent = state.wampanoagLaagOntdektEvent;
 
   const heeftDrempelGehaald = (hoogte: number) =>
     state.ontgrendelResource === "wetenschap"
@@ -97,6 +99,24 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     streken = streken.map((streek) =>
       streek.hoogte === volgendeHoogte ? { ...streek, ontgrendeld: true } : streek
     );
+    // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md §5):
+    // een parallelle, niet-blokkerende onthullings-flow, expliciet los van de
+    // Bezette-Streek-toestandsmachine hierboven — streek 4 ontgrendelt hier
+    // gewoon normaal door (geen `break`, geen `Streek.bezet`), alleen de drie
+    // vaste Wampanoag-vakjes (`initialiseerWampanoagLaag`, worldGoingWest.ts)
+    // blijven daarna nog individueel verhuld tot Verkenning (wampanoag.ts).
+    // De `campagneId`-check is nodig omdat de tutorial toevallig ook een
+    // streek 4 heeft (ontgrendeld via de gewone cultuurdrempel, of — als
+    // `ontgrendelResource` ooit per ongeluk op "wetenschap" zou staan — via
+    // `wetenschapKostenVoorStreekOntgrendeling` hierboven) — zonder deze
+    // check zou die tutorial-streek 4 hier per ongeluk ook Wampanoag-vakjes
+    // krijgen.
+    if (volgendeHoogte === WAMPANOAG_STREEK_HOOGTE && state.campagneId === "going-west") {
+      streken = streken.map((streek) =>
+        streek.hoogte === WAMPANOAG_STREEK_HOOGTE ? initialiseerWampanoagLaag(streek) : streek
+      );
+      wampanoagLaagOntdektEvent = true;
+    }
     // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
     // gegarandeerde eerste Amberader-locatie ligt op `AMBER_ONTDEKKING_STREEK`
     // (world.ts) — deze `while`-lus loopt precies één keer door die hoogte
@@ -138,15 +158,26 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     volgendeHoogte += 1;
   }
 
-  return streken === state.streken && bezetteStreekOntdektEvent === state.bezetteStreekOntdektEvent
+  return streken === state.streken &&
+    bezetteStreekOntdektEvent === state.bezetteStreekOntdektEvent &&
+    wampanoagLaagOntdektEvent === state.wampanoagLaagOntdektEvent
     ? state
-    : { ...state, streken, amberOntdektEvent, tweedeAmberOntdektEvent, bezetteStreekOntdektEvent };
+    : { ...state, streken, amberOntdektEvent, tweedeAmberOntdektEvent, bezetteStreekOntdektEvent, wampanoagLaagOntdektEvent };
 }
 
 // Sluit de "Bezette Streek ontdekt"-melding (Deel 2) — puur een
 // UI-bevestiging, zelfde patroon als `sluitAmberOntdektMelding` hieronder.
 export function sluitBezetteStreekOntdektMelding(state: GameState): GameState {
   return { ...state, bezetteStreekOntdektEvent: undefined };
+}
+
+// Sluit de "Wampanoag-laag ontdekt"-melding (Going West, M21e) — puur een
+// UI-bevestiging, zelfde patroon als `sluitBezetteStreekOntdektMelding`
+// hierboven. Nog door geen enkele pop-up-component aangeroepen (§8: de
+// narratieve `eersteContactPopup`-UI zelf is M21g), alvast aanwezig voor die
+// latere UI.
+export function sluitWampanoagLaagOntdektMelding(state: GameState): GameState {
+  return { ...state, wampanoagLaagOntdektEvent: undefined };
 }
 
 // Sluit de Amberader-ontdekkingsmelding (hoofdstuk 3/14) — puur een
