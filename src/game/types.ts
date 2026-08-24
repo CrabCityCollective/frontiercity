@@ -71,6 +71,14 @@ export type BezetteStreekInhoud = "wachttoren" | "heiligdom" | "huisje";
 // individueel verhuld.
 export type WampanoagInhoud = "maisboerderij" | "beverjachthut" | "opperhoofdtent";
 
+// Grondstofkeuze voor de handelsconversie op een onthuld Wampanoag-vakje
+// (M21f, opdracht-wampanoag-opening.md §6): welke grondstof de speler kiest
+// om elke beurt 1:1 om te zetten in het bijbehorende handelswaar
+// (`wampanoag.ts`: `WAMPANOAG_GOED_VOOR_INHOUD`). Maïsboerderij/Beverjachthut
+// bieden een keuze tussen erts en gereedschap, Opperhoofdtent alleen goud
+// (opdracht §6, tabel).
+export type WampanoagHandelKeuze = "erts" | "gereedschap" | "goud";
+
 export interface EffectDefinition {
   type: string;
   resource?: ResourceType;
@@ -260,6 +268,13 @@ export interface Tile {
   // nooit kunnen overschrijven (ook al draaien ze in de praktijk nooit
   // tegelijk, zie de comment bij `wampanoagVerhuld` hierboven).
   wampanoagVerkenningInGang?: { beurtenResterend: number };
+  // Handelskeuze op een onthuld Wampanoag-vakje (M21f, opdracht-wampanoag-
+  // opening.md §6): welke grondstof de speler momenteel kiest om elke beurt
+  // om te zetten in het bijbehorende handelswaar (`verwerkWampanoagHandel`,
+  // wampanoag.ts). `undefined` = geen actieve handel (nog niet gekozen, of
+  // gepauzeerd) — instant omkeerbaar door opnieuw te klikken, zelfde patroon
+  // als Wachttoren-bemanning.
+  wampanoagHandelKeuze?: WampanoagHandelKeuze;
 }
 
 // Positie van de settler-eenheid (M10, hoofdstuk 16). Bestaat pas vanaf beurt

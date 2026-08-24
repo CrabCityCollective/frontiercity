@@ -40,7 +40,7 @@ import { verwerkUitputting, verwerkVerval } from "./uitputtingEnVerval";
 import { verwerkBouwwachtrij } from "./bouwwachtrij";
 import { verwerkProductie } from "./productie";
 import { verwerkBelegering, verwerkStreekOntgrendeling, verwerkVerkenningInGang } from "./streekOntgrendeling";
-import { verwerkWampanoagVerkenningInGang } from "./wampanoag";
+import { verwerkWampanoagHandel, verwerkWampanoagVerkenningInGang } from "./wampanoag";
 import { verwerkTechDrempel } from "./tech";
 import {
   verwerkCityVerbetering,
@@ -196,10 +196,16 @@ export function volgendeBeurt(state: GameState): GameState {
   // tutorial-only, Wampanoag Going-West-only op streek 4), dus de volgorde
   // t.o.v. `naVerkenningInGang`/`naBelegering` maakt niet uit.
   const naWampanoagVerkenningInGang = verwerkWampanoagVerkenningInGang(naVerkenningInGang);
+  // Wampanoag-handel (Going West, M21f, opdracht-wampanoag-opening.md §6):
+  // past elke beurt de lopende grondstofkeuzes toe op alle al onthulde
+  // Wampanoag-vakjes — los van de Verkenning-in-gang hierboven (die is voor
+  // de onthulling zelf), dus de volgorde ertussen maakt niet uit: een vakje
+  // is op elk moment óf nog aan het onthullen óf al handelbaar, nooit beide.
+  const naWampanoagHandel = verwerkWampanoagHandel(naWampanoagVerkenningInGang);
   // Wololo (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
   // verkenner", Deel 4, herzien door "Bezette streek scherm"): direct na
   // Verkenning-in-gang — zie `verwerkBelegering` hierboven.
-  const naBelegering = verwerkBelegering(naWampanoagVerkenningInGang);
+  const naBelegering = verwerkBelegering(naWampanoagHandel);
   const naTechDrempel = verwerkTechDrempel(naBelegering);
   const naVerval = verwerkVerval(naTechDrempel);
   if (naVerval.laatsteIneenstorting) return naVerval;

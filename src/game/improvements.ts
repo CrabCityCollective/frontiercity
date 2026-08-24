@@ -114,11 +114,12 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
   if (effect.type === "conversie" && effect.resource && effect.waarde) {
     return `Zet elke beurt ${effect.waarde} ${RESOURCE_LABELS[effect.resource].toLowerCase()} om in ${SMEDERIJ_GEREEDSCHAP_OPBRENGST} gereedschap, zolang er genoeg ${RESOURCE_LABELS[effect.resource].toLowerCase()} voorradig is (anders geen conversie die beurt).`;
   }
-  // Wampanoag-vakjes (Going West, M21e, opdracht-wampanoag-opening.md §5): een
-  // minimale placeholder-omschrijving — de daadwerkelijke handelsconversie
-  // (grondstofkeuze, 1:1-omzetting) is M21f, expliciet nog niet hier gebouwd.
+  // Wampanoag-vakjes (Going West, M21e/M21f, opdracht-wampanoag-opening.md
+  // §5/§6): de daadwerkelijke grondstofkeuze-UI (1:1-omzetting per beurt,
+  // instant omkeerbaar) zit in TileInfoPopup (`wampanoagHandelVraag`) —
+  // hier alleen een korte omschrijving voor de tile-info-tekst zelf.
   if (effect.type === "wampanoag") {
-    return "Een onthuld Wampanoag-vakje. Handel hierop is nog niet mogelijk in deze fase.";
+    return "Een onthuld Wampanoag-vakje. Klik erop om een grondstof te kiezen voor handel.";
   }
   return "";
 }

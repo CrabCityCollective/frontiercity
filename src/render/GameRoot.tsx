@@ -53,7 +53,7 @@ import {
   kanStuurVerkenner,
   verhuldeBezetteStreekPosities,
 } from "@/game/streekOntgrendeling";
-import { kanStuurVerkennerWampanoag, verhuldeWampanoagPosities } from "@/game/wampanoag";
+import { kanStuurVerkennerWampanoag, verhuldeWampanoagPosities, wampanoagHandelOpties } from "@/game/wampanoag";
 import {
   AMBER_ONTDEKKING_TWEEDE_TEKST,
   AMBER_ONTDEKKING_TWEEDE_TITEL,
@@ -170,6 +170,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     kiesTech,
     stuurVerkenner,
     stuurVerkennerWampanoag,
+    stelWampanoagHandel,
     stuurMissionaris,
     startMissionarisRecrutering,
     bemanLegerkamp,
@@ -484,6 +485,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // maar voor de losstaande Wampanoag-verhullingslaag (wampanoag.ts) i.p.v.
   // de Bezette Streek.
   const geselecteerdeTileIsWampanoagVerhuld = Boolean(geselecteerdeTileVoorRush?.wampanoagVerhuld);
+  // Wampanoag-handel (Going West, M21f, opdracht-wampanoag-opening.md §6) —
+  // zelfde soort afgeleide vlag als hierboven, maar voor een al onthuld
+  // Wampanoag-vakje: die krijgt in de tile-info-pop-up de grondstofkeuze
+  // (`wampanoagHandelVraag`) i.p.v. de verkenner-actie.
+  const geselecteerdeTileIsWampanoagOnthuld = Boolean(
+    geselecteerdeTileVoorRush?.wampanoagInhoud && !geselecteerdeTileVoorRush.wampanoagVerhuld
+  );
   const geselecteerdeTileIsVijandelijkeWachttoren =
     geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "vijandelijke-wachttoren";
   const geselecteerdeTileIsVijandelijkHeiligdom =
@@ -1804,6 +1812,16 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
                     onStuurVerkenner: () => stuurVerkennerWampanoag(geselecteerdeTile.positieInStreek),
                   }
                 : undefined
+          }
+          wampanoagHandelVraag={
+            geselecteerdeTileIsWampanoagOnthuld && geselecteerdeTile && geselecteerdeTileVoorRush?.wampanoagInhoud
+              ? {
+                  opties: wampanoagHandelOpties(geselecteerdeTileVoorRush.wampanoagInhoud),
+                  huidigeKeuze: geselecteerdeTileVoorRush.wampanoagHandelKeuze,
+                  onKiesResource: (keuze) => stelWampanoagHandel(geselecteerdeTile.positieInStreek, keuze),
+                  onPauzeer: () => stelWampanoagHandel(geselecteerdeTile.positieInStreek, undefined),
+                }
+              : undefined
           }
           confrontatieVraag={
             geselecteerdeTileIsVijandelijkeWachttoren && geselecteerdeTile

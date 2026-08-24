@@ -52,7 +52,10 @@ import {
   stuurMissionaris as stuurMissionarisActie,
   stuurVerkenner as stuurVerkennerActie,
 } from "./streekOntgrendeling";
-import { stuurVerkennerWampanoag as stuurVerkennerWampanoagActie } from "./wampanoag";
+import {
+  stelWampanoagHandelIn as stelWampanoagHandelActie,
+  stuurVerkennerWampanoag as stuurVerkennerWampanoagActie,
+} from "./wampanoag";
 import { sluitBouwKeuze as sluitBouwKeuzeActie, startBouw as startBouwActie } from "./infrastructuurEnBouw";
 import {
   bemanLegerkamp as bemanLegerkampActie,
@@ -63,7 +66,7 @@ import {
 import { laadSpel, saveSpel } from "./save";
 import { kiesTech as kiesTechActie } from "./tech";
 import { bevestigIneenstorting as bevestigIneenstortingActie } from "./uitputtingEnVerval";
-import { EenmaligeUitlegKey, GameState, Improvement, TechId } from "./types";
+import { EenmaligeUitlegKey, GameState, Improvement, TechId, WampanoagHandelKeuze } from "./types";
 
 // Ketent een `volgendeBeurt` vast aan het resultaat van een settler-actie of
 // bouwkeuze zodra er niets meer te doen valt deze beurt (issue: "beurt
@@ -305,6 +308,13 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => stuurVerkennerWampanoagActie(huidig, positieInStreek));
   }, []);
 
+  // Wampanoag-handel (Going West, M21f, opdracht-wampanoag-opening.md §6) —
+  // zelfde dunne wrapper-conventie als `stuurVerkennerWampanoag` hierboven.
+  // `keuze: undefined` pauzeert de handel op dit vakje.
+  const stelWampanoagHandel = useCallback((positieInStreek: number, keuze: WampanoagHandelKeuze | undefined) => {
+    setState((huidig) => stelWampanoagHandelActie(huidig, positieInStreek, keuze));
+  }, []);
+
   const stuurMissionaris = useCallback((missionarisId: string, positieInStreek: number) => {
     setState((huidig) => stuurMissionarisActie(huidig, missionarisId, positieInStreek));
   }, []);
@@ -371,6 +381,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     kiesTech,
     stuurVerkenner,
     stuurVerkennerWampanoag,
+    stelWampanoagHandel,
     stuurMissionaris,
     startMissionarisRecrutering,
     bemanLegerkamp,

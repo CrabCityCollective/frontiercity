@@ -10,10 +10,12 @@ import {
   ECONOMISCH_LAND_IMPROVEMENTS,
   MILITAIR_LAND_IMPROVEMENTS,
   STERRENCIRKEL,
+  VERKENNER,
 } from "./improvements";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek, wetenschapKostenVoorStreekOntgrendeling } from "./world";
 import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
+import { stuurVerkennerWampanoag, verwerkWampanoagVerkenningInGang } from "./wampanoag";
 
 export const HOUTKAP = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "houtkap")!;
 export const STEENGROEVE = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "steengroeve")!;
@@ -217,4 +219,22 @@ export function metWampanoagLaagInBeeld(): GameState {
 export function metWampanoagLaagEnVoorraadVoorVerkenning(): GameState {
   const state = metWampanoagLaagInBeeld();
   return { ...state, wetenschap: 100, voorraad: { hout: 100, steen: 100, erts: 100, goud: 100 } };
+}
+
+// Alle drie Wampanoag-vakjes onthuld, met genoeg erts/gereedschap/goud om
+// meteen te kunnen handelen — gedeelde opzet voor de M21f-handelstests
+// (opdracht-wampanoag-opening.md §6), bouwt voort op
+// `metWampanoagLaagEnVoorraadVoorVerkenning` hierboven. Stuurt op elke positie
+// een verkenner en telt zijn tellertje meteen volledig af, met de
+// 1x-per-beurt-limiet telkens teruggezet — zelfde volgorde als de M21e-tests
+// in wampanoag.test.ts.
+export function metWampanoagLaagOnthuld(): GameState {
+  let state = metWampanoagLaagEnVoorraadVoorVerkenning();
+  state = { ...state, gereedschap: 100 };
+  for (const positieInStreek of [0, 1, 2]) {
+    state = stuurVerkennerWampanoag(state, positieInStreek);
+    for (let i = 0; i < VERKENNER.bouwtijdBeurten; i++) state = verwerkWampanoagVerkenningInGang(state);
+    state = { ...state, verkenningGedaanDitBeurt: false };
+  }
+  return state;
 }
