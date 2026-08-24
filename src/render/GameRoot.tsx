@@ -74,7 +74,6 @@ import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij }
 import {
   campagneStatistieken,
   grafischeStijl,
-  heeftOpgeslagenSpel,
   registreerCampagneGestart,
   registreerCampagneUitgespeeld,
   registreerGameOverGezien,
@@ -173,8 +172,6 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     sluitBezetteStreekOntdektMelding,
     sluitVijandelijkHeiligdomOnthuldMelding,
     sluitVijandelijkHeiligdomVeroverdMelding,
-    opslaan,
-    laden,
   } = useGameEngine(campagneId, laadBijStart);
 
   // Actieve campagne (hoofdstuk 9/13, M20d deelstap 3): `state.campagneId` is
@@ -1459,9 +1456,6 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   return (
     <div className="game-viewport">
       <HoofdMenu
-        onOpslaan={opslaan}
-        onLaden={laden}
-        kanLaden={heeftOpgeslagenSpel(state.campagneId)}
         onVerlaten={onVerlaten}
         uitlegAan={uitlegAan}
         onToggleUitleg={() => zetUitlegPopups(!uitlegAan)}
