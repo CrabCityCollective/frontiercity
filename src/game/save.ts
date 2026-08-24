@@ -136,6 +136,22 @@ function metGemigreerdeSmederijVeld(state: GameState): GameState {
   return { ...state, stad, steden };
 }
 
+// Verwijdert de opgeslagen run van deze campagne (issue: "Bij game over moet
+// de save verwijderd worden") — zonder dit bleef de laatst ge-autosavede
+// status (met `laatsteIneenstorting: true` erop) gewoon in localStorage
+// staan, waardoor "Laden" op CampagneSelectScherm de speler regelrecht weer
+// op het game-over-scherm zette. Aangeroepen zodra een run daadwerkelijk
+// instort (zie useGameEngine: de autosave-effect) — een ingestorte run heeft
+// toch niets meer om te hervatten, dus de save mag weg in plaats van
+// overschreven te blijven met de ineenstortingsvlag erop.
+export function verwijderSpel(campagneId?: string): void {
+  try {
+    window.localStorage.removeItem(saveSleutel(campagneId));
+  } catch {
+    // Zie hierboven bij saveSpel: bewust genegeerd.
+  }
+}
+
 // Of er iets te laden valt voor de gegeven campagne (issue: "menu-icoontje
 // ... opslaan en oudere games ... inladen") — gebruikt om de "Laden"-knop uit
 // te schakelen zolang de speler voor déze campagne nog niets bewust heeft
