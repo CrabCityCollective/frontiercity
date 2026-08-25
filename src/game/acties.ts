@@ -380,6 +380,7 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
     missionarissen: [],
     cityImprovements: [],
     heeftSmederij: false,
+    smederijActief: true,
   };
   // Laatste streek van de wereld = de verplichte, campagne-afsluitende
   // stichting (hoofdstuk 1/9) — elke andere stichting is een tussentijdse

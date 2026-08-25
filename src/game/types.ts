@@ -78,9 +78,10 @@ export type WampanoagInhoud = "maisboerderij" | "beverjachthut" | "opperhoofdten
 // (M21f, opdracht-wampanoag-opening.md §6): welke grondstof de speler kiest
 // om elke beurt 1:1 om te zetten in het bijbehorende handelswaar
 // (`wampanoag.ts`: `WAMPANOAG_GOED_VOOR_INHOUD`). Maïsboerderij/Beverjachthut
-// bieden een keuze tussen erts en gereedschap, Opperhoofdtent alleen goud
-// (opdracht §6, tabel).
-export type WampanoagHandelKeuze = "erts" | "gereedschap" | "goud";
+// bieden alleen gereedschap aan (issue: "Smederij inactief zetten" — erts is
+// hier bewust geschrapt als keuze, zodat de Smederij de enige erts-afzet
+// blijft), Opperhoofdtent alleen goud (opdracht §6, tabel).
+export type WampanoagHandelKeuze = "gereedschap" | "goud";
 
 export interface EffectDefinition {
   type: string;
@@ -482,6 +483,16 @@ export interface City {
   // openingsfase gewoon staan (opdracht-wampanoag-opening.md §3: "blijft
   // nuttig voor latere campagne-lagen").
   heeftSmederij: boolean;
+  // Of de voltooide Smederij momenteel meedraait (issue: "Smederij inactief
+  // zetten") — losstaand van `heeftSmederij` hierboven, dat alleen bijhoudt
+  // of het gebouw er staat. Standaard `true` zodra de Smederij klaar is
+  // (`verwerkSmederij`/`versnelSmederijMetGoud`, groeiEnRekrutering.ts), de
+  // speler kan 'm via `zetSmederijActief` pauzeren/hervatten om de lopende
+  // erts-consumptie stil te leggen zonder het gebouw kwijt te raken (zelfde
+  // instant-omkeerbare toggle-conventie als de Wampanoag-handelskeuze en
+  // Wachttoren-bemanning). Betekenisloos zolang `heeftSmederij` nog `false`
+  // is; blijft dan gewoon op de standaardwaarde staan.
+  smederijActief: boolean;
 }
 
 // Uitkomst van een militaire confrontatie (M7, hoofdstuk 6): een vergelijking

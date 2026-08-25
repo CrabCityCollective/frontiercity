@@ -273,10 +273,12 @@ export function verwerkProductie(state: GameState): GameState {
   // hierboven (een ander effect-type), en bewust zonder het afstandsverval/
   // `stadEffectiviteit` van de overige city improvements: de conversie trekt
   // rechtstreeks uit de lokale erts-voorraad van de actieve stad, geen
-  // productie op een land-vakje.
+  // productie op een land-vakje. `smederijActief` (issue: "Smederij inactief
+  // zetten") legt de conversie stil zonder het gebouw zelf kwijt te raken —
+  // zolang de speler 'm pauzeert, blijft de erts-voorraad ongemoeid.
   let gereedschap = state.gereedschap;
   const ertsKosten = SMEDERIJ.effect.waarde ?? 0;
-  if (state.stad.heeftSmederij && voorraad.erts >= ertsKosten) {
+  if (state.stad.heeftSmederij && state.stad.smederijActief && voorraad.erts >= ertsKosten) {
     voorraad.erts -= ertsKosten;
     gereedschap += SMEDERIJ_GEREEDSCHAP_OPBRENGST;
   }

@@ -32,6 +32,7 @@ import {
   versnelCivielMetGoud as versnelCivielMetGoudActie,
   versnelOpslagplaatsMetGoud as versnelOpslagplaatsMetGoudActie,
   versnelSmederijMetGoud as versnelSmederijMetGoudActie,
+  zetSmederijActief as zetSmederijActiefActie,
 } from "./groeiEnRekrutering";
 import {
   bevestigAmberOnderVuur as bevestigAmberOnderVuurActie,
@@ -258,6 +259,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => versnelSmederijMetGoudActie(huidig));
   }, []);
 
+  // Smederij actief/inactief toggelen (issue: "Smederij inactief zetten") —
+  // zelfde dunne wrapper-conventie als hierboven.
+  const zetSmederijActief = useCallback((actief: boolean) => {
+    setState((huidig) => zetSmederijActiefActie(huidig, actief));
+  }, []);
+
   const geefTribuut = useCallback(() => {
     setState((huidig) => geefTribuutActie(huidig));
   }, []);
@@ -383,6 +390,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     versnelCivielMetGoud,
     versnelOpslagplaatsMetGoud,
     versnelSmederijMetGoud,
+    zetSmederijActief,
     geefTribuut,
     weigerTribuut,
     bemanWachttoren,

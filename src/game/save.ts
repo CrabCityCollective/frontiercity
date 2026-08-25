@@ -40,8 +40,10 @@ export function laadSpel(campagneId?: string): GameState | null {
   try {
     const ruw = window.localStorage.getItem(saveSleutel(campagneId));
     if (!ruw) return null;
-    return metGemigreerdeSmederijVeld(
-      metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+    return metGemigreerdSmederijActiefVeld(
+      metGemigreerdeSmederijVeld(
+        metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+      )
     );
   } catch {
     return null;
@@ -133,6 +135,20 @@ function metGemigreerdeSmederijVeld(state: GameState): GameState {
   if (typeof state.stad.heeftSmederij === "boolean") return state;
   const stad = { ...state.stad, heeftSmederij: state.stad.heeftSmederij ?? false };
   const steden = state.steden.map((s) => ({ ...s, heeftSmederij: s.heeftSmederij ?? false }));
+  return { ...state, stad, steden };
+}
+
+// Migratie voor saves van vóór `City.smederijActief` (issue: "Smederij
+// inactief zetten"): oudere saves kennen dit veld nog niet, op zowel `stad`
+// als elke stad in `steden`. Valt terug op `true` (nooit gepauzeerd, want de
+// toggle bestond nog niet) op elke stad — vóór deze migratie liep een
+// voltooide Smederij (`heeftSmederij: true`) altijd door, dus dit behoudt het
+// bestaande gedrag voor een oudere save in plaats van de conversie
+// stilzwijgend te pauzeren.
+function metGemigreerdSmederijActiefVeld(state: GameState): GameState {
+  if (typeof state.stad.smederijActief === "boolean") return state;
+  const stad = { ...state.stad, smederijActief: state.stad.smederijActief ?? true };
+  const steden = state.steden.map((s) => ({ ...s, smederijActief: s.smederijActief ?? true }));
   return { ...state, stad, steden };
 }
 
