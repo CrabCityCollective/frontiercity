@@ -29,6 +29,7 @@ import {
   tekenBeschikbaarMarkering,
   tekenLegerkampBereikbaarMarkering,
   tekenSettlerBereikbaarMarkering,
+  tekenStadNaam,
   tekenTileGrid,
   tekenVerkenningBereikbaarMarkering,
   terreinBasisKleur,
@@ -973,6 +974,13 @@ export function tekenWereldPixelArt(
 
   const { canvas: tileCanvas, ctx: tileCtx } = maakTileCanvas();
 
+  // Schermpositie van de stad-tegel (issue: "Stad naam tonen op de kaart") —
+  // zie canvas.ts (`tekenWereld`) voor de volledige toelichting. Kan hier niet
+  // in de per-tegel offscreen `tileCtx` getekend worden (die is precies
+  // PIX x PIX groot, dus de naam zou aan de tegelrand afgeknipt worden) —
+  // moet dus op de echte `ctx` als losse overlay.
+  let stadPositie: { x: number; y: number } | undefined;
+
   for (const streek of streken) {
     const rijIndex = totaalStreken - streek.hoogte;
     const y = rijIndex * tileSize + topOffset;
@@ -993,6 +1001,9 @@ export function tekenWereldPixelArt(
         } else {
           const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
           tekenActieveTilePixel(tileCtx, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+          if (tile.improvement?.soort === "city") {
+            stadPositie = { x, y };
+          }
           if (tile.versWater) {
             tekenVersWaterMarkeringPixel(tileCtx, tileSeed(col, streek.hoogte, 2));
           }
@@ -1004,6 +1015,9 @@ export function tekenWereldPixelArt(
       } else {
         const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
         tekenActieveTilePixel(tileCtx, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+        if (streek.tiles[col].improvement?.soort === "city") {
+          stadPositie = { x, y };
+        }
         if (streek.tiles[col].versWater) {
           tekenVersWaterMarkeringPixel(tileCtx, tileSeed(col, streek.hoogte, 2));
         }
@@ -1073,5 +1087,11 @@ export function tekenWereldPixelArt(
       tekenOceaanTilePixel(ctx, x, 0, tileSize, tileSeed(col, totaalStreken + 1));
       tekenTileGrid(ctx, x, 0, tileSize);
     }
+  }
+
+  // Stad-naam als allerlaatste overlay — zie canvas.ts (`tekenWereld`) voor de
+  // volledige toelichting.
+  if (stadPositie) {
+    tekenStadNaam(ctx, stadPositie.x, stadPositie.y, tileSize, stad.naam);
   }
 }
