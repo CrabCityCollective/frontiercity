@@ -15,7 +15,7 @@ import {
   verwerkWampanoagVerkenningInGang,
   wampanoagHandelOpties,
 } from "./wampanoag";
-import { cultuurKostenVoorStreek, hoogsteOntgrendeldeStreek, wetenschapKostenVoorStreekOntgrendeling } from "./world";
+import { cultuurKostenVoorStreek, hoogsteOntgrendeldeStreek } from "./world";
 import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 import { magSettlerNaar } from "./wegen";
 import {
@@ -29,7 +29,7 @@ import {
 // (streekOntgrendeling.ts) — met alle negen vakjes verhuld i.p.v. alleen de
 // drie handelsvakjes; terrein bepaalt welk gebouw op welk vakje komt te
 // liggen.
-test("de Wampanoag-streek komt 'in beeld' als blokkerende streek met negen verhulde vakjes zodra de wetenschapsdrempel gehaald wordt (Going West)", () => {
+test("de Wampanoag-streek komt 'in beeld' als blokkerende streek met negen verhulde vakjes zodra de cultuurdrempel gehaald wordt (Going West)", () => {
   const state = metWampanoagLaagInBeeld();
   const streek = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
 
@@ -203,10 +203,6 @@ test("isBebouwbaarLeeg sluit elk nog verhuld Wampanoag-vakje uit, ondanks status
   assert.equal(isBebouwbaarLeeg(streek4.tiles[3]), false);
 });
 
-test("wetenschapKostenVoorStreekOntgrendeling(WAMPANOAG_STREEK_HOOGTE) is de opdracht-drempel van 35", () => {
-  assert.equal(wetenschapKostenVoorStreekOntgrendeling(WAMPANOAG_STREEK_HOOGTE), 35);
-});
-
 // M21f (opdracht-wampanoag-opening.md §6): "geen aparte Handelaar-unit" —
 // wampanoagHandelOpties bepaalt puur welke knoppen de tile-info-pop-up toont.
 test("wampanoagHandelOpties: Maïsboerderij/Beverjachthut bieden erts of gereedschap, Opperhoofdtent alleen goud", () => {
@@ -300,10 +296,9 @@ test("heeftWampanoagHandelsdrempelGehaald vereist alle drie handelswaren apart o
   assert.equal(heeftWampanoagHandelsdrempelGehaald({ ...state, bevervellen: 3, mais: 3, wampum: 3 }), true);
 });
 
-test("verwerkWampanoagFaseAfsluiting zet cultureelOntgrendeld/ontgrendelResource om en zet het narratieve event zodra de 3-3-3-drempel gehaald is", () => {
+test("verwerkWampanoagFaseAfsluiting zet cultureelOntgrendeld om en zet het narratieve event zodra de 3-3-3-drempel gehaald is", () => {
   let state = metWampanoagLaagOnthuld();
   assert.equal(state.cultureelOntgrendeld, false, "Going West start in de openingsfase");
-  assert.equal(state.ontgrendelResource, "wetenschap");
 
   const nogNiet = verwerkWampanoagFaseAfsluiting({ ...state, bevervellen: 2, mais: 3, wampum: 3 });
   assert.equal(nogNiet.cultureelOntgrendeld, false, "nog geen omslag zolang niet alle drie op de drempel staan");
@@ -312,7 +307,6 @@ test("verwerkWampanoagFaseAfsluiting zet cultureelOntgrendeld/ontgrendelResource
   state = { ...state, bevervellen: 3, mais: 3, wampum: 3 };
   state = verwerkWampanoagFaseAfsluiting(state);
   assert.equal(state.cultureelOntgrendeld, true);
-  assert.equal(state.ontgrendelResource, "cultuur");
   assert.equal(state.wampanoagRelatieGelegdEvent, true);
 
   const gesloten = sluitWampanoagRelatieGelegdMelding(state);
@@ -339,7 +333,6 @@ test("verwerkWampanoagFaseAfsluiting is een no-op in de tutorial (cultureelOntgr
   const resultaat = verwerkWampanoagFaseAfsluiting(tutorialMetVolleVoorraad);
   assert.equal(resultaat, tutorialMetVolleVoorraad, "no-op — zelfde object terug, geen omslag/event");
   assert.equal(resultaat.wampanoagRelatieGelegdEvent, undefined);
-  assert.equal(resultaat.ontgrendelResource, "cultuur");
 });
 
 // Integratietest: `volgendeBeurt` roept `verwerkWampanoagFaseAfsluiting` aan
@@ -354,6 +347,5 @@ test("volgendeBeurt sluit de Wampanoag-fase af zodra de handel deze beurt de 3-3
 
   assert.equal(state.wampum, 3);
   assert.equal(state.cultureelOntgrendeld, true);
-  assert.equal(state.ontgrendelResource, "cultuur");
   assert.equal(state.wampanoagRelatieGelegdEvent, true);
 });

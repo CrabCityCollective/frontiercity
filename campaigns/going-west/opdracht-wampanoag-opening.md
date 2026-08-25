@@ -1,5 +1,19 @@
 # Opdracht: Openingsfase Amerikaanse campagne — Wampanoag/Massasoit
 
+**Herzien (issue "Weer gewoon cultuur voor ontgrendeling")**: de
+wetenschap-gedreven streek-ontgrendeling van §4 hieronder (en de bijbehorende
+`ontgrendelResource`-vlag uit §1/§7) bleek nodeloos ingewikkeld en is
+teruggedraaid — streek-ontgrendeling loopt in Going West, net als in de
+tutorial, weer altijd op cultuur, en Cultureel-improvements (Heiligdom e.a.)
+zijn weer gewoon bouwbaar vanaf streek 1. Wetenschap drijft sindsdien alleen
+nog de technologieboom en de Verkenner-actie (§5: het onthullen van
+Wampanoag-vakjes blijft wetenschap kosten). De rest van deze opdracht — de
+Wampanoag-laag zelf, de Smederij, de handel (§6) en de gecapte
+stadsverbeteringen-pool die tot de 3-3-3-handelsdrempel op alleen de Smederij
+blijft staan (§7) — staat nog steeds, ongewijzigd. De paragrafen hieronder
+zijn met dit voorbehoud gelezen te worden; ze zijn historisch gelaten in
+plaats van herschreven.
+
 ## Context
 Dit implementeert de eerste zes streken van de Amerikaanse frontier-campagne
 ("Going West"), vóór de bestaande Anker-verhalen. De speler landt, heeft nog
@@ -34,10 +48,15 @@ van nieuwe systemen te bouwen.
 - Vlag op `GameState` of `City`: `cultureelOntgrendeld: boolean` (default false
   voor deze campagne-opening) — bepaalt of de Cultureel-categorie zichtbaar is
   in de land-improvement-categoriekeuze. Wordt `true` zodra 3-3-3-drempel
-  gehaald is.
-- Vlag `ontgrendelResource: 'wetenschap' | 'cultuur'` per campagne-fase — bepaalt
-  welke valuta streek-ontgrendeling aandrijft. Start op `wetenschap`, schakelt
-  naar `cultuur` bij dezelfde 3-3-3-trigger.
+  gehaald is. **Herzien**: bepaalt sindsdien alleen nog of de gecapte
+  stadsverbeteringen-pool en het Wampanoag-statusbalkje getoond worden — de
+  Cultureel-categorie zelf is niet langer aan deze vlag gekoppeld (zie de
+  herziening bovenaan dit document).
+- ~~Vlag `ontgrendelResource: 'wetenschap' | 'cultuur'` per campagne-fase —
+  bepaalt welke valuta streek-ontgrendeling aandrijft. Start op `wetenschap`,
+  schakelt naar `cultuur` bij dezelfde 3-3-3-trigger.~~ **Vervallen** (zie de
+  herziening bovenaan dit document): streek-ontgrendeling loopt altijd op
+  cultuur, dit veld bestaat niet meer.
 
 ## 2. Nieuwe land improvements (categorie Economisch, tenzij anders vermeld)
 
@@ -70,28 +89,39 @@ Boerderij/vergelijkbaar).
   tutorial-pacing) golden ook voor Going West — dat bleek een ongewenste
   tutorial-achtige beperking (op streek 1 was letterlijk alleen de Steengroeve
   bouwbaar). Beide zijn losgelaten: `beschikbareOpties` negeert `minStreek`
-  zodra er een campagne actief is, en `OPENINGSFASE_VERBORGEN_CATEGORIEEN`
-  bevat alleen nog Cultureel. Zichtbare categorieën in land-improvement-keuze
-  tijdens streek 1-6: **alles, behalve Cultureel** (Civiel toont sowieso geen
-  losse land-improvement-opties, zie `IMPROVEMENT_POOLS.civiel`).
-- Stadsverbeteringen-scherm (gecapte pool): **alleen Smederij** zichtbaar.
+  zodra er een campagne actief is. **Herzien (issue "Weer gewoon cultuur voor
+  ontgrendeling")**: `OPENINGSFASE_VERBORGEN_CATEGORIEEN`/`categorieZichtbaar`
+  bestaan niet meer — Cultureel is sindsdien net als elke andere categorie
+  altijd zichtbaar, ook tijdens de openingsfase. Zichtbare categorieën in
+  land-improvement-keuze tijdens streek 1-6: **alles** (Civiel toont sowieso
+  geen losse land-improvement-opties, zie `IMPROVEMENT_POOLS.civiel`).
+- Stadsverbeteringen-scherm (gecapte pool): **alleen Smederij** zichtbaar
+  (ongewijzigd — blijft aan `cultureelOntgrendeld` gekoppeld).
 - Civiele wachtrij (los, bestaand mechanisme): Woonwijk + settler, ongewijzigd.
-- Streek-ontgrendeling loopt op **wetenschap**, niet cultuur. Wetenschap komt uit
-  Sterrencirkel zoals gewoonlijk (put niet uit, volle opbrengst op frontier,
-  helft eronder).
-- Drempels (MVP-richtwaarde, tunebaar): streek 2 = 10, streek 3 = 18,
-  streek 4 = 25, streek 5 = 30, streek 6 ("in beeld") = 35.
+- ~~Streek-ontgrendeling loopt op **wetenschap**, niet cultuur.~~ **Herzien**:
+  streek-ontgrendeling loopt, net als in de tutorial, op **cultuur** — de
+  drempels hieronder golden alleen voor de teruggedraaide wetenschap-variant
+  en zijn niet meer in gebruik (`cultuurKostenVoorStreek` in world.ts blijft
+  de enige drempelformule). Wetenschap komt uit Sterrencirkel zoals
+  gewoonlijk (put niet uit, volle opbrengst op frontier, helft eronder) en
+  drijft nog wel de technologieboom en de Verkenner-actie (§5 hieronder).
+- ~~Drempels (MVP-richtwaarde, tunebaar): streek 2 = 10, streek 3 = 18,
+  streek 4 = 25, streek 5 = 30, streek 6 ("in beeld") = 35.~~ Vervallen samen
+  met de wetenschap-variant hierboven.
 
 ## 5. Streek 6 — Wampanoag-laag (issue: "Wampanoag streek blokkerend")
 
-- Trigger bij 35 wetenschap: narratieve pop-up (`CampaignConfig.popupTeksten`,
-  sleutel bijv. `eersteContactPopup`) — introduceert Massasoit/Wampanoag.
+- Trigger bij de cultuurdrempel van streek 6 (`cultuurKostenVoorStreek(6)`,
+  wereldwaarde van de Going West-kaart — vóór de herziening was dit "bij 35
+  wetenschap"): narratieve pop-up (`CampaignConfig.popupTeksten`, sleutel
+  bijv. `eersteContactPopup`) — introduceert Massasoit/Wampanoag.
 - **Blokkerend**, net als de bestaande Bezette Streek: de streek komt "in
   beeld" met `ontgrendeld: false` en blijft dat tot de fase hieronder is
-  opgelost — de settler kan er niet doorheen lopen, en de wetenschap-gedreven
+  opgelost — de settler kan er niet doorheen lopen, en de cultuur-gedreven
   streek-ontgrendeling (§4) stopt hier (ontgrendelt geen streken meer
   verderop). Wetenschap blijft wél bruikbaar om vakjes binnen deze streek te
-  onthullen (Verkenner-actie hieronder kost immers wetenschap).
+  onthullen (Verkenner-actie hieronder kost immers wetenschap) — dat is
+  sindsdien de enige plek waar wetenschap nog invloed heeft op deze streek.
 - Streek toont **alle negen vakjes verhuld** (niet alleen de drie
   handelsvakjes), per-tegel verhullingslaag zoals bestaande
   Bezette-Streek-tiles — de zes vakjes zonder bijzondere inhoud zijn
@@ -129,11 +159,15 @@ Boerderij/vergelijkbaar).
 ## 7. Afsluiting van de fase
 
 Zodra 3-3-3 gehaald is:
-- `cultureelOntgrendeld = true` → Cultureel-categorie (Heiligdom/Kapel)
-  wordt zichtbaar in land-improvement-keuze.
-- `ontgrendelResource` schakelt van `wetenschap` naar `cultuur` voor
+- `cultureelOntgrendeld = true` → opent de gecapte stadsverbeteringen-pool
+  (Bibliotheek/Markt/Barakken/Tempel/Grote Tempel) naast de Smederij, en
+  verbergt het Wampanoag-statusbalkje. **Herzien**: de Cultureel-categorie
+  (Heiligdom/Kapel) zelf hangt hier niet meer van af — die is al vanaf
+  streek 1 zichtbaar in de land-improvement-keuze (zie §4).
+- ~~`ontgrendelResource` schakelt van `wetenschap` naar `cultuur` voor
   streek 5 en verder (wetenschap blijft daarna gewoon actief voor de
-  technologie-boom, zoals in de tutorial).
+  technologie-boom, zoals in de tutorial).~~ **Vervallen** (zie de herziening
+  bovenaan dit document): streek-ontgrendeling liep hier al op cultuur.
 - Narratieve pop-up bevestigt het omslagpunt (nieuwe sleutel in
   `popupTeksten`, bijv. `wampanoagRelatieGelegdPopup`).
 - Zodra de stad (los, via Woonwijk) naar "middel" groeit: cap wordt 3, volledige
@@ -162,13 +196,17 @@ en andersom.
 
 ## Acceptatiecriteria
 
-- [ ] Speler kan op streek 1-5 alleen Economisch/Wetenschappelijk bouwen, plus
+- [x] Speler kan op streek 1-5 alle categorieën bouwen (**herzien**: ook
+      Cultureel, niet alleen Economisch/Wetenschappelijk/Militair), plus
       Smederij (city, buiten cap) en Woonwijk/settler (civiele wachtrij).
-- [ ] Streek-ontgrendeling 1→6 loopt aantoonbaar op wetenschap, niet cultuur.
-- [ ] Bij 35 wetenschap verschijnt de Massasoit-pop-up en toont streek 6 negen
-      verhulde vakjes; de streek zelf blijft `ontgrendeld: false` (settler kan
-      er niet doorheen, streek-ontgrendeling ontgrendelt geen streken meer
-      verderop) tot de drie handelsvakjes onthuld zijn.
+- [x] ~~Streek-ontgrendeling 1→6 loopt aantoonbaar op wetenschap, niet
+      cultuur.~~ **Herzien**: loopt aantoonbaar op cultuur, net als de rest
+      van het spel (zie de herziening bovenaan dit document).
+- [x] Bij de cultuurdrempel van streek 6 verschijnt de Massasoit-pop-up en
+      toont streek 6 negen verhulde vakjes; de streek zelf blijft
+      `ontgrendeld: false` (settler kan er niet doorheen, streek-ontgrendeling
+      ontgrendelt geen streken meer verderop) tot de drie handelsvakjes
+      onthuld zijn.
 - [ ] Onthullen via klik + Verkenner-tellertje werkt met de bestaande
       tutorial-Verkenner-kosten, max 1 gestart per beurt.
 - [ ] Terrein-subtype van het vakje bepaalt welk gebouw onthuld wordt.
@@ -177,8 +215,11 @@ en andersom.
 - [ ] Smederij zet 2 erts om in 1 gereedschap per beurt, bruikbaar als
       alternatieve handelsinput.
 - [ ] 3-3-3-drempel is hard en per type apart gecontroleerd.
-- [ ] Bij het halen van de drempel: Cultureel-categorie ontgrendelt, ontgrendel-
-      resource schakelt naar cultuur, bevestigingspop-up verschijnt.
+- [x] Bij het halen van de drempel: gecapte stadsverbeteringen-pool
+      ontgrendelt naast de Smederij, bevestigingspop-up verschijnt (**herzien**:
+      niet langer de Cultureel-categorie of een ontgrendel-resource-omslag —
+      die zijn al vanaf streek 1 op cultuur, zie de herziening bovenaan dit
+      document).
 - [ ] Mechaniek-uitleg-pop-ups, campagne-flavor-pop-ups en systeem-pop-ups zijn
       technisch gescheiden (aparte databronnen/sleutels), geen kruisbesmetting
       tussen tutorial en Amerikaanse campagne.

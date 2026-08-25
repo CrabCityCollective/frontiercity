@@ -31,13 +31,14 @@ export const STAD_POSITIE = 4; // middelste vakje van de band = stad — zelfde 
 export const GOING_WEST_STREEK_AANTAL = 35;
 
 // Streek-hoogte van de Wampanoag-laag (M21e, opdracht-wampanoag-opening.md
-// §5) — het einde van de openingsfase, lopend op wetenschap (zie
-// `wetenschapKostenVoorStreekOntgrendeling` in world.ts). Verschoven van 4
-// naar 6 (issue: "Wampanoag streek blokkerend") om de speler meer van de
-// openingsfase te laten spelen vóór de streek "in beeld" komt. Gedeeld met
-// streekOntgrendeling.ts (de trigger, in de wetenschap-gedreven
-// ontgrendel-lus, en de blokkering zelf) en wampanoag.ts (de Verkenning-flow
-// zelf) zodat beide dezelfde hoogte hanteren.
+// §5) — het einde van de openingsfase, lopend op cultuur net als elke andere
+// streek (`cultuurKostenVoorStreek` in world.ts; issue "Weer gewoon cultuur
+// voor ontgrendeling" draaide een eerdere, wetenschap-gedreven versie hiervan
+// terug). Verschoven van 4 naar 6 (issue: "Wampanoag streek blokkerend") om
+// de speler meer van de openingsfase te laten spelen vóór de streek "in
+// beeld" komt. Gedeeld met streekOntgrendeling.ts (de trigger, in de
+// cultuur-gedreven ontgrendel-lus, en de blokkering zelf) en wampanoag.ts (de
+// Verkenning-flow zelf) zodat beide dezelfde hoogte hanteren.
 export const WAMPANOAG_STREEK_HOOGTE = 6;
 
 // Vaste, beschrijvende terreinnaam per streek (flavor, geen invloed op

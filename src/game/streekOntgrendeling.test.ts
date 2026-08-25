@@ -24,7 +24,6 @@ import {
   KUDDE_GROTE_JACHT_BEURTEN,
   ROOFDIER_MIN_STREEK,
   ROOFDIER_STREEK_KUDDE_POSITIE,
-  wetenschapKostenVoorStreekOntgrendeling,
 } from "./world";
 import { metActieveStad } from "./stad";
 import {
@@ -385,47 +384,34 @@ test("Deel 6, uitgebreid (issue: laatste confrontatie tweaken): een nog niet opg
   );
 });
 
-// M21b (opdracht-wampanoag-opening.md §1/§4): tijdens de Going West-
-// openingsfase (`ontgrendelResource: "wetenschap"`, gezet door
-// `maakInitieleSpelStatus` sinds M21a) loopt streek-ontgrendeling op
-// wetenschap i.p.v. cultuur, met de opdracht-drempels streek 2 = 10.
-test("Going West-openingsfase: streek-ontgrendeling loopt op wetenschap, niet op cultuur", () => {
+// Issue "Weer gewoon cultuur voor ontgrendeling": een eerdere versie
+// (M21b, opdracht-wampanoag-opening.md §1/§4) liet de Going West-
+// openingsfase op wetenschap draaien i.p.v. cultuur (`ontgrendelResource`).
+// Dat bleek nodeloos ingewikkeld en is teruggedraaid — Going West ontgrendelt
+// streken nu, net als de tutorial, altijd via cultuur; wetenschap drijft
+// alleen nog de technologieboom en de Verkenner-actie (VERKENNING_KOSTEN_WETENSCHAP).
+test("Going West: streek-ontgrendeling loopt op cultuur, ongeacht wetenschap", () => {
   let state = maakInitieleSpelStatus("going-west");
-  assert.equal(state.ontgrendelResource, "wetenschap");
 
-  // Veel cultuur, maar geen wetenschap: streek 2 blijft vergrendeld.
-  state = { ...state, cultuur: cultuurKostenVoorStreek(2) + 100, wetenschap: 0 };
+  // Veel wetenschap, maar geen cultuur: streek 2 blijft vergrendeld.
+  state = { ...state, cultuur: 0, wetenschap: 10_000 };
   assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, false);
 
-  // Net genoeg wetenschap voor de opdracht-drempel van streek 2 (10):
-  // ontgrendelt, ongeacht de cultuur hierboven.
-  state = { ...state, wetenschap: wetenschapKostenVoorStreekOntgrendeling(2) };
-  assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, true);
-});
-
-// Zelfde opdracht-paragraaf: de tutorial (`ontgrendelResource: "cultuur"`,
-// ongewijzigd) mag door deze campagne-splitsing niet beïnvloed worden — veel
-// wetenschap alleen mag een tutorial-streek niet ontgrendelen.
-test("tutorial: streek-ontgrendeling blijft op cultuur lopen, ongeacht wetenschap", () => {
-  let state = maakInitieleSpelStatus();
-  assert.equal(state.ontgrendelResource, "cultuur");
-
-  state = { ...state, wetenschap: wetenschapKostenVoorStreekOntgrendeling(2) + 100, cultuur: 0 };
-  assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, false);
-
+  // Genoeg cultuur voor de gewone cultuurdrempel: ontgrendelt, ongeacht de
+  // wetenschap hierboven.
   state = { ...state, cultuur: cultuurKostenVoorStreek(2) };
   assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, true);
 });
 
-// De opdracht noemt oorspronkelijk drie expliciete drempelwaarden (streek 2 =
-// 10, 3 = 20, 4 = 35, met 4 destijds de Wampanoag-streek); sinds issue
-// "Wampanoag streek blokkerend" verschoof de Wampanoag-streek naar 6, met
-// twee nieuwe tussenliggende drempels (4 en 5) — vastgelegd als
-// regressietest, los van de exacte formule-vorm in world.ts.
-test("wetenschapKostenVoorStreekOntgrendeling geeft de vastgelegde drempels voor streek 2 t/m 6", () => {
-  assert.equal(wetenschapKostenVoorStreekOntgrendeling(2), 10);
-  assert.equal(wetenschapKostenVoorStreekOntgrendeling(3), 18);
-  assert.equal(wetenschapKostenVoorStreekOntgrendeling(4), 25);
-  assert.equal(wetenschapKostenVoorStreekOntgrendeling(5), 30);
-  assert.equal(wetenschapKostenVoorStreekOntgrendeling(6), 35, "streek 6 is de Wampanoag-streek ('in beeld')");
+// Zelfde issue: de tutorial liep hier altijd al op cultuur — vastgelegd als
+// regressietest zodat een latere wijziging aan Going West dit niet weer
+// per ongeluk verandert.
+test("tutorial: streek-ontgrendeling blijft op cultuur lopen, ongeacht wetenschap", () => {
+  let state = maakInitieleSpelStatus();
+
+  state = { ...state, wetenschap: 10_000, cultuur: 0 };
+  assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, false);
+
+  state = { ...state, cultuur: cultuurKostenVoorStreek(2) };
+  assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, true);
 });

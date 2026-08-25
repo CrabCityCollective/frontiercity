@@ -13,7 +13,7 @@ import {
   VERKENNER,
 } from "./improvements";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
-import { BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek, wetenschapKostenVoorStreekOntgrendeling } from "./world";
+import { BEZETTE_STREEK_HOOGTE, cultuurKostenVoorStreek } from "./world";
 import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 import { stuurVerkennerWampanoag, verwerkWampanoagVerkenningInGang } from "./wampanoag";
 
@@ -202,15 +202,17 @@ export function metLegerkampOpStreek12(state: GameState): GameState {
   return s;
 }
 
-// Duwt de Going West-wetenschap naar de drempel van WAMPANOAG_STREEK_HOOGTE en
+// Duwt de Going West-cultuur naar de drempel van WAMPANOAG_STREEK_HOOGTE en
 // verwerkt één beurt, zodat de streek "in beeld" komt als blokkerende streek
 // en de Wampanoag-laag geïnitialiseerd wordt (M21e, opdracht-wampanoag-
 // opening.md §5; blokkerend gemaakt door issue "Wampanoag streek
 // blokkerend") — gedeelde opzet voor de Wampanoag-Verkenning-tests, zelfde
-// patroon als `metBezetteStreekInBeeld` hierboven.
+// patroon als `metBezetteStreekInBeeld` hierboven. Sinds issue "Weer gewoon
+// cultuur voor ontgrendeling" loopt streek-ontgrendeling ook in Going West op
+// cultuur, niet meer op wetenschap.
 export function metWampanoagLaagInBeeld(): GameState {
   let state = maakInitieleSpelStatus("going-west");
-  state = { ...state, wetenschap: wetenschapKostenVoorStreekOntgrendeling(WAMPANOAG_STREEK_HOOGTE), voedsel: 10_000 };
+  state = { ...state, cultuur: cultuurKostenVoorStreek(WAMPANOAG_STREEK_HOOGTE), voedsel: 10_000 };
   return volgendeBeurt(state);
 }
 

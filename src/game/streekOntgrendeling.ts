@@ -30,7 +30,6 @@ import {
   kuddeJachtBeurtenVoorStreek,
   ROOFDIER_MIN_STREEK,
   ROOFDIER_STREEK_KUDDE_POSITIE,
-  wetenschapKostenVoorStreekOntgrendeling,
 } from "./world";
 import { initialiseerWampanoagLaag, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 import { metActieveStad } from "./stad";
@@ -54,15 +53,15 @@ export const BELEGERINGSDREMPEL = 30;
 export const WOLOLO_INKOMEN_PER_MISSIONARIS = 5;
 
 // Ontgrendelt de eerstvolgende vergrendelde streek zodra de cumulatieve
-// voortgangsvaluta de drempel haalt (M5, hoofdstuk 2/5; campagne-bewust sinds
-// M21b, opdracht-wampanoag-opening.md §1/§4). Welke valuta dat is, staat op
-// `GameState.ontgrendelResource` (M21a): de tutorial en Going West ná de
-// 3-3-3-drempel (M21g) draaien op `"cultuur"` (ongewijzigd gedrag,
-// `cultuurKostenVoorStreek`), de Going West-openingsfase draait op
-// `"wetenschap"` (`wetenschapKostenVoorStreekOntgrendeling` in world.ts).
-// Beide valuta's worden niet "uitgegeven" — ze blijven een oplopende teller,
-// dus bij een grote overschot ontgrendelen meteen meerdere streken na elkaar
-// in dezelfde beurt.
+// cultuur de drempel haalt (M5, hoofdstuk 2/5) — geldt ongewijzigd voor elke
+// campagne, inclusief de Going West-openingsfase (issue "Weer gewoon cultuur
+// voor ontgrendeling": een eerdere versie liet de openingsfase op wetenschap
+// draaien via `GameState.ontgrendelResource`/`wetenschapKostenVoorStreekOntgrendeling`
+// — dat bleek nodeloos ingewikkeld en is teruggedraaid; wetenschap drijft nu
+// alleen nog de technologieboom en de Verkenner-actie hieronder/in
+// wampanoag.ts). Cultuur wordt niet "uitgegeven" — het blijft een oplopende
+// teller, dus bij een groot overschot ontgrendelen meteen meerdere streken na
+// elkaar in dezelfde beurt.
 export function verwerkStreekOntgrendeling(state: GameState): GameState {
   let streken = state.streken;
   let volgendeHoogte = hoogsteOntgrendeldeStreek(streken) + 1;
@@ -71,10 +70,7 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
   let bezetteStreekOntdektEvent = state.bezetteStreekOntdektEvent;
   let wampanoagLaagOntdektEvent = state.wampanoagLaagOntdektEvent;
 
-  const heeftDrempelGehaald = (hoogte: number) =>
-    state.ontgrendelResource === "wetenschap"
-      ? state.wetenschap >= wetenschapKostenVoorStreekOntgrendeling(hoogte)
-      : state.cultuur >= cultuurKostenVoorStreek(hoogte);
+  const heeftDrempelGehaald = (hoogte: number) => state.cultuur >= cultuurKostenVoorStreek(hoogte);
 
   while (volgendeHoogte <= streken.length && heeftDrempelGehaald(volgendeHoogte)) {
     const huidigeStreek = streken.find((streek) => streek.hoogte === volgendeHoogte)!;
@@ -100,19 +96,17 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     // blokkerend gemaakt door issue "Wampanoag streek blokkerend"): zelfde
     // bevriezings-patroon als de Bezette Streek hierboven — de streek komt
     // "in beeld" met alle negen vakjes verhuld (`initialiseerWampanoagLaag`,
-    // worldGoingWest.ts) en blijft `ontgrendeld: false` (dus geen frontier-
-    // voortgang, geen verdere wetenschap-gedreven streek-ontgrendeling) tot
-    // de drie handelsvakjes onthuld zijn (`verwerkWampanoagVerkenningInGang`,
+    // worldGoingWest.ts) en blijft `ontgrendeld: false` (dus geen
+    // frontier-voortgang, geen verdere cultuur-gedreven streek-ontgrendeling)
+    // tot de drie handelsvakjes onthuld zijn (`verwerkWampanoagVerkenningInGang`,
     // wampanoag.ts, dat op dat moment ook `ontgrendeld: true` zet). Een eigen
     // `Streek.wampanoagBezet`-vlag i.p.v. `Streek.bezet` hergebruiken: die
     // laatste wordt hieronder door `verwerkBelegering` opgelost aan de hand
     // van vijandelijke Heiligdom-/Wachttoren-inhoud, die een Wampanoag-streek
     // niet heeft. De `campagneId`-check is nodig omdat de tutorial toevallig
     // ook een streek met dezelfde hoogte heeft (ontgrendeld via de gewone
-    // cultuurdrempel, of — als `ontgrendelResource` ooit per ongeluk op
-    // "wetenschap" zou staan — via `wetenschapKostenVoorStreekOntgrendeling`
-    // hierboven) — zonder deze check zou die tutorial-streek hier per ongeluk
-    // ook bevroren worden.
+    // cultuurdrempel) — zonder deze check zou die tutorial-streek hier per
+    // ongeluk ook bevroren worden.
     if (volgendeHoogte === WAMPANOAG_STREEK_HOOGTE && state.campagneId === "going-west") {
       if (!huidigeStreek.wampanoagBezet) {
         streken = streken.map((streek) =>

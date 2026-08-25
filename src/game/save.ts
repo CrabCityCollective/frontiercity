@@ -93,23 +93,24 @@ function metGemigreerdePopupStatus(state: GameState): GameState {
 
 // Migratie voor saves van vóór de Wampanoag-openingsfase-velden (M21a,
 // opdracht-wampanoag-opening.md §1): oudere saves kennen
-// `bevervellen`/`mais`/`wampum`/`gereedschap`/`cultureelOntgrendeld`/
-// `ontgrendelResource` nog niet. Handelswaren-voorraad begint alsnog op 0
-// (niets vult ze met terugwerkende kracht). `cultureelOntgrendeld`/
-// `ontgrendelResource` vallen terug op het bestaande gedrag — een save van
-// vóór deze velden bestond per definitie vóór de Wampanoag-fase-gating
-// (nog nergens aan gekoppeld, zie types.ts), dus voor élke campagne is
-// `cultureelOntgrendeld: true`/`ontgrendelResource: "cultuur"` de correcte
-// terugval, niet de Going-West-openingsfase-startwaarde
-// (`maakInitieleSpelStatus` gebruikt die alleen voor een gloednieuwe run).
+// `bevervellen`/`mais`/`wampum`/`gereedschap`/`cultureelOntgrendeld` nog niet.
+// Handelswaren-voorraad begint alsnog op 0 (niets vult ze met terugwerkende
+// kracht). `cultureelOntgrendeld` valt terug op `true` — een save van vóór dit
+// veld bestond per definitie vóór de Wampanoag-fase-gating (nog nergens aan
+// gekoppeld, zie types.ts), dus voor élke campagne is `true` de correcte
+// terugval, niet de Going-West-openingsfase-startwaarde (`maakInitieleSpelStatus`
+// gebruikt die alleen voor een gloednieuwe run). Een eerdere versie migreerde
+// hier ook `ontgrendelResource`; dat veld is vervallen (issue "Weer gewoon
+// cultuur voor ontgrendeling" — streek-ontgrendeling loopt altijd op cultuur,
+// zie streekOntgrendeling.ts), dus oudere saves met dat veld negeren het
+// stilzwijgend.
 function metGemigreerdeWampanoagVelden(state: GameState): GameState {
   if (
     typeof state.bevervellen === "number" &&
     typeof state.mais === "number" &&
     typeof state.wampum === "number" &&
     typeof state.gereedschap === "number" &&
-    typeof state.cultureelOntgrendeld === "boolean" &&
-    typeof state.ontgrendelResource === "string"
+    typeof state.cultureelOntgrendeld === "boolean"
   ) {
     return state;
   }
@@ -120,7 +121,6 @@ function metGemigreerdeWampanoagVelden(state: GameState): GameState {
     wampum: state.wampum ?? 0,
     gereedschap: state.gereedschap ?? 0,
     cultureelOntgrendeld: state.cultureelOntgrendeld ?? true,
-    ontgrendelResource: state.ontgrendelResource ?? "cultuur",
   };
 }
 

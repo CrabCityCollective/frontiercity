@@ -208,9 +208,8 @@ export const WAMPANOAG_GOED_LABELS: Record<"bevervellen" | "mais" | "wampum", st
 };
 
 // Harde drempel, elk van de drie apart (opdracht §6/§7: "niet cumulatief").
-// Nog niet afgedwongen hier — de omslag naar `cultureelOntgrendeld`/
-// `ontgrendelResource` bij het bereiken ervan is M21g; alvast beschikbaar
-// voor de statusweergave (WampanoagPaneel.tsx) en die latere stap.
+// Gebruikt door zowel de statusweergave (WampanoagPaneel.tsx) als de
+// `cultureelOntgrendeld`-omslag in `verwerkWampanoagFaseAfsluiting` hieronder.
 export const WAMPANOAG_HANDELSDREMPEL = 3;
 
 // Geldige handelskeuzes voor een vakje met deze inhoud — gebruikt door zowel
@@ -303,24 +302,24 @@ export function heeftWampanoagHandelsdrempelGehaald(state: GameState): boolean {
   );
 }
 
-// Zet de omslag zodra de 3-3-3-drempel gehaald is (opdracht §7):
-// `cultureelOntgrendeld` gaat aan (Cultureel-categorie ontgrendelt,
-// `categorieZichtbaar()` in improvements.ts), `ontgrendelResource` schakelt
-// van `"wetenschap"` naar `"cultuur"` voor streek 5 en verder
-// (`verwerkStreekOntgrendeling`, streekOntgrendeling.ts). De `!state.
-// cultureelOntgrendeld`-guard maakt dit vanzelf een eenmalige, onomkeerbare
-// omslag — een keer `true`, blijft `true`, ook al zou een voorraad later weer
-// onder de drempel zakken (de opdracht vraagt geen "terugval"-gedrag). Werkt
-// voor elke campagne die op `ontgrendelResource: "wetenschap"` begint (niet
-// hardcoded op `going-west`) — de tutorial start al op `cultureelOntgrendeld:
-// true`, dus de guard hierboven maakt deze functie daar sowieso een no-op.
+// Zet de omslag zodra de 3-3-3-drempel gehaald is (opdracht §7, herzien door
+// issue "Weer gewoon cultuur voor ontgrendeling"): `cultureelOntgrendeld`
+// gaat aan — dat opent voortaan alleen nog de gecapte stadsverbeteringen-pool
+// (StadsverbeteringenPaneel) en verbergt het Wampanoag-statusbalkje; de
+// Cultureel-categorie land improvements en streek-ontgrendeling zelf lopen
+// sinds die issue altijd op cultuur, ongeacht deze omslag (zie
+// `beschikbareOpties` in improvements.ts en `verwerkStreekOntgrendeling` in
+// streekOntgrendeling.ts). De `!state.cultureelOntgrendeld`-guard maakt dit
+// vanzelf een eenmalige, onomkeerbare omslag — een keer `true`, blijft `true`, ook al zou een
+// voorraad later weer onder de drempel zakken (de opdracht vraagt geen
+// "terugval"-gedrag). De tutorial start al op `cultureelOntgrendeld: true`,
+// dus de guard hierboven maakt deze functie daar sowieso een no-op.
 export function verwerkWampanoagFaseAfsluiting(state: GameState): GameState {
   if (state.cultureelOntgrendeld || !heeftWampanoagHandelsdrempelGehaald(state)) return state;
 
   return {
     ...state,
     cultureelOntgrendeld: true,
-    ontgrendelResource: "cultuur",
     wampanoagRelatieGelegdEvent: true,
   };
 }

@@ -899,19 +899,16 @@ export interface GameState {
   // voorraad, geen koppeling aan `opslagCap` (lage volumes, zelfde reden als
   // hierboven).
   gereedschap: number;
-  // Bepaalt of de Cultureel-categorie zichtbaar is in de
-  // land-improvement-categoriekeuze (opdracht-wampanoag-opening.md §1/§7) —
-  // nog door geen enkele UI gelezen (dat volgt in M21c). Tutorial start op
+  // Bepaalt of de gecapte stadsverbeteringen-pool (StadsverbeteringenPaneel)
+  // en het Wampanoag-statusbalkje getoond worden (opdracht-wampanoag-
+  // opening.md §3/§5/§7, herzien door issue "Weer gewoon cultuur voor
+  // ontgrendeling": streek-ontgrendeling en de Cultureel-categorie zelf
+  // hangen hier niet langer van af, zie `verwerkStreekOntgrendeling`/
+  // `categorieZichtbaar` — alleen de gecapte pool en het statusbalkje blijven
+  // aan de 3-3-3-Wampanoag-handelsdrempel gekoppeld). Tutorial start op
   // `true` (ongewijzigd, bestaande tutorial kent geen fase-gating); Going
   // West start op `false` tot de 3-3-3-Wampanoag-drempel gehaald is.
   cultureelOntgrendeld: boolean;
-  // Welke voortgangs-valuta streek-ontgrendeling aandrijft
-  // (opdracht-wampanoag-opening.md §1/§4/§7) — nog door
-  // `verwerkStreekOntgrendeling` (economie.ts) gelezen noch geschreven (dat
-  // is hardcoded op cultuur, ongeacht dit veld, tot M21b). Tutorial en
-  // bestaande saves blijven op `"cultuur"` (huidig gedrag); Going West start
-  // op `"wetenschap"` en schakelt na de 3-3-3-drempel naar `"cultuur"`.
-  ontgrendelResource: "wetenschap" | "cultuur";
   // Wampanoag-laag ontdekt (Going West, M21e/M21g, opdracht-wampanoag-opening.md
   // §5/§8): gezet door `verwerkStreekOntgrendeling` (streekOntgrendeling.ts)
   // zodra de Wampanoag-streek (`WAMPANOAG_STREEK_HOOGTE`, worldGoingWest.ts)
@@ -923,9 +920,9 @@ export interface GameState {
   // Wampanoag-3-3-3-drempel gehaald (Going West, M21g,
   // opdracht-wampanoag-opening.md §7): gezet door
   // `verwerkWampanoagFaseAfsluiting` (wampanoag.ts) op hetzelfde moment als de
-  // `cultureelOntgrendeld`/`ontgrendelResource`-omslag — zelfde eenmalige
-  // meldings-vlag-patroon als `wampanoagLaagOntdektEvent` hierboven, drijft de
-  // narratieve `wampanoagRelatieGelegdPopup`-tekst.
+  // `cultureelOntgrendeld`-omslag — zelfde eenmalige meldings-vlag-patroon als
+  // `wampanoagLaagOntdektEvent` hierboven, drijft de narratieve
+  // `wampanoagRelatieGelegdPopup`-tekst.
   wampanoagRelatieGelegdEvent?: boolean;
 }
 
