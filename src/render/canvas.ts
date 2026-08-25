@@ -13,7 +13,6 @@ import { isBebouwbaarLeeg } from "@/game/improvements";
 import { City, Streek, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import { BAND_WIDTH_TILES, eindeOceaanZichtbaar, isVooruitkijkStreek } from "@/game/world";
-import { GROENE_STREKEN_AANTAL, pasTegelSetTint } from "./tegelSets";
 
 export { BAND_WIDTH_TILES };
 
@@ -79,6 +78,21 @@ const TERREIN_BASIS: Record<string, string> = {
   "besneeuwde flank": "#8a8f8c",
   bergkam: "#9aa0a0",
   oceaanoever: "#8c9468",
+  // Going West, streek 1 t/m `WAMPANOAG_STREEK_HOOGTE` (worldGoingWest.ts):
+  // het kustnabije Wampanoag-thuisland (hoofdstuk 9 design-doc) — issue
+  // "Groene waas niet goed": deze zes streeknamen kregen eerder geen eigen
+  // basiskleur (vielen terug op de bruine default hieronder) en werden i.p.v.
+  // daarvan achteraf met een groene multiply-overlay over het hele canvas
+  // "vergroend" (`pasTegelSetTint`, voorheen `tegelSets.ts`) — dat kleurde ook
+  // wegen/gebouwen/settlers mee en gaf zo een waas i.p.v. groenere tegels. Nu
+  // gewoon echte, groene tegelkleuren per terreinnaam, net als de tutorial-
+  // groene paletten (bosrand/loofbos/naaldwoud) hierboven.
+  kreekmonding: "#5a6b45",
+  zoutmoeras: "#5e6a48",
+  cederswamp: "#3f4f36",
+  eikenbos: "#4c5c34",
+  "beboste heuvelrug": "#556b3a",
+  maisakker: "#748b42",
 };
 
 export function terreinBasisKleur(terreinType: string): string {
@@ -1672,7 +1686,13 @@ export function tekenWereld(
   // hierboven, altijd los getekend zodat beide tegelijk zichtbaar zijn.
   tweedeSettler?: Settler,
   // Campagne-tegelset (M20d deelstap 4, `CampaignConfig.tegelSet`) — `undefined`
-  // voor de tutorial, zie `pasTegelSetTint` (tegelSets.ts).
+  // voor de tutorial. Kleurde eerder een groene/bruine multiply-overlay over
+  // het hele canvas (issue "Groene waas niet goed"); nu bepalen de terrein-
+  // tegels zelf hun kleur via `terreinBasisKleur`/`TERREIN_BASIS` (elke
+  // Going West-streeknaam is al uniek t.o.v. de tutorial), dus deze parameter
+  // wordt hier voorlopig niet meer gebruikt. Blijft doorgegeven vanuit
+  // `GameCanvas` als aanknopingspunt voor een echte, losse tegelset per
+  // campagne (hoofdstuk 12 design-doc).
   tegelSet?: string
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
@@ -1794,11 +1814,4 @@ export function tekenWereld(
       tekenTileGrid(ctx, x, 0, tileSize);
     }
   }
-
-  // Groene band voor de eerste `GROENE_STREKEN_AANTAL` streken (issue: "Going
-  // west terrein in eerste instantie groener") — die staan onderaan het
-  // canvas (streek 1 heeft de hoogste rijIndex), vlak boven de startoceaan-rij.
-  const groeneBandVanafY =
-    topOffset + Math.max(0, totaalStreken - GROENE_STREKEN_AANTAL) * tileSize;
-  pasTegelSetTint(ctx, width, height, tegelSet, groeneBandVanafY);
 }
