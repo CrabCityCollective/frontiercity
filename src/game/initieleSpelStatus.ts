@@ -84,17 +84,18 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     voedsel: VOEDSEL_START,
     cultuur: 0,
     wetenschap: 0,
-    // Wampanoag-openingsfase (M21a, opdracht-wampanoag-opening.md §1): nog
-    // ongebruikt buiten Going West, zie types.ts. Handelswaren-voorraad
-    // begint altijd leeg; `cultureelOntgrendeld`/`ontgrendelResource` volgen
-    // de campagne-startwaarde (tutorial: ongewijzigd huidig gedrag, Going
-    // West: openingsfase-gating tot de 3-3-3-drempel).
+    // Wampanoag-openingsfase (M21a, opdracht-wampanoag-opening.md §1, herzien
+    // door issue "Weer gewoon cultuur voor ontgrendeling"): handelswaren-
+    // voorraad begint altijd leeg; `cultureelOntgrendeld` volgt de
+    // campagne-startwaarde (tutorial: ongewijzigd huidig gedrag, Going West:
+    // openingsfase-gating van de gecapte stadsverbeteringen-pool tot de
+    // 3-3-3-drempel — streek-ontgrendeling zelf loopt sindsdien altijd op
+    // cultuur, zie streekOntgrendeling.ts).
     bevervellen: 0,
     mais: 0,
     wampum: 0,
     gereedschap: 0,
     cultureelOntgrendeld: !isGoingWest,
-    ontgrendelResource: isGoingWest ? "wetenschap" : "cultuur",
     technologieen: [],
     beurt: 1,
     campagneId,

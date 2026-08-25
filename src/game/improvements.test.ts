@@ -1,33 +1,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { beschikbareOpties, categorieZichtbaar } from "./improvements";
+import { beschikbareOpties } from "./improvements";
 import { maakInitieleSpelStatus } from "./economie";
 
-// Issue "Going west campaign geen tutorial": tijdens de Wampanoag-openingsfase
-// (`cultureelOntgrendeld: false`) blijft alleen Cultureel verborgen in de
-// land-improvement-categoriekeuze — Militair stond hier eerder ook bij
-// (opdracht-wampanoag-opening.md §4), maar dat bleek een ongewenste
-// tutorial-achtige beperking: de speler moet vanaf streek 1 alles kunnen
-// bouwen, op Cultureel na. Economisch/Wetenschappelijk/Militair/Civiel
-// blijven zichtbaar (Civiel toont sowieso al geen opties, zie
-// IMPROVEMENT_POOLS.civiel in improvements.ts).
-test("categorieZichtbaar verbergt alleen Cultureel tijdens de openingsfase (cultureelOntgrendeld: false)", () => {
-  assert.equal(categorieZichtbaar("militair", false), true);
-  assert.equal(categorieZichtbaar("cultureel", false), false);
-  assert.equal(categorieZichtbaar("economisch", false), true);
-  assert.equal(categorieZichtbaar("wetenschappelijk", false), true);
-  assert.equal(categorieZichtbaar("civiel", false), true);
-});
+// Issue "Weer gewoon cultuur voor ontgrendeling": een eerdere versie
+// verborg de Cultureel-categorie tijdens de Going West-openingsfase tot de
+// 3-3-3-Wampanoag-handelsdrempel gehaald was (`categorieZichtbaar()`,
+// opdracht-wampanoag-opening.md §4/§7). Dat bleek nodeloos ingewikkeld en is
+// teruggedraaid — Cultureel-improvements (bijv. Heiligdom) zijn nu, net als
+// in de tutorial, gewoon bouwbaar vanaf streek 1, ongeacht `cultureelOntgrendeld`.
+test("beschikbareOpties toont Cultureel-improvements al vanaf streek 1 in Going West, ongeacht cultureelOntgrendeld", () => {
+  const goingWest = maakInitieleSpelStatus("going-west");
+  assert.equal(goingWest.cultureelOntgrendeld, false, "Going West start nog in de openingsfase");
 
-// Zodra de 3-3-3-drempel gehaald is (`cultureelOntgrendeld: true`, gezet
-// door een latere M21-stap) — en, ongewijzigd, in de tutorial die altijd op
-// `true` start — zijn weer alle categorieën zichtbaar.
-test("categorieZichtbaar toont elke categorie zodra cultureelOntgrendeld true is (tutorial-gedrag, en Going West na de drempel)", () => {
-  assert.equal(categorieZichtbaar("militair", true), true);
-  assert.equal(categorieZichtbaar("cultureel", true), true);
-  assert.equal(categorieZichtbaar("economisch", true), true);
-  assert.equal(categorieZichtbaar("wetenschappelijk", true), true);
-  assert.equal(categorieZichtbaar("civiel", true), true);
+  const opties = beschikbareOpties("cultureel", goingWest.streken[0], goingWest.streken, [], goingWest.campagneId);
+  assert.ok(opties.some((i) => i.id === "heiligdom"), "Heiligdom is al bouwbaar vóór de 3-3-3-handelsdrempel");
 });
 
 // Issue "Going west campaign geen tutorial": Houtkap/Mijn (minStreek 2/3, zie

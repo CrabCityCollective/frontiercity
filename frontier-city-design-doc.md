@@ -836,6 +836,9 @@ De hoofdtekst hierboven beschrijft steeds alleen de huidige stand van het ontwer
 - Wetenschap had aanvankelijk geen enkele functie in de MVP; Sterrencirkel en de vertakkende technologie-boom (3 drempels) toegevoegd — issue: "tech tree toevoegen".
 - Wetenschapsdrempelkosten eerst verhoogd naar `10 + 10×(drempel-1)²`, daarna verdubbeld naar `20 + 20×(drempel-1)²` nadat bleek dat de eerste curve de hele boom al rond beurt 42 voltooide, ruim vóór de Bezette Streek — issue: "techtree langzamer".
 
+**Hoofdstuk 9 — Amerikaanse frontier-campagne, openingsfase**
+- De Going West-openingsfase (streek 1-6, campaigns/going-west/opdracht-wampanoag-opening.md) liet streek-ontgrendeling en de zichtbaarheid van de Cultureel-categorie eerst op wetenschap draaien tot de Wampanoag-3-3-3-handelsdrempel, met een omslag naar cultuur daarna (`GameState.ontgrendelResource`). Teruggedraaid naar altijd-cultuur, net als de tutorial — issue: "Weer gewoon cultuur voor ontgrendeling". Wetenschap drijft sindsdien alleen nog de technologieboom en de Verkenner-actie; de 3-3-3-handelsdrempel bepaalt nog wel wanneer de gecapte stadsverbeteringen-pool naast de Smederij opengaat.
+
 **Hoofdstuk 3/14 — goud**
 - Amberader/goudmijn, Markt en rush-bouwen met goud (5 goud per weggekochte bouwbeurt) toegevoegd — issue: "toevoeging Goud".
 - Een tweede gegarandeerde Amberader-locatie (streek 11) toegevoegd om een softlock rond streek 12 te voorkomen (goud nodig voor Offer Altaar/Legerkamp) — issue: "Amberader sowieso op streek 12".

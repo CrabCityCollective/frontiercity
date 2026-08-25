@@ -6,7 +6,6 @@ import { WACHTTOREN_VOEDSEL_VERBRUIK } from "@/game/productie";
 import {
   beschikbareOpties,
   CATEGORIE_LABELS,
-  categorieZichtbaar,
   effectBeschrijving,
   improvementNaam,
   terreinEisenBeschrijving,
@@ -96,10 +95,6 @@ interface BouwPopupProps {
   // tutorial (die geen eigen `CampaignConfig` heeft), zie `campagneConfig()`
   // in campagnes.ts.
   campagne?: CampaignConfig;
-  // Campagnefase-gating (hoofdstuk 9, M21c, opdracht-wampanoag-opening.md
-  // §4/§7): bepaalt of Militair/Cultureel als categorie-optie getoond worden
-  // — zie `categorieZichtbaar()` in improvements.ts.
-  cultureelOntgrendeld: boolean;
   zichtbaar: boolean;
   onBouwStarten: (improvement: Improvement) => void;
   onSluiten: () => void;
@@ -122,7 +117,6 @@ export default function BouwPopup({
   technologieen,
   cityImprovements,
   campagne,
-  cultureelOntgrendeld,
   zichtbaar,
   onBouwStarten,
   onSluiten,
@@ -181,7 +175,7 @@ export default function BouwPopup({
               Kies een categorie om deze beurt in te bouwen
             </strong>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-              {CATEGORIEEN.filter((categorie) => categorieZichtbaar(categorie, cultureelOntgrendeld)).map((categorie) => {
+              {CATEGORIEEN.map((categorie) => {
                 // Uitgegrijsd (issue: "categorieën waarin je niks kunt bouwen
                 // uitgegrijsd") als deze categorie geen nog-niet-gebouwde
                 // improvements meer heeft met een geldig leeg vakje —

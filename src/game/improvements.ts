@@ -853,28 +853,6 @@ export function cityImprovementCap(grootte: City["grootte"]): number {
   return CITY_IMPROVEMENT_CAP[grootte];
 }
 
-// Categorieën die verborgen blijven tijdens de Wampanoag-openingsfase (Going
-// West). Alleen Cultureel is pas weer zichtbaar zodra `GameState.cultureelOntgrendeld`
-// (M21a) true is, na de 3-3-3-handelsdrempel — dat is de enige uitzondering
-// die is afgesproken voor de eerste vier streken (issue: "Going west campaign
-// geen tutorial"). Militair stond hier eerder ook bij
-// (opdracht-wampanoag-opening.md §4), maar dat bleek een ongewenste
-// tutorial-achtige beperking: de speler moet vanaf streek 1 alles kunnen
-// bouwen, op Cultureel na. Civiel staat hier bewust niet bij:
-// `IMPROVEMENT_POOLS.civiel` is al leeg (Woonwijk/settler lopen via een eigen
-// wachtrij, zie de comment bovenaan dit bestand), dus die categorie toont
-// sowieso al nooit opties in de bouw-pop-up. De tutorial
-// (`cultureelOntgrendeld: true` vanaf de start, initieleSpelStatus.ts) ziet
-// dit gedrag nooit — elke categorie blijft daar zichtbaar zoals voorheen.
-const OPENINGSFASE_VERBORGEN_CATEGORIEEN: Categorie[] = ["cultureel"];
-
-// Of `categorie` getoond mag worden in de land-improvement-categoriekeuze
-// (BouwPopup) en de gecapte stadsverbeteringen-pool (StadsverbeteringenPaneel)
-// — gedeeld tussen beide zodat ze dezelfde campagnefase-gating hanteren.
-export function categorieZichtbaar(categorie: Categorie, cultureelOntgrendeld: boolean): boolean {
-  return cultureelOntgrendeld || !OPENINGSFASE_VERBORGEN_CATEGORIEEN.includes(categorie);
-}
-
 const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   economisch: ECONOMISCH_LAND_IMPROVEMENTS,
   wetenschappelijk: WETENSCHAPPELIJK_LAND_IMPROVEMENTS,
@@ -939,16 +917,12 @@ function kanImprovementOpStreek(improvement: Improvement, streek: Streek): boole
 //
 // Deze `minStreek`-drempels zijn stuk voor stuk tutorial-pacing-beslissingen
 // (elke comment hierboven verwijst naar een tutorial-specifiek issue) — ze
-// horen niet automatisch ook voor andere campagnes te gelden. Going West kent
-// zijn eigen, al bestaande openingsfase-gating (Cultureel verborgen tot de
-// 3-3-3-handelsdrempel, zie `categorieZichtbaar`/`OPENINGSFASE_VERBORGEN_CATEGORIEEN`
-// hierboven) en had daarnaast, via deze gedeelde `minStreek`-velden, ook nog
-// eens de tutorial-tempo-beperking geërfd — bijvoorbeeld alleen de
-// Steengroeve bouwbaar op streek 1 (issue: "Going west campaign geen
-// tutorial"). Vandaar `campagneId`: is er een campagne actief (dus niet de
+// horen niet automatisch ook voor andere campagnes te gelden. Going West had
+// via deze gedeelde `minStreek`-velden de tutorial-tempo-beperking geërfd —
+// bijvoorbeeld alleen de Steengroeve bouwbaar op streek 1 (issue: "Going west
+// campaign geen tutorial"). Vandaar `campagneId`: is er een campagne actief (dus niet de
 // tutorial, `undefined`), dan slaat deze filter over — alles blijft gewoon
-// bouwbaar vanaf streek 1, op Cultureel na (dat blijft via de aparte
-// categorie-gating hierboven verborgen).
+// bouwbaar vanaf streek 1.
 export function beschikbareOpties(
   categorie: Improvement["categorie"],
   streek: Streek,
