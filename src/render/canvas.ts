@@ -1140,6 +1140,39 @@ function tekenStadTile(
   }
 }
 
+// Naam van de stad, vlak onder de stad-tegel (issue: "Stad naam tonen op de
+// kaart"). Als losse overlay ná de hele tegel-band getekend (zie `tekenWereld`,
+// net als de settler hieronder) i.p.v. binnen `tekenStadTile` zelf: de naam
+// staat onder de tegel, en die ruimte behoort aan de tegel eronder (of de
+// oceaan-rij) die pas later in de teken-volgorde aan de beurt komt — zonder
+// overlay zou die latere tekening de naam meteen weer overschilderen.
+export function tekenStadNaam(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  naam: string
+): void {
+  const cx = x + size * 0.5;
+  const naamY = y + size + size * 0.05;
+  const fontSize = Math.max(9, Math.floor(size * 0.16));
+
+  ctx.save();
+  ctx.font = `${fontSize}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  const breedte = ctx.measureText(naam).width;
+  const paddingX = size * 0.08;
+  const badgeH = fontSize * 1.5;
+  ctx.fillStyle = "rgba(16, 13, 10, 0.62)";
+  ctx.fillRect(cx - breedte / 2 - paddingX, naamY - size * 0.02, breedte + paddingX * 2, badgeH);
+
+  ctx.fillStyle = "#f0e6d2";
+  ctx.fillText(naam, cx, naamY);
+  ctx.restore();
+}
+
 function tekenGhostTown(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
   const rng = maakSeededRandom(seed);
   const baseY = y + size * 0.86;
@@ -1706,6 +1739,12 @@ export function tekenWereld(
   ctx.fillStyle = "#100d0a";
   ctx.fillRect(0, 0, width, height);
 
+  // Schermpositie van de stad-tegel (issue: "Stad naam tonen op de kaart") —
+  // pas ná de hele band bekend welke tegel dat is, dus hier vastgelegd zodra
+  // hij tijdens de loop hieronder getekend wordt en pas aan het eind gebruikt
+  // om de naam als overlay te tekenen (zie `tekenStadNaam`).
+  let stadPositie: { x: number; y: number } | undefined;
+
   for (const streek of streken) {
     const rijIndex = totaalStreken - streek.hoogte;
     const y = rijIndex * tileSize + topOffset;
@@ -1728,6 +1767,9 @@ export function tekenWereld(
         } else {
           const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
           tekenActieveTile(ctx, x, y, tileSize, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+          if (tile.improvement?.soort === "city") {
+            stadPositie = { x, y };
+          }
           if (tile.versWater) {
             tekenVersWaterMarkering(ctx, x, y, tileSize, tileSeed(col, streek.hoogte, 2));
           }
@@ -1739,6 +1781,9 @@ export function tekenWereld(
       } else {
         const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
         tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+        if (streek.tiles[col].improvement?.soort === "city") {
+          stadPositie = { x, y };
+        }
         if (streek.tiles[col].versWater) {
           tekenVersWaterMarkering(ctx, x, y, tileSize, tileSeed(col, streek.hoogte, 2));
         }
@@ -1813,5 +1858,12 @@ export function tekenWereld(
       tekenOceaanTile(ctx, x, 0, tileSize, tileSeed(col, totaalStreken + 1));
       tekenTileGrid(ctx, x, 0, tileSize);
     }
+  }
+
+  // Stad-naam als allerlaatste overlay (zie toelichting bij `stadPositie`
+  // hierboven) zodat de startstad-tegel (hoogte 1, vlak boven de startoceaan)
+  // ook een naam toont zonder dat de oceaan-rij hierboven hem overschildert.
+  if (stadPositie) {
+    tekenStadNaam(ctx, stadPositie.x, stadPositie.y, tileSize, stad.naam);
   }
 }
