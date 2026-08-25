@@ -227,8 +227,9 @@ export function metWampanoagLaagEnVoorraadVoorVerkenning(): GameState {
 // De drie Wampanoag-handelsvakjes onthuld (waarmee, sinds issue "Wampanoag
 // streek blokkerend", ook de zes neutrale vakjes automatisch mee onthullen en
 // de streek zelf weer normaal ontgrendelt — zie `verwerkWampanoagVerkenningInGang`),
-// met genoeg erts/gereedschap/goud om meteen te kunnen handelen — gedeelde
-// opzet voor de M21f-handelstests (opdracht-wampanoag-opening.md §6), bouwt
+// met genoeg gereedschap/goud om meteen te kunnen handelen (issue "Smederij
+// inactief zetten": erts is geen geldige Wampanoag-handelskeuze meer) —
+// gedeelde opzet voor de M21f-handelstests (opdracht-wampanoag-opening.md §6), bouwt
 // voort op `metWampanoagLaagEnVoorraadVoorVerkenning` hierboven. Stuurt op
 // elke positie een verkenner en telt zijn tellertje meteen volledig af, met
 // de 1x-per-beurt-limiet telkens teruggezet — zelfde volgorde als de

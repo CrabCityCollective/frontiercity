@@ -171,12 +171,14 @@ export function verwerkWampanoagVerkenningInGang(state: GameState): GameState {
 // als Wachttoren-bemanning), i.p.v. de Verkenner-machinery hierboven, die
 // alleen voor de onthulling zelf is.
 
-// Geldige handelskeuzes per Wampanoag-inhoud (opdracht §6, tabel):
-// Maïsboerderij/Beverjachthut ruilen erts óf gereedschap, Opperhoofdtent
-// (Cultureel/diplomatiek van aard, opdracht §2) alleen goud.
+// Geldige handelskeuzes per Wampanoag-inhoud (opdracht §6, tabel; herzien
+// door issue "Smederij inactief zetten": erts is als keuze geschrapt, zodat
+// gereedschap de enige handelswaar is voor Maïsboerderij/Beverjachthut en de
+// Smederij de enige plek blijft die nog erts omzet). Opperhoofdtent
+// (Cultureel/diplomatiek van aard, opdracht §2) blijft alleen goud.
 const WAMPANOAG_HANDEL_OPTIES: Record<WampanoagInhoud, WampanoagHandelKeuze[]> = {
-  maisboerderij: ["erts", "gereedschap"],
-  beverjachthut: ["erts", "gereedschap"],
+  maisboerderij: ["gereedschap"],
+  beverjachthut: ["gereedschap"],
   opperhoofdtent: ["goud"],
 };
 
@@ -192,9 +194,8 @@ const WAMPANOAG_GOED_VOOR_INHOUD: Record<WampanoagInhoud, "bevervellen" | "mais"
 // Weergavelabels voor de grondstofkeuze-knoppen (TileInfoPopup:
 // `wampanoagHandelVraag`) — "gereedschap" is geen `ResourceType`/
 // `MateriaalType`, dus geen hergebruik van `MATERIAAL_LABELS` (improvements.ts)
-// mogelijk voor deze drie samen.
+// mogelijk voor deze twee samen.
 export const WAMPANOAG_HANDEL_KEUZE_LABELS: Record<WampanoagHandelKeuze, string> = {
-  erts: "Erts",
   gereedschap: "Gereedschap",
   goud: "Goud",
 };

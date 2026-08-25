@@ -176,6 +176,17 @@ test("zonder Smederij vindt er nooit een erts→gereedschap-conversie plaats", (
   assert.equal(state.voorraad.erts, 10);
 });
 
+test("een inactief gezette Smederij zet geen erts meer om (issue: 'Smederij inactief zetten')", () => {
+  let state = maakInitieleSpelStatus();
+  state = metActieveStad(state, { ...state.stad, heeftSmederij: true, smederijActief: false });
+  state = { ...state, voorraad: { ...state.voorraad, erts: 5 } };
+
+  state = volgendeBeurt(state);
+
+  assert.equal(state.gereedschap, 0, "geen conversie zolang de Smederij inactief staat");
+  assert.equal(state.voorraad.erts, 5, "erts blijft ongemoeid");
+});
+
 test("Smederij-conversie is niet gevoelig voor het afstandsverval van een tweede stad (bewuste keuze, opdracht-wampanoag-opening.md §3)", () => {
   let state = maakInitieleSpelStatus();
   const eersteStad = { ...state.stad, streekHoogte: 0 };

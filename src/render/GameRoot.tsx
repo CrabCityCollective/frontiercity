@@ -157,6 +157,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     versnelCivielMetGoud,
     versnelOpslagplaatsMetGoud,
     versnelSmederijMetGoud,
+    zetSmederijActief,
     geefTribuut,
     weigerTribuut,
     bemanWachttoren,
@@ -1610,6 +1611,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             onStartOpslagplaats={startOpslagplaats}
             onStartSmederij={startSmederij}
             onVersnelSmederij={versnelSmederijMetGoud}
+            onZetSmederijActief={zetSmederijActief}
             onStartCityVerbetering={startCityVerbetering}
             onVersnelCityVerbetering={versnelCityVerbeteringMetGoud}
             onStartRecrutering={startRecrutering}

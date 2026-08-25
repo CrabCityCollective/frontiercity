@@ -205,9 +205,12 @@ test("isBebouwbaarLeeg sluit elk nog verhuld Wampanoag-vakje uit, ondanks status
 
 // M21f (opdracht-wampanoag-opening.md §6): "geen aparte Handelaar-unit" —
 // wampanoagHandelOpties bepaalt puur welke knoppen de tile-info-pop-up toont.
-test("wampanoagHandelOpties: Maïsboerderij/Beverjachthut bieden erts of gereedschap, Opperhoofdtent alleen goud", () => {
-  assert.deepEqual(wampanoagHandelOpties("maisboerderij"), ["erts", "gereedschap"]);
-  assert.deepEqual(wampanoagHandelOpties("beverjachthut"), ["erts", "gereedschap"]);
+// Herzien door issue "Smederij inactief zetten": erts is geschrapt als
+// Wampanoag-handelskeuze, zodat gereedschap de enige handelswaar is voor
+// Maïsboerderij/Beverjachthut en de Smederij de enige erts-afzet blijft.
+test("wampanoagHandelOpties: Maïsboerderij/Beverjachthut bieden alleen gereedschap, Opperhoofdtent alleen goud", () => {
+  assert.deepEqual(wampanoagHandelOpties("maisboerderij"), ["gereedschap"]);
+  assert.deepEqual(wampanoagHandelOpties("beverjachthut"), ["gereedschap"]);
   assert.deepEqual(wampanoagHandelOpties("opperhoofdtent"), ["goud"]);
 });
 
@@ -217,19 +220,15 @@ test("stelWampanoagHandelIn zet/wijzigt/pauzeert de keuze, alleen op een onthuld
 
   // Nog verhuld (positie 3 heeft geen Wampanoag-inhoud) of een ongeldige
   // keuze voor dit vakje — genegeerd, geen effect.
-  const zonderInhoud = stelWampanoagHandelIn(state, 3, "erts");
+  const zonderInhoud = stelWampanoagHandelIn(state, 3, "gereedschap");
   assert.equal(zonderInhoud, state, "positie zonder wampanoagInhoud heeft geen effect");
-  const ongeldigeKeuze = stelWampanoagHandelIn(state, 2, "erts"); // opperhoofdtent, alleen goud
-  assert.equal(ongeldigeKeuze, state, "erts is geen geldige keuze voor de Opperhoofdtent");
+  const ongeldigeKeuze = stelWampanoagHandelIn(state, 2, "gereedschap"); // opperhoofdtent, alleen goud
+  assert.equal(ongeldigeKeuze, state, "gereedschap is geen geldige keuze voor de Opperhoofdtent");
 
-  state = stelWampanoagHandelIn(state, 0, "erts"); // maisboerderij
-  assert.equal(streek4().tiles[0].wampanoagHandelKeuze, "erts");
-
-  // Omkeerbaar: wijzigen naar een andere geldige optie.
-  state = stelWampanoagHandelIn(state, 0, "gereedschap");
+  state = stelWampanoagHandelIn(state, 0, "gereedschap"); // maisboerderij
   assert.equal(streek4().tiles[0].wampanoagHandelKeuze, "gereedschap");
 
-  // Pauzeren met `undefined`.
+  // Omkeerbaar: pauzeren met `undefined`.
   state = stelWampanoagHandelIn(state, 0, undefined);
   assert.equal(streek4().tiles[0].wampanoagHandelKeuze, undefined);
 });
@@ -237,49 +236,45 @@ test("stelWampanoagHandelIn zet/wijzigt/pauzeert de keuze, alleen op een onthuld
 test("verwerkWampanoagHandel ruilt elke beurt 1:1 per vakje, naar het juiste handelswaar, zonder kosten voor niet-gekozen vakjes", () => {
   let state = metWampanoagLaagOnthuld();
   state = { ...state, bevervellen: 0, mais: 0, wampum: 0, gereedschap: 5 };
-  state = stelWampanoagHandelIn(state, 0, "erts"); // maisboerderij -> mais
+  state = stelWampanoagHandelIn(state, 0, "gereedschap"); // maisboerderij -> mais
   state = stelWampanoagHandelIn(state, 1, "gereedschap"); // beverjachthut -> bevervellen
   // Positie 2 (opperhoofdtent) blijft gepauzeerd.
 
-  const ertsVoor = state.voorraad.erts;
   const gereedschapVoor = state.gereedschap;
 
   state = verwerkWampanoagHandel(state);
 
-  assert.equal(state.voorraad.erts, ertsVoor - 1);
   assert.equal(state.mais, 1);
-  assert.equal(state.gereedschap, gereedschapVoor - 1);
+  assert.equal(state.gereedschap, gereedschapVoor - 2, "beide vakjes trekken elk 1 gereedschap uit dezelfde voorraad");
   assert.equal(state.bevervellen, 1);
   assert.equal(state.wampum, 0, "opperhoofdtent handelt niet mee, staat gepauzeerd");
 });
 
 test("verwerkWampanoagHandel slaat een beurt over bij onvoldoende voorraad, zonder negatief te worden of de andere vakjes te blokkeren", () => {
   let state = metWampanoagLaagOnthuld();
-  state = { ...state, gereedschap: 0, bevervellen: 0, mais: 0, wampum: 0 };
-  state = stelWampanoagHandelIn(state, 0, "erts"); // maisboerderij, wél genoeg erts
-  state = stelWampanoagHandelIn(state, 1, "gereedschap"); // beverjachthut, geen gereedschap
+  state = { ...state, gereedschap: 1, bevervellen: 0, mais: 0, wampum: 0 };
+  state = stelWampanoagHandelIn(state, 0, "gereedschap"); // maisboerderij, verbruikt het laatste gereedschap
+  state = stelWampanoagHandelIn(state, 1, "gereedschap"); // beverjachthut, komt daarna aan de beurt zonder voorraad
 
-  const ertsVoor = state.voorraad.erts;
   state = verwerkWampanoagHandel(state);
 
-  assert.equal(state.voorraad.erts, ertsVoor - 1, "maisboerderij handelt gewoon door");
-  assert.equal(state.mais, 1);
+  assert.equal(state.mais, 1, "maisboerderij handelt gewoon door");
   assert.equal(state.gereedschap, 0, "kan niet negatief worden");
-  assert.equal(state.bevervellen, 0, "geen conversie deze beurt zonder gereedschap-voorraad");
+  assert.equal(state.bevervellen, 0, "geen conversie deze beurt zonder resterend gereedschap");
 });
 
 // Integratietest: `volgendeBeurt` roept `verwerkWampanoagHandel` daadwerkelijk
 // aan, zodat een gekozen handel ook zonder losse test-aanroep doorloopt.
 test("volgendeBeurt verwerkt de lopende Wampanoag-handel mee", () => {
   let state = metWampanoagLaagOnthuld();
-  state = { ...state, mais: 0, voedsel: 10_000 };
-  state = stelWampanoagHandelIn(state, 0, "erts");
+  state = { ...state, mais: 0, voedsel: 10_000, gereedschap: 5 };
+  state = stelWampanoagHandelIn(state, 0, "gereedschap");
 
-  const ertsVoor = state.voorraad.erts;
+  const gereedschapVoor = state.gereedschap;
   state = volgendeBeurt(state);
 
   assert.equal(state.mais, 1);
-  assert.equal(state.voorraad.erts, ertsVoor - 1);
+  assert.equal(state.gereedschap, gereedschapVoor - 1);
 });
 
 // M21g (opdracht-wampanoag-opening.md §7): "3-3-3-drempel is hard en per

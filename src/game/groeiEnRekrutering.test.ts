@@ -16,6 +16,7 @@ import {
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
   versnelSmederijMetGoud,
+  zetSmederijActief,
 } from "./groeiEnRekrutering";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
 import { bemanWachttoren, berekenLegerwaarde, confrontatieBezetteStreek } from "./militair";
@@ -121,6 +122,23 @@ test("versnelSmederijMetGoud koopt de resterende bouwtijd van een Smederij af en
   assert.equal(naVersnellen.stad.smederijInAanbouw, undefined);
   assert.equal(naVersnellen.stad.heeftSmederij, true);
   assert.equal(naVersnellen.voorraad.goud, 0);
+});
+
+// Issue "Smederij inactief zetten": een voltooide Smederij mag gepauzeerd en
+// weer hervat worden zonder het gebouw zelf kwijt te raken.
+test("zetSmederijActief pauzeert/hervat een voltooide Smederij, en heeft geen effect zolang er nog geen Smederij staat", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  assert.equal(state.stad.smederijActief, true, "standaard actief, ook al staat er nog geen Smederij");
+
+  const zonderSmederij = zetSmederijActief(state, false);
+  assert.equal(zonderSmederij, state, "geen effect zolang heeftSmederij nog false is");
+
+  state = { ...state, stad: { ...state.stad, heeftSmederij: true } };
+  state = zetSmederijActief(state, false);
+  assert.equal(state.stad.smederijActief, false);
+
+  state = zetSmederijActief(state, true);
+  assert.equal(state.stad.smederijActief, true);
 });
 
 test("versnelCivielMetGoud heeft geen effect op een Nieuwe settler in aanbouw ('soort: unit', buiten bereik van rush-bouwen)", () => {

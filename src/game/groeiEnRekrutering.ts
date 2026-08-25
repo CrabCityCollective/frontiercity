@@ -519,7 +519,12 @@ export function verwerkSmederij(state: GameState): GameState {
 
   if (resultaat.voltooid) {
     return {
-      ...metActieveStad(state, { ...state.stad, smederijInAanbouw: undefined, heeftSmederij: true }),
+      ...metActieveStad(state, {
+        ...state.stad,
+        smederijInAanbouw: undefined,
+        heeftSmederij: true,
+        smederijActief: true,
+      }),
       voorraad,
     };
   }
@@ -543,7 +548,12 @@ export function versnelSmederijMetGoud(state: GameState): GameState {
 
   if (resultaat.voltooid) {
     return {
-      ...metActieveStad(state, { ...state.stad, smederijInAanbouw: undefined, heeftSmederij: true }),
+      ...metActieveStad(state, {
+        ...state.stad,
+        smederijInAanbouw: undefined,
+        heeftSmederij: true,
+        smederijActief: true,
+      }),
       voorraad,
     };
   }
@@ -552,6 +562,18 @@ export function versnelSmederijMetGoud(state: GameState): GameState {
     ...metActieveStad(state, { ...state.stad, smederijInAanbouw: { ...smederijInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
     voorraad,
   };
+}
+
+// Pauzeert/hervat de erts→gereedschap-conversie van een voltooide Smederij
+// (issue: "Smederij inactief zetten") — instant en omkeerbaar, zelfde
+// interactiepatroon als de Wampanoag-handelskeuze (`stelWampanoagHandelIn`,
+// wampanoag.ts) en Wachttoren-bemanning: geen kosten, geen wachttijd, direct
+// effect op de eerstvolgende `verwerkProductie` (productie.ts). Negeert de
+// aanroep stilzwijgend zolang er nog geen voltooide Smederij staat — zelfde
+// veilige-aanroep-conventie als de andere acties hierboven.
+export function zetSmederijActief(state: GameState, actief: boolean): GameState {
+  if (!state.stad.heeftSmederij) return state;
+  return metActieveStad(state, { ...state.stad, smederijActief: actief });
 }
 
 // Start het rekruteren van een Soldaat (M7), als er niet al een rekrutering
