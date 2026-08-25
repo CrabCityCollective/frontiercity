@@ -1,6 +1,8 @@
 "use client";
 
+import { ComponentType } from "react";
 import { campagneStatistieken, heeftOpgeslagenSpel, opgeslagenSpelStreek } from "@/game/save";
+import { GoingWestSfeerAfbeelding, TutorialSfeerAfbeelding } from "@/components/CampagneSfeerAfbeeldingen";
 
 interface Campagne {
   // `undefined` voor de tutorial (zelfde betekenis als `GameState.campagneId`,
@@ -11,6 +13,11 @@ interface Campagne {
   naam: string;
   ondertitel: string;
   beschikbaar: boolean;
+  // Issue: "sfeer afbeeldingen campagne select" — vierkante pixel-art
+  // stemmingsafbeelding rechts in het campagne-blok. Alleen voor de eerste
+  // twee campagnes (tutorial + Going West); de nog niet gebouwde campagnes
+  // hieronder krijgen er bewust geen, dat is verder werk voor later.
+  sfeerAfbeelding?: ComponentType;
 }
 
 // Toekomstige campagnes (hoofdstuk 8/15 design-doc) — hier uitsluitend als
@@ -26,8 +33,14 @@ interface Campagne {
 // De drie Anker-verhalen blijven bewust nog open, los, doorlopend werk
 // (hoofdstuk 15) — geen poort voor `beschikbaar: true`.
 const CAMPAGNES: Campagne[] = [
-  { naam: "To the Elusive Coast", ondertitel: "Tutorial", beschikbaar: true },
-  { id: "going-west", naam: "Going West", ondertitel: "American Expansion", beschikbaar: true },
+  { naam: "To the Elusive Coast", ondertitel: "Tutorial", beschikbaar: true, sfeerAfbeelding: TutorialSfeerAfbeelding },
+  {
+    id: "going-west",
+    naam: "Going West",
+    ondertitel: "American Expansion",
+    beschikbaar: true,
+    sfeerAfbeelding: GoingWestSfeerAfbeelding,
+  },
   { naam: "Through the Taiga", ondertitel: "Russian Expansion", beschikbaar: false },
   { naam: "Into the Footsteps of Alexander", ondertitel: "Grieks-Macedonische Veroveringen", beschikbaar: false },
 ];
@@ -93,68 +106,94 @@ export default function CampagneSelectScherm({ onKiesCampagne, onLaadCampagne }:
               padding: "1rem 1.25rem",
               cursor: campagne.beschikbaar ? "pointer" : "not-allowed",
               filter: campagne.beschikbaar ? undefined : "grayscale(0.75) brightness(0.65)",
+              display: "flex",
+              alignItems: "center",
+              gap: "1rem",
             }}
           >
-            <strong className="fc-heading" style={{ fontSize: "1.1rem" }}>
-              {campagne.naam}
-              {/* Issue: "voortgang verschillende campagnes tonen" — elke
-                  campagne heeft nu haar eigen sleutel in `campagneStatistieken`
-                  (save.ts, gesleuteld op `campagne.id`, `undefined` voor de
-                  tutorial), dus het vinkje geldt per campagne in plaats van
-                  uitsluitend de tutorial. */}
-              {campagne.beschikbaar && campagneStatistieken(campagne.id).uitgespeeld > 0 && (
-                <span
-                  aria-label="Voltooid"
-                  title="Voltooid — nog altijd opnieuw te spelen"
-                  style={{ marginLeft: "0.5rem", color: "var(--kleur-mos)" }}
-                >
-                  ✓
-                </span>
-              )}
-            </strong>
-            <div style={{ color: "var(--kleur-tekst-gedempt)", marginTop: "0.25rem" }}>
-              {campagne.ondertitel}
-            </div>
-            {/* Issue: "hoevaak hij hem gestart heeft" — alleen bij beschikbare
-                campagnes, net als het vinkje hierboven; een uitgegrijsde,
-                nog niet klikbare campagne heeft nooit een run gestart. */}
-            {campagne.beschikbaar && (
-              <div style={{ color: "var(--kleur-tekst-gedempt)", marginTop: "0.25rem", fontSize: "0.8rem" }}>
-                {campagneStatistieken(campagne.id).gestart}× gestart
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <strong className="fc-heading" style={{ fontSize: "1.1rem" }}>
+                {campagne.naam}
+                {/* Issue: "voortgang verschillende campagnes tonen" — elke
+                    campagne heeft nu haar eigen sleutel in `campagneStatistieken`
+                    (save.ts, gesleuteld op `campagne.id`, `undefined` voor de
+                    tutorial), dus het vinkje geldt per campagne in plaats van
+                    uitsluitend de tutorial. */}
+                {campagne.beschikbaar && campagneStatistieken(campagne.id).uitgespeeld > 0 && (
+                  <span
+                    aria-label="Voltooid"
+                    title="Voltooid — nog altijd opnieuw te spelen"
+                    style={{ marginLeft: "0.5rem", color: "var(--kleur-mos)" }}
+                  >
+                    ✓
+                  </span>
+                )}
+              </strong>
+              <div style={{ color: "var(--kleur-tekst-gedempt)", marginTop: "0.25rem" }}>
+                {campagne.ondertitel}
               </div>
-            )}
-            {/* Issue: "loading button per campagne op het campagne select
-                screen, waarmee je een eerdere save kunt inladen ... geeft
-                aan op welke streek de save zich bevindt" — alleen zichtbaar
-                als er voor déze campagne al een save bestaat. `stopPropagation`
-                op zowel click als keydown: de omringende kaart heeft zelf al
-                een klik-/toetsenbord-handler die een verse run start
-                (`onKiesCampagne`), en die mag niet ook meelopen met deze knop. */}
-            {campagne.beschikbaar && heeftOpgeslagenSpel(campagne.id) && (
-              <button
-                type="button"
-                className="fc-knop"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onLaadCampagne(campagne.id);
-                }}
-                onKeyDown={(event) => event.stopPropagation()}
-                style={{ marginTop: "0.5rem", padding: "0.3rem 0.75rem", fontSize: "0.85rem" }}
-              >
-                Laden — streek {opgeslagenSpelStreek(campagne.id)}
-              </button>
-            )}
-            {!campagne.beschikbaar && (
+              {/* Issue: "hoevaak hij hem gestart heeft" — alleen bij beschikbare
+                  campagnes, net als het vinkje hierboven; een uitgegrijsde,
+                  nog niet klikbare campagne heeft nooit een run gestart. */}
+              {campagne.beschikbaar && (
+                <div style={{ color: "var(--kleur-tekst-gedempt)", marginTop: "0.25rem", fontSize: "0.8rem" }}>
+                  {campagneStatistieken(campagne.id).gestart}× gestart
+                </div>
+              )}
+              {/* Issue: "loading button per campagne op het campagne select
+                  screen, waarmee je een eerdere save kunt inladen ... geeft
+                  aan op welke streek de save zich bevindt" — alleen zichtbaar
+                  als er voor déze campagne al een save bestaat. `stopPropagation`
+                  op zowel click als keydown: de omringende kaart heeft zelf al
+                  een klik-/toetsenbord-handler die een verse run start
+                  (`onKiesCampagne`), en die mag niet ook meelopen met deze knop. */}
+              {campagne.beschikbaar && heeftOpgeslagenSpel(campagne.id) && (
+                <button
+                  type="button"
+                  className="fc-knop"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onLaadCampagne(campagne.id);
+                  }}
+                  onKeyDown={(event) => event.stopPropagation()}
+                  style={{ marginTop: "0.5rem", padding: "0.3rem 0.75rem", fontSize: "0.85rem" }}
+                >
+                  Laden — streek {opgeslagenSpelStreek(campagne.id)}
+                </button>
+              )}
+              {!campagne.beschikbaar && (
+                <div
+                  className="fc-heading"
+                  style={{
+                    marginTop: "0.5rem",
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.08em",
+                    color: "var(--kleur-roest-licht)",
+                  }}
+                >
+                  Binnenkort beschikbaar
+                </div>
+              )}
+            </div>
+            {/* Issue: "sfeer afbeeldingen campagne select" — vierkante
+                pixel-art stemmingsafbeelding rechts in het blok, met een
+                simpele omlijsting; alleen voor campagnes die er een hebben
+                (nu: de eerste twee, zie CAMPAGNES hierboven). */}
+            {campagne.sfeerAfbeelding && (
               <div
-                className="fc-heading"
+                aria-hidden="true"
                 style={{
-                  marginTop: "0.5rem",
-                  fontSize: "0.75rem",
-                  letterSpacing: "0.08em",
-                  color: "var(--kleur-roest-licht)",
+                  flexShrink: 0,
+                  width: "4.5rem",
+                  height: "4.5rem",
+                  overflow: "hidden",
+                  lineHeight: 0,
+                  border: "2px solid var(--kleur-oker)",
+                  borderRadius: "3px",
+                  boxShadow: "inset 0 0 0 2px var(--kleur-aarde-diepst)",
                 }}
               >
-                Binnenkort beschikbaar
+                <campagne.sfeerAfbeelding />
               </div>
             )}
           </div>
