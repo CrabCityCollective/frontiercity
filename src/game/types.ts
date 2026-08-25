@@ -540,6 +540,16 @@ export interface CampaignConfig {
   // generieke systeem-pop-ups (bevestigingsschermen) blijven bewust buiten
   // `CampaignConfig` — zie opdracht-wampanoag-opening.md §8 voor de driedeling.
   popupTeksten?: Partial<Record<string, string>>;
+  // Welke stam-naam(en) `verwerkIndringers` (indringersEnDieren.ts) toont bij
+  // een indringers-incident (issue: "Going west: indringers" — de invallen op
+  // Going West moeten van de Wampanoag afkomstig zijn i.p.v. de generieke
+  // fictieve tutorial-namen). Zelfde terugval-patroon als `techNamen`/
+  // `improvementNamen` hierboven: ontbreekt deze lijst (of de hele campagne
+  // heeft geen override), dan valt `verwerkIndringers` terug op de tutorial-
+  // pool (`INDRINGERS_STAMMEN`, tutorialContent.ts). Geldt voor de hele
+  // campagne — een streek-/anker-afhankelijke wisseling naar andere stammen
+  // (zoals de Comanche/Apache uit Anker 3, ontwerp.md) is nog niet gebouwd.
+  indringersStamNamen?: string[];
 }
 
 // Gedeelde-opslag-grondstoffen (hoofdstuk 5): hout, steen, erts, goud delen

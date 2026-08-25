@@ -342,6 +342,24 @@ test("een uitgeputte Amberader (ghost town) telt niet meer mee voor het extra in
   );
 });
 
+// Issue "Going west: indringers": Going West mag geen generieke fictieve
+// tutorial-stamnamen tonen bij een indringers-incident, maar alleen namen uit
+// de eigen Wampanoag-pool (`CampaignConfig.indringersStamNamen`, campagnes.ts).
+test("Going West trekt de indringers-stamnaam uit de eigen Wampanoag-pool i.p.v. de generieke tutorial-namen", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, streken: metOntgrendeldeStreek3(state.streken) };
+
+  // kans-check (0) → incident; streek-trekking (0) → streek 1 (streek 3 doet
+  // niet mee, bevat alleen een kale Wachttoren); stamnaam (0).
+  state = metRandomReeks([0, 0, 0], () => volgendeBeurt(state));
+
+  assert.equal(state.indringersEvent?.streekHoogte, 1);
+  assert.ok(
+    ["de Wampanoag", "het volk van Massasoit"].includes(state.indringersEvent?.stamNaam ?? ""),
+    `verwacht een Wampanoag-naam, kreeg "${state.indringersEvent?.stamNaam}"`
+  );
+});
+
 // Gedeelde opzet voor de derde-uitkomst-tests hieronder (issue: "wachttorens
 // kunnen vernietigd worden door indringers"): streek 2 krijgt een voltooide,
 // bemande, wegverbonden Wachttoren die (via "wachttoren beschermt 2 streken")

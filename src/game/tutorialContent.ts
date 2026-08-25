@@ -363,10 +363,13 @@ export const INEENSTORTING_FLAVOR_TEKST =
   "De rivier buigt nog steeds hetzelfde. Een nieuw vuur wacht op dezelfde oever.";
 
 // Indringers-tribuut-pop-up (hoofdstuk 6): een willekeurige naam uit deze
-// pool wordt gekozen door `verwerkIndringers` in economie.ts zodra een tribe
-// een ontgrendelde streek binnendringt (niet meer alleen de frontier-streek).
-// Zelfde stijlgids als de rest van dit bestand — kort, concreet, geen moreel
-// oordeel.
+// pool wordt gekozen door `verwerkIndringers` (indringersEnDieren.ts) zodra
+// een tribe een ontgrendelde streek binnendringt (niet meer alleen de
+// frontier-streek). Dit is de tutorial-pool, tevens de terugval voor elke
+// campagne zonder eigen override (issue "Going west: indringers" —
+// `CampaignConfig.indringersStamNamen`, campagnes.ts, geeft Going West een
+// eigen Wampanoag-pool in plaats van deze fictieve namen). Zelfde stijlgids
+// als de rest van dit bestand — kort, concreet, geen moreel oordeel.
 export const INDRINGERS_STAMMEN = [
   "de stam van de Halve Maan",
   "de stam van de Bloedhoeven",
