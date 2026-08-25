@@ -289,10 +289,8 @@ function maakLegeTiles(hoogte: number): Tile[] {
   }));
 }
 
-// Placeholder-startnederzetting (naam/flavor is bewust nog geen inhoudelijke
-// content — dat hoort bij de Anker-uitwerking, hoofdstuk 9/15, niet bij deze
-// kaart-milestone). Zelfde tile-opzet als `maakStartStreek` in world.ts.
-export const GOING_WEST_STARTSTAD_NAAM = "Startkamp";
+// Zelfde tile-opzet als `maakStartStreek` in world.ts.
+export const GOING_WEST_STARTSTAD_NAAM = "Plymouth";
 
 function maakStartStreek(): Streek {
   const tiles = maakLegeTiles(1);
