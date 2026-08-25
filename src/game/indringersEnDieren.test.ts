@@ -3,13 +3,7 @@ import assert from "node:assert/strict";
 import { jaag, verplaatsSettlerNaar } from "./acties";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { startNieuweSettler } from "./groeiEnRekrutering";
-import {
-  bevestigAmberOnderVuur,
-  bevestigGedwongenTribuut,
-  geefTribuut,
-  kiesGeefTribuut,
-  weigerTribuut,
-} from "./indringersEnDieren";
+import { bevestigAmberOnderVuur, geefTribuut, weigerTribuut } from "./indringersEnDieren";
 import { startBouw } from "./infrastructuurEnBouw";
 import { AMBERADER } from "./improvements";
 import { GameState } from "./types";
@@ -454,7 +448,7 @@ test("een streek met een actieve Amberader krijgt eerst de 'Amberader onder vuur
   );
 });
 
-test("kiesGeefTribuut trekt nog niets van de voorraad af — pas geefTribuut (na het sluiten van de bevestiging) doet dat (issue: wachttoren tweaks)", () => {
+test("geefTribuut trekt het tribuut direct van de voorraad af en sluit de melding in één stap (issue: Indringers 2e pop-up samenvoegen)", () => {
   let state: GameState = {
     ...maakInitieleSpelStatus(),
     voorraad: { hout: 10, steen: 0, erts: 0, goud: 0 },
@@ -467,16 +461,12 @@ test("kiesGeefTribuut trekt nog niets van de voorraad af — pas geefTribuut (na
     },
   };
 
-  state = kiesGeefTribuut(state);
-  assert.equal(state.indringersEvent?.fase, "betaald");
-  assert.equal(state.voorraad.hout, 10, "de voorraad mag nog niet veranderd zijn na de keuze om te betalen");
-
   state = geefTribuut(state);
-  assert.equal(state.voorraad.hout, 5, "pas na het sluiten van de bevestiging gaat het tribuut van de voorraad af");
+  assert.equal(state.voorraad.hout, 5, "het tribuut gaat meteen van de voorraad af, zonder tussenliggend scherm");
   assert.equal(state.indringersEvent, undefined);
 });
 
-test("een afgedwongen tribuut (na weigeren) trekt ook pas af zodra de laatste bevestiging gesloten wordt", () => {
+test("een afgedwongen tribuut (na weigeren) trekt ook direct af zodra de speler de afdwinging bevestigt", () => {
   let state: GameState = {
     ...maakInitieleSpelStatus(),
     voorraad: { hout: 10, steen: 0, erts: 0, goud: 0 },
@@ -491,10 +481,6 @@ test("een afgedwongen tribuut (na weigeren) trekt ook pas af zodra de laatste be
 
   state = weigerTribuut(state);
   assert.equal(state.indringersEvent?.fase, "geforceerd");
-
-  state = bevestigGedwongenTribuut(state);
-  assert.equal(state.indringersEvent?.fase, "betaald");
-  assert.equal(state.voorraad.hout, 10, "de voorraad mag nog niet veranderd zijn vóór de laatste bevestiging");
 
   state = geefTribuut(state);
   assert.equal(state.voorraad.hout, 5);

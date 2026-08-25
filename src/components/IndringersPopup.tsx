@@ -14,8 +14,6 @@ interface IndringersPopupProps {
   onBevestigAmberOnderVuur: () => void;
   onGeefTribuut: () => void;
   onWeigerTribuut: () => void;
-  onBevestigGedwongenTribuut: () => void;
-  onSluitTribuutBetaling: () => void;
   onSluiten: () => void;
 }
 
@@ -25,9 +23,11 @@ interface IndringersPopupProps {
 // `event.heeftWachttoren`/`event.fase`, omdat ze hetzelfde blokkerende
 // meldings-frame delen (zelfde patroon als
 // VoedselWaarschuwingPopup/MilitairUitlegPopup) en alleen in tekst/knoppen
-// verschillen. `fase: "betaald"` (issue: "wachttoren tweaks") is het laatste
-// bevestigingsscherm — pas het sluiten daarvan (`onSluitTribuutBetaling`)
-// trekt het tribuut daadwerkelijk van de voorraad af.
+// verschillen. Zowel `onGeefTribuut` (vanuit `fase: "gemeld"`) als de
+// "Begrepen"-knop bij `fase: "geforceerd"` roepen dezelfde `onGeefTribuut`-actie
+// aan — die trekt het tribuut direct van de voorraad af én sluit de melding in
+// één stap (issue: "Indringers 2e pop-up samenvoegen" — geen apart
+// bevestigingsscherm meer tussen de keuze/afdwinging en de afschrijving).
 // `fase: "amber-onder-vuur"`/`"malus"`/`"bonus"` (issue: "wachttorens kunnen
 // vernietigd worden door indringers"): de derde-uitkomst-loot voor een
 // beschermde streek, en de losstaande Amberader-aankondiging die daar (of vóór
@@ -38,8 +38,6 @@ export default function IndringersPopup({
   onBevestigAmberOnderVuur,
   onGeefTribuut,
   onWeigerTribuut,
-  onBevestigGedwongenTribuut,
-  onSluitTribuutBetaling,
   onSluiten,
 }: IndringersPopupProps) {
   const resourceLabel = event.tribuut ? MATERIAAL_LABELS[event.tribuut.resource].toLowerCase() : "";
@@ -144,26 +142,10 @@ export default function IndringersPopup({
             </p>
             <button
               className="fc-knop"
-              onClick={onBevestigGedwongenTribuut}
+              onClick={onGeefTribuut}
               style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}
             >
               Begrepen
-            </button>
-          </>
-        )}
-
-        {!event.heeftWachttoren && event.tribuut && event.fase === "betaald" && (
-          <>
-            <p style={{ margin: 0, lineHeight: 1.6 }}>
-              Je stuurt {event.tribuut.aantal} {resourceLabel} mee als tribuut. Zodra je deze melding sluit, gaat dit
-              van je voorraad af.
-            </p>
-            <button
-              className="fc-knop"
-              onClick={onSluitTribuutBetaling}
-              style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}
-            >
-              Sluiten
             </button>
           </>
         )}
