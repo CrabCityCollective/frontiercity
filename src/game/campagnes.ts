@@ -85,6 +85,14 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
       "Door eerlijke handel is er vertrouwen gegroeid tussen jouw nederzetting en het volk van Massasoit. Cultuur " +
       "stuurt vanaf nu je verdere groei, en de eerste culturele gebouwen worden beschikbaar.",
   },
+  // Issue "Going west: indringers": de indringers-incidenten (verwerkIndringers,
+  // indringersEnDieren.ts) moeten op Going West niet de generieke fictieve
+  // tutorial-stamnamen tonen, maar allemaal van de Wampanoag afkomstig zijn —
+  // functioneel beschreven, geen karikatuur (ontwerp.md, "Flavor-tekststijlgids").
+  // Vroege invallen, vóór het eerste contact op de Wampanoag-streek
+  // (opdracht-wampanoag-opening.md), passen bij de "donkerder, minder heroïsch"
+  // toon uit ontwerp.md: onrust met de Wampanoag al vóór de handelsrelatie er is.
+  indringersStamNamen: ["de Wampanoag", "het volk van Massasoit"],
 };
 
 // Alle bestaande, niet-tutorial `CampaignConfig`-instanties, gesleuteld op

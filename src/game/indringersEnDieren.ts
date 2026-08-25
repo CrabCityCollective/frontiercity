@@ -19,6 +19,7 @@ import { GameState, IndringersTribuut, KuddeEvent, Streek, MateriaalType, Roofdi
 import { hoogsteOntgrendeldeStreek, kuddeJachtBeurtenVoorStreek, STARTKUDDE_POSITIE } from "./world";
 import { kuddeKansFactor } from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
+import { campagneConfig } from "./campagnes";
 import { isTileVerbondenMetStad } from "./wegen";
 import { metActieveStad } from "./stad";
 
@@ -285,7 +286,12 @@ export function verwerkIndringers(state: GameState): GameState {
       break;
     }
   }
-  const stamNaam = INDRINGERS_STAMMEN[Math.floor(Math.random() * INDRINGERS_STAMMEN.length)];
+  // Campagne-afhankelijke stam-naam (issue "Going west: indringers",
+  // `CampaignConfig.indringersStamNamen`, campagnes.ts) — zelfde terugval-
+  // patroon als `improvementNaam()`/`techNaam()`: ontbreekt de override (zoals
+  // in de tutorial), dan valt dit terug op de generieke fictieve pool.
+  const stamNamenPool = campagneConfig(state.campagneId)?.indringersStamNamen ?? INDRINGERS_STAMMEN;
+  const stamNaam = stamNamenPool[Math.floor(Math.random() * stamNamenPool.length)];
   const amberOnderVuur = heeftActieveAmberader(streek) || undefined;
 
   const beschermendeWachttoren = vindBeschermendeWachttoren(state, streek);
