@@ -256,10 +256,60 @@ function tekenWachttorenPixel(ctx: CanvasRenderingContext2D, bemand: boolean): v
   }
 }
 
+// Lopend oer-poppetje (issue: "Andere skin oer settler") — pixel-art variant
+// van `tekenOerPoppetje` in canvas.ts: de tutorial-settler (Het Hertenpad-
+// volk, vóór het wiel) loopt te voet met een reisbindel, i.p.v. de huifkar
+// hieronder. `variant` geeft dezelfde koelere, blauwige kledingtint aan de
+// tweede settler (issue: "Altijd 2e settler" #236).
+function tekenOerPoppetjePixel(ctx: CanvasRenderingContext2D, variant: "primair" | "tweede" = "primair"): void {
+  const baseY = 13;
+  schaduw(ctx, 8, baseY + 1, 5);
+
+  const huidKleur = "#c19a6b";
+  const kledingKleur = variant === "primair" ? "#6b4a2c" : "#2c4a6b";
+  const haarKleur = variant === "primair" ? "#2a1c10" : "#1a222a";
+
+  // Benen — lopende pas: voorste been raakt de grond, achterste been geheven.
+  vlijn(ctx, 7, baseY - 3, baseY, huidKleur);
+  vlijn(ctx, 9, baseY - 3, baseY - 1, huidKleur);
+
+  // Tuniek/omslagdoek — smal bij het middel, breder bij de schouders.
+  blokrij(ctx, 8, baseY - 4, 1, kledingKleur);
+  blokrij(ctx, 8, baseY - 5, 1, kledingKleur);
+  blokrij(ctx, 8, baseY - 6, 2, kledingKleur);
+
+  // Armen.
+  p(ctx, 5, baseY - 5, huidKleur);
+  p(ctx, 11, baseY - 5, huidKleur);
+
+  // Reisbindel aan een stok over de schouder — teken van een trekkende settler.
+  vlijn(ctx, 11, baseY - 9, baseY - 6, kledingKleur);
+  ctx.fillStyle = kledingKleur;
+  ctx.fillRect(10, baseY - 11, 2, 2);
+
+  // Hoofd.
+  blokrij(ctx, 8, baseY - 7, 1, huidKleur);
+  blokrij(ctx, 8, baseY - 8, 1, haarKleur);
+}
+
 // Tweede settler (issue: "Altijd 2e settler" #236): `variant` geeft dezelfde
 // koelere, blauwige tint als de vector-variant (`tekenSettler` in canvas.ts)
 // zodat de twee settlers ook in pixel-art-stijl te onderscheiden zijn.
-function tekenSettlerPixel(ctx: CanvasRenderingContext2D, variant: "primair" | "tweede" = "primair"): void {
+//
+// `tegelSet` (M20d, `CampaignConfig.tegelSet`): `undefined` betekent de
+// tutorial — daar tekenen we het lopende oer-poppetje hierboven i.p.v. de
+// huifkar (issue: "Andere skin oer settler"). Going West (en elke andere
+// campagne met een `tegelSet`) behoudt de huifkar.
+function tekenSettlerPixel(
+  ctx: CanvasRenderingContext2D,
+  variant: "primair" | "tweede" = "primair",
+  tegelSet?: string
+): void {
+  if (tegelSet === undefined) {
+    tekenOerPoppetjePixel(ctx, variant);
+    return;
+  }
+
   const baseY = 13;
   schaduw(ctx, 8, baseY + 1, 9);
 
@@ -958,8 +1008,9 @@ export function tekenWereldPixelArt(
   // in `tekenWereld` (canvas.ts).
   tweedeSettler?: Settler,
   // Campagne-tegelset (M20d deelstap 4, `CampaignConfig.tegelSet`) — zie
-  // `tekenWereld` (canvas.ts) voor de volledige toelichting; hier momenteel
-  // ongebruikt om dezelfde reden.
+  // `tekenWereld` (canvas.ts) voor de volledige toelichting; hier gebruikt
+  // om dezelfde reden om de settler-skin te kiezen (`tekenSettlerPixel`
+  // hieronder).
   tegelSet?: string
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
@@ -1059,7 +1110,7 @@ export function tekenWereldPixelArt(
     const rijIndex = totaalStreken - settler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
       tileCtx.clearRect(0, 0, PIX, PIX);
-      tekenSettlerPixel(tileCtx, "primair");
+      tekenSettlerPixel(tileCtx, "primair", tegelSet);
       blit(ctx, tileCanvas, settler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize);
     }
   }
@@ -1067,7 +1118,7 @@ export function tekenWereldPixelArt(
     const rijIndex = totaalStreken - tweedeSettler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
       tileCtx.clearRect(0, 0, PIX, PIX);
-      tekenSettlerPixel(tileCtx, "tweede");
+      tekenSettlerPixel(tileCtx, "tweede", tegelSet);
       blit(ctx, tileCanvas, tweedeSettler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize);
     }
   }
