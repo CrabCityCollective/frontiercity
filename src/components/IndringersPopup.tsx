@@ -41,6 +41,10 @@ export default function IndringersPopup({
   onSluiten,
 }: IndringersPopupProps) {
   const resourceLabel = event.tribuut ? MATERIAAL_LABELS[event.tribuut.resource].toLowerCase() : "";
+  const afbeelding =
+    event.heeftWachttoren && event.fase === "malus"
+      ? "/assets/scenes/ingestorte-wachttoren.png"
+      : "/assets/scenes/indringers-bij-de-grens.png";
 
   return (
     <div
@@ -66,6 +70,20 @@ export default function IndringersPopup({
           textAlign: "center",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={afbeelding}
+          alt=""
+          style={{
+            width: "100%",
+            maxWidth: "26rem",
+            height: "auto",
+            display: "block",
+            alignSelf: "center",
+            border: "3px solid var(--kleur-oker)",
+            boxShadow: "0 6px 18px rgba(0, 0, 0, 0.55)",
+          }}
+        />
         <strong className="fc-heading" style={{ color: "var(--kleur-gevaar)" }}>
           {INDRINGERS_TITEL}
         </strong>
