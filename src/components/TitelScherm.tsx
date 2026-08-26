@@ -27,7 +27,10 @@ export default function TitelScherm({ onStart }: TitelSchermProps) {
         padding: "1.5rem",
         cursor: "pointer",
         zIndex: 200,
-        backgroundImage: `linear-gradient(180deg, rgba(15, 10, 6, 0.35), rgba(15, 10, 6, 0.85)), url(/assets/scenes/title-screen.jpg)`,
+        // Alternatieve hoofdtitel-afbeelding uitgeprobeerd (issue "Scène
+        // beelden") i.p.v. title-screen.jpg — terug te draaien naar
+        // title-screen.jpg als de oorspronkelijke toch mooier blijkt.
+        backgroundImage: `linear-gradient(180deg, rgba(15, 10, 6, 0.35), rgba(15, 10, 6, 0.85)), url(/assets/scenes/title-screen-alt.png)`,
         backgroundSize: "cover",
         backgroundPosition: "center top",
       }}

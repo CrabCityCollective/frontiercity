@@ -49,7 +49,11 @@ export function goingWestStreekContent(hoogte: number): StreekContent | undefine
 export const GOING_WEST_INTRO_TITEL = "Going West";
 export const GOING_WEST_INTRO_SUBTITEL = "American Expansion";
 export const GOING_WEST_INTRO_FLAVOR_TEKST =
-  "Weken op zee liggen achter ons. Voor ons ligt de kust van de Nieuwe Wereld — onbekend land, onder een vreemde hemel.";
+  "De Pilgrims kunnen niet meer in Engeland blijven, maar de Nieuwe Wereld biedt ook nieuwe avonturen. De Frontier wacht niet, laten we de wildernis intrekken.";
+// Eigen sfeerbeeld voor het Going West-introscherm (issue "Scène beelden"),
+// i.p.v. het tutorial-plaatje (`intro.jpg`) — zelfde Diablo II-achtige stijl
+// als de rest van de campagne-assets (CLAUDE.md, hoofdstuk 12 design-doc).
+export const GOING_WEST_INTRO_AFBEELDING = "/assets/scenes/going-west-campaign-intro.png";
 
 // De laatste streek van de Going West-kaart is een afdaling naar de kust
 // (`worldGoingWest.ts`, streek 28-35) — net als de tutorial dus de enige
