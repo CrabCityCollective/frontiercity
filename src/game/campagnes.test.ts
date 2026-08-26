@@ -95,7 +95,8 @@ test("introContentVoorCampagne geeft de tutorial-content terug zonder campagne, 
   const goingWestIntro = introContentVoorCampagne(GOING_WEST_CAMPAGNE.id);
   assert.equal(goingWestIntro.titel, "Going West");
   assert.notEqual(goingWestIntro.titel, INTRO_TITEL);
-  assert.equal(goingWestIntro.flavorTekst, "todo");
+  assert.ok(goingWestIntro.flavorTekst.includes("Wampanoag"));
+  assert.ok(!goingWestIntro.flavorTekst.includes("Massasoit"));
 });
 
 test("oceaanUitlegVoorCampagne geeft de tutorial-content terug zonder campagne, en eigen Going West-content met de campagne-id (hoofdstuk 19, blocker 1 afronding)", () => {

@@ -78,11 +78,11 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   popupTeksten: {
     eersteContactPopupTitel: "Eerste contact",
     eersteContactPopupTekst:
-      "Aan de rand van de nieuwe streek liggen drie kampementen van het volk van Massasoit. Stuur verkenners om ze " +
+      "Aan de rand van de nieuwe streek liggen drie kampementen van de Wampanoag. Stuur verkenners om ze " +
       "te ontdekken — daarna kun je met ze handelen in bevervellen, maïs en wampum.",
     wampanoagRelatieGelegdPopupTitel: "Een verbond met de Wampanoag",
     wampanoagRelatieGelegdPopupTekst:
-      "Door eerlijke handel is er vertrouwen gegroeid tussen jouw nederzetting en het volk van Massasoit. Cultuur " +
+      "Door eerlijke handel is er vertrouwen gegroeid tussen jouw nederzetting en de Wampanoag. Cultuur " +
       "stuurt vanaf nu je verdere groei, en de eerste culturele gebouwen worden beschikbaar.",
   },
   // Issue "Going west: indringers": de indringers-incidenten (verwerkIndringers,
@@ -92,7 +92,7 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   // Vroege invallen, vóór het eerste contact op de Wampanoag-streek
   // (opdracht-wampanoag-opening.md), passen bij de "donkerder, minder heroïsch"
   // toon uit ontwerp.md: onrust met de Wampanoag al vóór de handelsrelatie er is.
-  indringersStamNamen: ["de Wampanoag", "het volk van Massasoit"],
+  indringersStamNamen: ["de Wampanoag", "het Wampanoag-volk"],
 };
 
 // Alle bestaande, niet-tutorial `CampaignConfig`-instanties, gesleuteld op

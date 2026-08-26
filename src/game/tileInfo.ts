@@ -71,7 +71,7 @@ export function beschrijfTile(
   if (tile.wampanoagVerhuld) {
     return {
       titel: "Verhuld vakje",
-      ondertitel: `Massasoit — streek ${streek.hoogte}`,
+      ondertitel: `Wampanoag — streek ${streek.hoogte}`,
       tekst: tile.wampanoagVerkenningInGang
         ? `Een verkenner is onderweg — nog ${tile.wampanoagVerkenningInGang.beurtenResterend} ${tile.wampanoagVerkenningInGang.beurtenResterend === 1 ? "beurt" : "beurten"} tot dit vakje onthuld wordt.`
         : "Dit vakje is nog niet verkend. Stuur er een verkenner heen om te zien wat hier ligt.",
@@ -220,7 +220,7 @@ export function beschrijfTile(
   if (streek.bezet || streek.wampanoagBezet) {
     return {
       titel: "Leeg vakje",
-      ondertitel: streek.wampanoagBezet ? `Massasoit — streek ${streek.hoogte}` : `De Stam van de Mammoet — ${streek.hoogte}`,
+      ondertitel: streek.wampanoagBezet ? `Wampanoag — streek ${streek.hoogte}` : `De Stam van de Mammoet — ${streek.hoogte}`,
       tekst: "Hier ligt geen bijzondere inhoud. Zolang de streek bezet is, kun je hier niet bouwen.",
     };
   }
