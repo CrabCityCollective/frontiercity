@@ -39,21 +39,17 @@ export function goingWestStreekContent(hoogte: number): StreekContent | undefine
 // laatste twee openstaande stukken): de titel/subtitel hergebruiken de al
 // vastgelegde campagnenaam (`GOING_WEST_CAMPAGNE`/`CampagneSelectScherm`,
 // hier als losse string herhaald i.p.v. geïmporteerd om een circulaire
-// import met campagnes.ts te vermijden). De introscherm-flavor-tekst
-// (issue "Pop-up teksten Wampanoag") is de eerste-beurt-pop-up die de
-// koloniale openingssituatie en het bouwdoel (Kapellen, het hoofdkamp van de
-// Wampanoag) introduceert — zelfde stijlgids als `ontwerp.md`
-// "Flavor-tekststijlgids": korte zinnen, geen moreel oordeel in de tekst
-// zelf, historische naam functioneel gebruikt (Wampanoag, consequent, nooit
-// Massasoit). De oceaan-uitleg-pop-up hieronder is nog niet ingevuld en
-// blijft "todo" totdat de speler die zelf aanvult (issue #278, vraag 1).
+// import met campagnes.ts te vermijden). De langere, koloniale-openingssituatie
+// -tekst (issue "Pop-up teksten Wampanoag") staat expliciet niet hier, maar in
+// een eigen pop-up bij het begin van beurt 1 (`campagneOpeningPopup`,
+// `CampaignConfig.popupTeksten` in campagnes.ts) — dit introscherm-blurbje
+// blijft kort, zelfde stijl/lengte als de tutorial-versie (`INTRO_FLAVOR_TEKST`,
+// tutorialContent.ts). De oceaan-uitleg-pop-up hieronder is nog niet ingevuld
+// en blijft "todo" totdat de speler die zelf aanvult (issue #278, vraag 1).
 export const GOING_WEST_INTRO_TITEL = "Going West";
 export const GOING_WEST_INTRO_SUBTITEL = "American Expansion";
 export const GOING_WEST_INTRO_FLAVOR_TEKST =
-  "Engeland ligt aan de andere kant van de wereld. Wij staan alleen aan deze kust, tussen de wilden.\n" +
-  "De Wampanoag zijn een trots volk. Ze dulden ons nog niet in dit nieuwe land.\n" +
-  "Wij hebben God aan onze zijde. Bouw Kapellen, zodat het land onder God komt.\n" +
-  "Zoek het hoofdkamp van de Wampanoag. Misschien zijn ze te overtuigen om ons verder te laten gaan, op onze goddelijke missie.";
+  "Weken op zee liggen achter ons. Voor ons ligt de kust van de Nieuwe Wereld — onbekend land, onder een vreemde hemel.";
 
 // De laatste streek van de Going West-kaart is een afdaling naar de kust
 // (`worldGoingWest.ts`, streek 28-35) — net als de tutorial dus de enige

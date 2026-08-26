@@ -95,7 +95,12 @@ test("introContentVoorCampagne geeft de tutorial-content terug zonder campagne, 
   const goingWestIntro = introContentVoorCampagne(GOING_WEST_CAMPAGNE.id);
   assert.equal(goingWestIntro.titel, "Going West");
   assert.notEqual(goingWestIntro.titel, INTRO_TITEL);
-  assert.ok(goingWestIntro.flavorTekst.includes("Wampanoag"));
+  // De langere, koloniale-openingssituatie-tekst staat expliciet niet op het
+  // introscherm maar in een eigen pop-up (`campagneOpeningPopup`, zie de
+  // `popupContent`-test hieronder) — issue "Pop-up teksten Wampanoag": "die
+  // langere tekst moest in een nieuwe pop-up aan het begin van de campaign,
+  // niet de introtekst".
+  assert.ok(!goingWestIntro.flavorTekst.includes("Wampanoag"));
   assert.ok(!goingWestIntro.flavorTekst.includes("Massasoit"));
 });
 
@@ -112,6 +117,12 @@ test("oceaanUitlegVoorCampagne geeft de tutorial-content terug zonder campagne, 
 // terugval (in tegenstelling tot `introContentVoorCampagne`/
 // `oceaanUitlegVoorCampagne` hierboven).
 test("popupContent geeft het titel/tekst-paar van GOING_WEST_CAMPAGNE.popupTeksten terug voor de Wampanoag-narratieve pop-ups", () => {
+  const campagneOpening = popupContent(GOING_WEST_CAMPAGNE, "campagneOpeningPopup");
+  assert.equal(campagneOpening?.titel, GOING_WEST_CAMPAGNE.popupTeksten!.campagneOpeningPopupTitel);
+  assert.equal(campagneOpening?.tekst, GOING_WEST_CAMPAGNE.popupTeksten!.campagneOpeningPopupTekst);
+  assert.ok(campagneOpening?.tekst.includes("Wampanoag"));
+  assert.ok(!campagneOpening?.tekst.includes("Massasoit"));
+
   const eersteContact = popupContent(GOING_WEST_CAMPAGNE, "eersteContactPopup");
   assert.equal(eersteContact?.titel, GOING_WEST_CAMPAGNE.popupTeksten!.eersteContactPopupTitel);
   assert.equal(eersteContact?.tekst, GOING_WEST_CAMPAGNE.popupTeksten!.eersteContactPopupTekst);

@@ -45,7 +45,7 @@ export default function AmberOntdektPopup({ onSluiten, titel, tekst }: AmberOntd
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
           {titel ?? AMBER_ONTDEKKING_TITEL}
         </strong>
-        <p style={{ margin: 0, lineHeight: 1.6 }}>{tekst ?? AMBER_ONTDEKKING_TEKST}</p>
+        <p style={{ margin: 0, whiteSpace: "pre-line", lineHeight: 1.6 }}>{tekst ?? AMBER_ONTDEKKING_TEKST}</p>
         <button className="fc-knop" onClick={onSluiten} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Begrepen
         </button>

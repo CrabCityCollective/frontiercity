@@ -955,6 +955,7 @@ export interface GameState {
 // hoeft dus nooit een save te overleven).
 export type EenmaligeUitlegKey =
   | "opening"
+  | "campagneOpening"
   | "settler"
   | "vijandAanDeHorizon"
   | "goddelijkeRaadgeving"

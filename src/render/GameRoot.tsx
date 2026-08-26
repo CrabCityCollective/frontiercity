@@ -286,6 +286,14 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // beurt 1 — een eenmalige-confirm-vlag, zelfde patroon als de overige
   // uitleg-pop-ups hieronder (settler/voedsel/boerderij/militair).
   const openingsUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("opening");
+  // Campagne-openings-pop-up (issue "Pop-up teksten Wampanoag" — "die langere
+  // tekst moest in een nieuwe pop-up aan het begin van de campaign, niet de
+  // introtekst"): losse, narratieve pop-up bij het begin van beurt 1, naast en
+  // los van `openingsUitlegBevestigd` hierboven (dat is de tutorial-mechaniek-
+  // uitleg, aan/uit te zetten via `uitlegAan`) — deze toont altijd, is
+  // kerninhoud/verhaal net als de streek-popup, en bestaat alleen voor
+  // campagnes die er content voor hebben (`popupContent`, campagnes.ts).
+  const campagneOpeningBevestigd = state.gezieneEenmaligeUitleg.includes("campagneOpening");
 
   // Tutorial-voltooid-pop-up (issue: "pop-up met summary na het halen
   // ervan"): eenmalige confirm-vlag per sessie, zelfde patroon als
@@ -670,12 +678,22 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // popup) permanent achter zodra een campagnekaart verder komt dan de
   // beschikbare content, wat via de `!toonStreekPopup`-keten hieronder alle
   // lager-prioriteit pop-ups blokkeert, inclusief de verplichte tech-keuze.
+  // Campagne-openings-pop-up (zie `campagneOpeningBevestigd` hierboven):
+  // hoogste prioriteit van alle beurt-1-pop-ups — dit zet de openingsscène
+  // vóórdat de speler zelfs de eerste-streek-inhoud (`toonStreekPopup`)
+  // te zien krijgt. `popupContent` geeft `undefined` terug voor campagnes
+  // zonder `campagneOpeningPopup`-tekst (o.a. de tutorial), dus deze pop-up
+  // verschijnt vooralsnog alleen op Going West.
+  const toonCampagneOpeningPopup =
+    state.beurt === 1 && !campagneOpeningBevestigd && popupContent(campagne, "campagneOpeningPopup") !== undefined;
   const toonStreekPopup =
+    !toonCampagneOpeningPopup &&
     actieveStreek.hoogte > laatstBevestigdeStreek &&
     streekContentVoorCampagne(state.campagneId, actieveStreek.hoogte) !== undefined;
   // Openings-uitleg bij het begin van beurt 1 (issue: "uitleg pop-ups
   // dynamisch tonen") — geen vast beurtbereik meer, één vaste pop-up.
-  const toonUitlegPopup = !toonStreekPopup && uitlegAan && state.beurt === 1 && !openingsUitlegBevestigd;
+  const toonUitlegPopup =
+    !toonCampagneOpeningPopup && !toonStreekPopup && uitlegAan && state.beurt === 1 && !openingsUitlegBevestigd;
   // Settler-uitleg direct nadat de settler in beurt 2 verschijnt (hoofdstuk
   // 16) — gekoppeld aan `state.settler` zelf i.p.v. een los beurtnummer, dus
   // hij verschijnt op precies hetzelfde moment als de settler zelf.
@@ -1679,6 +1697,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             opties={state.techKeuzeEvent.opties}
             campagne={campagne}
             onKiesTech={kiesTech}
+          />
+        )}
+        {toonCampagneOpeningPopup && (
+          <AmberOntdektPopup
+            titel={popupContent(campagne, "campagneOpeningPopup")?.titel}
+            tekst={popupContent(campagne, "campagneOpeningPopup")?.tekst}
+            onSluiten={() => markeerUitlegGezien("campagneOpening")}
           />
         )}
         {toonEersteContactPopup && (

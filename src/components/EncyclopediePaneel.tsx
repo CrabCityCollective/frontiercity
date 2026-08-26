@@ -36,7 +36,13 @@ export default function EncyclopediePaneel({ onSluiten }: EncyclopediePaneelProp
         justifyContent: "center",
         background: "rgba(10, 8, 6, 0.72)",
         padding: "1rem",
-        zIndex: 20,
+        // 200, niet 20: dit paneel opent zowel tijdens een run (boven de
+        // canvas, zIndex 20 volstaat daar) als vanuit `HoofdNavigatieScherm`
+        // (zIndex 150) — met zIndex 20 opende het daar onzichtbaar/onklikbaar
+        // áchter het navigatiescherm (issue: "de encyclopedie knop op het
+        // hoofdmenu ... lijkt niet te werken"). 200 matcht `InstellingenPopup`,
+        // dat vanuit dezelfde twee plekken opent.
+        zIndex: 200,
       }}
     >
       <div
