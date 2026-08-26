@@ -554,6 +554,21 @@ export interface CampaignConfig {
   // campagne — een streek-afhankelijke wisseling naar andere stammen is nog
   // niet gebouwd.
   indringersStamNamen?: string[];
+  // Vervolg op de Wampanoag-opening (issue "Na de Wampanoag", M22): zodra
+  // `GameState.cultureelOntgrendeld` overgaat op `true` (de 3-3-3-
+  // handelsdrempel, wampanoag.ts) tellen streken tot en met deze hoogte niet
+  // meer mee in de `verwerkIndringers`-streek-trekking — de Wampanoag zijn nu
+  // bondgenoten, hun voormalige invalsgebied wordt blijvend veilig. Optioneel,
+  // zelfde terugval-patroon als hierboven: ontbreekt dit veld (elke andere
+  // campagne, of de tutorial — die start al op `cultureelOntgrendeld: true`
+  // maar heeft geen eigen `CampaignConfig`), dan verandert er niets aan het
+  // bestaande gedrag.
+  indringersUitgeslotenTotHoogteNaVerbond?: number;
+  // Vervangt `indringersStamNamen` hierboven zodra de omslag hierboven actief
+  // is: nieuwe stammen nemen de invallen over van de Wampanoag, die na het
+  // verbond zelf geen invallen meer plegen. Ontbreekt dit veld, dan blijft
+  // `indringersStamNamen` ook ná de omslag gewoon gelden.
+  indringersStamNamenNaVerbond?: string[];
 }
 
 // Gedeelde-opslag-grondstoffen (hoofdstuk 5): hout, steen, erts, goud delen

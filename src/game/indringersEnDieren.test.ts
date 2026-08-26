@@ -360,6 +360,68 @@ test("Going West trekt de indringers-stamnaam uit de eigen Wampanoag-pool i.p.v.
   );
 });
 
+// Issue "Na de Wampanoag" (M22, vervolg op de Wampanoag-opening): zodra het
+// verbond gesloten is (`cultureelOntgrendeld`), zijn streken 1-7 — het
+// voormalige Wampanoag-invalsgebied — blijvend veilig, en nemen drie nieuwe
+// stammen (`CampaignConfig.indringersStamNamenNaVerbond`) de invallen over.
+test("na het Wampanoag-verbond doen streken 1-7 niet meer mee in de indringers-trekking, en komt de stamnaam uit de nieuwe pool", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = {
+    ...state,
+    cultureelOntgrendeld: true,
+    streken: state.streken.map((streek) => (streek.hoogte <= 8 ? { ...streek, ontgrendeld: true } : streek)),
+  };
+
+  // kans-check (0) → incident; streek-trekking (0) zou zonder de uitsluiting
+  // op streek 1 uitkomen, maar streek 1-7 zijn na het verbond uitgesloten —
+  // met alleen streek 8 nog in de pool valt het incident daar gegarandeerd op;
+  // stamnaam (0).
+  state = metRandomReeks([0, 0, 0], () => volgendeBeurt(state));
+
+  assert.equal(state.indringersEvent?.streekHoogte, 8, "streek 1-7 zijn uitgesloten, alleen streek 8 kan nog geloot worden");
+  assert.ok(
+    ["de Shawnee", "stam2", "stam3"].includes(state.indringersEvent?.stamNaam ?? ""),
+    `verwacht een nieuwe-stam-naam uit de na-verbond-pool, kreeg "${state.indringersEvent?.stamNaam}"`
+  );
+});
+
+test("na het Wampanoag-verbond gebeurt er geen incident als alleen streek 1-7 ontgrendeld zijn — die doen allemaal niet meer mee", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = {
+    ...state,
+    cultureelOntgrendeld: true,
+    streken: state.streken.map((streek) => (streek.hoogte <= 7 ? { ...streek, ontgrendeld: true } : streek)),
+  };
+
+  state = metRandomReeks([0, 0, 0], () => volgendeBeurt(state));
+  assert.equal(state.indringersEvent, undefined, "geen enkele in aanmerking komende streek meer, dus geen incident");
+});
+
+test("vóór het Wampanoag-verbond blijven streken 1-7 gewoon meedoen, met de gewone Wampanoag-stamnamen (regressie)", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  assert.equal(state.cultureelOntgrendeld, false, "Going West start in de openingsfase, vóór het verbond");
+  state = { ...state, streken: metOntgrendeldeStreek3(state.streken) };
+
+  state = metRandomReeks([0, 0, 0], () => volgendeBeurt(state));
+
+  assert.equal(state.indringersEvent?.streekHoogte, 1, "streek 1 doet nog gewoon mee vóór het verbond");
+  assert.ok(
+    ["de Wampanoag", "het Wampanoag-volk"].includes(state.indringersEvent?.stamNaam ?? ""),
+    `verwacht nog een Wampanoag-naam, kreeg "${state.indringersEvent?.stamNaam}"`
+  );
+});
+
+test("de tutorial blijft ongewijzigd door de Wampanoag-verbond-uitsluiting, ondanks dat 'cultureelOntgrendeld' daar altijd al true is", () => {
+  let state = maakInitieleSpelStatus();
+  assert.equal(state.campagneId, undefined);
+  assert.equal(state.cultureelOntgrendeld, true, "de tutorial start al op cultureelOntgrendeld: true");
+  state = { ...state, streken: metOntgrendeldeStreek3(state.streken) };
+
+  state = metRandomReeks([0, 0, 0], () => volgendeBeurt(state));
+
+  assert.equal(state.indringersEvent?.streekHoogte, 1, "streek 1 doet in de tutorial gewoon mee — geen CampaignConfig, dus geen uitsluiting");
+});
+
 // Gedeelde opzet voor de derde-uitkomst-tests hieronder (issue: "wachttorens
 // kunnen vernietigd worden door indringers"): streek 2 krijgt een voltooide,
 // bemande, wegverbonden Wachttoren die (via "wachttoren beschermt 2 streken")
