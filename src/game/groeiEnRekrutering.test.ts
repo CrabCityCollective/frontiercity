@@ -13,6 +13,7 @@ import {
   startRecrutering,
   startSmederij,
   startTweedeSettler,
+  sluitSmederijGebouwdMelding,
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
   versnelSmederijMetGoud,
@@ -122,6 +123,42 @@ test("versnelSmederijMetGoud koopt de resterende bouwtijd van een Smederij af en
   assert.equal(naVersnellen.stad.smederijInAanbouw, undefined);
   assert.equal(naVersnellen.stad.heeftSmederij, true);
   assert.equal(naVersnellen.voorraad.goud, 0);
+});
+
+// Issue "Wampanoag streek pas helemaal onthuld na handel": de gecapte
+// stadsverbeteringen-pool hing voorheen aan de 3-3-3-Wampanoag-handelsdrempel
+// (wampanoag.ts), sindsdien aan de Smederij — beide voltooiingspaden
+// (organisch bouwen en met goud versnellen) moeten deze omslag zetten.
+test("een voltooide Smederij ontgrendelt cultureelOntgrendeld en zet het smederijGebouwdEvent", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  assert.equal(state.cultureelOntgrendeld, false, "Going West start in de openingsfase");
+  state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 20 } };
+  state = startSmederij(state);
+  const bouwtijd = state.stad.smederijInAanbouw!.improvement.bouwtijdBeurten;
+
+  for (let i = 0; i < bouwtijd; i++) {
+    state = volgendeBeurt(state);
+  }
+
+  assert.equal(state.stad.heeftSmederij, true);
+  assert.equal(state.cultureelOntgrendeld, true);
+  assert.equal(state.smederijGebouwdEvent, true);
+
+  const gesloten = sluitSmederijGebouwdMelding(state);
+  assert.equal(gesloten.smederijGebouwdEvent, undefined);
+  assert.equal(gesloten.cultureelOntgrendeld, true, "sluiten van de melding raakt de omslag zelf niet aan");
+});
+
+test("versnelSmederijMetGoud ontgrendelt cultureelOntgrendeld en zet het smederijGebouwdEvent meteen", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, voorraad: { hout: 20, steen: 20, erts: 20, goud: 0 } };
+  state = startSmederij(state);
+  const kosten = rushKostenGoud(state.stad.smederijInAanbouw!.improvement, state.stad.smederijInAanbouw!.voortgang);
+  state = { ...state, voorraad: { ...state.voorraad, goud: kosten } };
+
+  const naVersnellen = versnelSmederijMetGoud(state);
+  assert.equal(naVersnellen.cultureelOntgrendeld, true);
+  assert.equal(naVersnellen.smederijGebouwdEvent, true);
 });
 
 // Issue "Smederij inactief zetten": een voltooide Smederij mag gepauzeerd en

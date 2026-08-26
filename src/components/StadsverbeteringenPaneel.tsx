@@ -43,13 +43,17 @@ export default function StadsverbeteringenPaneel({
   const cap = cityImprovementCap(stad.grootte);
   const inAanbouw = stad.cityVerbeteringInAanbouw;
   // Campagnefase-gating (hoofdstuk 9, M21c, opdracht-wampanoag-opening.md
-  // §4/§7): tijdens de Wampanoag-openingsfase (Going West, vóór de
-  // 3-3-3-handelsdrempel) toont de gecapte pool niets — de Smederij (M21d,
-  // buiten de cap, zelfde uitzondering als Opslagplaats) is dan het enige
-  // bouwbare city improvement. Zodra `cultureelOntgrendeld` true is, opent de
-  // volledige normale pool (Bibliotheek/Markt/Barakken/Tempel/Grote
-  // Tempel/Aquaduct) weer. De tutorial (`cultureelOntgrendeld: true` vanaf de
-  // start) ziet dit gedrag nooit.
+  // §4/§7, herzien door issue "Wampanoag streek pas helemaal onthuld na
+  // handel"): tijdens de Wampanoag-openingsfase (Going West, vóór de Smederij
+  // klaar is) toont de gecapte pool niets — de Smederij (M21d, buiten de cap,
+  // zelfde uitzondering als Opslagplaats) is dan het enige bouwbare city
+  // improvement. Zodra `cultureelOntgrendeld` true is (gezet zodra de
+  // Smederij klaar is, `metCultureelOntgrendeldDoorSmederij` in
+  // groeiEnRekrutering.ts — niet langer gekoppeld aan de
+  // 3-3-3-Wampanoag-handelsdrempel), opent de volledige normale pool
+  // (Bibliotheek/Markt/Barakken/Tempel/Grote Tempel/Aquaduct) weer. De
+  // tutorial (`cultureelOntgrendeld: true` vanaf de start) ziet dit gedrag
+  // nooit.
   const zichtbareImprovements = state.cultureelOntgrendeld ? CAPPED_CITY_IMPROVEMENTS : [];
   const effectiviteit = stadEffectiviteit(state, stad);
   const afstand = frontierAfstand(state, stad);

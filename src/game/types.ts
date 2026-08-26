@@ -929,14 +929,16 @@ export interface GameState {
   // hierboven).
   gereedschap: number;
   // Bepaalt of de gecapte stadsverbeteringen-pool (StadsverbeteringenPaneel)
-  // en het Wampanoag-statusbalkje getoond worden (opdracht-wampanoag-
-  // opening.md §3/§5/§7, herzien door issue "Weer gewoon cultuur voor
-  // ontgrendeling": streek-ontgrendeling en de Cultureel-categorie zelf
-  // hangen hier niet langer van af, zie `verwerkStreekOntgrendeling`/
-  // `categorieZichtbaar` — alleen de gecapte pool en het statusbalkje blijven
-  // aan de 3-3-3-Wampanoag-handelsdrempel gekoppeld). Tutorial start op
-  // `true` (ongewijzigd, bestaande tutorial kent geen fase-gating); Going
-  // West start op `false` tot de 3-3-3-Wampanoag-drempel gehaald is.
+  // getoond wordt (opdracht-wampanoag-opening.md §3/§7, herzien door issue
+  // "Weer gewoon cultuur voor ontgrendeling" en, ná die herziening, door issue
+  // "Wampanoag streek pas helemaal onthuld na handel": streek-ontgrendeling en
+  // de Cultureel-categorie zelf hangen hier niet van af, zie
+  // `verwerkStreekOntgrendeling`/`categorieZichtbaar` — en sinds de tweede
+  // issue ook niet meer de 3-3-3-Wampanoag-handelsdrempel, maar het gereed
+  // zijn van de Smederij, zie `metCultureelOntgrendeldDoorSmederij`
+  // (groeiEnRekrutering.ts)). Tutorial start op `true` (ongewijzigd,
+  // bestaande tutorial kent geen fase-gating); Going West start op `false`
+  // tot de Smederij gebouwd is.
   cultureelOntgrendeld: boolean;
   // Wampanoag-laag ontdekt (Going West, M21e/M21g, opdracht-wampanoag-opening.md
   // §5/§8): gezet door `verwerkStreekOntgrendeling` (streekOntgrendeling.ts)
@@ -948,11 +950,20 @@ export interface GameState {
   wampanoagLaagOntdektEvent?: boolean;
   // Wampanoag-3-3-3-drempel gehaald (Going West, M21g,
   // opdracht-wampanoag-opening.md §7): gezet door
-  // `verwerkWampanoagFaseAfsluiting` (wampanoag.ts) op hetzelfde moment als de
-  // `cultureelOntgrendeld`-omslag — zelfde eenmalige meldings-vlag-patroon als
-  // `wampanoagLaagOntdektEvent` hierboven, drijft de narratieve
-  // `wampanoagRelatieGelegdPopup`-tekst.
+  // `verwerkWampanoagFaseAfsluiting` (wampanoag.ts) zodra de streek zelf
+  // weer normaal ontgrendelt (herzien door issue "Wampanoag streek pas
+  // helemaal onthuld na handel": niet langer gekoppeld aan de
+  // `cultureelOntgrendeld`-omslag, zie hierboven) — zelfde eenmalige
+  // meldings-vlag-patroon als `wampanoagLaagOntdektEvent` hierboven, drijft
+  // de narratieve `wampanoagRelatieGelegdPopup`-tekst.
   wampanoagRelatieGelegdEvent?: boolean;
+  // Smederij gebouwd (Going West, issue "Wampanoag streek pas helemaal
+  // onthuld na handel"): gezet door `metCultureelOntgrendeldDoorSmederij`
+  // (groeiEnRekrutering.ts) op hetzelfde moment als de `cultureelOntgrendeld`-
+  // omslag — zelfde eenmalige meldings-vlag-patroon als de twee velden
+  // hierboven, drijft de narratieve `smederijGebouwdPopup`-tekst ("je kunt nu
+  // weer alle stadsverbeteringen bouwen").
+  smederijGebouwdEvent?: boolean;
 }
 
 // Sleutels van de eenmalige uitleg-pop-ups (issue: "Bij laden niet alle

@@ -180,6 +180,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     sluitVijandelijkHeiligdomVeroverdMelding,
     sluitWampanoagLaagOntdektMelding,
     sluitWampanoagRelatieGelegdMelding,
+    sluitSmederijGebouwdMelding,
   } = useGameEngine(campagneId, laadBijStart);
 
   // Actieve campagne (hoofdstuk 9/13, M20d deelstap 3): `state.campagneId` is
@@ -1567,6 +1568,47 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonEersteContactPopup &&
     Boolean(state.wampanoagRelatieGelegdEvent);
 
+  // Smederij-narratieve pop-up (issue "Wampanoag streek pas helemaal onthuld
+  // na handel"): zelfde onderaan-de-keten-conventie als de twee Wampanoag-
+  // pop-ups hierboven — laagste prioriteit, negeert dus ook die twee.
+  const toonSmederijGebouwdPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    !toonStichtingsMomentPopup &&
+    !toonEersteContactPopup &&
+    !toonWampanoagRelatieGelegdPopup &&
+    Boolean(state.smederijGebouwdEvent);
+
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -1719,6 +1761,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             titel={popupContent(campagne, "wampanoagRelatieGelegdPopup")?.titel}
             tekst={popupContent(campagne, "wampanoagRelatieGelegdPopup")?.tekst}
             onSluiten={sluitWampanoagRelatieGelegdMelding}
+          />
+        )}
+        {toonSmederijGebouwdPopup && (
+          <AmberOntdektPopup
+            titel={popupContent(campagne, "smederijGebouwdPopup")?.titel}
+            tekst={popupContent(campagne, "smederijGebouwdPopup")?.tekst}
+            onSluiten={sluitSmederijGebouwdMelding}
           />
         )}
         {toonUitlegPopup && <UitlegPopup onDoorgaan={() => markeerUitlegGezien("opening")} />}
