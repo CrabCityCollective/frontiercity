@@ -137,6 +137,26 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
       "Een zeldzame variant van de mijn: alleen te bouwen op een heuvel- of bergvakje met een amberader-vondst. Levert goud in plaats van erts.",
   },
   {
+    id: "aquaduct",
+    titel: "Aquaduct",
+    categorie: "Gebouwen",
+    tekst:
+      "Civiele stadsverbetering die de voedseldrempel om van middel naar groot te groeien verlaagt. Pas te bouwen vanaf een stad van middelgrote omvang.",
+  },
+  {
+    id: "barakken",
+    titel: "Barakken",
+    categorie: "Gebouwen",
+    tekst:
+      "Militaire stadsverbetering die de hele stad een vaste legerwaarde-bonus geeft bij een militaire confrontatie, zonder dat daar een strijder voor bemand hoeft te zijn. Pas te bouwen vanaf een stad van middelgrote omvang.",
+  },
+  {
+    id: "bibliotheek",
+    titel: "Bibliotheek",
+    categorie: "Gebouwen",
+    tekst: "Wetenschappelijke stadsverbetering, levert wetenschap per beurt.",
+  },
+  {
     id: "boerderij",
     titel: "Boerderij",
     categorie: "Gebouwen",
@@ -148,6 +168,20 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     categorie: "Gebouwen",
     tekst:
       "Land- en stadsverbeteringen kosten grondstoffen en een aantal beurten om te voltooien. Een landverbetering moet daarna ook nog via een weg met de stad verbonden zijn voordat hij echt produceert.",
+  },
+  {
+    id: "grote-tempel",
+    titel: "Grote Tempel",
+    categorie: "Gebouwen",
+    tekst:
+      "Tweede culturele stadsverbetering naast de Tempel, levert extra cultuur per beurt. Pas te bouwen vanaf een grote stad, en samen met vijf actieve heiligdommen een voorwaarde voor het Offeraltaar.",
+  },
+  {
+    id: "grote-woonwijk",
+    titel: "Grote Woonwijk",
+    categorie: "Gebouwen",
+    tekst:
+      "Civiele stadsverbetering die de stad van middelgrote naar grote omvang laat groeien, zodra de bijbehorende (hogere) voedseldrempel is bereikt.",
   },
   {
     id: "heiligdom",
@@ -170,6 +204,12 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
       "Verbeteringen die je op een los vakje binnen een streek plaatst, zoals boerderij, mijn en wachttoren. De meeste hebben een terrein-eis en putten na verloop van tijd uit.",
   },
   {
+    id: "markt",
+    titel: "Markt",
+    categorie: "Gebouwen",
+    tekst: "Economische stadsverbetering, levert goud per beurt.",
+  },
+  {
     id: "mijn",
     titel: "Mijn",
     categorie: "Gebouwen",
@@ -181,6 +221,20 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     categorie: "Gebouwen",
     tekst:
       "Culturele landverbetering die de missionaris ontgrendelt. Vereist eerst meerdere heiligdommen en een uitgebouwde stad met een Grote Tempel.",
+  },
+  {
+    id: "opslagplaats",
+    titel: "Opslagplaats",
+    categorie: "Gebouwen",
+    tekst:
+      "Economische stadsverbetering die de gedeelde opslag-cap verhoogt. Herhaalbaar: elke voltooide Opslagplaats telt opnieuw mee.",
+  },
+  {
+    id: "smederij",
+    titel: "Smederij",
+    categorie: "Gebouwen",
+    tekst:
+      "Economische stadsverbetering die elke beurt erts omzet in gereedschap, zolang er genoeg erts voorradig is.",
   },
   {
     id: "stad-improvements",
@@ -200,6 +254,19 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     titel: "Sterrencirkel",
     categorie: "Gebouwen",
     tekst: "Wetenschappelijke landverbetering, levert wetenschap per beurt — de sleutel tot de technologieboom.",
+  },
+  {
+    id: "tempel",
+    titel: "Tempel",
+    categorie: "Gebouwen",
+    tekst: "Culturele stadsverbetering, levert cultuur per beurt. Pas te bouwen vanaf een stad van middelgrote omvang.",
+  },
+  {
+    id: "woonwijk",
+    titel: "Woonwijk",
+    categorie: "Gebouwen",
+    tekst:
+      "Civiele stadsverbetering die de stad van kleine naar middelgrote omvang laat groeien, zodra er genoeg voedsel is.",
   },
   // Eenheden & acties
   {
