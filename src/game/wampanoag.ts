@@ -11,11 +11,15 @@
 // `verkenningInGang`: de Bezette Streek lost zichzelf op via
 // `verwerkBelegering` (vijandelijke Heiligdom-/Wachttoren-inhoud), en die
 // resolutielogica past niet op Wampanoag-inhoud. De streek lost hier in
-// plaats daarvan op zodra de drie handelsvakjes (met `wampanoagInhoud`)
-// onthuld zijn — zie `verwerkWampanoagVerkenningInGang` hieronder — de
-// overige zes "neutrale" vakjes onthullen op dat moment automatisch mee,
-// maar zijn ook eerder al individueel verkenbaar (net als een "huisje"-vakje
-// bij de Bezette Streek).
+// plaats daarvan op zodra de 3-3-3-handelsdrempel op de drie handelsvakjes
+// (met `wampanoagInhoud`) gehaald is — zie `verwerkWampanoagFaseAfsluiting`
+// hieronder (herzien door issue "Wampanoag streek pas helemaal onthuld na
+// handel": puur ontdekken van de drie vakjes, via
+// `verwerkWampanoagVerkenningInGang`, maakt ze alleen handelbaar, dat
+// ontgrendelt de streek zelf niet meer) — de overige zes "neutrale" vakjes
+// onthullen dan automatisch mee, maar zijn (net als de drie handelsvakjes)
+// al vanaf het begin individueel verkenbaar (net als een "huisje"-vakje bij
+// de Bezette Streek).
 //
 // Hergebruikt bewust dezelfde kosten/bouwtijd (`VERKENNER.kosten`/
 // `VERKENNER.bouwtijdBeurten`, improvements.ts) en de EXACT ZELFDE
@@ -124,18 +128,20 @@ export function stuurVerkennerWampanoag(state: GameState, positieInStreek: numbe
 // (streekOntgrendeling.ts): elk vakje telt onafhankelijk af, ongeacht op
 // welke beurt de verkenner gestuurd is.
 //
-// Resolutie (issue: "Wampanoag streek blokkerend", zelfde soort omslag als
-// `verwerkBelegering` voor de Bezette Streek): zodra alle drie de vakjes met
-// `wampanoagInhoud` onthuld zijn, onthullen de resterende, neutrale verhulde
-// vakjes in één keer mee en telt de streek vanaf nu als normaal ontgrendeld
-// (`wampanoagBezet: false`, `ontgrendeld: true`) — de settler mag er dan
-// weer doorheen, en de wetenschap-gedreven streek-ontgrendeling
-// (streekOntgrendeling.ts) gaat weer verder.
+// Onthult uitsluitend het losse vakje zelf — dat maakt het handelbaar (zie
+// `verwerkWampanoagHandel` hieronder), maar ontgrendelt de streek als geheel
+// nog niet. Herzien door issue "Wampanoag streek pas helemaal onthuld na
+// handel": vóór die issue onthulden de resterende neutrale vakjes automatisch
+// mee en werd de streek al ontgrendeld zodra alleen deze drie vakjes ontdekt
+// waren — dat vond de speler te vroeg. Die volledige-streek-resolutie
+// (neutrale vakjes onthullen, `wampanoagBezet: false`/`ontgrendeld: true`)
+// loopt sindsdien via `verwerkWampanoagFaseAfsluiting` hieronder, pas bij de
+// 3-3-3-handelsdrempel.
 export function verwerkWampanoagVerkenningInGang(state: GameState): GameState {
   const streek = vindWampanoagStreek(state);
   if (!streek || !streek.tiles.some((tile) => tile.wampanoagVerkenningInGang)) return state;
 
-  let tiles = streek.tiles.map((tile) => {
+  const tiles = streek.tiles.map((tile) => {
     if (!tile.wampanoagVerkenningInGang) return tile;
 
     const beurtenResterend = tile.wampanoagVerkenningInGang.beurtenResterend - 1;
@@ -151,16 +157,7 @@ export function verwerkWampanoagVerkenningInGang(state: GameState): GameState {
     };
   });
 
-  const nogInhoudVerhuld = tiles.some((tile) => tile.wampanoagInhoud && tile.wampanoagVerhuld);
-  if (!nogInhoudVerhuld) {
-    tiles = tiles.map((tile) => (tile.wampanoagVerhuld ? { ...tile, wampanoagVerhuld: false } : tile));
-  }
-
-  const streken = state.streken.map((s) =>
-    s.hoogte === streek.hoogte
-      ? { ...s, tiles, wampanoagBezet: nogInhoudVerhuld, ontgrendeld: nogInhoudVerhuld ? s.ontgrendeld : true }
-      : s
-  );
+  const streken = state.streken.map((s) => (s.hoogte === streek.hoogte ? { ...s, tiles } : s));
   return { ...state, streken };
 }
 
@@ -303,24 +300,42 @@ export function heeftWampanoagHandelsdrempelGehaald(state: GameState): boolean {
   );
 }
 
-// Zet de omslag zodra de 3-3-3-drempel gehaald is (opdracht §7, herzien door
-// issue "Weer gewoon cultuur voor ontgrendeling"): `cultureelOntgrendeld`
-// gaat aan — dat opent voortaan alleen nog de gecapte stadsverbeteringen-pool
-// (StadsverbeteringenPaneel) en verbergt het Wampanoag-statusbalkje; de
-// Cultureel-categorie land improvements en streek-ontgrendeling zelf lopen
-// sinds die issue altijd op cultuur, ongeacht deze omslag (zie
-// `beschikbareOpties` in improvements.ts en `verwerkStreekOntgrendeling` in
-// streekOntgrendeling.ts). De `!state.cultureelOntgrendeld`-guard maakt dit
-// vanzelf een eenmalige, onomkeerbare omslag — een keer `true`, blijft `true`, ook al zou een
-// voorraad later weer onder de drempel zakken (de opdracht vraagt geen
-// "terugval"-gedrag). De tutorial start al op `cultureelOntgrendeld: true`,
-// dus de guard hierboven maakt deze functie daar sowieso een no-op.
+// Zet de streek-resolutie zodra de 3-3-3-drempel gehaald is (opdracht §7,
+// herzien door issue "Wampanoag streek pas helemaal onthuld na handel"): pas
+// nu — niet meer zodra de drie vaste vakjes ontdekt zijn, zie
+// `verwerkWampanoagVerkenningInGang` hierboven — onthullen de resterende
+// neutrale vakjes automatisch mee en telt de streek weer als normaal
+// ontgrendeld (`wampanoagBezet: false`, `ontgrendeld: true`): de settler mag
+// er dan pas doorheen. `wampanoagRelatieGelegdEvent` drijft de narratieve
+// bevestigingspop-up. De gecapte stadsverbeteringen-pool (`cultureelOntgrendeld`)
+// hangt sinds diezelfde issue niet langer aan deze drempel, maar aan de
+// Smederij (`metCultureelOntgrendeldDoorSmederij`, groeiEnRekrutering.ts) —
+// die omslag blijft hier dus buiten beeld.
+//
+// Guard op `streek.wampanoagBezet` (i.p.v. het vroegere `cultureelOntgrendeld`)
+// maakt dit vanzelf een eenmalige, onomkeerbare omslag per streek — eenmaal
+// opgelost, blijft opgelost, ook al zou een voorraad later weer onder de
+// drempel zakken (de opdracht vraagt geen "terugval"-gedrag). Bestaat de
+// Wampanoag-streek niet (tutorial, of een campagne zonder deze laag), dan is
+// dit vanzelf een no-op.
 export function verwerkWampanoagFaseAfsluiting(state: GameState): GameState {
-  if (state.cultureelOntgrendeld || !heeftWampanoagHandelsdrempelGehaald(state)) return state;
+  const streek = vindWampanoagStreek(state);
+  if (!streek || !streek.wampanoagBezet || !heeftWampanoagHandelsdrempelGehaald(state)) return state;
+
+  const streken = state.streken.map((s) =>
+    s.hoogte !== streek.hoogte
+      ? s
+      : {
+          ...s,
+          wampanoagBezet: false,
+          ontgrendeld: true,
+          tiles: s.tiles.map((t) => (t.wampanoagVerhuld ? { ...t, wampanoagVerhuld: false } : t)),
+        }
+  );
 
   return {
     ...state,
-    cultureelOntgrendeld: true,
+    streken,
     wampanoagRelatieGelegdEvent: true,
   };
 }

@@ -91,21 +91,31 @@ test("tutorial: de Wampanoag-streekhoogte krijgt geen Wampanoag-vakjes en blijft
   );
 });
 
-// De streek lost pas op (net als de Bezette Streek) zodra alle drie de
-// handelsvakjes onthuld zijn — de zes neutrale vakjes onthullen dan
-// automatisch mee, en de frontier/settler kunnen weer verder.
-test("de Wampanoag-streek ontgrendelt pas zodra alle drie de handelsvakjes onthuld zijn, en onthult de neutrale vakjes automatisch mee", () => {
+// Issue "Wampanoag streek pas helemaal onthuld na handel": alleen de drie
+// handelsvakjes zelf ontdekken is niet meer genoeg om de streek te
+// ontgrendelen — dat vereist sindsdien de volledige 3-3-3-handelsdrempel, zie
+// `verwerkWampanoagFaseAfsluiting` en de tests daarvoor hieronder.
+test("het ontdekken van alle drie de handelsvakjes ontgrendelt de streek zelf nog niet — de zes neutrale vakjes blijven verhuld tot de 3-3-3-drempel gehaald is", () => {
   const state = metWampanoagLaagOnthuld();
   const streek = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
 
-  assert.equal(streek.ontgrendeld, true, "opgelost — de streek telt weer als normaal ontgrendeld");
-  assert.equal(streek.wampanoagBezet, false);
-  assert.equal(streek.tiles.every((t) => t.wampanoagVerhuld === false), true, "ook de zes neutrale vakjes zijn nu onthuld");
-  assert.equal(hoogsteOntgrendeldeStreek(state.streken), WAMPANOAG_STREEK_HOOGTE, "de frontier mag weer verder");
+  assert.equal(streek.ontgrendeld, false, "nog steeds vergrendeld — de handelsdrempel is nog niet gehaald");
+  assert.equal(streek.wampanoagBezet, true);
+  assert.equal(
+    streek.tiles.filter((t) => t.wampanoagInhoud).every((t) => t.wampanoagVerhuld === false),
+    true,
+    "de drie handelsvakjes zelf zijn wel onthuld — dat maakt ze handelbaar"
+  );
+  assert.equal(
+    streek.tiles.filter((t) => !t.wampanoagInhoud).every((t) => t.wampanoagVerhuld === true),
+    true,
+    "de zes neutrale vakjes blijven verhuld tot de handelsdrempel gehaald is"
+  );
+  assert.equal(hoogsteOntgrendeldeStreek(state.streken), WAMPANOAG_STREEK_HOOGTE - 1, "de frontier staat nog steeds stil");
   assert.equal(
     magSettlerNaar(state.streken, { hoogte: WAMPANOAG_STREEK_HOOGTE, positieInStreek: 4 }),
-    true,
-    "de settler kan er nu doorheen lopen"
+    false,
+    "de settler kan er nog niet doorheen lopen"
   );
 });
 
@@ -182,10 +192,14 @@ test("verwerkWampanoagVerkenningInGang onthult het juiste, terrein-afgeleide geb
   streek4 = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
   assert.equal(streek4.tiles[4].improvement?.id, MAISBOERDERIJ.id);
   assert.equal(streek4.tiles[5].improvement?.id, OPPERHOOFDTENT.id);
+  // Issue "Wampanoag streek pas helemaal onthuld na handel": het ontdekken
+  // van de drie handelsvakjes onthult alleen die drie zelf — de zes neutrale
+  // vakjes blijven verhuld tot de 3-3-3-handelsdrempel gehaald is
+  // (verwerkWampanoagFaseAfsluiting), dus 6 posities blijven nog verkenbaar.
   assert.equal(
     verhuldeWampanoagPosities(state).length,
-    0,
-    "alle drie de Wampanoag-vakjes zijn nu onthuld"
+    6,
+    "de drie handelsvakjes zijn onthuld, de zes neutrale vakjes nog niet"
   );
 });
 
@@ -293,38 +307,52 @@ test("heeftWampanoagHandelsdrempelGehaald vereist alle drie handelswaren apart o
   assert.equal(heeftWampanoagHandelsdrempelGehaald({ ...state, bevervellen: 3, mais: 3, wampum: 3 }), true);
 });
 
-test("verwerkWampanoagFaseAfsluiting zet cultureelOntgrendeld om en zet het narratieve event zodra de 3-3-3-drempel gehaald is", () => {
+// Herzien door issue "Wampanoag streek pas helemaal onthuld na handel": de
+// 3-3-3-drempel ontgrendelt sindsdien de streek zelf (i.p.v. `cultureelOntgrendeld`
+// — dat volgt nu de Smederij, zie groeiEnRekrutering.test.ts) en onthult de
+// resterende neutrale vakjes.
+test("verwerkWampanoagFaseAfsluiting ontgrendelt de streek en zet het narratieve event zodra de 3-3-3-drempel gehaald is", () => {
   let state = metWampanoagLaagOnthuld();
-  assert.equal(state.cultureelOntgrendeld, false, "Going West start in de openingsfase");
+  const streek = () => state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
+  assert.equal(streek().wampanoagBezet, true, "Going West start in de openingsfase");
 
   const nogNiet = verwerkWampanoagFaseAfsluiting({ ...state, bevervellen: 2, mais: 3, wampum: 3 });
-  assert.equal(nogNiet.cultureelOntgrendeld, false, "nog geen omslag zolang niet alle drie op de drempel staan");
+  assert.equal(
+    nogNiet.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!.wampanoagBezet,
+    true,
+    "nog geen omslag zolang niet alle drie op de drempel staan"
+  );
   assert.equal(nogNiet.wampanoagRelatieGelegdEvent, undefined);
 
   state = { ...state, bevervellen: 3, mais: 3, wampum: 3 };
   state = verwerkWampanoagFaseAfsluiting(state);
-  assert.equal(state.cultureelOntgrendeld, true);
+  assert.equal(streek().wampanoagBezet, false);
+  assert.equal(streek().ontgrendeld, true);
+  assert.equal(streek().tiles.every((t) => t.wampanoagVerhuld === false), true, "ook de zes neutrale vakjes zijn nu onthuld");
   assert.equal(state.wampanoagRelatieGelegdEvent, true);
+  assert.equal(state.cultureelOntgrendeld, false, "raakt de Smederij-gedreven omslag niet aan");
 
   const gesloten = sluitWampanoagRelatieGelegdMelding(state);
   assert.equal(gesloten.wampanoagRelatieGelegdEvent, undefined);
-  assert.equal(gesloten.cultureelOntgrendeld, true, "sluiten van de melding raakt de omslag zelf niet aan");
+  assert.equal(
+    gesloten.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!.ontgrendeld,
+    true,
+    "sluiten van de melding raakt de omslag zelf niet aan"
+  );
 
   // Eenmalig/onomkeerbaar: een latere aanroep met een voorraad weer onder de
-  // drempel valt niet terug naar `cultureelOntgrendeld: false` — de guard is
-  // puur op `cultureelOntgrendeld`, dus deze aanroep is een no-op (zelfde
-  // object terug) ongeacht de voorraad.
+  // drempel valt niet terug naar een vergrendelde streek — de guard is puur
+  // op `streek.wampanoagBezet`, dus deze aanroep is een no-op (zelfde object
+  // terug) ongeacht de voorraad.
   const onderDrempelStaat = { ...state, bevervellen: 0, mais: 0, wampum: 0 };
   const onderDrempelDaarna = verwerkWampanoagFaseAfsluiting(onderDrempelStaat);
-  assert.equal(onderDrempelDaarna, onderDrempelStaat, "no-op zodra cultureelOntgrendeld al true is");
+  assert.equal(onderDrempelDaarna, onderDrempelStaat, "no-op zodra de streek al ontgrendeld is");
 });
 
-// Regressietest: de tutorial begint al op `cultureelOntgrendeld: true`, dus
-// deze functie moet daar altijd een no-op zijn, ongeacht wat er verder in de
-// (voor de tutorial betekenisloze) bevervellen/mais/wampum-velden staat.
-test("verwerkWampanoagFaseAfsluiting is een no-op in de tutorial (cultureelOntgrendeld staat al op true)", () => {
+// Regressietest: bestaat de Wampanoag-streek niet (tutorial), dan moet deze
+// functie altijd een no-op zijn.
+test("verwerkWampanoagFaseAfsluiting is een no-op in de tutorial (geen Wampanoag-streek)", () => {
   const state = maakInitieleSpelStatus();
-  assert.equal(state.cultureelOntgrendeld, true);
 
   const tutorialMetVolleVoorraad = { ...state, bevervellen: 3, mais: 3, wampum: 3 };
   const resultaat = verwerkWampanoagFaseAfsluiting(tutorialMetVolleVoorraad);
@@ -335,7 +363,7 @@ test("verwerkWampanoagFaseAfsluiting is een no-op in de tutorial (cultureelOntgr
 // Integratietest: `volgendeBeurt` roept `verwerkWampanoagFaseAfsluiting` aan
 // direct nadat diezelfde beurt de handel (`verwerkWampanoagHandel`) de
 // voorraad over de drempel heeft geduwd — geen extra beurt vertraging nodig.
-test("volgendeBeurt sluit de Wampanoag-fase af zodra de handel deze beurt de 3-3-3-drempel bereikt", () => {
+test("volgendeBeurt ontgrendelt de Wampanoag-streek zodra de handel deze beurt de 3-3-3-drempel bereikt", () => {
   let state = metWampanoagLaagOnthuld();
   state = { ...state, bevervellen: 3, mais: 3, wampum: 2, voedsel: 10_000 };
   state = stelWampanoagHandelIn(state, 5, "goud"); // opperhoofdtent -> wampum, de laatste stap naar 3
@@ -343,6 +371,8 @@ test("volgendeBeurt sluit de Wampanoag-fase af zodra de handel deze beurt de 3-3
   state = volgendeBeurt(state);
 
   assert.equal(state.wampum, 3);
-  assert.equal(state.cultureelOntgrendeld, true);
+  const streek = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
+  assert.equal(streek.ontgrendeld, true);
+  assert.equal(streek.wampanoagBezet, false);
   assert.equal(state.wampanoagRelatieGelegdEvent, true);
 });

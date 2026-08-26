@@ -14,6 +14,24 @@ blijft staan (§7) — staat nog steeds, ongewijzigd. De paragrafen hieronder
 zijn met dit voorbehoud gelezen te worden; ze zijn historisch gelaten in
 plaats van herschreven.
 
+**Herzien (issue "Wampanoag streek pas helemaal onthuld na handel")**: twee
+losse omslagpunten die voorheen aan hetzelfde moment (de drie handelsvakjes
+ontdekt) hingen, zijn uit elkaar getrokken. Ten eerste ontgrendelt/onthult de
+streek als geheel (§5, "Opgelost zodra...") niet langer zodra alleen de drie
+handelsvakjes ontdekt zijn — dat maakt ze voortaan alleen handelbaar (§6) —
+maar pas zodra de volledige 3-3-3-handelsdrempel gehaald is; pas dan onthullen
+de resterende zes neutrale vakjes automatisch mee en mag de settler er
+doorheen. Ten tweede hangt de gecapte stadsverbeteringen-pool (§7,
+`cultureelOntgrendeld`) niet langer aan diezelfde 3-3-3-drempel, maar aan het
+gereed zijn van de Smederij (§3) — inclusief een eigen bevestigingspop-up
+("De Smederij staat", `smederijGebouwdPopup` in `CampaignConfig.popupTeksten`)
+die verschijnt zodra de Smederij klaar is. De narratieve
+`wampanoagRelatieGelegdPopup` (§7/§8) blijft aan de 3-3-3-drempel gekoppeld,
+maar bevestigt sindsdien puur de streek-onthulling/-doorgang, niet meer de
+stadsverbeteringen-pool. Ook de openings-pop-up-tekst (`campagneOpeningPopup`,
+§8) is bij deze issue herschreven. De paragrafen hieronder zijn, net als bij
+de vorige herziening, met dit voorbehoud gelezen te worden.
+
 ## Context
 Dit implementeert de eerste zes streken van de Amerikaanse frontier-campagne
 ("Going West"). De speler landt, heeft nog
@@ -205,8 +223,11 @@ en andersom.
 - [x] Bij de cultuurdrempel van streek 6 verschijnt de Massasoit-pop-up en
       toont streek 6 negen verhulde vakjes; de streek zelf blijft
       `ontgrendeld: false` (settler kan er niet doorheen, streek-ontgrendeling
-      ontgrendelt geen streken meer verderop) tot de drie handelsvakjes
-      onthuld zijn.
+      ontgrendelt geen streken meer verderop) tot de 3-3-3-handelsdrempel
+      gehaald is (**herzien** door issue "Wampanoag streek pas helemaal
+      onthuld na handel": niet langer tot de drie handelsvakjes zelf onthuld
+      zijn — dat maakt ze alleen handelbaar, zie de herziening bovenaan dit
+      document).
 - [ ] Onthullen via klik + Verkenner-tellertje werkt met de bestaande
       tutorial-Verkenner-kosten, max 1 gestart per beurt.
 - [ ] Terrein-subtype van het vakje bepaalt welk gebouw onthuld wordt.
@@ -215,11 +236,18 @@ en andersom.
 - [ ] Smederij zet 2 erts om in 1 gereedschap per beurt, bruikbaar als
       alternatieve handelsinput.
 - [ ] 3-3-3-drempel is hard en per type apart gecontroleerd.
-- [x] Bij het halen van de drempel: gecapte stadsverbeteringen-pool
-      ontgrendelt naast de Smederij, bevestigingspop-up verschijnt (**herzien**:
-      niet langer de Cultureel-categorie of een ontgrendel-resource-omslag —
-      die zijn al vanaf streek 1 op cultuur, zie de herziening bovenaan dit
-      document).
+- [x] Bij het halen van de drempel: de streek onthult/ontgrendelt volledig en
+      een bevestigingspop-up verschijnt (**herzien**: niet langer de
+      Cultureel-categorie of een ontgrendel-resource-omslag — die zijn al
+      vanaf streek 1 op cultuur; en, door issue "Wampanoag streek pas
+      helemaal onthuld na handel", ook niet langer de gecapte
+      stadsverbeteringen-pool — die ontgrendelt sindsdien naast de Smederij
+      zodra die klaar is, met een eigen bevestigingspop-up, zie de
+      herzieningen bovenaan dit document).
 - [ ] Mechaniek-uitleg-pop-ups, campagne-flavor-pop-ups en systeem-pop-ups zijn
       technisch gescheiden (aparte databronnen/sleutels), geen kruisbesmetting
       tussen tutorial en Amerikaanse campagne.
+- [x] (issue "Wampanoag streek pas helemaal onthuld na handel") Zodra de
+      Smederij klaar is, ontgrendelt de gecapte stadsverbeteringen-pool en
+      verschijnt een korte bevestigingspop-up ("De Smederij staat") die zegt
+      dat de overige stadsverbeteringen weer bouwbaar zijn.

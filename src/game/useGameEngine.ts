@@ -26,6 +26,7 @@ import {
   startNieuweSettler as startNieuweSettlerActie,
   startOpslagplaats as startOpslagplaatsActie,
   startRecrutering as startRecruteringActie,
+  sluitSmederijGebouwdMelding as sluitSmederijGebouwdMeldingActie,
   startSmederij as startSmederijActie,
   startTweedeSettler as startTweedeSettlerActie,
   versnelCityVerbeteringMetGoud as versnelCityVerbeteringMetGoudActie,
@@ -361,6 +362,13 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => sluitWampanoagRelatieGelegdMeldingActie(huidig));
   }, []);
 
+  // Smederij-narratieve pop-up (issue "Wampanoag streek pas helemaal onthuld
+  // na handel") — zelfde dunne wrapper-conventie als de `sluit...Melding`-
+  // acties hierboven.
+  const sluitSmederijGebouwdMelding = useCallback(() => {
+    setState((huidig) => sluitSmederijGebouwdMeldingActie(huidig));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -412,5 +420,6 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     sluitVijandelijkHeiligdomVeroverdMelding,
     sluitWampanoagLaagOntdektMelding,
     sluitWampanoagRelatieGelegdMelding,
+    sluitSmederijGebouwdMelding,
   };
 }

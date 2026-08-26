@@ -78,23 +78,32 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   // `eersteContactPopup` triggert zodra de Wampanoag-streek
   // (`WAMPANOAG_STREEK_HOOGTE`, worldGoingWest.ts) "in beeld" komt
   // (`wampanoagLaagOntdektEvent`, streekOntgrendeling.ts);
-  // `wampanoagRelatieGelegdPopup` zodra de 3-3-3-handelsdrempel gehaald is
-  // (`wampanoagRelatieGelegdEvent`, wampanoag.ts).
+  // `wampanoagRelatieGelegdPopup` zodra de 3-3-3-handelsdrempel gehaald is en
+  // de streek weer begaanbaar wordt (`wampanoagRelatieGelegdEvent`,
+  // wampanoag.ts); `smederijGebouwdPopup` zodra de Smederij klaar is
+  // (`smederijGebouwdEvent`, groeiEnRekrutering.ts — issue "Wampanoag streek
+  // pas helemaal onthuld na handel": de gecapte stadsverbeteringen-pool hangt
+  // sinds die issue aan de Smederij, niet meer aan de handelsdrempel).
   popupTeksten: {
     campagneOpeningPopupTitel: "De nieuwe wereld",
     campagneOpeningPopupTekst:
-      "Engeland ligt aan de andere kant van de wereld. Wij staan alleen aan deze kust, tussen de wilden.\n" +
-      "De Wampanoag zijn een trots volk. Ze dulden ons nog niet in dit nieuwe land.\n" +
-      "Wij hebben God aan onze zijde. Bouw Kapellen, zodat het land onder God komt.\n" +
-      "Zoek het hoofdkamp van de Wampanoag. Misschien zijn ze te overtuigen om ons verder te laten gaan, op onze goddelijke missie.",
+      "We staan er alleen voor. Dit land wordt bevolkt door de Wampanoag, een trots volk, die ons niet onze " +
+      "gang zullen laten gaan.\n" +
+      "Misschien kunnen we met hun onderhandelen om vrije doorgang. We moeten hun hoofdkamp vinden.\n" +
+      "Als we een smederij bouwen, dan kunnen we gereedschap fabriceren waar ze ongetwijfeld wel interesse in " +
+      "zullen hebben.",
     eersteContactPopupTitel: "Eerste contact",
     eersteContactPopupTekst:
       "In het midden van de nieuwe streek liggen drie kampementen van de Wampanoag. Stuur verkenners om ze " +
       "te ontdekken — daarna kun je met ze handelen in bevervellen, maïs en wampum.",
     wampanoagRelatieGelegdPopupTitel: "Een verbond met de Wampanoag",
     wampanoagRelatieGelegdPopupTekst:
-      "Door eerlijke handel is er vertrouwen gegroeid tussen jouw nederzetting en de Wampanoag. Cultuur " +
-      "stuurt vanaf nu je verdere groei, en de eerste culturele gebouwen worden beschikbaar.",
+      "Door eerlijke handel is er vertrouwen gegroeid tussen jouw nederzetting en de Wampanoag. Ze laten ons " +
+      "voortaan door — de streek ligt weer open voor onze verkenning.",
+    smederijGebouwdPopupTitel: "De Smederij staat",
+    smederijGebouwdPopupTekst:
+      "Nu we gereedschap kunnen smeden, is onze nederzetting weer zelfvoorzienend genoeg. Je kunt vanaf nu " +
+      "weer alle overige stadsverbeteringen bouwen.",
   },
   // Issue "Going west: indringers": de indringers-incidenten (verwerkIndringers,
   // indringersEnDieren.ts) moeten op Going West niet de generieke fictieve

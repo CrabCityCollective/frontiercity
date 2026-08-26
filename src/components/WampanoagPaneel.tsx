@@ -1,7 +1,7 @@
 "use client";
 
 import { GameState } from "@/game/types";
-import { WAMPANOAG_GOED_LABELS, WAMPANOAG_HANDELSDREMPEL } from "@/game/wampanoag";
+import { heeftWampanoagHandelsdrempelGehaald, WAMPANOAG_GOED_LABELS, WAMPANOAG_HANDELSDREMPEL } from "@/game/wampanoag";
 import { WAMPANOAG_STREEK_HOOGTE } from "@/game/worldGoingWest";
 
 // Wampanoag-statusbalk (Going West, M21e/M21f, opdracht-wampanoag-opening.md
@@ -13,12 +13,14 @@ import { WAMPANOAG_STREEK_HOOGTE } from "@/game/worldGoingWest";
 // verkenner(s) onderweg zijn, én (M21f) de lopende 3-3-3-handelsvoortgang —
 // blijft daarom zichtbaar nadat alle drie vakjes onthuld zijn, i.t.t. de
 // eerdere M21e-versie. Verdwijnt (net als BezetteStreekPaneel bij een
-// opgeloste Bezette Streek) zodra de 3-3-3-drempel gehaald is en de fase
-// afgesloten (`cultureelOntgrendeld`, M21g, opdracht-wampanoag-opening.md
-// §7) — de openingsfase is dan voorbij, dit balkje hoort daarna niet meer op
-// de kaart te staan.
+// opgeloste Bezette Streek) zodra de 3-3-3-drempel gehaald is
+// (`heeftWampanoagHandelsdrempelGehaald`, wampanoag.ts) — de openingsfase is
+// dan voorbij, dit balkje hoort daarna niet meer op de kaart te staan.
+// Herzien door issue "Wampanoag streek pas helemaal onthuld na handel": niet
+// langer op `cultureelOntgrendeld` gegated — dat volgt sindsdien de Smederij
+// i.p.v. de handelsdrempel, en die twee lopen niet meer per se gelijk op.
 export default function WampanoagPaneel({ state }: { state: GameState }) {
-  if (state.cultureelOntgrendeld) return null;
+  if (heeftWampanoagHandelsdrempelGehaald(state)) return null;
   const streek = state.streken.find((s) => s.hoogte === WAMPANOAG_STREEK_HOOGTE);
   if (!streek) return null;
 

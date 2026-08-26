@@ -504,6 +504,29 @@ export function startSmederij(state: GameState): GameState {
   });
 }
 
+// Ontgrendelt de gecapte stadsverbeteringen-pool (StadsverbeteringenPaneel)
+// zodra de Smederij klaar is (Going West, herzien door issue "Wampanoag
+// streek pas helemaal onthuld na handel"): dit liep voorheen op de
+// 3-3-3-Wampanoag-handelsdrempel (`verwerkWampanoagFaseAfsluiting`,
+// wampanoag.ts) — die drempel bepaalt sindsdien alleen nog de
+// Wampanoag-streek-onthulling/-begaanbaarheid, niet meer de
+// stadsverbeteringen-pool. `smederijGebouwdEvent` drijft de bijbehorende
+// bevestigingspop-up ("je kunt nu weer alle stadsverbeteringen bouwen").
+// Guard op `cultureelOntgrendeld` zelf maakt dit een eenmalige omslag, ook al
+// wordt deze functie vanuit twee voltooiingspaden aangeroepen
+// (`verwerkSmederij` en `versnelSmederijMetGoud` hieronder) — en een no-op in
+// de tutorial, die al op `cultureelOntgrendeld: true` begint.
+function metCultureelOntgrendeldDoorSmederij(state: GameState): GameState {
+  if (state.cultureelOntgrendeld) return state;
+  return { ...state, cultureelOntgrendeld: true, smederijGebouwdEvent: true };
+}
+
+// Sluit de "Smederij gebouwd"-melding — puur een UI-bevestiging, zelfde
+// patroon als `sluitWampanoagRelatieGelegdMelding` (wampanoag.ts).
+export function sluitSmederijGebouwdMelding(state: GameState): GameState {
+  return { ...state, smederijGebouwdEvent: undefined };
+}
+
 // Betaalt de bouwkosten van een lopende Smederij — zelfde wachtrij-patroon
 // als `verwerkOpslagplaats` hierboven, maar voltooiing zet `heeftSmederij` op
 // `true` in plaats van een cap/voorraad-effect direct toe te passen: de
@@ -518,7 +541,7 @@ export function verwerkSmederij(state: GameState): GameState {
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
-    return {
+    return metCultureelOntgrendeldDoorSmederij({
       ...metActieveStad(state, {
         ...state.stad,
         smederijInAanbouw: undefined,
@@ -526,7 +549,7 @@ export function verwerkSmederij(state: GameState): GameState {
         smederijActief: true,
       }),
       voorraad,
-    };
+    });
   }
 
   return {
@@ -547,7 +570,7 @@ export function versnelSmederijMetGoud(state: GameState): GameState {
   const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };
 
   if (resultaat.voltooid) {
-    return {
+    return metCultureelOntgrendeldDoorSmederij({
       ...metActieveStad(state, {
         ...state.stad,
         smederijInAanbouw: undefined,
@@ -555,7 +578,7 @@ export function versnelSmederijMetGoud(state: GameState): GameState {
         smederijActief: true,
       }),
       voorraad,
-    };
+    });
   }
 
   return {
