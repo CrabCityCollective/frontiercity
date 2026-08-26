@@ -267,8 +267,21 @@ export function verwerkIndringers(state: GameState): GameState {
   if (hoogsteOntgrendeldeStreek(state.streken) < INDRINGERS_MIN_STREEK) return state;
   if (Math.random() >= INDRINGERS_KANS) return state;
 
+  // Na het Wampanoag-verbond (Going West, issue "Na de Wampanoag", M22): de
+  // Wampanoag zijn nu bondgenoten, dus hun voormalige invalsgebied (streken
+  // tot en met `indringersUitgeslotenTotHoogteNaVerbond`) doet niet meer mee
+  // in de trekking hieronder — puur Going-West-specifiek via `CampaignConfig`,
+  // ontbreekt het veld (elke andere campagne, of de tutorial, die overigens
+  // altijd op `cultureelOntgrendeld: true` start maar geen eigen
+  // `CampaignConfig` heeft), dan verandert hier niets.
+  const campagne = campagneConfig(state.campagneId);
+  const naVerbond = state.cultureelOntgrendeld && campagne?.indringersUitgeslotenTotHoogteNaVerbond !== undefined;
+
   const ontgrendeldeStreken = state.streken.filter(
-    (streek) => streek.ontgrendeld && !isAlleenWachttorenStreek(streek)
+    (streek) =>
+      streek.ontgrendeld &&
+      !isAlleenWachttorenStreek(streek) &&
+      !(naVerbond && streek.hoogte <= campagne!.indringersUitgeslotenTotHoogteNaVerbond!)
   );
   if (ontgrendeldeStreken.length === 0) return state;
 
@@ -289,8 +302,12 @@ export function verwerkIndringers(state: GameState): GameState {
   // Campagne-afhankelijke stam-naam (issue "Going west: indringers",
   // `CampaignConfig.indringersStamNamen`, campagnes.ts) — zelfde terugval-
   // patroon als `improvementNaam()`/`techNaam()`: ontbreekt de override (zoals
-  // in de tutorial), dan valt dit terug op de generieke fictieve pool.
-  const stamNamenPool = campagneConfig(state.campagneId)?.indringersStamNamen ?? INDRINGERS_STAMMEN;
+  // in de tutorial), dan valt dit terug op de generieke fictieve pool. Ná het
+  // Wampanoag-verbond (`naVerbond` hierboven) nemen de nieuwe stammen het over
+  // (issue "Na de Wampanoag", M22), met dezelfde terugval als er geen eigen
+  // na-verbond-pool is.
+  const stamNamenPool =
+    (naVerbond ? campagne?.indringersStamNamenNaVerbond : undefined) ?? campagne?.indringersStamNamen ?? INDRINGERS_STAMMEN;
   const stamNaam = stamNamenPool[Math.floor(Math.random() * stamNamenPool.length)];
   const amberOnderVuur = heeftActieveAmberader(streek) || undefined;
 
