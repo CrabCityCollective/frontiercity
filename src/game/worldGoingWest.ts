@@ -128,7 +128,11 @@ const GOING_WEST_TILE_TERREIN: Record<number, TerreinType[]> = {
   2: ["heuvel", "bos", "vlak", "heuvel", "bos", "vlak", "berg", "bos", "vlak"],
   3: ["bos", "heuvel", "vlak", "bos", "berg", "vlak", "heuvel", "bos", "vlak"],
   4: ["vlak", "vlak", "bos", "heuvel", "berg", "vlak", "bos", "heuvel", "vlak"],
-  5: ["vlak", "bos", "vlak", "vlak", "bos", "heuvel", "vlak", "vlak", "bos"],
+  // Positie 6 kreeg een tweede heuvel-vakje (issue: "Extra heuvel op streek 5")
+  // — met maar één heuvel-vakje kon een speler die daar al een Steengroeve of
+  // Wachttoren op had staan geen Mijn meer bouwen; erts is anders niet meer
+  // te winnen op deze streek.
+  5: ["vlak", "bos", "vlak", "vlak", "bos", "heuvel", "heuvel", "vlak", "bos"],
   6: ["vlak", "vlak", "heuvel", "vlak", "vlak", "bos", "vlak", "heuvel", "vlak"],
   7: ["vlak", "heuvel", "vlak", "bos", "vlak", "heuvel", "vlak", "vlak", "bos"],
   8: ["heuvel", "vlak", "bos", "vlak", "heuvel", "vlak", "bos", "vlak", "vlak"],
