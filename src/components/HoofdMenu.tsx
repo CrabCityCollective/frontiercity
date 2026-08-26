@@ -31,6 +31,10 @@ interface HoofdMenuProps {
   // knop waarop je een economie overzicht kunt inzien"): zelfde plek/patroon
   // als "Historie"/"Techboom" hierboven.
   onToonEconomie: () => void;
+  // Encyclopedie-knop (issue: "Boekwerk met uitleg" — "ook direct vanuit het
+  // menu tijdens het spelen zelf, zodat je weer terug kan naar de game"):
+  // zelfde plek/patroon als "Historie"/"Techboom"/"Economie" hierboven.
+  onToonEncyclopedie: () => void;
 }
 
 // Zwevend menu-icoontje rechtsboven (issue: "niet automatisch opslaan, maar
@@ -48,6 +52,7 @@ export default function HoofdMenu({
   onToonHistorie,
   onToonTechboom,
   onToonEconomie,
+  onToonEncyclopedie,
 }: HoofdMenuProps) {
   const [open, setOpen] = useState(false);
   const [toonInstellingen, setToonInstellingen] = useState(false);
@@ -106,6 +111,16 @@ export default function HoofdMenu({
             style={{ padding: "0.35rem 0.75rem" }}
           >
             Economie
+          </button>
+          <button
+            className="fc-knop"
+            onClick={() => {
+              onToonEncyclopedie();
+              setOpen(false);
+            }}
+            style={{ padding: "0.35rem 0.75rem" }}
+          >
+            Encyclopedie
           </button>
           <button
             className="fc-knop"

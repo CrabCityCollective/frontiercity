@@ -3,14 +3,18 @@
 interface HoofdNavigatieSchermProps {
   onCampagnes: () => void;
   onInstellingen: () => void;
+  // Encyclopedie-knop (issue: "Boekwerk met uitleg" — "toegankelijk via
+  // button in het hoofdmenu van het spel, onder campagnes en instellingen"):
+  // zelfde overlay-patroon als `onInstellingen` hierboven (zie AppRoot).
+  onEncyclopedie: () => void;
 }
 
 // Navigatie-scherm ná het titelscherm (issue: "een nieuw scherm waarin je
 // kunt kiezen tussen Campagnes en Instellingen") — puur navigatie-UI, geen
 // spelstatus. "Campagnes" gaat naar het bestaande CampagneSelectScherm,
-// "Instellingen" opent InstellingenPopup als overlay boven dit scherm (zie
-// AppRoot).
-export default function HoofdNavigatieScherm({ onCampagnes, onInstellingen }: HoofdNavigatieSchermProps) {
+// "Instellingen"/"Encyclopedie" openen hun pop-up als overlay boven dit
+// scherm (zie AppRoot).
+export default function HoofdNavigatieScherm({ onCampagnes, onInstellingen, onEncyclopedie }: HoofdNavigatieSchermProps) {
   return (
     <div
       style={{
@@ -34,6 +38,9 @@ export default function HoofdNavigatieScherm({ onCampagnes, onInstellingen }: Ho
         </button>
         <button className="fc-knop" onClick={onInstellingen} style={{ padding: "0.75rem 1rem", fontSize: "1rem" }}>
           Instellingen
+        </button>
+        <button className="fc-knop" onClick={onEncyclopedie} style={{ padding: "0.75rem 1rem", fontSize: "1rem" }}>
+          Encyclopedie
         </button>
       </div>
     </div>

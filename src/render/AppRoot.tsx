@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import CampagneSelectScherm from "@/components/CampagneSelectScherm";
+import EncyclopediePaneel from "@/components/EncyclopediePaneel";
 import HoofdNavigatieScherm from "@/components/HoofdNavigatieScherm";
 import InstellingenPopup from "@/components/InstellingenPopup";
 import TitelScherm from "@/components/TitelScherm";
@@ -17,6 +18,10 @@ type Scherm = "titel" | "navigatie" | "campagne" | "spel";
 export default function AppRoot() {
   const [scherm, setScherm] = useState<Scherm>("titel");
   const [toonInstellingen, setToonInstellingen] = useState(false);
+  // Encyclopedie (issue: "Boekwerk met uitleg" — "toegankelijk via button in
+  // het hoofdmenu van het spel, onder campagnes en instellingen"): zelfde
+  // overlay-patroon als `toonInstellingen` hierboven.
+  const [toonEncyclopedie, setToonEncyclopedie] = useState(false);
   // Actieve campagne (M20d deelstap 3, hoofdstuk 9/13/15) — `undefined` voor
   // de tutorial, anders de `CampaignConfig.id` (campagnes.ts) die
   // `CampagneSelectScherm` doorgeeft via `onKiesCampagne`. Net als `scherm`
@@ -39,8 +44,10 @@ export default function AppRoot() {
         <HoofdNavigatieScherm
           onCampagnes={() => setScherm("campagne")}
           onInstellingen={() => setToonInstellingen(true)}
+          onEncyclopedie={() => setToonEncyclopedie(true)}
         />
         {toonInstellingen && <InstellingenPopup onSluiten={() => setToonInstellingen(false)} />}
+        {toonEncyclopedie && <EncyclopediePaneel onSluiten={() => setToonEncyclopedie(false)} />}
       </>
     );
   }
