@@ -19,8 +19,7 @@ interface TechKeuzePopupProps {
 // geen wegklikbare melding — de speler moet daadwerkelijk kiezen, dus er is
 // bewust geen "sluiten"-knop. De niet-gekozen optie (en alles wat daaronder
 // in de boom hangt) wordt hiermee voor de rest van de run permanent
-// onbereikbaar (zelfde onomkeerbare vertakkingslogica als de Anker-verhalen,
-// hoofdstuk 9/11) — vandaar de expliciete waarschuwing in de tekst.
+// onbereikbaar (hoofdstuk 11) — vandaar de expliciete waarschuwing in de tekst.
 export default function TechKeuzePopup({ drempel, opties, campagne, onKiesTech }: TechKeuzePopupProps) {
   return (
     <div

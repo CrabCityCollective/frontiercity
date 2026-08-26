@@ -3,9 +3,7 @@
 // hoofdstuk 13), maar een vertakkende keuzeboom van 3 drempels, elk met 2
 // opties. Bij het bereiken van een drempel kiest de speler één van de twee
 // getoonde technologieën; de niet-gekozen tech en alles wat daaronder in de
-// boom hing, is voor de rest van de run permanent onbereikbaar — dezelfde
-// vertakkingslogica als de Anker-verhalen (hoofdstuk 9/11), nu toegepast op
-// wetenschap in plaats van op verhaalmomenten.
+// boom hing, is voor de rest van de run permanent onbereikbaar (hoofdstuk 11).
 //
 // Elke tech is een functionele sleutel (`TechId`, types.ts), los van zijn
 // naam/flavor-tekst — dezelfde herbruikbare aanpak als de tegel-sets per

@@ -1,6 +1,6 @@
 // Spiegelt de data-schema's uit frontier-city-design-doc.md, hoofdstuk 13.
 // Velden met een `?` zijn bewust al aanwezig voor post-MVP features (zeldzaamheid,
-// vooruitkijk, campagne-ankers) maar worden in de MVP nog niet gebruikt.
+// vooruitkijk) maar worden in de MVP nog niet gebruikt.
 
 export type ResourceType =
   | "hout"
@@ -508,12 +508,6 @@ export interface ConfrontatieResultaat {
   geraakteTiles?: number; // alleen bij verlies (hoofdstuk 6: "schade ... aan getroffen tiles")
 }
 
-export interface StoryAnchor {
-  id: string;
-  hoogteRange: [number, number];
-  keuzes: string[];
-}
-
 export interface CampaignConfig {
   id: string;
   naam: string;
@@ -523,7 +517,6 @@ export interface CampaignConfig {
     pushbackFrequentie: number;
     zeldzaamheidLegendarisch: number;
   }>;
-  ankers?: StoryAnchor[]; // post-MVP
   // Herbruikbaarheid van de technologie-boom per campagne (hoofdstuk 3/9/13,
   // issue: "tech tree toevoegen"): dezelfde functionele `TechId`-sleutels
   // (techTree.ts) krijgen per campagne een eigen naam/flavor (bijv. "IJzeren
@@ -558,8 +551,8 @@ export interface CampaignConfig {
   // `improvementNamen` hierboven: ontbreekt deze lijst (of de hele campagne
   // heeft geen override), dan valt `verwerkIndringers` terug op de tutorial-
   // pool (`INDRINGERS_STAMMEN`, tutorialContent.ts). Geldt voor de hele
-  // campagne — een streek-/anker-afhankelijke wisseling naar andere stammen
-  // (zoals de Comanche/Apache uit Anker 3, ontwerp.md) is nog niet gebouwd.
+  // campagne — een streek-afhankelijke wisseling naar andere stammen is nog
+  // niet gebouwd.
   indringersStamNamen?: string[];
 }
 
@@ -693,8 +686,8 @@ export interface GameState {
   // 3/9). `technologieen.length` is tegelijk de laatst bereikte, opgeloste
   // drempel: de eerstvolgende te bereiken drempel is dus altijd
   // `technologieen.length + 1`. Het niet-gekozen pad op elke drempel (en
-  // alles daaronder) wordt hierdoor vanzelf nooit bereikbaar — dezelfde
-  // permanente vertakkingslogica als de Anker-verhalen (hoofdstuk 9/11).
+  // alles daaronder) wordt hierdoor vanzelf nooit bereikbaar — een
+  // permanente vertakkingslogica (hoofdstuk 11).
   technologieen: TechId[];
   // Lopende technologie-keuze (hoofdstuk 9/11: dezelfde blokkerende
   // meldings-vorm als `indringersEvent` hieronder), gezet door

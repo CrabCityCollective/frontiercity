@@ -30,8 +30,6 @@ interface Campagne {
 // tutorial-specifiek) is opgelost met dezelfde campagne-bewuste
 // placeholder-aanpak als de rest van Going West's content (M20f,
 // `introContentVoorCampagne()`/`oceaanUitlegVoorCampagne()`, campagnes.ts).
-// De drie Anker-verhalen blijven bewust nog open, los, doorlopend werk
-// (hoofdstuk 15) — geen poort voor `beschikbaar: true`.
 const CAMPAGNES: Campagne[] = [
   { naam: "To the Elusive Coast", ondertitel: "Tutorial", beschikbaar: true, sfeerAfbeelding: TutorialSfeerAfbeelding },
   {

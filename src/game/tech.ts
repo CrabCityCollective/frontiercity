@@ -5,8 +5,7 @@
 // haalt (`verwerkTechDrempel`), opent dit — anders dan cultuur — geen
 // automatische ontgrendeling maar een keuze tussen twee technologieën
 // (`kiesTech`); de niet-gekozen tech en alles daaronder in de boom wordt
-// daarmee voor de rest van de run permanent onbereikbaar (dezelfde
-// vertakkingslogica als de Anker-verhalen, hoofdstuk 9/11). De effecten zelf
+// daarmee voor de rest van de run permanent onbereikbaar (hoofdstuk 11). De effecten zelf
 // (boerderij-opbrengst, jachtopbrengst, opslag-cap, enz.) staan als pure
 // helpers in techTree.ts en worden op de relevante plek elders toegepast.
 
