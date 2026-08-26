@@ -102,6 +102,10 @@ test("introContentVoorCampagne geeft de tutorial-content terug zonder campagne, 
   // niet de introtekst".
   assert.ok(!goingWestIntro.flavorTekst.includes("Wampanoag"));
   assert.ok(!goingWestIntro.flavorTekst.includes("Massasoit"));
+
+  // Eigen sfeerbeeld op het introscherm (issue "Scène beelden") — niet het
+  // tutorial-plaatje.
+  assert.notEqual(goingWestIntro.afbeelding, introContentVoorCampagne(undefined).afbeelding);
 });
 
 test("oceaanUitlegVoorCampagne geeft de tutorial-content terug zonder campagne, en eigen Going West-content met de campagne-id (hoofdstuk 19, blocker 1 afronding)", () => {

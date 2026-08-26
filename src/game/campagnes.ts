@@ -10,6 +10,7 @@
 
 import {
   goingWestStreekContent,
+  GOING_WEST_INTRO_AFBEELDING,
   GOING_WEST_INTRO_FLAVOR_TEKST,
   GOING_WEST_INTRO_SUBTITEL,
   GOING_WEST_INTRO_TITEL,
@@ -17,6 +18,7 @@ import {
   GOING_WEST_OCEAAN_UITLEG_TITEL,
 } from "./goingWestContent";
 import {
+  INTRO_AFBEELDING,
   INTRO_FLAVOR_TEKST,
   INTRO_SUBTITEL,
   INTRO_TITEL,
@@ -138,6 +140,9 @@ export interface IntroContent {
   titel: string;
   subtitel: string;
   flavorTekst: string;
+  // Campagne-eigen sfeerbeeld (issue "Scène beelden") — Going West toont een
+  // eigen scène i.p.v. het tutorial-plaatje.
+  afbeelding: string;
 }
 
 export function introContentVoorCampagne(campagneId: string | undefined): IntroContent {
@@ -146,9 +151,10 @@ export function introContentVoorCampagne(campagneId: string | undefined): IntroC
       titel: GOING_WEST_INTRO_TITEL,
       subtitel: GOING_WEST_INTRO_SUBTITEL,
       flavorTekst: GOING_WEST_INTRO_FLAVOR_TEKST,
+      afbeelding: GOING_WEST_INTRO_AFBEELDING,
     };
   }
-  return { titel: INTRO_TITEL, subtitel: INTRO_SUBTITEL, flavorTekst: INTRO_FLAVOR_TEKST };
+  return { titel: INTRO_TITEL, subtitel: INTRO_SUBTITEL, flavorTekst: INTRO_FLAVOR_TEKST, afbeelding: INTRO_AFBEELDING };
 }
 
 // Campagne-bewuste oceaan-uitleg-pop-up (zelfde blocker als hierboven, tweede

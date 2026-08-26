@@ -21,7 +21,7 @@ interface IntroSchermProps {
 // GameRoot: `toonIntro`), niet slechts één keer per browser (issue: "als ik
 // de tutorial aanklik vanuit het menu, zie ik het introscherm niet meer").
 export default function IntroScherm({ onBeginnen, statistieken, campagneId }: IntroSchermProps) {
-  const { titel, subtitel, flavorTekst } = introContentVoorCampagne(campagneId);
+  const { titel, subtitel, flavorTekst, afbeelding } = introContentVoorCampagne(campagneId);
   return (
     <div
       style={{
@@ -40,7 +40,7 @@ export default function IntroScherm({ onBeginnen, statistieken, campagneId }: In
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/assets/scenes/intro.jpg"
+        src={afbeelding}
         alt=""
         style={{
           width: "100%",

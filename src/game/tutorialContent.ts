@@ -262,6 +262,7 @@ export const INTRO_TITEL = "To the Elusive Coast";
 export const INTRO_SUBTITEL = "tutorial";
 export const INTRO_FLAVOR_TEKST =
   "Onze voorouders hebben aons lang op deze kust gewoond, maar de tijd is aangebroken om het binnenland in te trekken, op zoek naar nieuw land. (let op, deze tutorial is niet makkelijk)";
+export const INTRO_AFBEELDING = "/assets/scenes/intro.jpg";
 
 // Voedselwaarschuwing-pop-up (issue: "uitleg pop-ups dynamisch tonen" —
 // vervangt de vroegere vaste beurt-3-pop-up): getoond zodra de stad voor het
