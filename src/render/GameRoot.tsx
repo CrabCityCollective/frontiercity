@@ -32,6 +32,7 @@ import StichtStadPopup from "@/components/StichtStadPopup";
 import StrijdersOpleidenPopup from "@/components/StrijdersOpleidenPopup";
 import TechboomPaneel from "@/components/TechboomPaneel";
 import EconomieOverzichtPaneel from "@/components/EconomieOverzichtPaneel";
+import EncyclopediePaneel from "@/components/EncyclopediePaneel";
 import TechKeuzePopup from "@/components/TechKeuzePopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
@@ -205,6 +206,11 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // volledig-schermige pop-up als het historie-/techboomscherm hierboven,
   // bereikbaar via hetzelfde hoofdmenu.
   const [toonEconomie, setToonEconomie] = useState(false);
+
+  // Encyclopedie (issue: "Boekwerk met uitleg"): zelfde soort losse,
+  // volledig-schermige pop-up als het historie-/techboom-/economiescherm
+  // hierboven, bereikbaar via hetzelfde hoofdmenu.
+  const [toonEncyclopedie, setToonEncyclopedie] = useState(false);
 
   // Grafische stijl (issue: "Settings uitbreiden" — "on the fly kunnen
   // wisselen tussen pixel art en vector art"): als losse state hier i.p.v.
@@ -1569,6 +1575,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
         onToonHistorie={() => setToonHistorie((open) => !open)}
         onToonTechboom={() => setToonTechboom((open) => !open)}
         onToonEconomie={() => setToonEconomie((open) => !open)}
+        onToonEncyclopedie={() => setToonEncyclopedie((open) => !open)}
       />
       <div className="game-scroll-area" ref={scrollRef}>
         <GameCanvas
@@ -1965,6 +1972,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           />
         )}
         {toonEconomie && <EconomieOverzichtPaneel state={state} onSluiten={() => setToonEconomie(false)} />}
+        {toonEncyclopedie && <EncyclopediePaneel onSluiten={() => setToonEncyclopedie(false)} />}
       </div>
       <ResourceHud state={state} />
     </div>
