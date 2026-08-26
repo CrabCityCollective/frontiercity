@@ -199,9 +199,8 @@ export function opgeslagenSpelStreek(campagneId?: string): number | null {
 // geen gedeelde sleutel die de tutorial en Going West door elkaar zou halen.
 //
 // M20d deelstap 2/vervolg: Going West heeft nog geen afsluitend
-// "voltooid"-moment (de drie ankers, hoofdstuk 9, zijn nog niet inhoudelijk
-// uitgewerkt) — `uitgespeeld` blijft voor die campagne dus vanzelf op 0 tot
-// die latere milestone er een aanroept naar `registreerCampagneUitgespeeld`
+// "voltooid"-moment — `uitgespeeld` blijft voor die campagne dus vanzelf op 0
+// tot een latere milestone er een aanroep naar `registreerCampagneUitgespeeld`
 // aan toevoegt. Geen mechaniek hier vooruit gebouwd voor dat moment.
 export interface CampagneStatistieken {
   gestart: number;

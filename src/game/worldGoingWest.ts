@@ -104,8 +104,8 @@ export function terreinTypeVoorStreek(hoogte: number): string {
 // (zelfde mix-conventie als de tutorial), terwijl de verhouding duidelijk
 // verschuift met de hoogte: vlakke prairie (streek 1-9) → canyons/mesa's
 // (10-18) → hooggebergte (19-27) → afdaling naar de kust (28-35).
-// Streek 1-4 (opdracht-wampanoag-opening.md, de openingsfase vóór de eerste
-// Anker) kregen oorspronkelijk vrijwel dezelfde krappe mix als de tutorial —
+// Streek 1-4 (opdracht-wampanoag-opening.md, de openingsfase) kregen
+// oorspronkelijk vrijwel dezelfde krappe mix als de tutorial —
 // op elke streek maar één heuvel-vakje en (voor streek 1) helemaal geen
 // berg-vakje. Sinds `beschikbareOpties` (improvements.ts) de tutorial-
 // `minStreek`-tempobeperking niet meer toepast op Going West (issue: "Going

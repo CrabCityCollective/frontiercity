@@ -8,9 +8,7 @@
 // streek-pop-up niet kaal oogt zolang de echte flavor-tekst er nog niet is.
 // `mechaniek` is ook "todo": Going West introduceert geen eigen, nieuwe
 // mechaniek-volgorde per streek — dezelfde functionele improvement-gating
-// als de tutorial blijft gelden (hoofdstuk 9 "Weergavenamen"). De drie
-// Anker-verhalen (hoofdstuk 9) horen hier nog niet bij (issue #278, vraag 3,
-// bewust nog open).
+// als de tutorial blijft gelden (hoofdstuk 9 "Weergavenamen").
 
 import { StreekContent } from "./tutorialContent";
 import { GOING_WEST_STREEK_AANTAL, terreinTypeVoorStreek } from "./worldGoingWest";

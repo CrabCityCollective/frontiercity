@@ -1,4 +1,4 @@
-# Going West — campagne-ontwerp (ankers, afstandsverval, weergavenamen)
+# Going West — campagne-ontwerp (afstandsverval, weergavenamen)
 
 Dit bestand bevat de campagne-specifieke inhoud voor de Amerikaanse
 frontier-campagne ("Going West") die eerder in hoofdstuk 9 (en delen van
@@ -7,50 +7,11 @@ campagne-onafhankelijke spelmechanica (waar deze content op voortbouwt) staat
 nog gewoon in het hoofddocument — zie de hoofdstukverwijzingen hieronder.
 
 Zie ook [`opdracht-wampanoag-opening.md`](./opdracht-wampanoag-opening.md)
-voor de technische opdracht van de openingsfase (streek 1-4, vóór onderstaande
-ankers beginnen).
-
-**Status**: de drie ankers hieronder zijn inhoudelijk beschreven, maar nog niet
-technisch/inhoudelijk uitgewerkt in code (issue #278, vraag 3). Dit is bewust
-een **doorlopend, incrementeel proces zonder vaste opleverdatum** — geen aparte
-milestone die dit in één keer "afrondt"; de ankers worden gaandeweg, stap voor
-stap opgepakt. Ze zijn geen onderdeel van de eerdere blocker 1 (zie
-[`implementatie-status.md`](./implementatie-status.md)) en vormden geen poort
-voor `beschikbaar: true`.
+voor de technische opdracht van de openingsfase (streek 1-4).
 
 **Toon**: donkerder en minder heroïsch dan klassieke western-verhalen —
 geïnspireerd op de sfeer van *Blood Meridian*. Geen morele framing door het
 spel zelf; geweld en keuzes worden beschreven, niet beoordeeld.
-
-## Anker 1 (streek 8-10) — Eerste contact
-Twee keuzes (geen neutrale derde optie):
-- **Handel aanbieden** → kleine economische bonus nu; de tribe groeit sterker mee met jouw voortgang.
-- **Land claimen** → gratis land improvement-vakje nu; start een **zichtbare wrokmeter** die oploopt tot Anker 2.
-
-## Anker 2 (streek 16-18) — vertakt per keuze uit Anker 1
-
-*Vanuit Handel:*
-- **Verdrag sluiten** → permanente/vergrote economische relic; tribe blijft neutrale sterke buur.
-- **Ruil ondermijnen** → grote eenmalige economische boost; tribe wordt blijvend vijandig.
-
-*Vanuit Land claimen (wrokmeter vol):*
-- **Terugvechten** → directe militaire confrontatie; winst = lagere wrok maar beschadigde streek (versnelde uitputting); verlies = richting stadsverval.
-- **Tribuut aanbieden** → wrok daalt fors, eenmalig fors verlies van huidige opbrengst; geen garantie voor de toekomst.
-
-## Anker 3 (richting oceaan) — vier tonale/mechanisch verschillende varianten
-Gedeelde flavor-kern, uitkomst (winnen) gelijk voor iedereen, maar elk pad krijgt een eigen soort obstakel:
-- **Na Verdrag**: tolgang-onderhandeling (resource-management, geen gevecht) — bijv. met Comanche onder Buffalo Hump.
-- **Na Ruil ondermijnen**: pure militaire confrontatie, zwaarste directe slag — bijv. Apache onder Mangas Coloradas.
-- **Na Terugvechten**: lange, uitputtende tocht over meerdere half-uitgeputte streken (uithoudingstest, geen piekmoment).
-- **Na Tribuut**: moreel/strategisch dilemma — permanent relic-verlies voor gegarandeerde doorgang, óf onvoorbereid gevecht.
-
-**Lange mars (Anker 3, na Terugvechten)**
-- Uitgestrekt over 3-4 opeenvolgende streken in plaats van één piekmoment.
-- Vooruitkijk-bereik tijdelijk teruggezet naar 0 extra streken tijdens deze reeks.
-- Alle land improvements in deze streken hebben standaard verlaagde opbrengst (het beschadigde land werkt door).
-- Geen nieuwe stad te stichten binnen deze reeks.
-- Zichtbare voorraadmeter (materiaal tegenover resterende streken) i.p.v. een harde timer.
-- Bij te weinig voorraad aan het einde: geen instant game-over, maar een verzwakte aankomst (kleinere stad-status bij de oceaan, beïnvloedt slotscène/flavor) — consistent met "hard maar eerlijk" bij nederlagen (zie hoofdstuk 11 van het hoofddocument).
 
 ## Afstandsverval & het herhalende drie-stichtingsmomenten-patroon
 
@@ -84,8 +45,6 @@ Of de speler bij kans 1, 2 of 3 daadwerkelijk sticht, is aan hem — dat hangt a
 Bij een campagnelengte van 30-40 streken (Normaal, hoofdstuk 14 van het hoofddocument) herhaalt dit patroon zich met deze afstandszones typisch ongeveer 3 keer over een hele run — vandaar het "verhaal in 3 delen"-gevoel — maar dit is een natuurlijk gevolg van de gekozen getallen, geen harde limiet. Bij een lange "Moeilijk"-campagne (45-60 streken) kan het vaker gebeuren. Het is dus een herhalend mechanisme, geen geharde "maximaal/precies 3 keer"-teller.
 
 Stad stichten blijft een **settler-actie** (hoofdstuk 6/13 van het hoofddocument, inclusief de bestaande "maximaal één settler per gestichte stad"-regel), mogelijk op **elke** al ontgrendelde streek — een uitzondering op de frontier-only-bouwregel, zoals Wachttoren/Legerkamp al hebben (hoofdstuk 6/11) — mits er vers water direct naast ligt (hoofdstuk 2) en de settler er fysiek naartoe reist. De allerlaatste, verplichte stichting blijft bij de oceaan aan het einde van de campagne (bestaande win-conditie, hoofdstuk 1) — die telt gewoon mee als een van deze cykli, in de 0%-zone van de laatst gestichte stad als de speler tot dan toe heeft doorgetrokken.
-
-Hoe dit precies samenvalt met de bestaande Anker-verhalen hierboven (rond streek 8-10/16-18/eindspel) moet nog op elkaar afgestemd worden in een latere opdracht — dit mechanisme is hier op zichzelf staand uitgewerkt.
 
 *Doorrekening tegen de campagnelengte*: een speler die telkens pas bij kans 3 (afstand 13+) sticht, legt tussen twee stichtingen ten minste 13 streken frontier-voortgang af — bij Normaal (30-40 streken) past dat ruwweg **3 cycli** (3 × 13 ≈ 39, aan de bovenkant van de range), bij Moeilijk (45-60 streken) **3-4 cycli**, bij Makkelijk (20-25 streken) **1-2 cycli**. Een speler die eerder sticht (kans 1 of 2) start een nieuwe cyclus sneller, dus dit is een ondergrens-schatting van het aantal cycli, geen exacte voorspelling — vandaar "typisch ~3 keer" hierboven, niet een harde teller.
 

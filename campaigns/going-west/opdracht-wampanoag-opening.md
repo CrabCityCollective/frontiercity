@@ -16,7 +16,7 @@ plaats van herschreven.
 
 ## Context
 Dit implementeert de eerste zes streken van de Amerikaanse frontier-campagne
-("Going West"), vóór de bestaande Anker-verhalen. De speler landt, heeft nog
+("Going West"). De speler landt, heeft nog
 geen cultuur-economie, en moet via wetenschap streken ontgrendelen tot hij de
 Wampanoag-laag op streek 6 bereikt. Die streek is (issue: "Wampanoag streek
 blokkerend") volledig bezet — de settler kan er niet doorheen, en wetenschap
