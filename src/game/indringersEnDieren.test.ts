@@ -355,7 +355,7 @@ test("Going West trekt de indringers-stamnaam uit de eigen Wampanoag-pool i.p.v.
 
   assert.equal(state.indringersEvent?.streekHoogte, 1);
   assert.ok(
-    ["de Wampanoag", "het volk van Massasoit"].includes(state.indringersEvent?.stamNaam ?? ""),
+    ["de Wampanoag", "het Wampanoag-volk"].includes(state.indringersEvent?.stamNaam ?? ""),
     `verwacht een Wampanoag-naam, kreeg "${state.indringersEvent?.stamNaam}"`
   );
 });
