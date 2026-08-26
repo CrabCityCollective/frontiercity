@@ -237,7 +237,7 @@ export function metWampanoagLaagEnVoorraadVoorVerkenning(): GameState {
 export function metWampanoagLaagOnthuld(): GameState {
   let state = metWampanoagLaagEnVoorraadVoorVerkenning();
   state = { ...state, gereedschap: 100 };
-  for (const positieInStreek of [0, 1, 2]) {
+  for (const positieInStreek of [3, 4, 5]) {
     state = stuurVerkennerWampanoag(state, positieInStreek);
     for (let i = 0; i < VERKENNER.bouwtijdBeurten; i++) state = verwerkWampanoagVerkenningInGang(state);
     state = { ...state, verkenningGedaanDitBeurt: false };
