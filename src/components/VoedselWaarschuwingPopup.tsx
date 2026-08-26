@@ -36,6 +36,20 @@ export default function VoedselWaarschuwingPopup({ beurtenResterend, onDoorgaan 
           textAlign: "center",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/scenes/voedsel-tekort-dreigt.png"
+          alt=""
+          style={{
+            width: "100%",
+            maxWidth: "26rem",
+            height: "auto",
+            display: "block",
+            alignSelf: "center",
+            border: "3px solid var(--kleur-oker)",
+            boxShadow: "0 6px 18px rgba(0, 0, 0, 0.55)",
+          }}
+        />
         <strong className="fc-heading" style={{ color: "var(--kleur-gevaar)" }}>
           {VOEDSEL_WAARSCHUWING_TITEL}
         </strong>
