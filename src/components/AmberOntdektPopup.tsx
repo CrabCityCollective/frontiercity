@@ -11,13 +11,18 @@ interface AmberOntdektPopupProps {
   // alleen de flavor-tekst wijkt af.
   titel?: string;
   tekst?: string;
+  // Optioneel sfeerbeeld (issue: "Scène beelden") — alleen gezet voor
+  // popups die er een hebben (bijv. `eersteContactPopup`, Going West); de
+  // meeste hergebruikers van dit component (amberader-vondst e.d.) laten dit
+  // weg en tonen zoals voorheen geen plaatje.
+  afbeelding?: string;
 }
 
 // Amberader-ontdekkingspop-up (hoofdstuk 3/14, issue: "toevoeging Goud"):
 // verschijnt zodra `verwerkStreekOntgrendeling` (economie.ts) de gegarandeerde
 // eerste Amberader-locatie ontgrendelt — zelfde blokkerende meldings-frame en
 // stijl als KuddePopup, zonder keuze: de speler klikt 'm gewoon weg.
-export default function AmberOntdektPopup({ onSluiten, titel, tekst }: AmberOntdektPopupProps) {
+export default function AmberOntdektPopup({ onSluiten, titel, tekst, afbeelding }: AmberOntdektPopupProps) {
   return (
     <div
       style={{
@@ -42,6 +47,22 @@ export default function AmberOntdektPopup({ onSluiten, titel, tekst }: AmberOntd
           textAlign: "center",
         }}
       >
+        {afbeelding && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={afbeelding}
+            alt=""
+            style={{
+              width: "100%",
+              maxWidth: "26rem",
+              height: "auto",
+              display: "block",
+              alignSelf: "center",
+              border: "3px solid var(--kleur-oker)",
+              boxShadow: "0 6px 18px rgba(0, 0, 0, 0.55)",
+            }}
+          />
+        )}
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
           {titel ?? AMBER_ONTDEKKING_TITEL}
         </strong>

@@ -1710,6 +1710,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           <AmberOntdektPopup
             titel={popupContent(campagne, "eersteContactPopup")?.titel}
             tekst={popupContent(campagne, "eersteContactPopup")?.tekst}
+            afbeelding="/assets/scenes/wampanoag-trading.png"
             onSluiten={sluitWampanoagLaagOntdektMelding}
           />
         )}
