@@ -70,12 +70,21 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   // hieronder, maar via `CampaignConfig.popupTeksten` in plaats van een eigen
   // interface, omdat dit er ná de MVP meerdere kunnen worden zonder steeds een
   // nieuw functie-paar nodig te hebben — zie `popupContent()` onderaan dit
-  // bestand). `eersteContactPopup` triggert zodra de Wampanoag-streek
+  // bestand). `campagneOpeningPopup` triggert bij het begin van beurt 1 (issue
+  // "Pop-up teksten Wampanoag" — expliciet los van `introContentVoorCampagne`/
+  // `IntroScherm` hieronder, dat blijft het titelscherm vóór "Beginnen");
+  // `eersteContactPopup` triggert zodra de Wampanoag-streek
   // (`WAMPANOAG_STREEK_HOOGTE`, worldGoingWest.ts) "in beeld" komt
   // (`wampanoagLaagOntdektEvent`, streekOntgrendeling.ts);
   // `wampanoagRelatieGelegdPopup` zodra de 3-3-3-handelsdrempel gehaald is
   // (`wampanoagRelatieGelegdEvent`, wampanoag.ts).
   popupTeksten: {
+    campagneOpeningPopupTitel: "De nieuwe wereld",
+    campagneOpeningPopupTekst:
+      "Engeland ligt aan de andere kant van de wereld. Wij staan alleen aan deze kust, tussen de wilden.\n" +
+      "De Wampanoag zijn een trots volk. Ze dulden ons nog niet in dit nieuwe land.\n" +
+      "Wij hebben God aan onze zijde. Bouw Kapellen, zodat het land onder God komt.\n" +
+      "Zoek het hoofdkamp van de Wampanoag. Misschien zijn ze te overtuigen om ons verder te laten gaan, op onze goddelijke missie.",
     eersteContactPopupTitel: "Eerste contact",
     eersteContactPopupTekst:
       "Aan de rand van de nieuwe streek liggen drie kampementen van de Wampanoag. Stuur verkenners om ze " +
