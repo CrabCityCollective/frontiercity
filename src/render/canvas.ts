@@ -271,6 +271,86 @@ function tekenNietVerbondenIndicator(ctx: CanvasRenderingContext2D, x: number, y
   ctx.restore();
 }
 
+// Lopend oer-poppetje (issue: "Andere skin oer settler") — de tutorial-
+// settler (Het Hertenpad-volk) is thematisch vóór het wiel, dus een huifkar
+// past daar niet: in plaats daarvan een lopend mensfiguurtje met een
+// reisbindel over de schouder. `variant` geeft dezelfde koelere, blauwige
+// kledingtint aan de tweede settler als de huifkar hieronder deed (issue:
+// "Altijd 2e settler" #236), zodat de twee op de kaart uit elkaar te houden
+// blijven.
+function tekenOerPoppetje(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  variant: "primair" | "tweede" = "primair"
+): void {
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.34);
+
+  const huidKleur = "#c19a6b";
+  const kledingKleur = variant === "primair" ? "#6b4a2c" : "#2c4a6b";
+  const kledingSchaduw = variant === "primair" ? "#4a3018" : "#1c2e3a";
+  const haarKleur = variant === "primair" ? "#2a1c10" : "#1a222a";
+  const cx = x + size * 0.5;
+
+  // Benen — lopende pas: één been vooruit, één naar achteren.
+  ctx.strokeStyle = huidKleur;
+  ctx.lineWidth = Math.max(2, size * 0.05);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.04, baseY - size * 0.3);
+  ctx.lineTo(cx - size * 0.16, baseY);
+  ctx.moveTo(cx + size * 0.05, baseY - size * 0.3);
+  ctx.lineTo(cx + size * 0.13, baseY - size * 0.05);
+  ctx.stroke();
+
+  // Tuniek/omslagdoek — smal bij het middel, breder bij de schouders.
+  ctx.fillStyle = kledingKleur;
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.14, baseY - size * 0.28);
+  ctx.lineTo(cx + size * 0.14, baseY - size * 0.28);
+  ctx.lineTo(cx + size * 0.1, baseY - size * 0.56);
+  ctx.lineTo(cx - size * 0.1, baseY - size * 0.56);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = kledingSchaduw;
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.stroke();
+
+  // Armen.
+  ctx.strokeStyle = huidKleur;
+  ctx.lineWidth = Math.max(1.6, size * 0.04);
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.1, baseY - size * 0.5);
+  ctx.lineTo(cx - size * 0.2, baseY - size * 0.34);
+  ctx.moveTo(cx + size * 0.1, baseY - size * 0.5);
+  ctx.lineTo(cx + size * 0.18, baseY - size * 0.4);
+  ctx.stroke();
+
+  // Reisbindel aan een stok over de schouder — teken van een trekkende settler.
+  ctx.strokeStyle = kledingSchaduw;
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.beginPath();
+  ctx.moveTo(cx + size * 0.16, baseY - size * 0.66);
+  ctx.lineTo(cx + size * 0.24, baseY - size * 0.38);
+  ctx.stroke();
+  ctx.fillStyle = kledingKleur;
+  ctx.beginPath();
+  ctx.arc(cx + size * 0.24, baseY - size * 0.42, size * 0.055, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hoofd.
+  ctx.fillStyle = huidKleur;
+  ctx.beginPath();
+  ctx.arc(cx, baseY - size * 0.63, size * 0.09, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = haarKleur;
+  ctx.beginPath();
+  ctx.arc(cx, baseY - size * 0.66, size * 0.09, Math.PI, 0);
+  ctx.fill();
+}
+
 // De settler-eenheid (hoofdstuk 16): een huifkar, in lijn met de
 // MVP-plaatshouderstijl (hoofdstuk 13: "grove/simpele placeholders zijn
 // prima") — geen los afbeeldingsbestand, zelfde vector-aanpak als de rest van
@@ -279,13 +359,25 @@ function tekenNietVerbondenIndicator(ctx: CanvasRenderingContext2D, x: number, y
 // Tweede settler (issue: "Altijd 2e settler" #236): `variant` geeft de
 // tweede settler een koelere, blauwige huifkar-kleur zodat de twee op de
 // kaart uit elkaar te houden zijn — verder identieke vorm/placeholder-stijl.
+//
+// `tegelSet` (M20d, `CampaignConfig.tegelSet`): `undefined` betekent de
+// tutorial (Het Hertenpad-volk, vóór het wiel) — daar tekenen we in plaats
+// van de huifkar het lopende oer-poppetje hierboven (issue: "Andere skin oer
+// settler"). Elke campagne mét een `tegelSet` (vooralsnog alleen Going West)
+// behoudt de huifkar.
 export function tekenSettler(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   size: number,
-  variant: "primair" | "tweede" = "primair"
+  variant: "primair" | "tweede" = "primair",
+  tegelSet?: string
 ): void {
+  if (tegelSet === undefined) {
+    tekenOerPoppetje(ctx, x, y, size, variant);
+    return;
+  }
+
   const baseY = y + size * 0.86;
   tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.6);
 
@@ -1722,10 +1814,11 @@ export function tekenWereld(
   // voor de tutorial. Kleurde eerder een groene/bruine multiply-overlay over
   // het hele canvas (issue "Groene waas niet goed"); nu bepalen de terrein-
   // tegels zelf hun kleur via `terreinBasisKleur`/`TERREIN_BASIS` (elke
-  // Going West-streeknaam is al uniek t.o.v. de tutorial), dus deze parameter
-  // wordt hier voorlopig niet meer gebruikt. Blijft doorgegeven vanuit
-  // `GameCanvas` als aanknopingspunt voor een echte, losse tegelset per
-  // campagne (hoofdstuk 12 design-doc).
+  // Going West-streeknaam is al uniek t.o.v. de tutorial). Wordt inmiddels wel
+  // gebruikt om de settler-skin te kiezen (`tekenSettler` hieronder: oer-
+  // poppetje voor de tutorial vs. huifkar voor Going West, issue "Andere skin
+  // oer settler") en blijft verder een aanknopingspunt voor een echte, losse
+  // tegelset per campagne (hoofdstuk 12 design-doc).
   tegelSet?: string
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
@@ -1826,13 +1919,13 @@ export function tekenWereld(
   if (settler) {
     const rijIndex = totaalStreken - settler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
-      tekenSettler(ctx, settler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize, "primair");
+      tekenSettler(ctx, settler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize, "primair", tegelSet);
     }
   }
   if (tweedeSettler) {
     const rijIndex = totaalStreken - tweedeSettler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
-      tekenSettler(ctx, tweedeSettler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize, "tweede");
+      tekenSettler(ctx, tweedeSettler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize, "tweede", tegelSet);
     }
   }
 
