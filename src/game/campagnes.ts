@@ -89,7 +89,7 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
       "Zoek het hoofdkamp van de Wampanoag. Misschien zijn ze te overtuigen om ons verder te laten gaan, op onze goddelijke missie.",
     eersteContactPopupTitel: "Eerste contact",
     eersteContactPopupTekst:
-      "Aan de rand van de nieuwe streek liggen drie kampementen van de Wampanoag. Stuur verkenners om ze " +
+      "In het midden van de nieuwe streek liggen drie kampementen van de Wampanoag. Stuur verkenners om ze " +
       "te ontdekken — daarna kun je met ze handelen in bevervellen, maïs en wampum.",
     wampanoagRelatieGelegdPopupTitel: "Een verbond met de Wampanoag",
     wampanoagRelatieGelegdPopupTekst:
