@@ -52,7 +52,7 @@ test("een Sterrencirkel produceert wetenschap per beurt zonder uit te putten", (
   assert.equal(state.wetenschap, (STERRENCIRKEL.effect.waarde ?? 0) * 2);
 });
 
-test('"vuur-temmen" verhoogt de boerderij-opbrengst met 20%', () => {
+test('"vuur-temmen" verhoogt de boerderij-opbrengst met 15%', () => {
   let state = maakInitieleSpelStatus();
   const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
   state = {

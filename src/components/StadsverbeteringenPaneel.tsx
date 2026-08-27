@@ -93,6 +93,7 @@ export default function StadsverbeteringenPaneel({
             improvement={inAanbouw.improvement}
             voortgang={inAanbouw.voortgang}
             goudInVoorraad={state.voorraad.goud}
+            technologieen={state.technologieen}
             onVersnellen={onVersnelCityVerbetering}
           />
         </>

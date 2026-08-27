@@ -198,9 +198,11 @@ export function jaag(state: GameState, slot: SettlerSlot = "primair"): GameState
   const beurtenResterend = tile.kudde.beurtenResterend - 1;
   const magRoofdier = hoogte >= ROOFDIER_MIN_STREEK;
   const eersteRoofdierGegarandeerd = magRoofdier && !state.eersteRoofdierVerschenen;
-  // "B2. Speerwerper" / "B2a. Boogschieten" (hoofdstuk 3/9, techTree.ts):
-  // verlagen de roofdier-kans (`roofdierKansFactor`); "B. Het spoor lezen" /
-  // "B2a. Boogschieten" verhogen de jachtopbrengst (`jachtVoedselBonus`).
+  // "B2. Speerwerper" (hoofdstuk 3/9, techTree.ts) verlaagt de roofdier-kans
+  // (`roofdierKansFactor`); "B. Het spoor lezen" verhoogt de jachtopbrengst
+  // (`jachtVoedselBonus`) — Boogschieten buft sinds "Technologie-boom
+  // herbalanceren" niet langer deze twee, zie `wachttorenBeschermingsbereik`
+  // (techTree.ts) voor zijn nieuwe effect.
   const roofdierVerschijnt =
     magRoofdier &&
     (eersteRoofdierGegarandeerd || Math.random() < ROOFDIER_KANS * roofdierKansFactor(state.technologieen));

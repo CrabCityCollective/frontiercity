@@ -53,6 +53,7 @@ export default function OpslagplaatsPaneel({
             improvement={opslagplaatsInAanbouw.improvement}
             voortgang={opslagplaatsInAanbouw.voortgang}
             goudInVoorraad={state.voorraad.goud}
+            technologieen={state.technologieen}
             onVersnellen={onVersnelOpslagplaats}
           />
         </>

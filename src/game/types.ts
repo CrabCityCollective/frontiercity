@@ -36,7 +36,7 @@ export type TechId =
   | "kalkoven"
   | "veeteelt"
   | "voorraadschuur"
-  | "vlotten"
+  | "trekdier"
   | "handkar"
   | "boogschieten"
   | "verharde-speren";

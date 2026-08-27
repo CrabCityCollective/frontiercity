@@ -10,7 +10,7 @@
 // helpers in techTree.ts en worden op de relevante plek elders toegepast.
 
 import { GameState, TechDrempel, TechId } from "./types";
-import { OPSLAGCAP_BONUS_WEVEN, techKinderen, wetenschapKostenVoorDrempel } from "./techTree";
+import { OPSLAGCAP_BONUS_AARDEWERK, OPSLAGCAP_BONUS_WEVEN, techKinderen, wetenschapKostenVoorDrempel } from "./techTree";
 
 // Technologie-boom (hoofdstuk 3/9/11, issue: "tech tree toevoegen" Deel 2):
 // zodra de cumulatieve wetenschap de eerstvolgende drempel haalt, opent dit
@@ -45,18 +45,22 @@ export function verwerkTechDrempel(state: GameState): GameState {
 // openstaande keuze, of een `techId` die niet één van de twee getoonde opties
 // is) — zelfde veilige-aanroep-conventie als `startBouw`/`bemanWachttoren`.
 //
-// "Weven" (A1a, techTree.ts) verhoogt de opslag-cap direct bij het kiezen,
-// net als de Opslagplaats-improvement bij voltooiing (hoofdstuk 3/5) — het is
-// een keuze, geen gebouwd improvement, dus er is geen wachtrij of
-// wegverbinding om op te wachten.
+// "Weven" (A1a, techTree.ts) en "Aardewerk" (A1, issue: "Technologie-boom
+// herbalanceren") verhogen de opslag-cap direct bij het kiezen, net als de
+// Opslagplaats-improvement bij voltooiing (hoofdstuk 3/5) — het is een
+// keuze, geen gebouwd improvement, dus er is geen wachtrij of wegverbinding
+// om op te wachten.
 export function kiesTech(state: GameState, techId: TechId): GameState {
   const event = state.techKeuzeEvent;
   if (!event || !event.opties.includes(techId)) return state;
 
+  const opslagCapBonus =
+    techId === "weven" ? OPSLAGCAP_BONUS_WEVEN : techId === "aardewerk" ? OPSLAGCAP_BONUS_AARDEWERK : 0;
+
   return {
     ...state,
     technologieen: [...state.technologieen, techId],
-    opslagCap: techId === "weven" ? state.opslagCap + OPSLAGCAP_BONUS_WEVEN : state.opslagCap,
+    opslagCap: state.opslagCap + opslagCapBonus,
     techKeuzeEvent: undefined,
   };
 }

@@ -1,12 +1,13 @@
 "use client";
 
 import { RUSH_GOUD_PER_BEURT, rushKostenGoud } from "@/game/bouwwachtrij";
-import { Improvement, ResourceType } from "@/game/types";
+import { Improvement, ResourceType, TechId } from "@/game/types";
 
 interface RushMetGoudKnopProps {
   improvement: Improvement;
   voortgang: Partial<Record<ResourceType, number>>;
   goudInVoorraad: number;
+  technologieen?: TechId[];
   onVersnellen: () => void;
 }
 
@@ -20,9 +21,10 @@ export default function RushMetGoudKnop({
   improvement,
   voortgang,
   goudInVoorraad,
+  technologieen = [],
   onVersnellen,
 }: RushMetGoudKnopProps) {
-  const kosten = rushKostenGoud(improvement, voortgang);
+  const kosten = rushKostenGoud(improvement, voortgang, technologieen);
   if (kosten <= 0) return null;
 
   const kanVolledigVersnellen = goudInVoorraad >= kosten;
