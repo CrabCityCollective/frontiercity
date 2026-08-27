@@ -51,7 +51,7 @@ export function verwerkCivielInAanbouw(state: GameState): GameState {
   if (!civielInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(civielInAanbouw.improvement, civielInAanbouw.voortgang, voorraad);
+  const resultaat = investeerInBouwkosten(civielInAanbouw.improvement, civielInAanbouw.voortgang, voorraad, state.technologieen);
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
@@ -84,7 +84,7 @@ export function versnelCivielMetGoud(state: GameState): GameState {
   const civielInAanbouw = state.stad.civielInAanbouw;
   if (!civielInAanbouw || civielInAanbouw.improvement.soort !== "city") return state;
 
-  const resultaat = pasVersnellingToe(civielInAanbouw.improvement, civielInAanbouw.voortgang, state.voorraad.goud);
+  const resultaat = pasVersnellingToe(civielInAanbouw.improvement, civielInAanbouw.voortgang, state.voorraad.goud, state.technologieen);
   if (!resultaat) return state;
 
   const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };
@@ -113,7 +113,12 @@ export function verwerkOpslagplaats(state: GameState): GameState {
   if (!opslagplaatsInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(opslagplaatsInAanbouw.improvement, opslagplaatsInAanbouw.voortgang, voorraad);
+  const resultaat = investeerInBouwkosten(
+    opslagplaatsInAanbouw.improvement,
+    opslagplaatsInAanbouw.voortgang,
+    voorraad,
+    state.technologieen
+  );
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
@@ -141,7 +146,8 @@ export function versnelOpslagplaatsMetGoud(state: GameState): GameState {
   const resultaat = pasVersnellingToe(
     opslagplaatsInAanbouw.improvement,
     opslagplaatsInAanbouw.voortgang,
-    state.voorraad.goud
+    state.voorraad.goud,
+    state.technologieen
   );
   if (!resultaat) return state;
 
@@ -212,7 +218,7 @@ export function verwerkCityVerbetering(state: GameState): GameState {
   if (!inAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(inAanbouw.improvement, inAanbouw.voortgang, voorraad);
+  const resultaat = investeerInBouwkosten(inAanbouw.improvement, inAanbouw.voortgang, voorraad, state.technologieen);
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
@@ -240,7 +246,7 @@ export function versnelCityVerbeteringMetGoud(state: GameState): GameState {
   const inAanbouw = state.stad.cityVerbeteringInAanbouw;
   if (!inAanbouw) return state;
 
-  const resultaat = pasVersnellingToe(inAanbouw.improvement, inAanbouw.voortgang, state.voorraad.goud);
+  const resultaat = pasVersnellingToe(inAanbouw.improvement, inAanbouw.voortgang, state.voorraad.goud, state.technologieen);
   if (!resultaat) return state;
 
   const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };
@@ -293,7 +299,7 @@ export function verwerkRecrutering(state: GameState): GameState {
   if (!legerInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(legerInAanbouw.improvement, legerInAanbouw.voortgang, voorraad);
+  const resultaat = investeerInBouwkosten(legerInAanbouw.improvement, legerInAanbouw.voortgang, voorraad, state.technologieen);
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
@@ -326,7 +332,12 @@ export function verwerkMissionarisRecrutering(state: GameState): GameState {
   if (!missionarisInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(missionarisInAanbouw.improvement, missionarisInAanbouw.voortgang, voorraad);
+  const resultaat = investeerInBouwkosten(
+    missionarisInAanbouw.improvement,
+    missionarisInAanbouw.voortgang,
+    voorraad,
+    state.technologieen
+  );
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
@@ -355,7 +366,7 @@ export function verwerkRechterTraining(state: GameState): GameState {
   if (!rechterInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(rechterInAanbouw.improvement, rechterInAanbouw.voortgang, voorraad);
+  const resultaat = investeerInBouwkosten(rechterInAanbouw.improvement, rechterInAanbouw.voortgang, voorraad, state.technologieen);
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
@@ -484,7 +495,12 @@ export function verwerkTweedeSettlerInAanbouw(state: GameState): GameState {
   if (!tweedeSettlerInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(tweedeSettlerInAanbouw.improvement, tweedeSettlerInAanbouw.voortgang, voorraad);
+  const resultaat = investeerInBouwkosten(
+    tweedeSettlerInAanbouw.improvement,
+    tweedeSettlerInAanbouw.voortgang,
+    voorraad,
+    state.technologieen
+  );
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
@@ -567,7 +583,7 @@ export function verwerkSmederij(state: GameState): GameState {
   if (!smederijInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(smederijInAanbouw.improvement, smederijInAanbouw.voortgang, voorraad);
+  const resultaat = investeerInBouwkosten(smederijInAanbouw.improvement, smederijInAanbouw.voortgang, voorraad, state.technologieen);
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
@@ -594,7 +610,7 @@ export function versnelSmederijMetGoud(state: GameState): GameState {
   const smederijInAanbouw = state.stad.smederijInAanbouw;
   if (!smederijInAanbouw) return state;
 
-  const resultaat = pasVersnellingToe(smederijInAanbouw.improvement, smederijInAanbouw.voortgang, state.voorraad.goud);
+  const resultaat = pasVersnellingToe(smederijInAanbouw.improvement, smederijInAanbouw.voortgang, state.voorraad.goud, state.technologieen);
   if (!resultaat) return state;
 
   const voorraad = { ...state.voorraad, goud: state.voorraad.goud - resultaat.gouduitgegeven };

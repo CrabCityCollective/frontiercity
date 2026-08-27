@@ -66,6 +66,7 @@ export default function SmederijPaneel({ state, onStartSmederij, onVersnelSmeder
             improvement={smederijInAanbouw.improvement}
             voortgang={smederijInAanbouw.voortgang}
             goudInVoorraad={state.voorraad.goud}
+            technologieen={state.technologieen}
             onVersnellen={onVersnelSmederij}
           />
         </>

@@ -44,7 +44,7 @@ export const TECH_TREE: Record<TechId, TechNode> = {
     id: "vuur-temmen",
     drempel: 1,
     tutorialNaam: "Vuur temmen",
-    beschrijving: "Boerderij-opbrengst +20%.",
+    beschrijving: "Boerderij-opbrengst +15%.",
   },
   "spoor-lezen": {
     id: "spoor-lezen",
@@ -57,14 +57,15 @@ export const TECH_TREE: Record<TechId, TechNode> = {
     drempel: 2,
     ouder: "vuur-temmen",
     tutorialNaam: "Aardewerk",
-    beschrijving: "Ontgrendelt de Voorraadkuil — een goedkoop land improvement met een kleine extra opslag.",
+    beschrijving:
+      "Ontgrendelt de Voorraadkuil — een goedkoop land improvement met een kleine extra opslag. Opslag-cap direct +5.",
   },
   zaadselectie: {
     id: "zaadselectie",
     drempel: 2,
     ouder: "vuur-temmen",
     tutorialNaam: "Zaadselectie",
-    beschrijving: "Boerderij-uitputting 25% trager.",
+    beschrijving: "Boerderij-uitputting 15% trager.",
   },
   wiel: {
     id: "wiel",
@@ -99,7 +100,7 @@ export const TECH_TREE: Record<TechId, TechNode> = {
     drempel: 3,
     ouder: "zaadselectie",
     tutorialNaam: "Veeteelt",
-    beschrijving: "Kuddes verschijnen vaker.",
+    beschrijving: "Bemande Wachttorens kosten geen voedsel meer.",
   },
   voorraadschuur: {
     id: "voorraadschuur",
@@ -108,12 +109,12 @@ export const TECH_TREE: Record<TechId, TechNode> = {
     tutorialNaam: "Voorraadschuur",
     beschrijving: "Voedselverbruik van de stad daalt.",
   },
-  vlotten: {
-    id: "vlotten",
+  trekdier: {
+    id: "trekdier",
     drempel: 3,
     ouder: "wiel",
-    tutorialNaam: "Vlotten",
-    beschrijving: "De settler kan rivier-vakjes oversteken.",
+    tutorialNaam: "Trekdier",
+    beschrijving: "Land- en city improvements worden 20% sneller gebouwd.",
   },
   handkar: {
     id: "handkar",
@@ -127,7 +128,7 @@ export const TECH_TREE: Record<TechId, TechNode> = {
     drempel: 3,
     ouder: "speerwerper",
     tutorialNaam: "Boogschieten",
-    beschrijving: "Kans op een roofdier nogmaals lager, jachtopbrengst nogmaals +1.",
+    beschrijving: "Wachttoren beschermt ook de streek twee eronder.",
   },
   "verharde-speren": {
     id: "verharde-speren",
@@ -209,22 +210,26 @@ export function techNaam(id: TechId, campagne?: CampaignConfig): string {
 // zodat ze overal in economie.ts droog toepasbaar zijn, ook op plekken die
 // zelf geen `GameState` bij de hand hebben (bv. binnen een `tiles.map`).
 
-// A. Vuur temmen: boerderij-opbrengst +20%.
+// A. Vuur temmen: boerderij-opbrengst +15% (issue: "Technologie-boom
+// herbalanceren" — was +20%, verlaagd omdat deze tak al direct op voedsel
+// ingreep en daarmee de kernspanning van het spel te veel demonteerde,
+// hoofdstuk 4/11).
 export function boerderijOpbrengstFactor(technologieen: TechId[]): number {
-  return heeftTech(technologieen, "vuur-temmen") ? 1.2 : 1;
+  return heeftTech(technologieen, "vuur-temmen") ? 1.15 : 1;
 }
 
-// B. Het spoor lezen (+1) en B2a. Boogschieten (nogmaals +1): jachtopbrengst.
+// B. Het spoor lezen: jachtopbrengst +1 (issue: "Technologie-boom
+// herbalanceren" — Boogschieten's eigen nogmaals-+1 hier is vervallen, zie
+// `wachttorenBeschermingsbereik` hieronder voor zijn nieuwe effect).
 export function jachtVoedselBonus(technologieen: TechId[]): number {
-  let bonus = 0;
-  if (heeftTech(technologieen, "spoor-lezen")) bonus += 1;
-  if (heeftTech(technologieen, "boogschieten")) bonus += 1;
-  return bonus;
+  return heeftTech(technologieen, "spoor-lezen") ? 1 : 0;
 }
 
-// A2. Zaadselectie: boerderij-uitputting 25% trager (langere levensduur).
+// A2. Zaadselectie: boerderij-uitputting 15% trager (langere levensduur) —
+// issue: "Technologie-boom herbalanceren", was 25%, samen met de verlaagde
+// Vuur temmen-bonus hierboven om de A-tak minder eenzijdig sterk te maken.
 export function boerderijUitputtingFactor(technologieen: TechId[]): number {
-  return heeftTech(technologieen, "zaadselectie") ? 1.25 : 1;
+  return heeftTech(technologieen, "zaadselectie") ? 1.15 : 1;
 }
 
 // A1b. Kalkoven: steen-opbrengst +20%.
@@ -233,13 +238,23 @@ export function steenOpbrengstFactor(technologieen: TechId[]): number {
 }
 
 // A1a. Weven: opslag-cap +10 — toegepast als eenmalige bonus op het moment
-// van kiezen (economie.ts: `kiesTech`), net als de Opslagplaats-improvement
-// bij voltooiing. Hier alleen de constante, geen berekenfunctie nodig.
+// van kiezen (tech.ts: `kiesTech`), net als de Opslagplaats-improvement bij
+// voltooiing. Hier alleen de constante, geen berekenfunctie nodig.
 export const OPSLAGCAP_BONUS_WEVEN = 10;
 
-// A2a. Veeteelt: kuddes verschijnen vaker (multiplier op de kudde-kans).
-export function kuddeKansFactor(technologieen: TechId[]): number {
-  return heeftTech(technologieen, "veeteelt") ? 1.5 : 1;
+// A1. Aardewerk: naast de Voorraadkuil-ontgrendeling ook direct +5
+// opslag-cap bij het kiezen zelf (issue: "Technologie-boom herbalanceren" —
+// zelfde eenmalige-toepassing-patroon als `OPSLAGCAP_BONUS_WEVEN`, om
+// Aardewerk minder eenzijdig zwakker te laten aanvoelen dan Zaadselectie).
+export const OPSLAGCAP_BONUS_AARDEWERK = 5;
+
+// A2a. Veeteelt: bemande Wachttorens verbruiken geen voedsel meer (issue:
+// "Technologie-boom herbalanceren" — herthematisering van het oude
+// "kuddes verschijnen vaker"-effect, dat nutteloos werd zodra de speler niet
+// meer actief jaagt, hoofdstuk 11). Gebruikt door `voedselVerbruik`
+// (productie.ts) als multiplier op `WACHTTOREN_VOEDSEL_VERBRUIK`.
+export function wachttorenVoedselkostFactor(technologieen: TechId[]): number {
+  return heeftTech(technologieen, "veeteelt") ? 0 : 1;
 }
 
 // A2b. Voorraadschuur: voedselverbruik van de stad daalt (vaste aftrek).
@@ -247,12 +262,22 @@ export function voedselVerbruikVermindering(technologieen: TechId[]): number {
   return heeftTech(technologieen, "voorraadschuur") ? 1 : 0;
 }
 
-// B2. Speerwerper (×0,4) en B2a. Boogschieten (nogmaals ×0,5): roofdier-kans.
+// B2. Speerwerper: roofdier-kans ×0,4 (issue: "Technologie-boom
+// herbalanceren" — Boogschieten's eigen nogmaals-×0,5 hier is vervallen, zie
+// `wachttorenBeschermingsbereik` hieronder voor zijn nieuwe effect).
 export function roofdierKansFactor(technologieen: TechId[]): number {
-  let factor = 1;
-  if (heeftTech(technologieen, "speerwerper")) factor *= 0.4;
-  if (heeftTech(technologieen, "boogschieten")) factor *= 0.5;
-  return factor;
+  return heeftTech(technologieen, "speerwerper") ? 0.4 : 1;
+}
+
+// B2a. Boogschieten: de Wachttoren die een streek beschermt mag ook twee
+// streken erboven vandaan komen in plaats van maar één (issue:
+// "Technologie-boom herbalanceren" — herthematisering van het oude
+// "roofdierkans/jachtopbrengst nogmaals beter"-effect, dat een uitfaserende
+// jacht-mechaniek bufte). Gebruikt door `vindBeschermendeWachttoren`
+// (indringersEnDieren.ts): 2 zonder deze tech (de bestaande situatie — eigen
+// streek + de streek erboven), 3 mét (eigen streek + twee streken erboven).
+export function wachttorenBeschermingsbereik(technologieen: TechId[]): number {
+  return heeftTech(technologieen, "boogschieten") ? 3 : 2;
 }
 
 // B2b. Verharde speren: lichte legerwaarde-bonus per strijder.
@@ -275,14 +300,13 @@ export function settlerBeweegtGratis(technologieen: TechId[]): boolean {
   return heeftTech(technologieen, "handkar");
 }
 
-// B1a. Vlotten: de settler kan rivier-vakjes oversteken. De huidige MVP kent
-// geen enkele vorm van bewegingsbeperking bij water (`versWater` op een tile
-// is uitsluitend een stichtings-geschiktheids-vlag, geen doorgangs-blokkade —
-// zie world.ts/wegen.ts), dus dit effect heeft op dit moment geen waarneembaar
-// gevolg. De tech blijft desondanks onderdeel van de boom (Deel 2 legt de
-// structuur vast) en deze functie staat klaar voor zodra een
-// water-doorgangs-regel wordt toegevoegd — zie de PR-samenvatting voor de
-// volledige toelichting op deze afwijking.
-export function settlerKanRivierOversteken(technologieen: TechId[]): boolean {
-  return heeftTech(technologieen, "vlotten");
+// B1a. Trekdier (issue: "Technologie-boom herbalanceren" — vervangt de
+// niet-functionele Vlotten-tech, thematisch een logisch vervolg op Wiel: een
+// lastdier maakt het wiel pas echt nuttig): land- en city improvements
+// worden 20% sneller gebouwd. Gebruikt door `bouwwachtrij.ts` als factor op
+// de resterende bouwtijd (`bouwtijdBeurten`), niet op de materiaalkosten
+// zelf — nooit toegepast op `soort: "unit"`-wachtrijen (Soldaat/Missionaris/
+// Rechter/Nieuwe settler), die houden hun eigen tempo.
+export function bouwtijdFactor(technologieen: TechId[]): number {
+  return heeftTech(technologieen, "trekdier") ? 0.8 : 1;
 }

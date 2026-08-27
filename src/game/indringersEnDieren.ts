@@ -27,7 +27,7 @@ import {
   WampumAfkoopStatus,
 } from "./types";
 import { hoogsteOntgrendeldeStreek, kuddeJachtBeurtenVoorStreek, STARTKUDDE_POSITIE } from "./world";
-import { kuddeKansFactor } from "./techTree";
+import { wachttorenBeschermingsbereik } from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
 import { campagneConfig } from "./campagnes";
 import { isTileVerbondenMetStad } from "./wegen";
@@ -176,21 +176,26 @@ export function heeftWerkendeWachttorenOpStreek(state: GameState, streek: Streek
   return vindWerkendeWachttorenTile(state, streek) !== undefined;
 }
 
-// De specifieke streek+tile van de Wachttoren die `streek` beschermt: op de streek
-// zelf, of anders (issue: "wachttoren beschermt 2 streken") op de streek erboven
-// — nooit de streek eronder. Een toren beschermt dus zijn eigen streek én de streek
-// daaronder, nooit de streek erboven — dat blijft aan een eigen toren op die
-// hogere streek. Gebruikt door zowel `heeftBeschermendeWachttoren` hieronder
-// als de nieuwe malus-uitkomst (issue: "wachttorens kunnen vernietigd worden
-// door indringers"), die precies déze Wachttoren tot ruïne laat vervallen.
+// De specifieke streek+tile van de Wachttoren die `streek` beschermt: op de
+// streek zelf, of anders (issue: "wachttoren beschermt 2 streken") op de
+// streek erboven — nooit de streek eronder. Een toren beschermt dus zijn
+// eigen streek én de streek daaronder, nooit de streek erboven — dat blijft
+// aan een eigen toren op die hogere streek. "B2a. Boogschieten" (issue:
+// "Technologie-boom herbalanceren") breidt dit bereik uit naar twee streken
+// erboven in plaats van één, via `wachttorenBeschermingsbereik` (techTree.ts).
+// Gebruikt door zowel `heeftBeschermendeWachttoren` hieronder als de nieuwe
+// malus-uitkomst (issue: "wachttorens kunnen vernietigd worden door
+// indringers"), die precies déze Wachttoren tot ruïne laat vervallen.
 function vindBeschermendeWachttoren(state: GameState, streek: Streek): { streek: Streek; tile: Tile } | undefined {
-  const opStreekZelf = vindWerkendeWachttorenTile(state, streek);
-  if (opStreekZelf) return { streek, tile: opStreekZelf };
-
-  const streekErboven = state.streken.find((l) => l.hoogte === streek.hoogte + 1);
-  if (!streekErboven) return undefined;
-  const opStreekErboven = vindWerkendeWachttorenTile(state, streekErboven);
-  return opStreekErboven ? { streek: streekErboven, tile: opStreekErboven } : undefined;
+  const bereik = wachttorenBeschermingsbereik(state.technologieen);
+  for (let afstand = 0; afstand < bereik; afstand++) {
+    const kandidaatStreek =
+      afstand === 0 ? streek : state.streken.find((l) => l.hoogte === streek.hoogte + afstand);
+    if (!kandidaatStreek) continue;
+    const tile = vindWerkendeWachttorenTile(state, kandidaatStreek);
+    if (tile) return { streek: kandidaatStreek, tile };
+  }
+  return undefined;
 }
 
 function heeftBeschermendeWachttoren(state: GameState, streek: Streek): boolean {
@@ -454,8 +459,7 @@ export function verwerkIndringers(state: GameState): GameState {
 // aanwezige kuddes.
 export function verwerkKuddes(state: GameState): GameState {
   if (hoogsteOntgrendeldeStreek(state.streken) < KUDDE_MIN_STREEK) return state;
-  // "A2a. Veeteelt" (hoofdstuk 3/9, techTree.ts): kuddes verschijnen vaker.
-  if (Math.random() >= KUDDE_KANS * kuddeKansFactor(state.technologieen)) return state;
+  if (Math.random() >= KUDDE_KANS) return state;
 
   const kandidaten: { hoogte: number; positieInStreek: number }[] = [];
   for (const streek of state.streken) {

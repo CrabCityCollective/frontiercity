@@ -565,7 +565,15 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
       : geselecteerdeTile?.hoogte === EINDE_OCEAAN_HOOGTE
         ? beschrijfEindeOceaanTile()
         : geselecteerdeTile && geselecteerdeStreek
-          ? beschrijfTile(geselecteerdeStreek, state.streken, state.stad, geselecteerdeTile.positieInStreek, state.voorraad, campagne)
+          ? beschrijfTile(
+              geselecteerdeStreek,
+              state.streken,
+              state.stad,
+              geselecteerdeTile.positieInStreek,
+              state.voorraad,
+              state.technologieen,
+              campagne
+            )
           : null;
 
   // De tile die de speler heeft aangeklikt terwijl er een improvement klaar
@@ -2043,6 +2051,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
                   improvement: geselecteerdeTileVoorRush.improvement,
                   voortgang: geselecteerdeTileVoorRush.bouwVoortgang,
                   goudInVoorraad: state.voorraad.goud,
+                  technologieen: state.technologieen,
                   onVersnellen: () => versnelBouwMetGoud(geselecteerdeTile.hoogte, geselecteerdeTile.positieInStreek),
                 }
               : undefined

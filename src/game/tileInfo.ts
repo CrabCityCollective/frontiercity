@@ -9,7 +9,8 @@ import { isWachttorenBemand } from "./indringersEnDieren";
 import { onrustOpStreek, onrustProductieMultiplier } from "./onrust";
 import { WACHTTOREN_VOEDSEL_VERBRUIK } from "./productie";
 import { BELEGERINGSDREMPEL } from "./streekOntgrendeling";
-import { CampaignConfig, City, Improvement, Streek, MateriaalType, ResourceType, Tile } from "./types";
+import { wachttorenVoedselkostFactor } from "./techTree";
+import { CampaignConfig, City, Improvement, Streek, MateriaalType, ResourceType, TechId, Tile } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
 import { hoogsteOntgrendeldeStreek, isVooruitkijkStreek } from "./world";
 
@@ -27,7 +28,8 @@ export interface TileInfo {
 function bouwVoortgangBeschrijving(
   tile: Tile & { bouwVoortgang: Partial<Record<ResourceType, number>> },
   improvement: Improvement,
-  voorraad: Record<MateriaalType, number>
+  voorraad: Record<MateriaalType, number>,
+  technologieen: TechId[]
 ): string {
   const resterend = (Object.entries(tile.bouwVoortgang) as [ResourceType, number][]).filter(
     ([, aantal]) => aantal > 0
@@ -38,11 +40,11 @@ function bouwVoortgangBeschrijving(
     .map(([resource, aantal]) => `${aantal} ${MATERIAAL_LABELS[resource as MateriaalType] ?? resource}`)
     .join(", ");
 
-  if (bouwStagneertVolgendeBeurt(improvement, tile.bouwVoortgang, voorraad)) {
+  if (bouwStagneertVolgendeBeurt(improvement, tile.bouwVoortgang, voorraad, technologieen)) {
     return ` Nog nodig: ${grondstoffenTekst}. Let op: door een tekort aan grondstoffen wordt hier de volgende beurt niet aan gebouwd.`;
   }
 
-  const beurten = resterendeBouwBeurten(improvement, tile.bouwVoortgang);
+  const beurten = resterendeBouwBeurten(improvement, tile.bouwVoortgang, technologieen);
   return ` Nog nodig: ${grondstoffenTekst}. Nog ${beurten} ${beurten === 1 ? "beurt" : "beurten"} tot voltooiing.`;
 }
 
@@ -70,6 +72,7 @@ export function beschrijfTile(
   stad: City,
   positieInStreek: number,
   voorraad: Record<MateriaalType, number>,
+  technologieen: TechId[],
   campagne?: CampaignConfig
 ): TileInfo {
   const tile = streek.tiles[positieInStreek];
@@ -160,15 +163,19 @@ export function beschrijfTile(
       ? bouwVoortgangBeschrijving(
           tile as Tile & { bouwVoortgang: Partial<Record<ResourceType, number>> },
           tile.improvement,
-          voorraad
+          voorraad,
+          technologieen
         )
       : "";
     // Voedselverbruik van een Wachttoren (issue: "wachttoren tweaks" — moet
     // ook zichtbaar zijn zolang hij nog in aanbouw is, niet pas zodra hij
-    // actief en bemand is).
+    // actief en bemand is). "A2a. Veeteelt" (issue: "Technologie-boom
+    // herbalanceren") neemt dit verbruik weg, zie `wachttorenVoedselkostFactor`.
     const wachttorenVoedselTekst =
       tile.improvement.id === "wachttoren"
-        ? ` Verbruikt ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt zodra bemand.`
+        ? wachttorenVoedselkostFactor(technologieen) === 0
+          ? " Verbruikt geen voedsel (Veeteelt)."
+          : ` Verbruikt ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt zodra bemand.`
         : "";
     return {
       titel: improvementNaam(tile.improvement, campagne),
@@ -201,11 +208,16 @@ export function beschrijfTile(
     // hebben geen bemanningsconcept. Vermeldt ook het voedselverbruik
     // (issue: "wachttoren tweaks" — moet inzichtelijk zijn dat een Wachttoren
     // voedsel kost).
+    const geenWachttorenVoedselkost = wachttorenVoedselkostFactor(technologieen) === 0;
     const bemandStatus =
       tile.improvement.id === "wachttoren"
         ? isWachttorenBemand(stad.strijders, streek.hoogte, positieInStreek)
-          ? ` Bemand door een strijder — actief, verbruikt ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
-          : ` Nog niet bemand door een strijder — daardoor momenteel niet actief. Zodra bemand, verbruikt hij ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
+          ? geenWachttorenVoedselkost
+            ? " Bemand door een strijder — actief, verbruikt geen voedsel (Veeteelt)."
+            : ` Bemand door een strijder — actief, verbruikt ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
+          : geenWachttorenVoedselkost
+            ? " Nog niet bemand door een strijder — daardoor momenteel niet actief. Zodra bemand, verbruikt hij geen voedsel (Veeteelt)."
+            : ` Nog niet bemand door een strijder — daardoor momenteel niet actief. Zodra bemand, verbruikt hij ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt.`
         : "";
     // Wololo-meter (issue: "Bezette streek scherm"): alleen relevant voor een
     // nog niet veroverd vijandelijk Heiligdom — zie `wololoVoortgang`

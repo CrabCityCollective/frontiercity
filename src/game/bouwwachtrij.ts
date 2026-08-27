@@ -11,7 +11,7 @@
 // goud in plaats van te wachten op de normale per-beurt-investering — nooit
 // voor units of de technologieboom, die houden hun eigen tempo.
 
-import { boerderijUitputtingFactor } from "./techTree";
+import { boerderijUitputtingFactor, bouwtijdFactor } from "./techTree";
 import { GameState, Improvement, MateriaalType, ResourceType, TechId, Tile } from "./types";
 import { isMateriaalType } from "./materiaal";
 
@@ -20,6 +20,20 @@ type ResourceKey = keyof Improvement["kosten"];
 interface BouwInvestering {
   nieuweVoortgang: Partial<Record<ResourceType, number>>;
   voltooid: boolean;
+}
+
+// "B1a. Trekdier" (hoofdstuk 3/9, issue: "Technologie-boom herbalanceren"):
+// 20% kortere bouwtijd voor land- en city improvements — nooit voor
+// `soort: "unit"`-wachtrijen (Soldaat/Missionaris/Rechter/Nieuwe settler),
+// die houden hun eigen tempo (zelfde uitzondering als de goud-rush hieronder).
+// `technologieen` heeft een `= []`-default zodat bestaande aanroepen zonder
+// deze parameter (tests, plekken die alleen een `soort: "unit"`-improvement
+// doorgeven) blijven werken — voor die improvements maakt de meegegeven
+// waarde toch niets uit.
+function effectieveBouwtijdBeurten(improvement: Improvement, technologieen: TechId[]): number {
+  return improvement.soort === "unit"
+    ? improvement.bouwtijdBeurten
+    : improvement.bouwtijdBeurten * bouwtijdFactor(technologieen);
 }
 
 // Investeert dit beurt-aandeel van de resterende bouwkosten vanuit de
@@ -37,7 +51,8 @@ interface BouwInvestering {
 export function investeerInBouwkosten(
   improvement: Improvement,
   voortgang: Partial<Record<ResourceType, number>>,
-  voorraad: Record<MateriaalType, number>
+  voorraad: Record<MateriaalType, number>,
+  technologieen: TechId[] = []
 ): BouwInvestering | null {
   const nieuweVoortgang = { ...voortgang };
   let geinvesteerd = false;
@@ -47,7 +62,7 @@ export function investeerInBouwkosten(
     if (resterend <= 0) continue;
 
     const totaal = improvement.kosten[key] ?? 0;
-    const perBeurt = Math.ceil(totaal / improvement.bouwtijdBeurten);
+    const perBeurt = Math.ceil(totaal / effectieveBouwtijdBeurten(improvement, technologieen));
     const bedrag = Math.min(perBeurt, resterend);
 
     if (isMateriaalType(key) && voorraad[key] < bedrag) continue; // dit type stokt deze beurt, de rest gaat gewoon door
@@ -73,14 +88,15 @@ export function investeerInBouwkosten(
 // improvement toont.
 export function resterendeBouwBeurten(
   improvement: Improvement,
-  voortgang: Partial<Record<ResourceType, number>>
+  voortgang: Partial<Record<ResourceType, number>>,
+  technologieen: TechId[] = []
 ): number {
   let maxBeurten = 0;
   for (const key of Object.keys(voortgang) as ResourceKey[]) {
     const resterend = voortgang[key] ?? 0;
     if (resterend <= 0) continue;
     const totaal = improvement.kosten[key] ?? 0;
-    const perBeurt = Math.ceil(totaal / improvement.bouwtijdBeurten);
+    const perBeurt = Math.ceil(totaal / effectieveBouwtijdBeurten(improvement, technologieen));
     maxBeurten = Math.max(maxBeurten, Math.ceil(resterend / perBeurt));
   }
   return maxBeurten;
@@ -96,14 +112,15 @@ export function resterendeBouwBeurten(
 export function bouwStagneertVolgendeBeurt(
   improvement: Improvement,
   voortgang: Partial<Record<ResourceType, number>>,
-  voorraad: Record<MateriaalType, number>
+  voorraad: Record<MateriaalType, number>,
+  technologieen: TechId[] = []
 ): boolean {
   for (const key of Object.keys(voortgang) as ResourceKey[]) {
     const resterend = voortgang[key] ?? 0;
     if (resterend <= 0) continue;
 
     const totaal = improvement.kosten[key] ?? 0;
-    const perBeurt = Math.ceil(totaal / improvement.bouwtijdBeurten);
+    const perBeurt = Math.ceil(totaal / effectieveBouwtijdBeurten(improvement, technologieen));
     const bedrag = Math.min(perBeurt, resterend);
 
     if (!isMateriaalType(key) || voorraad[key] >= bedrag) return false;
@@ -125,9 +142,10 @@ export const RUSH_GOUD_PER_BEURT = 5;
 // de speler daadwerkelijk in voorraad heeft.
 export function rushKostenGoud(
   improvement: Improvement,
-  voortgang: Partial<Record<ResourceType, number>>
+  voortgang: Partial<Record<ResourceType, number>>,
+  technologieen: TechId[] = []
 ): number {
-  return resterendeBouwBeurten(improvement, voortgang) * RUSH_GOUD_PER_BEURT;
+  return resterendeBouwBeurten(improvement, voortgang, technologieen) * RUSH_GOUD_PER_BEURT;
 }
 
 // Koopt zoveel mogelijk van de resterende bouwtijd af (nooit meer dan nodig,
@@ -139,9 +157,10 @@ export function rushKostenGoud(
 export function pasVersnellingToe(
   improvement: Improvement,
   voortgang: Partial<Record<ResourceType, number>>,
-  beschikbaarGoud: number
+  beschikbaarGoud: number,
+  technologieen: TechId[] = []
 ): (BouwInvestering & { gouduitgegeven: number }) | null {
-  const resterendeBeurten = resterendeBouwBeurten(improvement, voortgang);
+  const resterendeBeurten = resterendeBouwBeurten(improvement, voortgang, technologieen);
   const beurten = Math.min(resterendeBeurten, Math.floor(beschikbaarGoud / RUSH_GOUD_PER_BEURT));
   if (beurten <= 0) return null;
 
@@ -150,7 +169,7 @@ export function pasVersnellingToe(
     const resterend = nieuweVoortgang[key] ?? 0;
     if (resterend <= 0) continue;
     const totaal = improvement.kosten[key] ?? 0;
-    const perBeurt = Math.ceil(totaal / improvement.bouwtijdBeurten);
+    const perBeurt = Math.ceil(totaal / effectieveBouwtijdBeurten(improvement, technologieen));
     nieuweVoortgang[key] = Math.max(0, resterend - perBeurt * beurten);
   }
 
@@ -158,7 +177,7 @@ export function pasVersnellingToe(
   return { nieuweVoortgang, voltooid, gouduitgegeven: beurten * RUSH_GOUD_PER_BEURT };
 }
 
-// "A2. Zaadselectie" (hoofdstuk 3/9, techTree.ts: boerderij-uitputting 25%
+// "A2. Zaadselectie" (hoofdstuk 3/9, techTree.ts: boerderij-uitputting 15%
 // trager) wordt hier toegepast — op het moment dat de tile "actief" wordt,
 // niet per beurt tijdens het aftellen (`verwerkUitputting` in
 // uitputtingEnVerval.ts telt gewoon 1 per beurt af, ongeacht de tech): de
@@ -196,7 +215,7 @@ function verwerkTileInAanbouw(tile: Tile, voorraad: Record<MateriaalType, number
   const improvement = tile.improvement;
   if (!improvement || !tile.bouwVoortgang) return tile;
 
-  const resultaat = investeerInBouwkosten(improvement, tile.bouwVoortgang, voorraad);
+  const resultaat = investeerInBouwkosten(improvement, tile.bouwVoortgang, voorraad, technologieen);
   if (!resultaat) return tile;
 
   return pasTileInvesteringToe(tile, improvement, resultaat, technologieen);
@@ -240,7 +259,7 @@ export function versnelBouwMetGoud(state: GameState, hoogte: number, positieInSt
   const tile = streek?.tiles[positieInStreek];
   if (!tile || tile.status !== "in_aanbouw" || !tile.improvement || !tile.bouwVoortgang) return state;
 
-  const resultaat = pasVersnellingToe(tile.improvement, tile.bouwVoortgang, state.voorraad.goud);
+  const resultaat = pasVersnellingToe(tile.improvement, tile.bouwVoortgang, state.voorraad.goud, state.technologieen);
   if (!resultaat) return state;
 
   const nieuweTile = pasTileInvesteringToe(tile, tile.improvement, resultaat, state.technologieen);

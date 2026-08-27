@@ -140,6 +140,7 @@ export default function CivielPaneel({
           improvement={stad.civielInAanbouw.improvement}
           voortgang={stad.civielInAanbouw.voortgang}
           goudInVoorraad={state.voorraad.goud}
+          technologieen={state.technologieen}
           onVersnellen={onVersnelCiviel}
         />
       )}

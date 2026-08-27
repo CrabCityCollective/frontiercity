@@ -13,6 +13,7 @@ import {
   boerderijOpbrengstFactor,
   steenOpbrengstFactor,
   voedselVerbruikVermindering,
+  wachttorenVoedselkostFactor,
 } from "./techTree";
 import { City, GameState, ResourceType, Streek, TechId } from "./types";
 import { hoogsteOntgrendeldeStreek } from "./world";
@@ -96,8 +97,10 @@ function berekenVoedselProductie(state: GameState): number {
 // Netto voedselverbruik per beurt (issue: "stad instort of verlaten alleen
 // als er te weinig voedsel is"): een grotere stad heeft meer monden te voeden
 // (hoofdstuk 10, streek 10-flavor), plus 1 voedsel per bemande Wachttoren
-// (hoofdstuk 6/11/14, `WACHTTOREN_VOEDSEL_VERBRUIK` hierboven). Nog geen
-// aparte multiplier per campagne nodig in de MVP (hoofdstuk 13).
+// (hoofdstuk 6/11/14, `WACHTTOREN_VOEDSEL_VERBRUIK` hierboven) — tenzij
+// "A2a. Veeteelt" (issue: "Technologie-boom herbalanceren") dat verbruik
+// wegneemt, zie `wachttorenVoedselkostFactor`. Nog geen aparte multiplier per
+// campagne nodig in de MVP (hoofdstuk 13).
 // "A2b. Voorraadschuur" (techTree.ts): verlaagt alleen het stadsverbruik
 // zelf, niet de bemannings-kosten van Wachttorens hieronder — nooit onder de
 // 1 (een stad van 0 monden bestaat niet).
@@ -106,7 +109,10 @@ function voedselVerbruik(state: GameState): number {
     1,
     VOEDSEL_VERBRUIK[state.stad.grootte] - voedselVerbruikVermindering(state.technologieen)
   );
-  return stadVerbruik + telBemandeWachttorens(state) * WACHTTOREN_VOEDSEL_VERBRUIK;
+  return (
+    stadVerbruik +
+    telBemandeWachttorens(state) * WACHTTOREN_VOEDSEL_VERBRUIK * wachttorenVoedselkostFactor(state.technologieen)
+  );
 }
 
 // Netto voedselverandering deze beurt: productie min verbruik. Negatief

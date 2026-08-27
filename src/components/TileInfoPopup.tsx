@@ -6,7 +6,7 @@ import { VERKENNER } from "@/game/improvements";
 import { VERKENNING_KOSTEN_WETENSCHAP } from "@/game/streekOntgrendeling";
 import { TileInfo } from "@/game/tileInfo";
 import { WAMPANOAG_HANDEL_KEUZE_LABELS } from "@/game/wampanoag";
-import { Improvement, Missionaris, Rechter, ResourceType, Strijder, WampanoagHandelKeuze } from "@/game/types";
+import { Improvement, Missionaris, Rechter, ResourceType, Strijder, TechId, WampanoagHandelKeuze } from "@/game/types";
 
 interface TileInfoPopupProps {
   tileInfo: TileInfo | null;
@@ -26,6 +26,7 @@ interface TileInfoPopupProps {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
     goudInVoorraad: number;
+    technologieen?: TechId[];
     onVersnellen: () => void;
   };
   // Gezet als de aangeklikte tile een actieve Wachttoren is (issue:
@@ -187,6 +188,7 @@ export default function TileInfoPopup({
             improvement={rushVraag.improvement}
             voortgang={rushVraag.voortgang}
             goudInVoorraad={rushVraag.goudInVoorraad}
+            technologieen={rushVraag.technologieen}
             onVersnellen={rushVraag.onVersnellen}
           />
         )}
