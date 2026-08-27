@@ -8,6 +8,7 @@ import { startBouw } from "./infrastructuurEnBouw";
 import { AMBERADER } from "./improvements";
 import { GameState } from "./types";
 import { KUDDE_GROTE_JACHT_BEURTEN, ROOFDIER_MIN_STREEK } from "./world";
+import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 import {
   metBezetteStreekInBeeld,
   metSettlerOpKuddeVakje,
@@ -361,15 +362,24 @@ test("Going West trekt de indringers-stamnaam uit de eigen Wampanoag-pool i.p.v.
 });
 
 // Issue "Na de Wampanoag" (M22, vervolg op de Wampanoag-opening): zodra het
-// verbond gesloten is (`cultureelOntgrendeld`), zijn streken 1-7 — het
-// voormalige Wampanoag-invalsgebied — blijvend veilig, en nemen drie nieuwe
-// stammen (`CampaignConfig.indringersStamNamenNaVerbond`) de invallen over.
+// verbond gesloten is (`heeftWampanoagVerbond`, d.w.z. de Wampanoag-streek is
+// niet langer `wampanoagBezet` — de 3-3-3-handelsdrempel is gehaald), zijn
+// streken 1-7 — het voormalige Wampanoag-invalsgebied — blijvend veilig, en
+// nemen drie nieuwe stammen (`CampaignConfig.indringersStamNamenNaVerbond`)
+// de invallen over.
+function metWampanoagVerbondGesloten(streken: GameState["streken"]): GameState["streken"] {
+  return streken.map((streek) =>
+    streek.hoogte === WAMPANOAG_STREEK_HOOGTE ? { ...streek, wampanoagBezet: false, ontgrendeld: true } : streek
+  );
+}
+
 test("na het Wampanoag-verbond doen streken 1-7 niet meer mee in de indringers-trekking, en komt de stamnaam uit de nieuwe pool", () => {
   let state = maakInitieleSpelStatus("going-west");
   state = {
     ...state,
-    cultureelOntgrendeld: true,
-    streken: state.streken.map((streek) => (streek.hoogte <= 8 ? { ...streek, ontgrendeld: true } : streek)),
+    streken: metWampanoagVerbondGesloten(
+      state.streken.map((streek) => (streek.hoogte <= 8 ? { ...streek, ontgrendeld: true } : streek))
+    ),
   };
 
   // kans-check (0) → incident; streek-trekking (0) zou zonder de uitsluiting
@@ -389,8 +399,9 @@ test("na het Wampanoag-verbond gebeurt er geen incident als alleen streek 1-7 on
   let state = maakInitieleSpelStatus("going-west");
   state = {
     ...state,
-    cultureelOntgrendeld: true,
-    streken: state.streken.map((streek) => (streek.hoogte <= 7 ? { ...streek, ontgrendeld: true } : streek)),
+    streken: metWampanoagVerbondGesloten(
+      state.streken.map((streek) => (streek.hoogte <= 7 ? { ...streek, ontgrendeld: true } : streek))
+    ),
   };
 
   state = metRandomReeks([0, 0, 0], () => volgendeBeurt(state));
@@ -405,6 +416,30 @@ test("vóór het Wampanoag-verbond blijven streken 1-7 gewoon meedoen, met de ge
   state = metRandomReeks([0, 0, 0], () => volgendeBeurt(state));
 
   assert.equal(state.indringersEvent?.streekHoogte, 1, "streek 1 doet nog gewoon mee vóór het verbond");
+  assert.ok(
+    ["de Wampanoag", "het Wampanoag-volk"].includes(state.indringersEvent?.stamNaam ?? ""),
+    `verwacht nog een Wampanoag-naam, kreeg "${state.indringersEvent?.stamNaam}"`
+  );
+});
+
+// Regressietest voor de bug uit issue "Going west campaign indringers": de
+// Smederij (die `cultureelOntgrendeld` zet, groeiEnRekrutering.ts) staat
+// meestal ruim vóór het echte Wampanoag-verbond (de 3-3-3-handelsdrempel)
+// klaar. Met `cultureelOntgrendeld` als uitsluitingsvoorwaarde (de oude,
+// foutieve implementatie) sloten streek 1-7 zich hier al af zodra de Smederij
+// klaar was, waardoor spelers in de praktijk nooit een indringers-incident op
+// streek 1-6 meemaakten.
+test("een voltooide Smederij (cultureelOntgrendeld) sluit streken 1-7 niet uit zolang het Wampanoag-verbond nog niet gesloten is (regressie)", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, cultureelOntgrendeld: true, streken: metOntgrendeldeStreek3(state.streken) };
+
+  state = metRandomReeks([0, 0, 0], () => volgendeBeurt(state));
+
+  assert.equal(
+    state.indringersEvent?.streekHoogte,
+    1,
+    "de Smederij-omslag alleen mag streek 1 niet uitsluiten — pas het echte verbond (heeftWampanoagVerbond) mag dat"
+  );
   assert.ok(
     ["de Wampanoag", "het Wampanoag-volk"].includes(state.indringersEvent?.stamNaam ?? ""),
     `verwacht nog een Wampanoag-naam, kreeg "${state.indringersEvent?.stamNaam}"`

@@ -330,11 +330,17 @@ export function verwerkIndringers(state: GameState): GameState {
   // Wampanoag zijn nu bondgenoten, dus hun voormalige invalsgebied (streken
   // tot en met `indringersUitgeslotenTotHoogteNaVerbond`) doet niet meer mee
   // in de trekking hieronder — puur Going-West-specifiek via `CampaignConfig`,
-  // ontbreekt het veld (elke andere campagne, of de tutorial, die overigens
-  // altijd op `cultureelOntgrendeld: true` start maar geen eigen
-  // `CampaignConfig` heeft), dan verandert hier niets.
+  // ontbreekt het veld (elke andere campagne, of de tutorial, die geen eigen
+  // `CampaignConfig` heeft), dan verandert hier niets. Gebruikt bewust
+  // `heeftWampanoagVerbond` (de 3-3-3-handelsdrempel, wampanoag.ts) en niet
+  // `state.cultureelOntgrendeld` (bugfix, issue "Going west campaign
+  // indringers"): sinds "Wampanoag streek pas helemaal onthuld na handel"
+  // hangt die laatste alleen nog aan de Smederij, die al vóór het echte
+  // verbond klaar staat — met `cultureelOntgrendeld` hier sloot deze
+  // uitsluiting per ongeluk streek 1-7 al af zodra de Smederij klaar was, ruim
+  // voordat de speler ooit een indringers-incident kon meemaken.
   const campagne = campagneConfig(state.campagneId);
-  const naVerbond = state.cultureelOntgrendeld && campagne?.indringersUitgeslotenTotHoogteNaVerbond !== undefined;
+  const naVerbond = heeftWampanoagVerbond(state) && campagne?.indringersUitgeslotenTotHoogteNaVerbond !== undefined;
 
   const ontgrendeldeStreken = state.streken.filter(
     (streek) =>
