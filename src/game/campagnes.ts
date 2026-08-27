@@ -85,10 +85,10 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   // pas helemaal onthuld na handel": de gecapte stadsverbeteringen-pool hangt
   // sinds die issue aan de Smederij, niet meer aan de handelsdrempel).
   popupTeksten: {
-    campagneOpeningPopupTitel: "De nieuwe wereld",
+    campagneOpeningPopupTitel: "De Wampanoag",
     campagneOpeningPopupTekst:
-      "We staan er alleen voor. Dit land wordt bevolkt door de Wampanoag, een trots volk, die ons niet onze " +
-      "gang zullen laten gaan.\n" +
+      "We staan er alleen voor. Dit land wordt bevolkt door de Wampanoag, een trots volk, te sterk voor onze " +
+      "prille nederzetting.\n" +
       "Misschien kunnen we met hun onderhandelen om vrije doorgang. We moeten hun hoofdkamp vinden.\n" +
       "Als we een smederij bouwen, dan kunnen we gereedschap fabriceren waar ze ongetwijfeld wel interesse in " +
       "zullen hebben.",
