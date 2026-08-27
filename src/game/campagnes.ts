@@ -114,6 +114,12 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
       "Een Saloon kalmeert de gemoederen op zijn eigen streek. Een Courthouse houdt, zodra een rechter er " +
       "zitting neemt, de onrust op zijn eigen streek én de streken direct erboven en eronder blijvend " +
       "onderdrukt.",
+    // Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): bevestiging
+    // na het afkopen van een indringers-incident met wampum — zie
+    // `koopIndringersAfMetWampum` (indringersEnDieren.ts).
+    wampumAfkoopPopupTitel: "Tijdelijke rust gekocht",
+    wampumAfkoopPopupTekst:
+      "Wampum wisselt van eigenaar, en de onrust zakt — voorlopig. Vroeg of laat zullen ze terugkomen.",
   },
   // Issue "Going west: indringers": de indringers-incidenten (verwerkIndringers,
   // indringersEnDieren.ts) moeten op Going West niet de generieke fictieve

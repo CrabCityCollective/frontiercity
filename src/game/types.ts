@@ -648,6 +648,13 @@ export interface IndringersTribuut {
 // streek met een actieve Amberader (ook de gewone tribuut-afhandeling), en
 // wordt altijd als eerste getoond vóór de eigenlijke uitkomst-fase
 // (`bevestigAmberOnderVuur` schuift daarna door naar die fase).
+//
+// `fase: "wampum-afgekocht"` (issue "Wampum — invallen tijdelijk afkopen"):
+// gezet door `koopIndringersAfMetWampum` (indringersEnDieren.ts) i.p.v. het
+// event meteen te wissen, zodat de pop-up eerst nog een korte bevestiging kan
+// tonen — zelfde "meteen afgehandeld, alleen de UI-bevestiging staat nog
+// open"-patroon als de andere niet-"gemeld"-fases hierboven. Sluit, net als
+// die andere fases, af via het generieke `sluitIndringersMelding`.
 export interface IndringersEvent {
   streekHoogte: number;
   stamNaam: string;
@@ -656,7 +663,7 @@ export interface IndringersEvent {
   amberOnderVuur?: boolean;
   uitkomst?: "standhouden" | "malus" | "bonus";
   buitGoud?: number;
-  fase: "amber-onder-vuur" | "gemeld" | "malus" | "bonus" | "geforceerd";
+  fase: "amber-onder-vuur" | "gemeld" | "malus" | "bonus" | "geforceerd" | "wampum-afgekocht";
 }
 
 // Cumulatieve indringers-statistieken voor het historiescherm van deze run
@@ -676,6 +683,23 @@ export interface IndringersStatistieken {
   wachttorensGesloopt: number;
   tribuutGegevenAantal: number;
   tribuutGegeven: Record<MateriaalType, number>;
+}
+
+// Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): generiek,
+// niet aan één specifieke stam gekoppeld alternatief voor tribuut geven/
+// weigeren bij een indringers-incident (`IndringersEvent.stamNaam`,
+// indringersEnDieren.ts) — de speler koopt tijdelijke rust van díe stam met
+// wampum uit de eigen voorraad. Bijgehouden per stam-naam, zodat afkopen bij
+// de ene stam de kosten/rust van een andere stam (bijv. een latere Shawnee-
+// laag) niet beïnvloedt.
+export interface WampumAfkoopStatus {
+  // Aantal keer dat de speler deze stam al afgekocht heeft deze playthrough —
+  // bepaalt de oplopende kosten van de vólgende afkoop, zie
+  // `wampumAfkoopKosten` in indringersEnDieren.ts.
+  aantalAfgekocht: number;
+  // Beurt tot en met welke deze stam geen nieuw indringers-incident meer mag
+  // veroorzaken, vergeleken met `GameState.beurt` in `verwerkIndringers`.
+  rustTotBeurt: number;
 }
 
 // Kudde-melding (hoofdstuk 17: "verschijnt een kudde, dan meldt een pop-up
@@ -914,6 +938,16 @@ export interface GameState {
   // (indringersEnDieren.ts), getoond door `berekenHistorieStatistieken`
   // (uitputtingEnVerval.ts) via HistoriePaneel.
   indringersStatistieken: IndringersStatistieken;
+  // Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"), zie
+  // `WampumAfkoopStatus` hierboven — gesleuteld op stam-naam
+  // (`IndringersEvent.stamNaam`). Ontbreekt een stam nog in deze map, dan
+  // betekent dat "nog nooit afgekocht, geen rust actief" (zie
+  // `wampumAfkoopStatusVoorStam` in indringersEnDieren.ts) — geen aparte
+  // "leeg"-state nodig. Alleen daadwerkelijk bruikbaar ná het Wampanoag-
+  // verbond (`heeftWampanoagVerbond`, wampanoag.ts), zie
+  // `kanIndringersAfkopenMetWampum` in indringersEnDieren.ts. Oudere saves
+  // kennen dit veld nog niet, zie `metGemigreerdeWampumAfkoopVeld` in save.ts.
+  wampumAfkoopPerStam: Record<string, WampumAfkoopStatus>;
   // Bij welke campagne deze run hoort (hoofdstuk 9/13/15, M20d deelstap 1) —
   // `CampaignConfig.id` (campagnes.ts), of `undefined` voor de tutorial (die
   // nog geen eigen `CampaignConfig`-instantie heeft). Bepaalt gedurende de
