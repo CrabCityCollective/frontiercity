@@ -43,7 +43,6 @@ import {
   sluitIndringersMelding as sluitIndringersMeldingActie,
   sluitKuddeMelding as sluitKuddeMeldingActie,
   sluitRoofdierMelding as sluitRoofdierMeldingActie,
-  weigerTribuut as weigerTribuutActie,
 } from "./indringersEnDieren";
 import {
   sluitAmberOntdektMelding as sluitAmberOntdektMeldingActie,
@@ -273,10 +272,6 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => geefTribuutActie(huidig));
   }, []);
 
-  const weigerTribuut = useCallback(() => {
-    setState((huidig) => weigerTribuutActie(huidig));
-  }, []);
-
   const koopIndringersAfMetWampum = useCallback(() => {
     setState((huidig) => koopIndringersAfMetWampumActie(huidig));
   }, []);
@@ -422,7 +417,6 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     versnelSmederijMetGoud,
     zetSmederijActief,
     geefTribuut,
-    weigerTribuut,
     koopIndringersAfMetWampum,
     bemanWachttoren,
     haalStrijderTerug,

@@ -4,8 +4,9 @@
 // wordt de getroffen streek geloot uit alle ontgrendelde streken, ook beschermde.
 // Een Wachttoren beschermt de streek waarop hij staat alleen als hij voltooid,
 // bemand én via een wegketen met de stad verbonden is (zie hoofdstuk 16);
-// anders eisen de indringers tribuut uit de gedeelde opslag, en kiest de
-// speler geven (`geefTribuut`) of weigeren (`weigerTribuut`).
+// anders eisen de indringers tribuut uit de gedeelde opslag, dat de speler
+// geeft via `geefTribuut` (geen weiger-optie, issue: "indringers weigeren
+// droppen" — de indringers eisen het hoe dan ook op).
 //
 // Kuddes & roofdieren (hoofdstuk 14/16/17; issue: "kuddes met dieren waar je
 // op kunt jagen voor voedsel", "roofdieren toevoegen"): wilde kuddes
@@ -82,10 +83,10 @@ const INDRINGERS_MALUS_KANS = 0.1;
 const INDRINGERS_BUIT_GOUD = 6;
 
 // Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): een generiek,
-// niet aan één specifieke stam gekoppeld derde alternatief naast
-// `geefTribuut`/`weigerTribuut` hieronder — de speler koopt met wampum
-// tijdelijke rust van dezelfde stam die net het incident veroorzaakte, in
-// plaats van tribuut te geven of te weigeren. Werkt voor elke huidige/
+// niet aan één specifieke stam gekoppeld tweede alternatief naast
+// `geefTribuut` hieronder — de speler koopt met wampum tijdelijke rust van
+// dezelfde stam die net het incident veroorzaakte, in plaats van tribuut te
+// geven. Werkt voor elke huidige/
 // toekomstige stam-namenpool (`CampaignConfig.indringersStamNamen`/
 // `indringersStamNamenNaVerbond`, campagnes.ts) zonder wijziging, want
 // gesleuteld op de al bestaande `IndringersEvent.stamNaam` in plaats van op
@@ -321,7 +322,7 @@ function verwerkWachttorenOverrompeling(
 // `bepaalIndringersUitkomst` hierboven loot hier nu de derde uitkomst, ook op
 // de frontier-streek zelf: meestal stand houden, soms een malus, zelden een
 // bonus). Zonder zo'n wachttoren eist de tribe tribuut (zie `kiesTribuut`); de
-// speler lost dit verder zelf op via `geefTribuut`/`weigerTribuut` hieronder.
+// speler lost dit verder zelf op via `geefTribuut` hieronder.
 // Een streek met een actieve Amberader krijgt bovendien altijd eerst een eigen
 // aankondiging (`amberOnderVuur`/fase "amber-onder-vuur"), los van de
 // uitkomst — ook bij de gewone tribuut-afhandeling. Rolt geen nieuwe
@@ -686,25 +687,14 @@ export function bevestigAmberOnderVuur(state: GameState): GameState {
   return { ...state, indringersEvent: { ...event, fase: volgendeFase } };
 }
 
-// Weigert het tribuut (hoofdstuk 6, issue: "indringers pakken altijd tribuut,
-// geen stad-vernietiging"): weigeren heeft bewust hetzelfde gevolg als geven
-// — er is geen "stad vernietigd"-uitkomst, ook niet zodra er meerdere steden
-// bestaan (hoofdstuk 9). Het tribuut wordt hoe dan ook alsnog opgeëist, wat
-// hier eerst zichtbaar wordt gemaakt (`fase: "geforceerd"`) zodat de pop-up
-// dat kan uitleggen vóór de speler `geefTribuut` hieronder afrondt.
-export function weigerTribuut(state: GameState): GameState {
-  const event = state.indringersEvent;
-  if (!event?.tribuut) return state;
-  return { ...state, indringersEvent: { ...event, fase: "geforceerd" } };
-}
-
-// Geeft (bewust vanuit `fase: "gemeld"`, of afgedwongen vanuit `fase:
-// "geforceerd"` na `weigerTribuut` hierboven) het geëiste tribuut: trekt het
-// direct van de gedeelde opslag af (nooit onder nul) én sluit de melding in
-// dezelfde stap (issue: "Indringers 2e pop-up samenvoegen" — voorheen ging
-// dit via een tussenliggend `fase: "betaald"`-bevestigingsscherm dat de
-// afschrijving pas bij het sluiten daarvan deed; dat scherm voegde niets toe
-// aan wat de "gemeld"/"geforceerd"-tekst al meldde).
+// Geeft (vanuit `fase: "gemeld"`) het geëiste tribuut: trekt het direct van
+// de gedeelde opslag af (nooit onder nul) én sluit de melding in dezelfde
+// stap (issue: "Indringers 2e pop-up samenvoegen" — voorheen ging dit via een
+// tussenliggend `fase: "betaald"`-bevestigingsscherm dat de afschrijving pas
+// bij het sluiten daarvan deed; dat scherm voegde niets toe aan wat de
+// "gemeld"-tekst al meldde). Geen weiger-optie (issue: "indringers weigeren
+// droppen") — de indringers eisen het tribuut hoe dan ook op, dus dit is de
+// enige manier om de melding af te sluiten (naast de wampum-afkoop hieronder).
 export function geefTribuut(state: GameState): GameState {
   const event = state.indringersEvent;
   if (!event?.tribuut) return state;
@@ -730,8 +720,8 @@ export function geefTribuut(state: GameState): GameState {
 // Of de wampum-afkoop-keuze (IndringersPopup.tsx) getoond moet worden naast
 // de bestaande tribuut-knoppen (issue "Wampum — invallen tijdelijk afkopen").
 // Zelfde tak als de tribuut-keuze zelf (`fase: "gemeld"`, geen Wachttoren) —
-// een reeds afgeslagen of al afgedwongen (`fase: "geforceerd"`) incident kent
-// geen keuze meer. Los daarvan pas beschikbaar ná het Wampanoag-verbond
+// een al afgehandeld incident kent geen keuze meer. Los daarvan pas
+// beschikbaar ná het Wampanoag-verbond
 // (`heeftWampanoagVerbond`), expliciet gevraagd in het issue. Zegt niets over
 // of de speler het zich kan veroorloven — zie `wampumAfkoopKostenHuidig`
 // hieronder, de UI disablet de knop zelf bij onvoldoende voorraad.
@@ -750,8 +740,8 @@ export function wampumAfkoopKostenHuidig(state: GameState): number {
 }
 
 // Koopt het huidige incident af met wampum (issue "Wampum — invallen
-// tijdelijk afkopen"): generiek derde alternatief naast `geefTribuut`/
-// `weigerTribuut` hierboven. Trekt de oplopende kosten direct van de
+// tijdelijk afkopen"): generiek tweede alternatief naast `geefTribuut`
+// hierboven. Trekt de oplopende kosten direct van de
 // wampum-voorraad af, sluit de melding, en geeft exact déze stam een
 // tijdelijke rust van `WAMPUM_AFKOOP_RUST_BEURTEN` beurten (zie het filter in
 // `verwerkIndringers` hierboven) — een andere stam blijft onaangetast, ook al

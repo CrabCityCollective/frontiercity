@@ -161,7 +161,6 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     versnelSmederijMetGoud,
     zetSmederijActief,
     geefTribuut,
-    weigerTribuut,
     koopIndringersAfMetWampum,
     bemanWachttoren,
     haalStrijderTerug,
@@ -880,9 +879,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // Indringers-pop-up (hoofdstuk 6) — verschijnt zodra `verwerkIndringers`
   // (economie.ts) een gebeurtenis op een van de ontgrendelde streken heeft
   // gezet (niet meer alleen de frontier-streek). Blijft in beeld tot de speler
-  // de melding afhandelt (geven/weigeren/afgedwongen tribuut of gewoon
-  // wegklikken). Los van de uitleg-toggle hierboven — dit is kerninhoud, geen
-  // uitleg.
+  // de melding afhandelt (tribuut geven, wampum-afkoop of gewoon wegklikken).
+  // Los van de uitleg-toggle hierboven — dit is kerninhoud, geen uitleg.
   const toonIndringersPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
@@ -1798,7 +1796,6 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             event={state.indringersEvent}
             onBevestigAmberOnderVuur={bevestigAmberOnderVuur}
             onGeefTribuut={geefTribuut}
-            onWeigerTribuut={weigerTribuut}
             onSluiten={sluitIndringersMelding}
             wampumAfkoop={
               kanIndringersAfkopenMetWampum(state)
