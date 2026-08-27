@@ -20,6 +20,7 @@ import {
   MISSIONARIS,
   NIEUWE_SETTLER,
   OPSLAGPLAATS,
+  RECHTER,
   SMEDERIJ,
   SOLDAAT,
   WOONWIJK,
@@ -345,6 +346,35 @@ export function verwerkMissionarisRecrutering(state: GameState): GameState {
   };
 }
 
+// Betaalt de bouwkosten van een lopende Rechter-training (issue: "Onrust,
+// Saloon en Courthouse") — zelfde wachtrij-patroon als
+// `verwerkMissionarisRecrutering` hierboven, eigen wachtrij
+// (`rechterInAanbouw`) omdat een Rechter een andere unit is.
+export function verwerkRechterTraining(state: GameState): GameState {
+  const rechterInAanbouw = state.stad.rechterInAanbouw;
+  if (!rechterInAanbouw) return state;
+
+  const voorraad = { ...state.voorraad };
+  const resultaat = investeerInBouwkosten(rechterInAanbouw.improvement, rechterInAanbouw.voortgang, voorraad);
+  if (!resultaat) return state;
+
+  if (resultaat.voltooid) {
+    return {
+      ...metActieveStad(state, {
+        ...state.stad,
+        rechters: [...state.stad.rechters, { id: `rechter-${state.stad.rechters.length}` }],
+        rechterInAanbouw: undefined,
+      }),
+      voorraad,
+    };
+  }
+
+  return {
+    ...metActieveStad(state, { ...state.stad, rechterInAanbouw: { ...rechterInAanbouw, voortgang: resultaat.nieuweVoortgang } }),
+    voorraad,
+  };
+}
+
 // Start de groei-tier klein→middel (M6), als de voedseldrempel gehaald is en
 // er niet al een groei loopt. Dit is een bewuste spelerskeuze, geen
 // automatische ontgrendeling zoals cultuur (M5) — hoofdstuk 11: "doorgroeien
@@ -622,4 +652,16 @@ export function startMissionarisRecrutering(state: GameState): GameState {
   if (state.stad.missionarisInAanbouw || !heeftOfferAltaar(state)) return state;
 
   return metActieveStad(state, { ...state.stad, missionarisInAanbouw: { improvement: MISSIONARIS, voortgang: { ...MISSIONARIS.kosten } } });
+}
+
+// Start het opleiden van een Rechter (issue: "Onrust, Saloon en Courthouse")
+// — anders dan de Missionaris hierboven geen voorwaarde vooraf (geen
+// Courthouse nodig om te mogen trainen, alleen om de Rechter daarna ergens
+// aan toe te wijzen). Alleen relevant in Going West (zelfde
+// campagne-guard-conventie als `startSmederij` hieronder) — de UI toont de
+// knop hiervoor sowieso pas vanaf streek 8 van die campagne (CivielPaneel).
+export function startRechterTraining(state: GameState): GameState {
+  if (state.campagneId !== "going-west" || state.stad.rechterInAanbouw) return state;
+
+  return metActieveStad(state, { ...state.stad, rechterInAanbouw: { improvement: RECHTER, voortgang: { ...RECHTER.kosten } } });
 }

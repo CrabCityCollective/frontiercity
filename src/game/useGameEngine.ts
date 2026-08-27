@@ -25,6 +25,7 @@ import {
   startMissionarisRecrutering as startMissionarisRecruteringActie,
   startNieuweSettler as startNieuweSettlerActie,
   startOpslagplaats as startOpslagplaatsActie,
+  startRechterTraining as startRechterTrainingActie,
   startRecrutering as startRecruteringActie,
   sluitSmederijGebouwdMelding as sluitSmederijGebouwdMeldingActie,
   startSmederij as startSmederijActie,
@@ -65,6 +66,7 @@ import {
   confrontatieBezetteStreek as confrontatieBezetteStreekActie,
   haalStrijderTerug as haalStrijderTerugActie,
 } from "./militair";
+import { bemanCourthouse as bemanCourthouseActie, haalRechterTerug as haalRechterTerugActie } from "./onrust";
 import { laadSpel, saveSpel, verwijderSpel } from "./save";
 import { kiesTech as kiesTechActie } from "./tech";
 import { bevestigIneenstorting as bevestigIneenstortingActie } from "./uitputtingEnVerval";
@@ -282,6 +284,17 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => haalStrijderTerugActie(huidig, strijderId));
   }, []);
 
+  // Courthouse-bemanning (issue: "Onrust, Saloon en Courthouse") — zelfde
+  // dunne wrapper-conventie als `bemanWachttoren`/`haalStrijderTerug`
+  // hierboven.
+  const bemanCourthouse = useCallback((rechterId: string, hoogte: number, positieInStreek: number) => {
+    setState((huidig) => bemanCourthouseActie(huidig, rechterId, hoogte, positieInStreek));
+  }, []);
+
+  const haalRechterTerug = useCallback((rechterId: string) => {
+    setState((huidig) => haalRechterTerugActie(huidig, rechterId));
+  }, []);
+
   const zetUitlegPopups = useCallback((aan: boolean) => {
     setState((huidig) => zetUitlegPopupsActie(huidig, aan));
   }, []);
@@ -333,6 +346,10 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
 
   const startMissionarisRecrutering = useCallback(() => {
     setState((huidig) => startMissionarisRecruteringActie(huidig));
+  }, []);
+
+  const startRechterTraining = useCallback(() => {
+    setState((huidig) => startRechterTrainingActie(huidig));
   }, []);
 
   const bemanLegerkamp = useCallback((strijderId: string, hoogte: number, positieInStreek: number) => {
@@ -403,6 +420,9 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     weigerTribuut,
     bemanWachttoren,
     haalStrijderTerug,
+    bemanCourthouse,
+    haalRechterTerug,
+    startRechterTraining,
     zetUitlegPopups,
     markeerUitlegGezien,
     bevestigStreekPopup,

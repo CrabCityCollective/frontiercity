@@ -164,6 +164,16 @@ export interface Improvement {
   // 11/14, issue: "city improvements" Deel 4) — zie `InfrastructuurEis`
   // hierboven. Momenteel alleen Legerkamp en Offer Altaar.
   infrastructuurEis?: InfrastructuurEis;
+  // Alleen beschikbaar binnen deze specifieke campagne (issue: "Onrust,
+  // Saloon en Courthouse" — Saloon/Courthouse horen alleen bij Going West,
+  // niet bij de tutorial of enige andere campagne). Anders dan `minStreek`
+  // hierboven (een tutorial-pacing-drempel die `beschikbareOpties` overslaat
+  // zodra er een campagne actief is, zie de comment daar in improvements.ts)
+  // geldt `minStreek` hier wél nog binnen de eigen campagne: het is voor zo'n
+  // campagne-exclusieve improvement het eigen introductiepunt, niet een
+  // tutorial-only tempo-beperking. `undefined` = beschikbaar in elke
+  // campagne (en de tutorial), zoals bijna elke andere improvement.
+  vereisteCampagneId?: string;
 }
 
 export interface Tile {
@@ -372,6 +382,17 @@ export interface Strijder {
   legerkamp?: { hoogte: number; positieInStreek: number };
 }
 
+// Individuele opgeleide Rechter-eenheid (issue: "Onrust, Saloon en
+// Courthouse", Going West): zelfde bemannings-patroon als een Strijder op een
+// Wachttoren (`Strijder.wachttoren` hierboven) — een Rechter zonder
+// `courthouse`-toewijzing is vrij inzetbaar, toewijzen/terughalen gaat via
+// een klik op de Courthouse-tile zelf (net als Wachttoren-bemanning) en is
+// net zo omkeerbaar/instant.
+export interface Rechter {
+  id: string;
+  courthouse?: { hoogte: number; positieInStreek: number };
+}
+
 export interface City {
   naam: string;
   grootte: "klein" | "middel" | "groot";
@@ -443,6 +464,19 @@ export interface City {
   // per klik, zie `Tile.verkenningInGang`).
   missionarissen: Missionaris[];
   missionarisInAanbouw?: {
+    improvement: Improvement;
+    voortgang: Partial<Record<ResourceType, number>>;
+  };
+  // Rechter-eenheden (issue: "Onrust, Saloon en Courthouse", Going West) —
+  // zelfde soort losstaande unit-lijst + eigen trainingswachtrij als
+  // `missionarissen`/`missionarisInAanbouw` hierboven, maar dan voor het
+  // Courthouse: een Rechter bemant een Courthouse-tile (zie `Rechter`
+  // hierboven) om diens onrust-onderdrukkend effect te activeren (onrust.ts).
+  // Geen voorwaarde vooraf (anders dan de Missionaris, die een voltooid Offer
+  // Altaar vereist) — een Rechter is los van een al gebouwd Courthouse
+  // trainbaar.
+  rechters: Rechter[];
+  rechterInAanbouw?: {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
@@ -1009,4 +1043,5 @@ export type EenmaligeUitlegKey =
   | "nietBouwen"
   | "boerderijStreek"
   | "houtkapStreek"
-  | "settlerWegSnelheid";
+  | "settlerWegSnelheid"
+  | "onrust";

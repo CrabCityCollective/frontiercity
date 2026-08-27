@@ -47,6 +47,7 @@ import {
   verwerkCivielInAanbouw,
   verwerkMissionarisRecrutering,
   verwerkOpslagplaats,
+  verwerkRechterTraining,
   verwerkRecrutering,
   verwerkSmederij,
   verwerkTweedeSettlerInAanbouw,
@@ -128,7 +129,8 @@ export function berekenEconomieOverzicht(state: GameState): Record<ResourceType,
   const naSmederij = verwerkSmederij(naOpslagplaats);
   const naCityVerbetering = verwerkCityVerbetering(naSmederij);
   const naRecrutering = verwerkRecrutering(naCityVerbetering);
-  const uitkomst = verwerkMissionarisRecrutering(naRecrutering);
+  const naMissionarisRecrutering = verwerkMissionarisRecrutering(naRecrutering);
+  const uitkomst = verwerkRechterTraining(naMissionarisRecrutering);
 
   return {
     hout: uitkomst.voorraad.hout - state.voorraad.hout,
@@ -232,7 +234,8 @@ export function volgendeBeurt(state: GameState): GameState {
   const naCityVerbetering = verwerkCityVerbetering(naSmederij);
   const naRecrutering = verwerkRecrutering(naCityVerbetering);
   const naMissionarisRecrutering = verwerkMissionarisRecrutering(naRecrutering);
-  const naIndringers = verwerkIndringers(naMissionarisRecrutering);
+  const naRechterTraining = verwerkRechterTraining(naMissionarisRecrutering);
+  const naIndringers = verwerkIndringers(naRechterTraining);
   const naKuddes = verwerkKuddes(naIndringers);
   // Gegarandeerde kuddes tijdens de Confrontatie (issue: "kuddes op de laatste
   // laag"): direct ná de gewone kans-gebaseerde spawn hierboven, zie

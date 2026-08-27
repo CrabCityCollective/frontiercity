@@ -14,13 +14,22 @@ import {
   steenOpbrengstFactor,
   voedselVerbruikVermindering,
 } from "./techTree";
-import { City, GameState, ResourceType, TechId } from "./types";
+import { City, GameState, ResourceType, Streek, TechId } from "./types";
 import { hoogsteOntgrendeldeStreek } from "./world";
 import { isTileVerbondenMetStad } from "./wegen";
 import { isMateriaalType } from "./materiaal";
 import { telBemandeWachttorens } from "./militair";
 import { stadEffectiviteit } from "./stad";
+import { onrustOpStreek, onrustProductieMultiplier } from "./onrust";
 import { SMEDERIJ, SMEDERIJ_GEREEDSCHAP_OPBRENGST } from "./improvements";
+
+// Onrust-productiepenalty (issue: "Onrust, Saloon en Courthouse") is
+// Going West-exclusief (zie onrust.ts) — buiten die campagne (dus ook in de
+// tutorial) altijd multiplier 1, zodat bestaande content ongewijzigd blijft.
+function onrustMultiplierVoorStreek(state: GameState, streek: Streek): number {
+  if (state.campagneId !== "going-west") return 1;
+  return onrustProductieMultiplier(onrustOpStreek(state.streken, state.stad.rechters, streek));
+}
 
 // Voedseltekort-tuning (M6, hoofdstuk 4/14; issue: "stad instort of verlaten
 // alleen als er te weinig voedsel is"): bewuste MVP-placeholders, net als de
@@ -66,6 +75,7 @@ function berekenVoedselProductie(state: GameState): number {
   let productie = 0;
 
   for (const streek of state.streken) {
+    const onrustMultiplier = onrustMultiplierVoorStreek(state, streek);
     for (const tile of streek.tiles) {
       const effect = tile.improvement?.effect;
       if (tile.status !== "actief" || effect?.type !== "productie" || effect.resource !== "voedsel" || !effect.waarde) {
@@ -74,8 +84,9 @@ function berekenVoedselProductie(state: GameState): number {
       if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)) {
         continue;
       }
-      productie +=
+      const opbrengst =
         tile.improvement?.id === "boerderij" ? boerderijOpbrengst(effect.waarde, state.technologieen) : effect.waarde;
+      productie += opbrengst * onrustMultiplier;
     }
   }
 
@@ -140,6 +151,7 @@ export function berekenCultuurProductieDitBeurt(state: GameState): number {
   const frontierHoogte = hoogsteOntgrendeldeStreek(state.streken);
 
   for (const streek of state.streken) {
+    const onrustMultiplier = onrustMultiplierVoorStreek(state, streek);
     for (const tile of streek.tiles) {
       const effect = tile.improvement?.effect;
       if (
@@ -153,7 +165,8 @@ export function berekenCultuurProductieDitBeurt(state: GameState): number {
       if (tile.improvement?.soort === "land" && !isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)) {
         continue;
       }
-      productie += streek.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+      const basis = streek.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+      productie += basis * onrustMultiplier;
     }
   }
 
@@ -204,6 +217,10 @@ export function verwerkProductie(state: GameState): GameState {
   const bezetteStreek = state.streken.find((l) => l.bezet);
 
   for (const streek of state.streken) {
+    // Onrust-productiepenalty (issue: "Onrust, Saloon en Courthouse", Going
+    // West-exclusief, zie onrust.ts): eenmaal per streek berekend, geldt voor
+    // alle land-improvement-productie op die streek hieronder.
+    const onrustMultiplier = onrustMultiplierVoorStreek(state, streek);
     for (const tile of streek.tiles) {
       const effect = tile.improvement?.effect;
       if (tile.status !== "actief" || effect?.type !== "productie" || !effect.resource || !effect.waarde) {
@@ -220,16 +237,19 @@ export function verwerkProductie(state: GameState): GameState {
 
       if (effect.resource === "cultuur") {
         if (!bezetteStreek) {
-          cultuur += streek.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+          cultuur += (streek.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2) * onrustMultiplier;
         }
       } else if (effect.resource === "wetenschap") {
-        wetenschap += streek.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2;
+        wetenschap += (streek.hoogte === frontierHoogte ? effect.waarde : effect.waarde / 2) * onrustMultiplier;
       } else if (isMateriaalType(effect.resource)) {
         const opbrengst =
           effect.resource === "steen" && tile.improvement?.id === "steengroeve"
             ? steenOpbrengst(effect.waarde, state.technologieen)
             : effect.waarde;
-        voorraad[effect.resource] = Math.min(state.opslagCap, voorraad[effect.resource] + opbrengst);
+        voorraad[effect.resource] = Math.min(
+          state.opslagCap,
+          voorraad[effect.resource] + Math.floor(opbrengst * onrustMultiplier)
+        );
       }
       // Voedsel-productie wordt hieronder in één keer verrekend met het
       // verbruik (niet per tile), zie `berekenVoedselProductie`.

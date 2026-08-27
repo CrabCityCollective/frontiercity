@@ -46,7 +46,7 @@ import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopu
 import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
 import { campagneConfig, popupContent, streekContentVoorCampagne } from "@/game/campagnes";
-import { improvementNaam, improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
+import { improvementNaam, improvementPastOpTerrein, ONRUST_MIN_STREEK, terreinEisenBeschrijving } from "@/game/improvements";
 import {
   BELEGERINGSDREMPEL,
   beschikbareMissionarissen,
@@ -163,6 +163,9 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     weigerTribuut,
     bemanWachttoren,
     haalStrijderTerug,
+    bemanCourthouse,
+    haalRechterTerug,
+    startRechterTraining,
     zetUitlegPopups,
     markeerUitlegGezien,
     bevestigStreekPopup,
@@ -371,6 +374,11 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // eenmalige-confirm-vlag, getoond zodra `TWEEDE_SETTLER_MIN_STREEK` voor
   // het eerst ontgrendelt — zie `toonTweedeSettlerUitlegPopup` hieronder.
   const tweedeSettlerUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("tweedeSettler");
+  // Onrust-uitleg-pop-up (issue: "Onrust, Saloon en Courthouse", issue-comment:
+  // "Laat dit vergezellen van een pop-up die dit uitlegt"): zelfde eenmalige-
+  // confirm-vlag, getoond zodra streek `ONRUST_MIN_STREEK` van Going West voor
+  // het eerst ontgrendelt — zie `toonOnrustUitlegPopup` verderop.
+  const onrustUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("onrust");
   // Bouw-pop-up-vervangende uitleg-pop-ups (issue: "Teksten aanpassen (nog
   // meer)"): zelfde eenmalige-confirm-vlaggen, getoond in plaats van de
   // gewone bouw-pop-up op de tweede/derde bouw-beurt van streek 1 en de
@@ -401,6 +409,9 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // keuzelijst met vrije strijders open staat voor de aangeklikte wachttoren
   // (zie `handleTileClick`/TileInfoPopup hieronder).
   const [toonWachttorenBemanningsKeuze, setToonWachttorenBemanningsKeuze] = useState(false);
+  // Courthouse-bemanning (issue: "Onrust, Saloon en Courthouse") — zelfde
+  // keuze-modus-vlag als `toonWachttorenBemanningsKeuze` hierboven.
+  const [toonCourthouseBemanningsKeuze, setToonCourthouseBemanningsKeuze] = useState(false);
   // Legerkamp-toewijzingsflow (hoofdstuk 6, issue: "De Bezette Streek,
   // missionaris en verkenner", Deel 5) — zelfde soort kies-modus als
   // hierboven, maar voor een Legerkamp-tile i.p.v. een Wachttoren-tile.
@@ -453,6 +464,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     setPlaatsingsImprovement(null);
     setGeselecteerdeTile(null);
     setToonWachttorenBemanningsKeuze(false);
+    setToonCourthouseBemanningsKeuze(false);
     setLegerkampKiesModusStrijderId(null);
     setToonStichtStadPopup(false);
     setToonStadMenuPopup(false);
@@ -487,6 +499,19 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           (s) =>
             s.wachttoren?.hoogte === geselecteerdeTile.hoogte &&
             s.wachttoren?.positieInStreek === geselecteerdeTile.positieInStreek
+        )
+      : undefined;
+  // Courthouse-bemannen (issue: "Onrust, Saloon en Courthouse") — zelfde
+  // patroon als `geselecteerdeTileIsWachttoren`/`wachttorenBemanner`
+  // hierboven, maar met een Rechter i.p.v. een Strijder.
+  const geselecteerdeTileIsCourthouse =
+    geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "courthouse";
+  const courthouseBemanner =
+    geselecteerdeTileIsCourthouse && geselecteerdeTile
+      ? state.stad.rechters.find(
+          (r) =>
+            r.courthouse?.hoogte === geselecteerdeTile.hoogte &&
+            r.courthouse?.positieInStreek === geselecteerdeTile.positieInStreek
         )
       : undefined;
   // Bezette Streek — klikbare kaart i.p.v. stadsscherm (issue: "Bezette streek
@@ -1609,6 +1634,53 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonWampanoagRelatieGelegdPopup &&
     Boolean(state.smederijGebouwdEvent);
 
+  // Onrust-uitleg-pop-up (issue: "Onrust, Saloon en Courthouse"): zodra streek
+  // `ONRUST_MIN_STREEK` van Going West voor het eerst ontgrendelt — hetzelfde
+  // moment waarop Saloon/Courthouse beschikbaar komen (improvements.ts:
+  // `vereisteCampagneId`/`minStreek`). Onderaan de keten net als
+  // `toonSmederijGebouwdPopup` hierboven (laagste prioriteit): dit is
+  // Going-West-kerninhoud, geen `uitlegAan`-toggle-baar tutorial-hintje.
+  const toonOnrustUitlegPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    !toonStichtingsMomentPopup &&
+    !toonEersteContactPopup &&
+    !toonWampanoagRelatieGelegdPopup &&
+    !toonSmederijGebouwdPopup &&
+    state.campagneId === "going-west" &&
+    !onrustUitlegBevestigd &&
+    hoogsteOntgrendeldeStreek(state.streken) >= ONRUST_MIN_STREEK;
+
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -1690,6 +1762,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             onVersnelCiviel={versnelCivielMetGoud}
             onVersnelOpslagplaats={versnelOpslagplaatsMetGoud}
             onStartMissionarisRecrutering={startMissionarisRecrutering}
+            onStartRechterTraining={startRechterTraining}
             onSluiten={() => setToonStadMenuPopup(false)}
           />
         )}
@@ -1768,6 +1841,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             titel={popupContent(campagne, "smederijGebouwdPopup")?.titel}
             tekst={popupContent(campagne, "smederijGebouwdPopup")?.tekst}
             onSluiten={sluitSmederijGebouwdMelding}
+          />
+        )}
+        {toonOnrustUitlegPopup && (
+          <AmberOntdektPopup
+            titel={popupContent(campagne, "onrustUitlegPopup")?.titel}
+            tekst={popupContent(campagne, "onrustUitlegPopup")?.tekst}
+            onSluiten={() => markeerUitlegGezien("onrust")}
           />
         )}
         {toonUitlegPopup && <UitlegPopup onDoorgaan={() => markeerUitlegGezien("opening")} />}
@@ -1969,6 +2049,25 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
                   },
                   onStuurNaarHuis: () => {
                     if (wachttorenBemanner) haalStrijderTerug(wachttorenBemanner.id);
+                    setGeselecteerdeTile(null);
+                  },
+                }
+              : undefined
+          }
+          courthouseVraag={
+            geselecteerdeTileIsCourthouse && geselecteerdeTile
+              ? {
+                  bemand: Boolean(courthouseBemanner),
+                  alleRechters: state.stad.rechters,
+                  keuzeActief: toonCourthouseBemanningsKeuze,
+                  onStartKeuze: () => setToonCourthouseBemanningsKeuze(true),
+                  onKiesRechter: (rechterId) => {
+                    bemanCourthouse(rechterId, geselecteerdeTile.hoogte, geselecteerdeTile.positieInStreek);
+                    setToonCourthouseBemanningsKeuze(false);
+                    setGeselecteerdeTile(null);
+                  },
+                  onStuurNaarHuis: () => {
+                    if (courthouseBemanner) haalRechterTerug(courthouseBemanner.id);
                     setGeselecteerdeTile(null);
                   },
                 }

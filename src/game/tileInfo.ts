@@ -6,6 +6,7 @@
 import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "./bouwwachtrij";
 import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS, effectBeschrijving, improvementNaam } from "./improvements";
 import { isWachttorenBemand } from "./indringersEnDieren";
+import { onrustOpStreek, onrustProductieMultiplier } from "./onrust";
 import { WACHTTOREN_VOEDSEL_VERBRUIK } from "./productie";
 import { BELEGERINGSDREMPEL } from "./streekOntgrendeling";
 import { CampaignConfig, City, Improvement, Streek, MateriaalType, ResourceType, Tile } from "./types";
@@ -43,6 +44,21 @@ function bouwVoortgangBeschrijving(
 
   const beurten = resterendeBouwBeurten(improvement, tile.bouwVoortgang);
   return ` Nog nodig: ${grondstoffenTekst}. Nog ${beurten} ${beurten === 1 ? "beurt" : "beurten"} tot voltooiing.`;
+}
+
+// Onrust-indicator (issue: "Onrust, Saloon en Courthouse", sectie 1: "Onrust-
+// waarde per streek zichtbaar voor de speler") — Going West-exclusief
+// (onrust.ts is elders al zo gegated, dit voorkomt dat de tutorial ineens een
+// onrust-regel in elke tile-info-tekst krijgt). Alleen zichtbaar op de twee
+// meest algemene tile-infoblokken hieronder (actief improvement / leeg
+// vakje) — voldoende om de speler de waarde te laten volgen zonder elk apart
+// tile-infoblok (stad/ghost-town/in-aanbouw) te hoeven aanpassen.
+function onrustStatusTekst(streek: Streek, streken: Streek[], stad: City, campagne?: CampaignConfig): string {
+  if (campagne?.id !== "going-west") return "";
+  const onrust = onrustOpStreek(streken, stad.rechters, streek);
+  if (onrust === 0) return " Onrust op deze streek: 0.";
+  const multiplierPercentage = Math.round(onrustProductieMultiplier(onrust) * 100);
+  return ` Onrust op deze streek: ${onrust} (productie op ${multiplierPercentage}% van normaal).`;
 }
 
 // Geeft de info voor de tile op `positieInStreek` binnen `streek`. Onontgrendelde
@@ -201,7 +217,7 @@ export function beschrijfTile(
     return {
       titel: improvementNaam(tile.improvement, campagne),
       ondertitel: CATEGORIE_LABELS[tile.improvement.categorie],
-      tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${bemandStatus}${wololoStatus}${wegStatus}${uitputting}`.trim(),
+      tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${bemandStatus}${wololoStatus}${wegStatus}${uitputting}${onrustStatusTekst(streek, streken, stad, campagne)}`.trim(),
     };
   }
 
@@ -240,9 +256,12 @@ export function beschrijfTile(
   return {
     titel: "Leeg vakje",
     ondertitel: `${streek.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
-    tekst: (opFrontier
-      ? "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, net als een steengroeve. Een boerderij vereist vlakke grond. Heiligdommen, sterrencirkels en wachttorens kunnen overal geplaatst worden."
-      : "Dit is niet meer de frontier-streek, dus hier is alleen nog een Wachttoren te bouwen — die mag, als uitzondering, op elke ontgrendelde streek geplaatst worden.") + versWaterTekst,
+    tekst:
+      (opFrontier
+        ? "Hier kun je bouwen. Houtkap vereist bos, een mijn vereist heuvel of berg, net als een steengroeve. Een boerderij vereist vlakke grond. Heiligdommen, sterrencirkels en wachttorens kunnen overal geplaatst worden."
+        : "Dit is niet meer de frontier-streek, dus hier is alleen nog een Wachttoren te bouwen — die mag, als uitzondering, op elke ontgrendelde streek geplaatst worden.") +
+      versWaterTekst +
+      onrustStatusTekst(streek, streken, stad, campagne),
   };
 }
 

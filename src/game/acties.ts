@@ -378,6 +378,7 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
     streekHoogte: hoogte,
     strijders: [],
     missionarissen: [],
+    rechters: [],
     cityImprovements: [],
     heeftSmederij: false,
     smederijActief: true,
