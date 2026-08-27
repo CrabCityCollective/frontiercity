@@ -46,7 +46,7 @@ import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopu
 import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
 import { campagneConfig, popupContent, streekContentVoorCampagne } from "@/game/campagnes";
-import { improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
+import { improvementNaam, improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import {
   BELEGERINGSDREMPEL,
   beschikbareMissionarissen,
@@ -538,7 +538,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
       : geselecteerdeTile?.hoogte === EINDE_OCEAAN_HOOGTE
         ? beschrijfEindeOceaanTile()
         : geselecteerdeTile && geselecteerdeStreek
-          ? beschrijfTile(geselecteerdeStreek, state.streken, state.stad, geselecteerdeTile.positieInStreek, state.voorraad)
+          ? beschrijfTile(geselecteerdeStreek, state.streken, state.stad, geselecteerdeTile.positieInStreek, state.voorraad, campagne)
           : null;
 
   // De tile die de speler heeft aangeklikt terwijl er een improvement klaar
@@ -1934,12 +1934,12 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
         />
         <TileInfoPopup
           tileInfo={tileInfo}
-          bouwVraag={isGeldigPlaatsingsDoel ? { improvementNaam: plaatsingsImprovement!.naam } : undefined}
+          bouwVraag={isGeldigPlaatsingsDoel ? { improvementNaam: improvementNaam(plaatsingsImprovement!, campagne) } : undefined}
           terreinWaarschuwing={
             terreinMismatch
-              ? `${plaatsingsImprovement!.naam} kan hier niet gebouwd worden — vereist ${terreinEisenBeschrijving(plaatsingsImprovement!)}.`
+              ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — vereist ${terreinEisenBeschrijving(plaatsingsImprovement!)}.`
               : amberMismatch
-                ? `${plaatsingsImprovement!.naam} kan hier niet gebouwd worden — hier is geen amberader gevonden.`
+                ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — hier is geen amberader gevonden.`
                 : undefined
           }
           rushVraag={

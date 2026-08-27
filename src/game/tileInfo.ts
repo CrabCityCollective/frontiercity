@@ -4,11 +4,11 @@
 // game-logica-modules in plaats van in een component.
 
 import { bouwStagneertVolgendeBeurt, resterendeBouwBeurten } from "./bouwwachtrij";
-import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS, effectBeschrijving } from "./improvements";
+import { CATEGORIE_LABELS, MATERIAAL_LABELS, TERREIN_LABELS, effectBeschrijving, improvementNaam } from "./improvements";
 import { isWachttorenBemand } from "./indringersEnDieren";
 import { WACHTTOREN_VOEDSEL_VERBRUIK } from "./productie";
 import { BELEGERINGSDREMPEL } from "./streekOntgrendeling";
-import { City, Improvement, Streek, MateriaalType, ResourceType, Tile } from "./types";
+import { CampaignConfig, City, Improvement, Streek, MateriaalType, ResourceType, Tile } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
 import { hoogsteOntgrendeldeStreek, isVooruitkijkStreek } from "./world";
 
@@ -53,7 +53,8 @@ export function beschrijfTile(
   streken: Streek[],
   stad: City,
   positieInStreek: number,
-  voorraad: Record<MateriaalType, number>
+  voorraad: Record<MateriaalType, number>,
+  campagne?: CampaignConfig
 ): TileInfo {
   const tile = streek.tiles[positieInStreek];
 
@@ -124,7 +125,7 @@ export function beschrijfTile(
     // gestichte stad) met een eigen naam, los van de originele `stad`-status
     // die alleen Oer-stad beschrijft.
     return {
-      titel: tile.improvement.naam,
+      titel: improvementNaam(tile.improvement, campagne),
       ondertitel: "Jouw nederzetting",
       tekst: "Het hart van je stad. Verzamel voedsel om hier te laten groeien.",
     };
@@ -133,7 +134,7 @@ export function beschrijfTile(
   if (tile.status === "ghost_town") {
     return {
       titel: "Verlaten vakje",
-      ondertitel: tile.improvement ? `Voormalig: ${tile.improvement.naam}` : undefined,
+      ondertitel: tile.improvement ? `Voormalig: ${improvementNaam(tile.improvement, campagne)}` : undefined,
       tekst: "Dit land is uitgeput en kan niet opnieuw bebouwd worden.",
     };
   }
@@ -154,7 +155,7 @@ export function beschrijfTile(
         ? ` Verbruikt ${WACHTTOREN_VOEDSEL_VERBRUIK} voedsel per beurt zodra bemand.`
         : "";
     return {
-      titel: tile.improvement.naam,
+      titel: improvementNaam(tile.improvement, campagne),
       ondertitel: `${CATEGORIE_LABELS[tile.improvement.categorie]} — in aanbouw`,
       tekst: `Nog niet actief. ${effectBeschrijving(tile.improvement)}${wachttorenVoedselTekst}${voortgangTekst}`.trim(),
     };
@@ -198,7 +199,7 @@ export function beschrijfTile(
         ? ` Wololo-meter: ${tile.wololoVoortgang ?? 0} / ${BELEGERINGSDREMPEL}.`
         : "";
     return {
-      titel: tile.improvement.naam,
+      titel: improvementNaam(tile.improvement, campagne),
       ondertitel: CATEGORIE_LABELS[tile.improvement.categorie],
       tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${bemandStatus}${wololoStatus}${wegStatus}${uitputting}`.trim(),
     };
