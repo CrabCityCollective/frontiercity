@@ -40,9 +40,11 @@ export function laadSpel(campagneId?: string): GameState | null {
   try {
     const ruw = window.localStorage.getItem(saveSleutel(campagneId));
     if (!ruw) return null;
-    return metGemigreerdSmederijActiefVeld(
-      metGemigreerdeSmederijVeld(
-        metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+    return metGemigreerdeOntvangenVlaggen(
+      metGemigreerdSmederijActiefVeld(
+        metGemigreerdeSmederijVeld(
+          metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+        )
       )
     );
   } catch {
@@ -145,6 +147,32 @@ function metGemigreerdeSmederijVeld(state: GameState): GameState {
 // voltooide Smederij (`heeftSmederij: true`) altijd door, dus dit behoudt het
 // bestaande gedrag voor een oudere save in plaats van de conversie
 // stilzwijgend te pauzeren.
+// Migratie voor saves van vóór de "eenmaal ontvangen, blijft zichtbaar"-
+// vlaggen voor Gereedschap en de drie Wampanoag-handelswaren (issue: "Alle
+// voorraden tonen in resource block"): oudere saves kennen
+// `gereedschapOntvangen`/`bevervellenOntvangen`/`maisOntvangen`/
+// `wampumOntvangen` nog niet. Leidt ze af van de bestaande voorraad — heeft de
+// speler al meer dan 0 van een grondstof, dan moet die na deze migratie
+// meteen in de ResourceHud staan, in plaats van pas na de eerstvolgende
+// toename opnieuw "ontdekt" te worden.
+function metGemigreerdeOntvangenVlaggen(state: GameState): GameState {
+  if (
+    typeof state.gereedschapOntvangen === "boolean" &&
+    typeof state.bevervellenOntvangen === "boolean" &&
+    typeof state.maisOntvangen === "boolean" &&
+    typeof state.wampumOntvangen === "boolean"
+  ) {
+    return state;
+  }
+  return {
+    ...state,
+    gereedschapOntvangen: state.gereedschapOntvangen ?? state.gereedschap > 0,
+    bevervellenOntvangen: state.bevervellenOntvangen ?? state.bevervellen > 0,
+    maisOntvangen: state.maisOntvangen ?? state.mais > 0,
+    wampumOntvangen: state.wampumOntvangen ?? state.wampum > 0,
+  };
+}
+
 function metGemigreerdSmederijActiefVeld(state: GameState): GameState {
   if (typeof state.stad.smederijActief === "boolean") return state;
   const stad = { ...state.stad, smederijActief: state.stad.smederijActief ?? true };

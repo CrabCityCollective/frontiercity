@@ -268,6 +268,13 @@ export function verwerkWampanoagHandel(state: GameState): GameState {
   let bevervellen = state.bevervellen;
   let mais = state.mais;
   let wampum = state.wampum;
+  // "Ontvangen"-vlaggen voor de ResourceHud (issue: "Alle voorraden tonen in
+  // resource block") — zelfde eenmalige-garantie-patroon als
+  // `gereedschapOntvangen` in productie.ts, maar dan voor de drie
+  // handelswaren die hier bij komen.
+  let bevervellenOntvangen = state.bevervellenOntvangen;
+  let maisOntvangen = state.maisOntvangen;
+  let wampumOntvangen = state.wampumOntvangen;
 
   for (const tile of handelendeTiles) {
     const keuze = tile.wampanoagHandelKeuze!;
@@ -281,12 +288,29 @@ export function verwerkWampanoagHandel(state: GameState): GameState {
     }
 
     const goed = WAMPANOAG_GOED_VOOR_INHOUD[tile.wampanoagInhoud!];
-    if (goed === "bevervellen") bevervellen += 1;
-    else if (goed === "mais") mais += 1;
-    else wampum += 1;
+    if (goed === "bevervellen") {
+      bevervellen += 1;
+      bevervellenOntvangen = true;
+    } else if (goed === "mais") {
+      mais += 1;
+      maisOntvangen = true;
+    } else {
+      wampum += 1;
+      wampumOntvangen = true;
+    }
   }
 
-  return { ...state, voorraad, gereedschap, bevervellen, mais, wampum };
+  return {
+    ...state,
+    voorraad,
+    gereedschap,
+    bevervellen,
+    mais,
+    wampum,
+    bevervellenOntvangen,
+    maisOntvangen,
+    wampumOntvangen,
+  };
 }
 
 // Afsluiting van de openingsfase (Going West, M21g, opdracht-wampanoag-opening.md
