@@ -6,7 +6,7 @@ import { VERKENNER } from "@/game/improvements";
 import { VERKENNING_KOSTEN_WETENSCHAP } from "@/game/streekOntgrendeling";
 import { TileInfo } from "@/game/tileInfo";
 import { WAMPANOAG_HANDEL_KEUZE_LABELS } from "@/game/wampanoag";
-import { Improvement, Missionaris, ResourceType, Strijder, WampanoagHandelKeuze } from "@/game/types";
+import { Improvement, Missionaris, Rechter, ResourceType, Strijder, WampanoagHandelKeuze } from "@/game/types";
 
 interface TileInfoPopupProps {
   tileInfo: TileInfo | null;
@@ -41,6 +41,17 @@ interface TileInfoPopupProps {
     keuzeActief: boolean;
     onStartKeuze: () => void;
     onKiesStrijder: (strijderId: string) => void;
+    onStuurNaarHuis: () => void;
+  };
+  // Gezet als de aangeklikte tile een actief Courthouse is (issue: "Onrust,
+  // Saloon en Courthouse") — zelfde bemannen/naar-huis-sturen-patroon als
+  // `wachttorenVraag` hierboven, maar met een Rechter i.p.v. een Strijder.
+  courthouseVraag?: {
+    bemand: boolean;
+    alleRechters: Rechter[];
+    keuzeActief: boolean;
+    onStartKeuze: () => void;
+    onKiesRechter: (rechterId: string) => void;
     onStuurNaarHuis: () => void;
   };
   // Gezet als de aangeklikte tile een nog verhuld vakje van een Bezette Streek
@@ -96,6 +107,7 @@ export default function TileInfoPopup({
   terreinWaarschuwing,
   rushVraag,
   wachttorenVraag,
+  courthouseVraag,
   verkenningVraag,
   wampanoagHandelVraag,
   confrontatieVraag,
@@ -250,6 +262,73 @@ export default function TileInfoPopup({
                 style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
               >
                 Wachttoren bemannen
+              </button>
+            )}
+          </div>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && courthouseVraag && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {courthouseVraag.bemand ? (
+              <button
+                className="fc-knop"
+                onClick={courthouseVraag.onStuurNaarHuis}
+                style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+              >
+                Stuur rechter naar huis
+              </button>
+            ) : courthouseVraag.keuzeActief ? (
+              courthouseVraag.alleRechters.length > 0 ? (
+                <>
+                  <p style={{ margin: 0, fontWeight: "bold" }}>Kies een rechter om dit Courthouse te bemannen:</p>
+                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                    {courthouseVraag.alleRechters.map((rechter) => {
+                      const bezet = Boolean(rechter.courthouse);
+                      if (bezet) {
+                        return (
+                          <span
+                            key={rechter.id}
+                            title={`Bemant al een ander Courthouse op streek ${rechter.courthouse!.hoogte}`}
+                            aria-label="Rechter niet beschikbaar"
+                            style={{
+                              padding: "0.35rem 0.6rem",
+                              fontSize: "1rem",
+                              lineHeight: 1,
+                              opacity: 0.35,
+                              cursor: "not-allowed",
+                            }}
+                          >
+                            ⚖
+                          </span>
+                        );
+                      }
+                      return (
+                        <button
+                          key={rechter.id}
+                          className="fc-knop"
+                          onClick={() => courthouseVraag.onKiesRechter(rechter.id)}
+                          title="Kies deze rechter om het Courthouse te bemannen"
+                          aria-label="Rechter beschikbaar"
+                          style={{ padding: "0.35rem 0.6rem", fontSize: "1rem", lineHeight: 1 }}
+                        >
+                          ⚖
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <p style={{ margin: 0, color: "var(--kleur-oker)" }}>
+                  Geen rechters beschikbaar — leid er eerst een op via het stadsmenu.
+                </p>
+              )
+            ) : (
+              <button
+                className="fc-knop"
+                onClick={courthouseVraag.onStartKeuze}
+                style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+              >
+                Courthouse bemannen
               </button>
             )}
           </div>

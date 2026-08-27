@@ -71,6 +71,7 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     streekHoogte: 0,
     strijders: [],
     missionarissen: [],
+    rechters: [],
     cityImprovements: [],
     heeftSmederij: false,
     smederijActief: true,

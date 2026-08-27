@@ -40,10 +40,12 @@ export function laadSpel(campagneId?: string): GameState | null {
   try {
     const ruw = window.localStorage.getItem(saveSleutel(campagneId));
     if (!ruw) return null;
-    return metGemigreerdeOntvangenVlaggen(
-      metGemigreerdSmederijActiefVeld(
-        metGemigreerdeSmederijVeld(
-          metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+    return metGemigreerdRechtersVeld(
+      metGemigreerdeOntvangenVlaggen(
+        metGemigreerdSmederijActiefVeld(
+          metGemigreerdeSmederijVeld(
+            metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+          )
         )
       )
     );
@@ -177,6 +179,18 @@ function metGemigreerdSmederijActiefVeld(state: GameState): GameState {
   if (typeof state.stad.smederijActief === "boolean") return state;
   const stad = { ...state.stad, smederijActief: state.stad.smederijActief ?? true };
   const steden = state.steden.map((s) => ({ ...s, smederijActief: s.smederijActief ?? true }));
+  return { ...state, stad, steden };
+}
+
+// Migratie voor saves van vóór de Rechter-eenheid (issue: "Onrust, Saloon en
+// Courthouse"): oudere saves kennen `City.rechters` nog niet, op zowel `stad`
+// als elke stad in `steden`. Valt terug op een lege lijst — geen enkele
+// oudere save kan al een Rechter opgeleid hebben, deze migratie voegt alleen
+// het ontbrekende veld toe.
+function metGemigreerdRechtersVeld(state: GameState): GameState {
+  if (Array.isArray(state.stad.rechters)) return state;
+  const stad = { ...state.stad, rechters: state.stad.rechters ?? [] };
+  const steden = state.steden.map((s) => ({ ...s, rechters: s.rechters ?? [] }));
   return { ...state, stad, steden };
 }
 

@@ -101,6 +101,13 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     tekst:
       "Een streek vol vijandelijke bouwwerken, verhuld tot je er een verkenner heen stuurt. Een vijandelijke wachttoren vraagt om een militaire confrontatie, een vijandelijk heiligdom om een missionaris.",
   },
+  {
+    id: "onrust",
+    titel: "Onrust",
+    categorie: "Streken",
+    tekst:
+      "Ontstaat zodra een streek meer dan drie gebouwen draagt — elk gebouw daarna verhoogt de onrust met 1 en verlaagt de productie van alle landverbeteringen op die streek. Gebouwen die volledig uitgeput zijn (ghost towns) tellen niet meer mee, dus onrust op oudere streken zakt vanzelf terug naarmate ze uitputten. Een Saloon verlaagt de onrust op zijn eigen streek met 1; een bemand Courthouse houdt de onrust op zijn eigen streek en de streken direct erboven en eronder blijvend op 0.",
+  },
   // Grondstoffen
   {
     id: "resources",
@@ -170,6 +177,13 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
       "Land- en stadsverbeteringen kosten grondstoffen en een aantal beurten om te voltooien. Een landverbetering moet daarna ook nog via een weg met de stad verbonden zijn voordat hij echt produceert.",
   },
   {
+    id: "courthouse",
+    titel: "Courthouse",
+    categorie: "Gebouwen",
+    tekst:
+      "Civiele landverbetering (Going West), duurder dan de Saloon. Bouwbaar zonder voorwaarde, maar heeft pas effect zodra een opgeleide rechter er zitting neemt — houdt dan de onrust op zijn eigen streek en de streken direct erboven en eronder blijvend op 0, zolang bemand.",
+  },
+  {
     id: "grote-tempel",
     titel: "Grote Tempel",
     categorie: "Gebouwen",
@@ -230,6 +244,12 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
       "Economische stadsverbetering die de gedeelde opslag-cap verhoogt. Herhaalbaar: elke voltooide Opslagplaats telt opnieuw mee.",
   },
   {
+    id: "saloon",
+    titel: "Saloon",
+    categorie: "Gebouwen",
+    tekst: "Goedkope civiele landverbetering (Going West) die de onrust op zijn eigen streek met 1 vermindert.",
+  },
+  {
     id: "smederij",
     titel: "Smederij",
     categorie: "Gebouwen",
@@ -282,6 +302,13 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     categorie: "Eenheden & acties",
     tekst:
       "Je settler kan op een kudde jagen voor voedsel. Daarbij is er een kans dat er een roofdier verschijnt op datzelfde vakje.",
+  },
+  {
+    id: "rechter",
+    titel: "Rechter",
+    categorie: "Eenheden & acties",
+    tekst:
+      "Trainbare eenheid (Going West) die aan een Courthouse toegewezen kan worden om onrust te onderdrukken — zelfde bemannings-patroon als een strijder op een wachttoren: instant en omkeerbaar.",
   },
   {
     id: "roofdieren",

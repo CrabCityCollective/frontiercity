@@ -2,9 +2,17 @@
 
 import { campagneConfig } from "@/game/campagnes";
 import { kanTweedeSettlerBouwen } from "@/game/groeiEnRekrutering";
-import { aquaductVoedseldrempelVerlaging, GROTE_WOONWIJK, improvementNaam, NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
+import {
+  aquaductVoedseldrempelVerlaging,
+  GROTE_WOONWIJK,
+  improvementNaam,
+  NIEUWE_SETTLER,
+  ONRUST_MIN_STREEK,
+  RECHTER,
+  WOONWIJK,
+} from "@/game/improvements";
 import { City, GameState } from "@/game/types";
-import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "@/game/world";
+import { hoogsteOntgrendeldeStreek, VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "@/game/world";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
 
@@ -31,6 +39,11 @@ interface CivielPaneelProps {
   onStartNieuweSettler: () => void;
   onStartTweedeSettler: () => void;
   onVersnelCiviel: () => void;
+  // Rechter-opleiding (issue: "Onrust, Saloon en Courthouse") — zelfde
+  // stadsmenu-trainingsknop-patroon als Soldaat/Missionaris in MilitairPaneel;
+  // toewijzing aan een Courthouse gebeurt via een klik op de tile zelf (zie
+  // TileInfoPopup: `courthouseVraag`), niet via dit paneel.
+  onStartRechterTraining: () => void;
 }
 
 // Civiele keuzes (M6, hoofdstuk 4/11/16): toont de voortgang richting de
@@ -48,9 +61,17 @@ export default function CivielPaneel({
   onStartNieuweSettler,
   onStartTweedeSettler,
   onVersnelCiviel,
+  onStartRechterTraining,
 }: CivielPaneelProps) {
   const { stad, voedsel, settler } = state;
   const campagne = campagneConfig(state.campagneId);
+
+  // Rechter opleiden (issue: "Onrust, Saloon en Courthouse"): alleen relevant
+  // vanaf streek 8 van Going West — hetzelfde introductiepunt als Saloon/
+  // Courthouse zelf (improvements.ts: `ONRUST_MIN_STREEK`).
+  const kanRechterTrainen =
+    state.campagneId === "going-west" && hoogsteOntgrendeldeStreek(state.streken) >= ONRUST_MIN_STREEK;
+  const vrijeRechters = stad.rechters.filter((r) => !r.courthouse);
 
   const groeiTier = groeiTierVoorGrootte(stad);
   const kanGroeien = groeiTier !== undefined;
@@ -65,7 +86,16 @@ export default function CivielPaneel({
   // permanent herbouwbaar).
   const kanTweedeSettler = kanTweedeSettlerBouwen(state);
 
-  if (!kanGroeien && !kanNieuweSettler && !stad.civielInAanbouw && !kanTweedeSettler && !stad.tweedeSettlerInAanbouw) {
+  if (
+    !kanGroeien &&
+    !kanNieuweSettler &&
+    !stad.civielInAanbouw &&
+    !kanTweedeSettler &&
+    !stad.tweedeSettlerInAanbouw &&
+    !kanRechterTrainen &&
+    !stad.rechterInAanbouw &&
+    stad.rechters.length === 0
+  ) {
     return null;
   }
 
@@ -153,6 +183,34 @@ export default function CivielPaneel({
           Rust een tweede settler uit (<KostenIcons kosten={NIEUWE_SETTLER.kosten} />,{" "}
           {NIEUWE_SETTLER.bouwtijdBeurten} beurten)
         </button>
+      )}
+
+      {/* Rechter-opleiding (issue: "Onrust, Saloon en Courthouse") — toewijzing
+          aan een Courthouse gebeurt via een klik op de Courthouse-tile zelf
+          (zie TileInfoPopup: `courthouseVraag`), zelfde patroon als
+          Wachttoren-bemanning. */}
+      {(kanRechterTrainen || stad.rechters.length > 0 || stad.rechterInAanbouw) && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginTop: "0.3rem" }}>
+          {stad.rechters.length > 0 && (
+            <span style={{ color: "var(--kleur-tekst-gedempt)" }}>
+              Rechters: {stad.rechters.length} totaal, {vrijeRechters.length} vrij (nog niet toegewezen aan een
+              Courthouse) — klik op een Courthouse op de kaart om er een te bemannen.
+            </span>
+          )}
+          {stad.rechterInAanbouw ? (
+            <p style={{ margin: 0 }}>Rechter in opleiding…</p>
+          ) : (
+            kanRechterTrainen && (
+              <button
+                className="fc-knop"
+                onClick={onStartRechterTraining}
+                style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+              >
+                Rechter opleiden (<KostenIcons kosten={RECHTER.kosten} />, {RECHTER.bouwtijdBeurten} beurten)
+              </button>
+            )
+          )}
+        </div>
       )}
     </div>
   );

@@ -6,10 +6,12 @@
 // Wachttoren-verdedigingsbonus voor militaire confrontaties (M7) én, sindsdien
 // (hoofdstuk 6), de indringers-tribuut-bescherming van de hele streek,
 // wetenschappelijk levert wetenschap voor de technologie-boom (hoofdstuk 3/9,
-// zie techTree.ts). Civiel blijft leeg: de groei-tier-improvement (M6, zie WOONWIJK hieronder)
-// is een stad-upgrade buiten de tegel-band, en de overige civiele
-// land-improvements (weg/brug) vallen buiten de MVP-scope — zie hoofdstuk 3
-// en hoofdstuk 13 van het design-document.
+// zie techTree.ts). Civiel bevat sinds issue "Onrust, Saloon en Courthouse"
+// de Saloon en het Courthouse (Going West-exclusief, zie
+// `CIVIEL_LAND_IMPROVEMENTS` hieronder) — de groei-tier-improvement (M6, zie
+// WOONWIJK hieronder) blijft een stad-upgrade buiten de tegel-band, en de
+// overige civiele land-improvements (weg/brug) vallen nog steeds buiten de
+// MVP-scope — zie hoofdstuk 3 en hoofdstuk 13 van het design-document.
 
 import { CampaignConfig, Categorie, City, Improvement, Streek, MateriaalType, ResourceType, TechId, Tile, TerreinType } from "./types";
 import { hoogsteOntgrendeldeStreek } from "./world";
@@ -120,6 +122,18 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
   // hier alleen een korte omschrijving voor de tile-info-tekst zelf.
   if (effect.type === "wampanoag") {
     return "Een onthuld Wampanoag-vakje. Klik erop om een grondstof te kiezen voor handel.";
+  }
+  // Onrust (issue: "Onrust, Saloon en Courthouse", Going West, zie
+  // onrust.ts): Saloon en Courthouse hebben geen productie-effect, dus geen
+  // van de generieke gevallen hierboven.
+  if (effect.type === "onrust-verlichting" && effect.waarde) {
+    return `Vermindert de onrust op deze streek met ${effect.waarde}.`;
+  }
+  if (effect.type === "courthouse") {
+    return "Vereist een toegewezen Rechter om effect te hebben — zet dan de onrust op deze streek én de streek erboven en eronder blijvend op 0, zolang bemand.";
+  }
+  if (effect.type === "rechter") {
+    return "Wijs deze Rechter toe aan een Courthouse om onrust op die streek en de aangrenzende streken te onderdrukken.";
   }
   return "";
 }
@@ -608,13 +622,78 @@ export const OPPERHOOFDTENT: Improvement = {
   effect: { type: "wampanoag" },
 };
 
+// Onrust (issue: "Onrust, Saloon en Courthouse", Going West-exclusief, zie
+// onrust.ts): Saloon en Courthouse zijn de eerste twee echte Civiele land
+// improvements (Weg/Brug blijven buiten de MVP-scope, zie de comment bij
+// WOONWIJK hieronder) — `IMPROVEMENT_POOLS.civiel` was tot nu toe leeg.
+// Allebei `vereisteCampagneId: "going-west"` (types.ts): nooit in de tutorial
+// of een andere campagne, en `minStreek: 8` als hun eigen introductiepunt
+// binnen Going West (issue-comment: "Pas vanaf streek 8 van Going West geldt
+// onrust als mechanisme"), niet de gebruikelijke tutorial-only
+// `minStreek`-uitzondering die `beschikbareOpties` hieronder normaal maakt.
+export const ONRUST_MIN_STREEK = 8;
+
+// Saloon: goedkoop, geen terrein-/andere eis — vermindert de onrust op de
+// eigen streek met 1 zolang hij actief staat (onrust.ts:
+// `SALOON_ONRUST_VERMINDERING`). Telt zelf niet mee als een van de
+// onrust-veroorzakende improvements op zijn streek (issue-comment: "de
+// saloon moet niet zelf meetellen bij onrust") — zie `ONRUST_UITGESLOTEN_IDS`
+// in onrust.ts.
+export const SALOON: Improvement = {
+  id: "saloon",
+  naam: "Saloon",
+  categorie: "civiel",
+  soort: "land",
+  kosten: { hout: 4, steen: 2 },
+  bouwtijdBeurten: 1,
+  effect: { type: "onrust-verlichting", waarde: 1 },
+  vereisteCampagneId: "going-west",
+  minStreek: ONRUST_MIN_STREEK,
+};
+
+// Courthouse: duurder dan de Saloon, bouwbaar zonder voorwaarde vooraf — maar
+// heeft pas effect zodra een opgeleide Rechter 'm bemant (zelfde
+// bemannings-patroon als de Wachttoren, zie `Rechter`/`City.rechters`,
+// types.ts, en `bemanCourthouse`/`haalRechterTerug` in onrust.ts). Telt,
+// net als de Saloon hierboven, zelf niet mee als onrust-veroorzakend
+// improvement.
+export const COURTHOUSE: Improvement = {
+  id: "courthouse",
+  naam: "Courthouse",
+  categorie: "civiel",
+  soort: "land",
+  kosten: { hout: 8, steen: 10, goud: 4 },
+  bouwtijdBeurten: 3,
+  effect: { type: "courthouse" },
+  vereisteCampagneId: "going-west",
+  minStreek: ONRUST_MIN_STREEK,
+};
+
+export const CIVIEL_LAND_IMPROVEMENTS: Improvement[] = [SALOON, COURTHOUSE];
+
+// Rechter (issue: "Onrust, Saloon en Courthouse"): trainbare eenheid, zelfde
+// soort losse rekruterings-wachtrij als SOLDAAT/MISSIONARIS hierboven
+// (`City.rechterInAanbouw`, groeiEnRekrutering.ts) — geen land-vakje, dus
+// geen onderdeel van IMPROVEMENT_POOLS/beschikbareOpties. Geen voorwaarde
+// vooraf (anders dan de Missionaris, die een voltooid Offer Altaar vereist):
+// een Rechter kan losstaand van een al gebouwd Courthouse opgeleid worden.
+export const RECHTER: Improvement = {
+  id: "rechter",
+  naam: "Rechter",
+  categorie: "civiel",
+  soort: "unit",
+  kosten: { goud: 3, hout: 2 },
+  bouwtijdBeurten: 3,
+  effect: { type: "rechter" },
+};
+
 // Stadsgroei-improvement (M6, hoofdstuk 3/4: "Aquaduct, riolering, woonwijk
 // (= groei-tiers)"). Dit is een `soort: "city"`-improvement die de stad zelf
 // upgradet, geen land-vakje — daarom geen onderdeel van IMPROVEMENT_POOLS/
 // beschikbareOpties (die zijn voor land-improvements op de actieve streek) en
 // wordt in plaats daarvan rechtstreeks gebruikt door de startGroei-actie in
-// economie.ts en het civiele paneel. Weg/brug (de land-improvements onder
-// civiel) blijven, net als de rest van IMPROVEMENT_POOLS.civiel, buiten de
+// economie.ts en het civiele paneel. Weg/brug (de overige land-improvements
+// onder civiel) blijven, net als Saloon/Courthouse hierboven niet, buiten de
 // MVP-scope (hoofdstuk 13).
 export const WOONWIJK: Improvement = {
   id: "woonwijk",
@@ -857,7 +936,7 @@ const IMPROVEMENT_POOLS: Record<Improvement["categorie"], Improvement[]> = {
   economisch: ECONOMISCH_LAND_IMPROVEMENTS,
   wetenschappelijk: WETENSCHAPPELIJK_LAND_IMPROVEMENTS,
   militair: MILITAIR_LAND_IMPROVEMENTS,
-  civiel: [],
+  civiel: CIVIEL_LAND_IMPROVEMENTS,
   cultureel: CULTUREEL_LAND_IMPROVEMENTS,
 };
 
@@ -932,10 +1011,21 @@ export function beschikbareOpties(
 ): Improvement[] {
   const frontierHoogte = hoogsteOntgrendeldeStreek(alleStreken);
   return IMPROVEMENT_POOLS[categorie]
+    // Campagne-exclusieve improvements (issue: "Onrust, Saloon en
+    // Courthouse", `Improvement.vereisteCampagneId`): nooit beschikbaar
+    // buiten hun eigen campagne, dus ook nooit in de tutorial.
+    .filter((improvement) => !improvement.vereisteCampagneId || improvement.vereisteCampagneId === campagneId)
     .filter((improvement) => !improvement.vereisteTech || technologieen.includes(improvement.vereisteTech))
-    .filter(
-      (improvement) => campagneId !== undefined || !improvement.minStreek || frontierHoogte >= improvement.minStreek
-    )
+    .filter((improvement) => {
+      if (!improvement.minStreek) return true;
+      // `vereisteCampagneId`-improvements gebruiken `minStreek` als hun eigen
+      // introductiepunt binnen die campagne (hierboven al bevestigd dat
+      // `campagneId` overeenkomt) — anders dan de tutorial-pacing-drempels
+      // hieronder wordt deze eis dus niet overgeslagen zodra er een campagne
+      // actief is.
+      if (improvement.vereisteCampagneId) return frontierHoogte >= improvement.minStreek;
+      return campagneId !== undefined || frontierHoogte >= improvement.minStreek;
+    })
     .filter((improvement) =>
       improvement.bouwbaarBuitenFrontier
         ? alleStreken.some((l) => l.ontgrendeld && kanImprovementOpStreek(improvement, l))
