@@ -1,6 +1,23 @@
 import { RESOURCE_LABELS } from "@/game/improvements";
 import { ResourceType } from "@/game/types";
 
+// Gereedschap en de drie Wampanoag-handelswaren zijn geen `ResourceType`
+// (zie de toelichting bij `WAMPANOAG_HANDEL_KEUZE_LABELS` in wampanoag.ts) —
+// maar de ResourceHud moet ze wel als icoontje kunnen tonen (issue: "Alle
+// voorraden tonen in resource block"). Daarom hier een eigen, kleine
+// uitbreiding op `ResourceType` i.p.v. dat type zelf te verbreden: `KostenIcons`
+// en de kosten-records elders blijven bewust beperkt tot echte `ResourceType`s.
+export type HudResourceType = ResourceType | "gereedschap" | "bevervellen" | "mais" | "wampum";
+
+const EXTRA_RESOURCE_LABELS: Record<"gereedschap" | "bevervellen" | "mais" | "wampum", string> = {
+  gereedschap: "Gereedschap",
+  bevervellen: "Bevervellen",
+  mais: "Maïs",
+  wampum: "Wampum",
+};
+
+const HUD_RESOURCE_LABELS: Record<HudResourceType, string> = { ...RESOURCE_LABELS, ...EXTRA_RESOURCE_LABELS };
+
 // Pixel-art icoontjes per grondstof (issue #129: "kun je ook de resource
 // icoontjes voorzien van pixel art versies?"). Elk icoon is een klein grid
 // van "pixels" (rect per cel) i.p.v. een afbeeldingsbestand — geen extra
@@ -17,7 +34,7 @@ interface PixelIconSpec {
 const GRID_GROOTTE = 8;
 const CEL = 16 / GRID_GROOTTE;
 
-const PIXEL_ICONEN: Record<ResourceType, PixelIconSpec> = {
+const PIXEL_ICONEN: Record<HudResourceType, PixelIconSpec> = {
   hout: {
     grid: [
       "........",
@@ -109,9 +126,61 @@ const PIXEL_ICONEN: Record<ResourceType, PixelIconSpec> = {
     ],
     palette: { A: "#5a9fa8", B: "#e8f5f5", C: "#a8d8dc" },
   },
+  gereedschap: {
+    grid: [
+      "........",
+      "...AA...",
+      "..AAAA..",
+      ".AAAAAA.",
+      "...BB...",
+      "..BBBB..",
+      "...BB...",
+      "...BB...",
+    ],
+    palette: { A: "#9a9aa0", B: "#7a4a28" },
+  },
+  bevervellen: {
+    grid: [
+      "........",
+      ".AAAAAA.",
+      "AAAAAAAA",
+      "AABBBBAA",
+      "AABBBBAA",
+      "AAAAAAAA",
+      ".AAAAAA.",
+      "........",
+    ],
+    palette: { A: "#6f4a2a", B: "#c9a06a" },
+  },
+  mais: {
+    grid: [
+      "...BB...",
+      "..BAAB..",
+      ".AACCAA.",
+      ".ACCCCA.",
+      ".ACCCCA.",
+      ".AACCAA.",
+      "..BAAB..",
+      "...BB...",
+    ],
+    palette: { A: "#e8d26a", B: "#4a7a3a", C: "#c9a83a" },
+  },
+  wampum: {
+    grid: [
+      "........",
+      "........",
+      "AABBAABB",
+      "AABBAABB",
+      "BBAABBAA",
+      "BBAABBAA",
+      "........",
+      "........",
+    ],
+    palette: { A: "#6a4a8a", B: "#e8e0d0" },
+  },
 };
 
-function IcoonSvg({ type }: { type: ResourceType }) {
+function IcoonSvg({ type }: { type: HudResourceType }) {
   const { grid, palette } = PIXEL_ICONEN[type];
 
   return (
@@ -128,7 +197,7 @@ function IcoonSvg({ type }: { type: ResourceType }) {
 }
 
 interface ResourceIcoonProps {
-  type: ResourceType;
+  type: HudResourceType;
   waarde?: number | string;
 }
 
@@ -141,7 +210,7 @@ export default function ResourceIcoon({ type, waarde }: ResourceIcoonProps) {
       <span aria-hidden="true" style={{ display: "inline-flex", lineHeight: 0 }}>
         <IcoonSvg type={type} />
       </span>
-      <span>{RESOURCE_LABELS[type]}</span>
+      <span>{HUD_RESOURCE_LABELS[type]}</span>
       {waarde !== undefined && <span>{waarde}</span>}
     </span>
   );

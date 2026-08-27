@@ -53,6 +53,31 @@ export default function ResourceHud({ state }: ResourceHudProps) {
           <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
             <ResourceIcoon type="wetenschap" /> {wetenschapLabel}
           </span>
+          {/* Gereedschap en de drie Wampanoag-handelswaren (issue: "Alle
+              voorraden tonen in resource block"): verschijnen pas zodra de
+              speler er voor het eerst één heeft, en blijven daarna staan, ook
+              als de voorraad terugzakt naar 0 (zie de "Ontvangen"-vlaggen in
+              types.ts). */}
+          {state.gereedschapOntvangen && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+              <ResourceIcoon type="gereedschap" /> {state.gereedschap}
+            </span>
+          )}
+          {state.bevervellenOntvangen && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+              <ResourceIcoon type="bevervellen" /> {state.bevervellen}
+            </span>
+          )}
+          {state.maisOntvangen && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+              <ResourceIcoon type="mais" /> {state.mais}
+            </span>
+          )}
+          {state.wampumOntvangen && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+              <ResourceIcoon type="wampum" /> {state.wampum}
+            </span>
+          )}
         </div>
       </div>
     </>

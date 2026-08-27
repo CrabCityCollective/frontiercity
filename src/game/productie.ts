@@ -277,13 +277,18 @@ export function verwerkProductie(state: GameState): GameState {
   // zetten") legt de conversie stil zonder het gebouw zelf kwijt te raken —
   // zolang de speler 'm pauzeert, blijft de erts-voorraad ongemoeid.
   let gereedschap = state.gereedschap;
+  // "Ontvangen"-vlag voor de ResourceHud (issue: "Alle voorraden tonen in
+  // resource block") — pas op `true` gezet zodra hier daadwerkelijk
+  // gereedschap bij komt, blijft daarna permanent staan (types.ts).
+  let gereedschapOntvangen = state.gereedschapOntvangen;
   const ertsKosten = SMEDERIJ.effect.waarde ?? 0;
   if (state.stad.heeftSmederij && state.stad.smederijActief && voorraad.erts >= ertsKosten) {
     voorraad.erts -= ertsKosten;
     gereedschap += SMEDERIJ_GEREEDSCHAP_OPBRENGST;
+    gereedschapOntvangen = true;
   }
 
-  return { ...state, voorraad, voedsel, cultuur, wetenschap, gereedschap };
+  return { ...state, voorraad, voedsel, cultuur, wetenschap, gereedschap, gereedschapOntvangen };
 }
 
 // Of er al een actieve, wegverbonden boerderij meeproduceert (issue: "uitleg

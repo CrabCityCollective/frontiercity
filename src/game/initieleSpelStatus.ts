@@ -96,6 +96,12 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     mais: 0,
     wampum: 0,
     gereedschap: 0,
+    // "Ontvangen"-vlaggen voor de ResourceHud (issue: "Alle voorraden tonen in
+    // resource block") — beginnen leeg, net als de voorraad hierboven.
+    gereedschapOntvangen: false,
+    bevervellenOntvangen: false,
+    maisOntvangen: false,
+    wampumOntvangen: false,
     cultureelOntgrendeld: !isGoingWest,
     technologieen: [],
     beurt: 1,

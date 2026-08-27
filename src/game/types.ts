@@ -964,6 +964,22 @@ export interface GameState {
   // hierboven, drijft de narratieve `smederijGebouwdPopup`-tekst ("je kunt nu
   // weer alle stadsverbeteringen bouwen").
   smederijGebouwdEvent?: boolean;
+  // Eenmalige "ontvangen"-vlaggen voor Gereedschap en de drie
+  // Wampanoag-handelswaren (issue: "Alle voorraden tonen in resource block"):
+  // bepalen of `ResourceHud` het bijbehorende icoontje toont. Gezet op `true`
+  // zodra de speler voor het eerst meer dan 0 van de grondstof heeft (Smederij-
+  // productie voor `gereedschap`, `verwerkWampanoagHandel` voor de andere
+  // drie), en blijven daarna permanent `true` — zelfde eenmalige-
+  // garantie-patroon als `eersteKuddeVerschenen` hierboven. Zonder deze
+  // vlaggen zou de HUD een grondstof weer verbergen zodra de voorraad terug
+  // op 0 zakt (`gereedschap` is verhandelbaar, kan dus weer leeglopen), wat de
+  // opdracht expliciet niet wil ("als het daarna op 0 komt, blijft de
+  // resource er wel bij staan"). Oudere saves kennen deze velden nog niet, zie
+  // `metGemigreerdeOntvangenVlaggen` in save.ts.
+  gereedschapOntvangen: boolean;
+  bevervellenOntvangen: boolean;
+  maisOntvangen: boolean;
+  wampumOntvangen: boolean;
 }
 
 // Sleutels van de eenmalige uitleg-pop-ups (issue: "Bij laden niet alle
