@@ -14,7 +14,6 @@ interface IndringersPopupProps {
   event: IndringersEvent;
   onBevestigAmberOnderVuur: () => void;
   onGeefTribuut: () => void;
-  onWeigerTribuut: () => void;
   onSluiten: () => void;
   // Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): `undefined`
   // zolang de keuze niet getoond moet worden (zie `kanIndringersAfkopenMetWampum`,
@@ -38,11 +37,11 @@ interface IndringersPopupProps {
 // `event.heeftWachttoren`/`event.fase`, omdat ze hetzelfde blokkerende
 // meldings-frame delen (zelfde patroon als
 // VoedselWaarschuwingPopup/MilitairUitlegPopup) en alleen in tekst/knoppen
-// verschillen. Zowel `onGeefTribuut` (vanuit `fase: "gemeld"`) als de
-// "Begrepen"-knop bij `fase: "geforceerd"` roepen dezelfde `onGeefTribuut`-actie
-// aan — die trekt het tribuut direct van de voorraad af én sluit de melding in
-// één stap (issue: "Indringers 2e pop-up samenvoegen" — geen apart
-// bevestigingsscherm meer tussen de keuze/afdwinging en de afschrijving).
+// verschillen. `onGeefTribuut` (vanuit `fase: "gemeld"`, geen weiger-optie —
+// issue: "indringers weigeren droppen") trekt het tribuut direct van de
+// voorraad af én sluit de melding in één stap (issue: "Indringers 2e pop-up
+// samenvoegen" — geen apart bevestigingsscherm meer tussen de keuze en de
+// afschrijving).
 // `fase: "amber-onder-vuur"`/`"malus"`/`"bonus"` (issue: "wachttorens kunnen
 // vernietigd worden door indringers"): de derde-uitkomst-loot voor een
 // beschermde streek, en de losstaande Amberader-aankondiging die daar (of vóór
@@ -52,7 +51,6 @@ export default function IndringersPopup({
   event,
   onBevestigAmberOnderVuur,
   onGeefTribuut,
-  onWeigerTribuut,
   onSluiten,
   wampumAfkoop,
   wampumAfkoopBevestigingTekst,
@@ -156,15 +154,11 @@ export default function IndringersPopup({
           <>
             <p style={{ margin: 0, lineHeight: 1.6 }}>
               {event.stamNaam} dringt streek {event.streekHoogte} binnen. Er staat geen bemande wachttoren — ze eisen{" "}
-              {event.tribuut.aantal} {resourceLabel} als tribuut. Geef je het, dan trekken ze zich terug. Weiger je,
-              dan eisen ze het hoe dan ook op.
+              {event.tribuut.aantal} {resourceLabel} als tribuut.
             </p>
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", flexWrap: "wrap" }}>
               <button className="fc-knop" onClick={onGeefTribuut} style={{ padding: "0.5rem 1.5rem" }}>
                 Geef tribuut
-              </button>
-              <button className="fc-knop" onClick={onWeigerTribuut} style={{ padding: "0.5rem 1.5rem" }}>
-                Weiger
               </button>
               {wampumAfkoop && (
                 <button
@@ -179,21 +173,6 @@ export default function IndringersPopup({
                 </button>
               )}
             </div>
-          </>
-        )}
-
-        {!event.heeftWachttoren && event.tribuut && event.fase === "geforceerd" && (
-          <>
-            <p style={{ margin: 0, lineHeight: 1.6 }}>
-              Weigeren helpt niet — ze eisen het tribuut hoe dan ook op: {event.tribuut.aantal} {resourceLabel}.
-            </p>
-            <button
-              className="fc-knop"
-              onClick={onGeefTribuut}
-              style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}
-            >
-              Begrepen
-            </button>
           </>
         )}
 

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { jaag, verplaatsSettlerNaar } from "./acties";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { startNieuweSettler } from "./groeiEnRekrutering";
-import { bevestigAmberOnderVuur, geefTribuut, weigerTribuut } from "./indringersEnDieren";
+import { bevestigAmberOnderVuur, geefTribuut } from "./indringersEnDieren";
 import { startBouw } from "./infrastructuurEnBouw";
 import { AMBERADER } from "./improvements";
 import { GameState } from "./types";
@@ -578,26 +578,5 @@ test("geefTribuut trekt het tribuut direct van de voorraad af en sluit de meldin
 
   state = geefTribuut(state);
   assert.equal(state.voorraad.hout, 5, "het tribuut gaat meteen van de voorraad af, zonder tussenliggend scherm");
-  assert.equal(state.indringersEvent, undefined);
-});
-
-test("een afgedwongen tribuut (na weigeren) trekt ook direct af zodra de speler de afdwinging bevestigt", () => {
-  let state: GameState = {
-    ...maakInitieleSpelStatus(),
-    voorraad: { hout: 10, steen: 0, erts: 0, goud: 0 },
-    indringersEvent: {
-      streekHoogte: 2,
-      stamNaam: "de stam van de Bloedhoeven",
-      heeftWachttoren: false,
-      tribuut: { resource: "hout", aantal: 5 },
-      fase: "gemeld",
-    },
-  };
-
-  state = weigerTribuut(state);
-  assert.equal(state.indringersEvent?.fase, "geforceerd");
-
-  state = geefTribuut(state);
-  assert.equal(state.voorraad.hout, 5);
   assert.equal(state.indringersEvent, undefined);
 });

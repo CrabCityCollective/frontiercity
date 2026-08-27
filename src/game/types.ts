@@ -620,17 +620,13 @@ export interface IndringersTribuut {
   aantal: number;
 }
 
-// `fase: "geforceerd"` is de MVP-uitzondering (hoofdstuk 13: nog geen
-// meerdere steden) op het "weiger → stad verwoest, terugval naar vorige
-// stad"-pad uit hoofdstuk 6: zonder vorige stad om naar terug te vallen wordt
-// het tribuut alsnog betaald — zie `weigerTribuut` in economie.ts. Zodra
-// meerdere steden bestaan (post-MVP), kan "weigeren" hier in plaats daarvan
-// echt tot stadsverlies leiden.
-// Zowel "gemeld" (bewust gegeven) als "geforceerd" (afgedwongen na weigeren)
-// sluiten rechtstreeks af via `geefTribuut` in economie.ts — die trekt het
-// bedrag meteen van de voorraad af en sluit de melding in één stap (issue:
-// "Indringers 2e pop-up samenvoegen" — geen apart bevestigingsscherm meer
-// tussen de keuze/afdwinging en de daadwerkelijke afschrijving).
+// `fase: "gemeld"` sluit rechtstreeks af via `geefTribuut` in economie.ts —
+// die trekt het bedrag meteen van de voorraad af en sluit de melding in één
+// stap (issue: "Indringers 2e pop-up samenvoegen" — geen apart
+// bevestigingsscherm meer tussen de keuze en de daadwerkelijke afschrijving).
+// Een tribuut-eis kent bewust geen weiger-optie (issue: "indringers weigeren
+// droppen") — de indringers eisen het hoe dan ook op, dus de enige keuze is
+// wanneer/hoe je betaalt (direct, of via de wampum-afkoop hieronder).
 //
 // `uitkomst` (issue: "wachttorens kunnen vernietigd worden door indringers"):
 // alleen gezet als `heeftWachttoren` — de derde-uitkomst-loot (hoofdstuk 6)
@@ -663,7 +659,7 @@ export interface IndringersEvent {
   amberOnderVuur?: boolean;
   uitkomst?: "standhouden" | "malus" | "bonus";
   buitGoud?: number;
-  fase: "amber-onder-vuur" | "gemeld" | "malus" | "bonus" | "geforceerd" | "wampum-afgekocht";
+  fase: "amber-onder-vuur" | "gemeld" | "malus" | "bonus" | "wampum-afgekocht";
 }
 
 // Cumulatieve indringers-statistieken voor het historiescherm van deze run
