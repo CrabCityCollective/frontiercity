@@ -47,6 +47,7 @@ import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
 import { campagneConfig, popupContent, streekContentVoorCampagne } from "@/game/campagnes";
 import { improvementNaam, improvementPastOpTerrein, ONRUST_MIN_STREEK, terreinEisenBeschrijving } from "@/game/improvements";
+import { kanIndringersAfkopenMetWampum, wampumAfkoopKostenHuidig } from "@/game/indringersEnDieren";
 import {
   BELEGERINGSDREMPEL,
   beschikbareMissionarissen,
@@ -161,6 +162,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     zetSmederijActief,
     geefTribuut,
     weigerTribuut,
+    koopIndringersAfMetWampum,
     bemanWachttoren,
     haalStrijderTerug,
     bemanCourthouse,
@@ -1790,6 +1792,16 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             onGeefTribuut={geefTribuut}
             onWeigerTribuut={weigerTribuut}
             onSluiten={sluitIndringersMelding}
+            wampumAfkoop={
+              kanIndringersAfkopenMetWampum(state)
+                ? {
+                    kosten: wampumAfkoopKostenHuidig(state),
+                    wampumVoorraad: state.wampum,
+                    onKoopAf: koopIndringersAfMetWampum,
+                  }
+                : undefined
+            }
+            wampumAfkoopBevestigingTekst={popupContent(campagne, "wampumAfkoopPopup")?.tekst}
           />
         )}
         {toonKuddePopup && state.kuddeEvent && (

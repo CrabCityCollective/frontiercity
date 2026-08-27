@@ -6,6 +6,7 @@ import {
   BUIT_BINNENGEHAALD_TEKST,
   INDRINGERS_TITEL,
   WACHTTOREN_OVERROMPELD_TEKST,
+  WAMPUM_AFKOOP_BEVESTIGING_TEKST,
 } from "@/game/tutorialContent";
 import { IndringersEvent } from "@/game/types";
 
@@ -15,6 +16,20 @@ interface IndringersPopupProps {
   onGeefTribuut: () => void;
   onWeigerTribuut: () => void;
   onSluiten: () => void;
+  // Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): `undefined`
+  // zolang de keuze niet getoond moet worden (zie `kanIndringersAfkopenMetWampum`,
+  // indringersEnDieren.ts) — pas ná het Wampanoag-verbond, en alleen op de
+  // gewone tribuut-tak (geen Wachttoren, `fase: "gemeld"`).
+  wampumAfkoop?: {
+    kosten: number;
+    wampumVoorraad: number;
+    onKoopAf: () => void;
+  };
+  // Campagne-eigen flavor-tekst voor de bevestiging hieronder
+  // (`CampaignConfig.popupTeksten.wampumAfkoopTekst`, campagnes.ts) — valt
+  // terug op `WAMPUM_AFKOOP_BEVESTIGING_TEKST` als de campagne (of de
+  // tutorial) geen override heeft.
+  wampumAfkoopBevestigingTekst?: string;
 }
 
 // Indringers-pop-up (hoofdstuk 6): verschijnt zodra `verwerkIndringers`
@@ -39,6 +54,8 @@ export default function IndringersPopup({
   onGeefTribuut,
   onWeigerTribuut,
   onSluiten,
+  wampumAfkoop,
+  wampumAfkoopBevestigingTekst,
 }: IndringersPopupProps) {
   const resourceLabel = event.tribuut ? MATERIAAL_LABELS[event.tribuut.resource].toLowerCase() : "";
   const afbeelding =
@@ -142,13 +159,25 @@ export default function IndringersPopup({
               {event.tribuut.aantal} {resourceLabel} als tribuut. Geef je het, dan trekken ze zich terug. Weiger je,
               dan eisen ze het hoe dan ook op.
             </p>
-            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", flexWrap: "wrap" }}>
               <button className="fc-knop" onClick={onGeefTribuut} style={{ padding: "0.5rem 1.5rem" }}>
                 Geef tribuut
               </button>
               <button className="fc-knop" onClick={onWeigerTribuut} style={{ padding: "0.5rem 1.5rem" }}>
                 Weiger
               </button>
+              {wampumAfkoop && (
+                <button
+                  className="fc-knop"
+                  onClick={wampumAfkoop.onKoopAf}
+                  disabled={wampumAfkoop.wampumVoorraad < wampumAfkoop.kosten}
+                  style={{ padding: "0.5rem 1.5rem" }}
+                >
+                  {wampumAfkoop.wampumVoorraad < wampumAfkoop.kosten
+                    ? `Afkopen met wampum (onvoldoende wampum, ${wampumAfkoop.kosten} nodig)`
+                    : `Afkopen met wampum (${wampumAfkoop.kosten})`}
+                </button>
+              )}
             </div>
           </>
         )}
@@ -163,6 +192,17 @@ export default function IndringersPopup({
               onClick={onGeefTribuut}
               style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}
             >
+              Begrepen
+            </button>
+          </>
+        )}
+
+        {event.fase === "wampum-afgekocht" && (
+          <>
+            <p style={{ margin: 0, lineHeight: 1.6 }}>
+              {wampumAfkoopBevestigingTekst ?? WAMPUM_AFKOOP_BEVESTIGING_TEKST}
+            </p>
+            <button className="fc-knop" onClick={onSluiten} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
               Begrepen
             </button>
           </>

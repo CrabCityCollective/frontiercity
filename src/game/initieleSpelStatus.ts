@@ -104,6 +104,9 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     maisOntvangen: false,
     wampumOntvangen: false,
     cultureelOntgrendeld: !isGoingWest,
+    // Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): begint
+    // altijd leeg — geen enkele stam is bij de start van een run al afgekocht.
+    wampumAfkoopPerStam: {},
     technologieen: [],
     beurt: 1,
     campagneId,

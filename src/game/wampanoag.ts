@@ -370,3 +370,17 @@ export function verwerkWampanoagFaseAfsluiting(state: GameState): GameState {
 export function sluitWampanoagRelatieGelegdMelding(state: GameState): GameState {
   return { ...state, wampanoagRelatieGelegdEvent: undefined };
 }
+
+// Of de Wampanoag "gepacificeerd" zijn — d.w.z. de 3-3-3-handelsdrempel is
+// gehaald en `verwerkWampanoagFaseAfsluiting` hierboven heeft de streek al
+// opgelost (`wampanoagBezet: false`). Gebruikt door de generieke wampum-
+// afkoop (issue "Wampum — invallen tijdelijk afkopen", indringersEnDieren.ts)
+// als de expliciet gevraagde voorwaarde: de speler mag wampum pas als
+// diplomatieke afkoopvaluta inzetten zodra dit eerste verbond met de
+// Wampanoag zelf gesloten is. `false` zolang de streek niet bestaat (tutorial,
+// of een campagne zonder Wampanoag-laag) — dan is er ook geen wampum-bron, dus
+// geen zinvolle afkoop mogelijk.
+export function heeftWampanoagVerbond(state: GameState): boolean {
+  const streek = vindWampanoagStreek(state);
+  return streek !== undefined && !streek.wampanoagBezet;
+}

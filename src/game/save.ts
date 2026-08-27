@@ -40,11 +40,13 @@ export function laadSpel(campagneId?: string): GameState | null {
   try {
     const ruw = window.localStorage.getItem(saveSleutel(campagneId));
     if (!ruw) return null;
-    return metGemigreerdRechtersVeld(
-      metGemigreerdeOntvangenVlaggen(
-        metGemigreerdSmederijActiefVeld(
-          metGemigreerdeSmederijVeld(
-            metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+    return metGemigreerdeWampumAfkoopVeld(
+      metGemigreerdRechtersVeld(
+        metGemigreerdeOntvangenVlaggen(
+          metGemigreerdSmederijActiefVeld(
+            metGemigreerdeSmederijVeld(
+              metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+            )
           )
         )
       )
@@ -192,6 +194,16 @@ function metGemigreerdRechtersVeld(state: GameState): GameState {
   const stad = { ...state.stad, rechters: state.stad.rechters ?? [] };
   const steden = state.steden.map((s) => ({ ...s, rechters: s.rechters ?? [] }));
   return { ...state, stad, steden };
+}
+
+// Migratie voor saves van vóór de wampum-afkoop (issue: "Wampum — invallen
+// tijdelijk afkopen"): oudere saves kennen `GameState.wampumAfkoopPerStam` nog
+// niet. Begint leeg — geen enkele oudere save kan al afgekocht hebben, dit
+// veld bestond nog niet, dus er is niets met terugwerkende kracht af te
+// leiden.
+function metGemigreerdeWampumAfkoopVeld(state: GameState): GameState {
+  if (state.wampumAfkoopPerStam && typeof state.wampumAfkoopPerStam === "object") return state;
+  return { ...state, wampumAfkoopPerStam: {} };
 }
 
 // Verwijdert de opgeslagen run van deze campagne (issue: "Bij game over moet

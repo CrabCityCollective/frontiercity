@@ -15,13 +15,24 @@
 // jachtactie een roofdier oproepen, dat één beurt later toeslaat als de
 // settler er nog staat (`verwerkRoofdieren` hieronder).
 
-import { GameState, IndringersTribuut, KuddeEvent, Streek, MateriaalType, RoofdierEvent, Strijder, Tile } from "./types";
+import {
+  GameState,
+  IndringersTribuut,
+  KuddeEvent,
+  Streek,
+  MateriaalType,
+  RoofdierEvent,
+  Strijder,
+  Tile,
+  WampumAfkoopStatus,
+} from "./types";
 import { hoogsteOntgrendeldeStreek, kuddeJachtBeurtenVoorStreek, STARTKUDDE_POSITIE } from "./world";
 import { kuddeKansFactor } from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
 import { campagneConfig } from "./campagnes";
 import { isTileVerbondenMetStad } from "./wegen";
 import { metActieveStad } from "./stad";
+import { heeftWampanoagVerbond } from "./wampanoag";
 
 // Kans per beurt dat er ergens een indringers-incident plaatsvindt
 // (hoofdstuk 6/14) — één trekking voor de hele stad, niet meer per streek.
@@ -69,6 +80,54 @@ const INDRINGERS_MALUS_KANS = 0.1;
 // Buit-bedrag bij de bonus-uitkomst hierboven (hoofdstuk 6/14) — MVP-
 // richtwaarde, tunebaar.
 const INDRINGERS_BUIT_GOUD = 6;
+
+// Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): een generiek,
+// niet aan één specifieke stam gekoppeld derde alternatief naast
+// `geefTribuut`/`weigerTribuut` hieronder — de speler koopt met wampum
+// tijdelijke rust van dezelfde stam die net het incident veroorzaakte, in
+// plaats van tribuut te geven of te weigeren. Werkt voor elke huidige/
+// toekomstige stam-namenpool (`CampaignConfig.indringersStamNamen`/
+// `indringersStamNamenNaVerbond`, campagnes.ts) zonder wijziging, want
+// gesleuteld op de al bestaande `IndringersEvent.stamNaam` in plaats van op
+// een hardcoded stamnaam. Alleen beschikbaar ná het Wampanoag-verbond
+// (`heeftWampanoagVerbond`, wampanoag.ts) — expliciet gevraagd in het issue:
+// "mag pas in effect gaan op het moment dat de Wampanoag zijn gepacificeerd".
+// MVP-richtwaarde, tunebaar (issue noemt 5-8 beurten).
+const WAMPUM_AFKOOP_RUST_BEURTEN = 6;
+
+// Oplopende kostenreeks per stam (issue: "3 wampum (eerste keer), 5 (tweede
+// keer), 8 (derde keer), daarna verder oplopend volgens een vaste curve"):
+// de eerste drie afkopen bij dezelfde stam volgen de vaste reeks hieronder,
+// elke afkoop daarna kost `WAMPUM_AFKOOP_KOSTEN_STAP` méér dan de vorige —
+// lineair oplopend (het issue vraagt geen kwadratische curve zoals
+// `cultuurKostenVoorStreek`/`wetenschapKostenVoorDrempel`, world.ts/techTree.ts,
+// alleen "vergelijkbaar met hoe andere oplopende kosten al zijn opgebouwd").
+const WAMPUM_AFKOOP_KOSTEN_REEKS = [3, 5, 8];
+const WAMPUM_AFKOOP_KOSTEN_STAP = 4;
+
+// Kosten van de vólgende afkoop bij een stam die al `aantalAlAfgekocht` keer
+// eerder afgekocht is (0 = nog nooit) — pure functie, geen state nodig.
+export function wampumAfkoopKosten(aantalAlAfgekocht: number): number {
+  if (aantalAlAfgekocht < WAMPUM_AFKOOP_KOSTEN_REEKS.length) {
+    return WAMPUM_AFKOOP_KOSTEN_REEKS[aantalAlAfgekocht];
+  }
+  const extraKeerBovenReeks = aantalAlAfgekocht - WAMPUM_AFKOOP_KOSTEN_REEKS.length + 1;
+  return WAMPUM_AFKOOP_KOSTEN_REEKS[WAMPUM_AFKOOP_KOSTEN_REEKS.length - 1] + WAMPUM_AFKOOP_KOSTEN_STAP * extraKeerBovenReeks;
+}
+
+// Status van een stam in `GameState.wampumAfkoopPerStam` — ontbreekt de stam
+// nog in die map, dan betekent dat "nog nooit afgekocht, geen rust actief".
+function wampumAfkoopStatusVoorStam(state: GameState, stamNaam: string): WampumAfkoopStatus {
+  return state.wampumAfkoopPerStam[stamNaam] ?? { aantalAfgekocht: 0, rustTotBeurt: 0 };
+}
+
+// Of deze stam op dit moment "rust" heeft na een eerdere afkoop — gebruikt
+// door `verwerkIndringers` hieronder om de stam-namenpool te filteren vóór de
+// trekking, zodat een afgekochte stam geen nieuw incident veroorzaakt totdat
+// de rustperiode voorbij is.
+function heeftWampumAfkoopRust(state: GameState, stamNaam: string): boolean {
+  return wampumAfkoopStatusVoorStam(state, stamNaam).rustTotBeurt > state.beurt;
+}
 
 // Kuddes verschijnen vanaf `KUDDE_MIN_STREEK` (issue: "jagen en farmen
 // omdraaien" — de jacht is nu vanaf streek 1 de eerste voedselbron, dus
@@ -308,7 +367,13 @@ export function verwerkIndringers(state: GameState): GameState {
   // na-verbond-pool is.
   const stamNamenPool =
     (naVerbond ? campagne?.indringersStamNamenNaVerbond : undefined) ?? campagne?.indringersStamNamen ?? INDRINGERS_STAMMEN;
-  const stamNaam = stamNamenPool[Math.floor(Math.random() * stamNamenPool.length)];
+  // Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): een stam die
+  // nog "rust" heeft na een eerdere afkoop doet niet mee in deze trekking —
+  // filteren behoudt de volgorde van de pool, dus zolang geen enkele stam rust
+  // heeft (het gangbare geval) verandert hier niets aan de bestaande trekking.
+  const beschikbareStamNamen = stamNamenPool.filter((naam) => !heeftWampumAfkoopRust(state, naam));
+  if (beschikbareStamNamen.length === 0) return state;
+  const stamNaam = beschikbareStamNamen[Math.floor(Math.random() * beschikbareStamNamen.length)];
   const amberOnderVuur = heeftActieveAmberader(streek) || undefined;
 
   const beschermendeWachttoren = vindBeschermendeWachttoren(state, streek);
@@ -650,4 +715,62 @@ export function geefTribuut(state: GameState): GameState {
   };
 
   return { ...state, voorraad, indringersEvent: undefined, indringersStatistieken };
+}
+
+// Of de wampum-afkoop-keuze (IndringersPopup.tsx) getoond moet worden naast
+// de bestaande tribuut-knoppen (issue "Wampum — invallen tijdelijk afkopen").
+// Zelfde tak als de tribuut-keuze zelf (`fase: "gemeld"`, geen Wachttoren) —
+// een reeds afgeslagen of al afgedwongen (`fase: "geforceerd"`) incident kent
+// geen keuze meer. Los daarvan pas beschikbaar ná het Wampanoag-verbond
+// (`heeftWampanoagVerbond`), expliciet gevraagd in het issue. Zegt niets over
+// of de speler het zich kan veroorloven — zie `wampumAfkoopKostenHuidig`
+// hieronder, de UI disablet de knop zelf bij onvoldoende voorraad.
+export function kanIndringersAfkopenMetWampum(state: GameState): boolean {
+  const event = state.indringersEvent;
+  return Boolean(event && !event.heeftWachttoren && event.tribuut && event.fase === "gemeld" && heeftWampanoagVerbond(state));
+}
+
+// Kosten van de afkoop van het huidige incident (alleen zinvol op te vragen
+// als `kanIndringersAfkopenMetWampum` hierboven `true` teruggeeft) — puur
+// afgeleid van hoe vaak déze stam al eerder afgekocht is, geen state-mutatie.
+export function wampumAfkoopKostenHuidig(state: GameState): number {
+  const stamNaam = state.indringersEvent?.stamNaam;
+  if (!stamNaam) return 0;
+  return wampumAfkoopKosten(wampumAfkoopStatusVoorStam(state, stamNaam).aantalAfgekocht);
+}
+
+// Koopt het huidige incident af met wampum (issue "Wampum — invallen
+// tijdelijk afkopen"): generiek derde alternatief naast `geefTribuut`/
+// `weigerTribuut` hierboven. Trekt de oplopende kosten direct van de
+// wampum-voorraad af, sluit de melding, en geeft exact déze stam een
+// tijdelijke rust van `WAMPUM_AFKOOP_RUST_BEURTEN` beurten (zie het filter in
+// `verwerkIndringers` hierboven) — een andere stam blijft onaangetast, ook al
+// deelt die een andere naam uit dezelfde of een latere pool
+// (`indringersStamNamenNaVerbond`). Negeert de aanroep stilzwijgend als de
+// keuze niet getoond zou worden (`kanIndringersAfkopenMetWampum`) of de
+// speler het zich niet kan veroorloven — zelfde veilige-aanroep-conventie als
+// de rest van dit bestand.
+export function koopIndringersAfMetWampum(state: GameState): GameState {
+  if (!kanIndringersAfkopenMetWampum(state)) return state;
+  const event = state.indringersEvent!;
+
+  const status = wampumAfkoopStatusVoorStam(state, event.stamNaam);
+  const kosten = wampumAfkoopKosten(status.aantalAfgekocht);
+  if (state.wampum < kosten) return state;
+
+  return {
+    ...state,
+    wampum: state.wampum - kosten,
+    wampumAfkoopPerStam: {
+      ...state.wampumAfkoopPerStam,
+      [event.stamNaam]: {
+        aantalAfgekocht: status.aantalAfgekocht + 1,
+        rustTotBeurt: state.beurt + WAMPUM_AFKOOP_RUST_BEURTEN,
+      },
+    },
+    // Niet meteen wissen (vergelijk `geefTribuut` hierboven) — de pop-up toont
+    // eerst nog een korte bevestiging (issue), pas `sluitIndringersMelding`
+    // wist het event echt.
+    indringersEvent: { ...event, fase: "wampum-afgekocht" },
+  };
 }

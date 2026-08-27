@@ -394,6 +394,13 @@ export const WACHTTOREN_OVERROMPELD_TEKST =
 export const BUIT_BINNENGEHAALD_TEKST =
   "De aanval wordt afgeslagen, en de bemanning neemt iets mee terug: goud dat de indringers achterlieten.";
 
+// Wampum-afkoop-bevestiging (issue "Wampum — invallen tijdelijk afkopen"):
+// generieke terugval-tekst, getoond zodra een campagne (of de tutorial) geen
+// eigen `popupTeksten.wampumAfkoopTekst` opgeeft (`CampaignConfig`,
+// campagnes.ts) — zelfde terugval-patroon als `INDRINGERS_STAMMEN` hierboven.
+export const WAMPUM_AFKOOP_BEVESTIGING_TEKST =
+  "Met wampum gepaaid, trekken ze zich voorlopig terug. Reken niet op blijvende rust.";
+
 // Kudde-melding (hoofdstuk 17): getoond zodra `verwerkKuddes` (economie.ts)
 // een nieuwe wilde kudde neerzet — zelfde stijlgids als de rest van dit
 // bestand, en dezelfde blokkerende meldings-vorm als de indringers-pop-up

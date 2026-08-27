@@ -39,6 +39,7 @@ import {
 import {
   bevestigAmberOnderVuur as bevestigAmberOnderVuurActie,
   geefTribuut as geefTribuutActie,
+  koopIndringersAfMetWampum as koopIndringersAfMetWampumActie,
   sluitIndringersMelding as sluitIndringersMeldingActie,
   sluitKuddeMelding as sluitKuddeMeldingActie,
   sluitRoofdierMelding as sluitRoofdierMeldingActie,
@@ -276,6 +277,10 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => weigerTribuutActie(huidig));
   }, []);
 
+  const koopIndringersAfMetWampum = useCallback(() => {
+    setState((huidig) => koopIndringersAfMetWampumActie(huidig));
+  }, []);
+
   const bemanWachttoren = useCallback((strijderId: string, hoogte: number, positieInStreek: number) => {
     setState((huidig) => bemanWachttorenActie(huidig, strijderId, hoogte, positieInStreek));
   }, []);
@@ -418,6 +423,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     zetSmederijActief,
     geefTribuut,
     weigerTribuut,
+    koopIndringersAfMetWampum,
     bemanWachttoren,
     haalStrijderTerug,
     bemanCourthouse,
