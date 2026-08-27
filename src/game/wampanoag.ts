@@ -379,8 +379,16 @@ export function sluitWampanoagRelatieGelegdMelding(state: GameState): GameState 
 // diplomatieke afkoopvaluta inzetten zodra dit eerste verbond met de
 // Wampanoag zelf gesloten is. `false` zolang de streek niet bestaat (tutorial,
 // of een campagne zonder Wampanoag-laag) — dan is er ook geen wampum-bron, dus
-// geen zinvolle afkoop mogelijk.
+// geen zinvolle afkoop mogelijk. Ook `false` zolang de streek nog nooit "in
+// beeld" is gekomen (`wampanoagBezet` dan nog `undefined`, niet `false`) —
+// bugfix (issue "Going west campaign indringers"): een losse `!wampanoagBezet`
+// check behandelde "nog nooit ontdekt" ten onrechte hetzelfde als "verbond
+// gesloten", waardoor `verwerkIndringers` (indringersEnDieren.ts) al vanaf
+// het allereerste begin van een Going West-run dacht dat het verbond al
+// gesloten was. De strikte `=== false` hieronder eist dat de streek eerst
+// daadwerkelijk `wampanoagBezet: true` is geweest (`initialiseerWampanoagLaag`,
+// worldGoingWest.ts) vóór hij als "opgelost" telt.
 export function heeftWampanoagVerbond(state: GameState): boolean {
   const streek = vindWampanoagStreek(state);
-  return streek !== undefined && !streek.wampanoagBezet;
+  return streek?.wampanoagBezet === false;
 }

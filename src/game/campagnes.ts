@@ -130,8 +130,10 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   // toon uit ontwerp.md: onrust met de Wampanoag al vóór de handelsrelatie er is.
   indringersStamNamen: ["de Wampanoag", "het Wampanoag-volk"],
   // Vervolg op de Wampanoag-opening (issue "Na de Wampanoag", M22): zodra het
-  // verbond gesloten is (`cultureelOntgrendeld`, de 3-3-3-handelsdrempel uit
-  // wampanoag.ts), zijn streken 1-7 — het voormalige Wampanoag-invalsgebied —
+  // verbond gesloten is (`heeftWampanoagVerbond`, de 3-3-3-handelsdrempel uit
+  // wampanoag.ts — niet `cultureelOntgrendeld`, dat hangt sinds "Wampanoag
+  // streek pas helemaal onthuld na handel" alleen nog aan de Smederij), zijn
+  // streken 1-7 — het voormalige Wampanoag-invalsgebied —
   // blijvend veilig, en nemen drie nieuwe stammen de invallen verderop over.
   // Eén daarvan (de Shawnee) staat al vast; de andere twee zijn nog te
   // bedenken en staan hier bewust als placeholder, net als de "todo"-
