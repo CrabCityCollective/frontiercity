@@ -19,18 +19,22 @@ interface ResourceHudProps {
 // `beurtMagAutomatischDoorgaan` in economie.ts.
 export default function ResourceHud({ state }: ResourceHudProps) {
   const volgendeStreekHoogte = hoogsteOntgrendeldeStreek(state.streken) + 1;
+  // Cultuur/wetenschap blijven intern fractioneel (progressie-valuta, zie
+  // types.ts) — `Math.round` hier zorgt dat de HUD altijd een heel getal
+  // toont (issue: "Voedsel hele getallen": alle resources, niet alleen
+  // voedsel).
   const cultuurLabel =
     volgendeStreekHoogte <= state.streken.length
-      ? `${state.cultuur} / ${cultuurKostenVoorStreek(volgendeStreekHoogte)} (streek ${volgendeStreekHoogte})`
-      : `${state.cultuur} (alle streken ontgrendeld)`;
+      ? `${Math.round(state.cultuur)} / ${cultuurKostenVoorStreek(volgendeStreekHoogte)} (streek ${volgendeStreekHoogte})`
+      : `${Math.round(state.cultuur)} (alle streken ontgrendeld)`;
   // Wetenschap → technologie-boom (hoofdstuk 3/9, issue: "tech tree
   // toevoegen") — zelfde label-patroon als cultuur hierboven, maar naar een
   // drempel (1-3) in plaats van een streek.
   const volgendeDrempel = (state.technologieen.length + 1) as TechDrempel;
   const wetenschapLabel =
     volgendeDrempel <= 3
-      ? `${state.wetenschap} / ${wetenschapKostenVoorDrempel(volgendeDrempel)} (drempel ${volgendeDrempel})`
-      : `${state.wetenschap} (technologie-boom compleet)`;
+      ? `${Math.round(state.wetenschap)} / ${wetenschapKostenVoorDrempel(volgendeDrempel)} (drempel ${volgendeDrempel})`
+      : `${Math.round(state.wetenschap)} (technologie-boom compleet)`;
 
   return (
     <>
@@ -45,7 +49,7 @@ export default function ResourceHud({ state }: ResourceHudProps) {
             </span>
           ))}
           <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-            <ResourceIcoon type="voedsel" /> {state.voedsel}
+            <ResourceIcoon type="voedsel" /> {Math.round(state.voedsel)}
           </span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
             <ResourceIcoon type="cultuur" /> {cultuurLabel}

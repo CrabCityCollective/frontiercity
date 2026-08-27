@@ -23,15 +23,23 @@ function ResourceRegel({
   huidig: number;
   verandering: number;
 }) {
-  const teken = verandering > 0 ? "+" : verandering < 0 ? "" : "±";
+  // `Math.round` op zowel huidig als verandering zorgt dat dit paneel altijd
+  // hele getallen toont, ook voor cultuur/wetenschap die intern fractioneel
+  // blijven (issue: "Voedsel hele getallen").
+  const gerondeVerandering = Math.round(verandering);
+  const teken = gerondeVerandering > 0 ? "+" : gerondeVerandering < 0 ? "" : "±";
   const kleur =
-    verandering > 0 ? "var(--kleur-groen, #4a8f4a)" : verandering < 0 ? "var(--kleur-rood, #b04a3a)" : "var(--kleur-tekst-gedempt)";
+    gerondeVerandering > 0
+      ? "var(--kleur-groen, #4a8f4a)"
+      : gerondeVerandering < 0
+        ? "var(--kleur-rood, #b04a3a)"
+        : "var(--kleur-tekst-gedempt)";
 
   return (
     <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem" }}>
       <span>{label}</span>
       <span>
-        {huidig} <span style={{ color: kleur }}>({teken}{verandering})</span>
+        {Math.round(huidig)} <span style={{ color: kleur }}>({teken}{gerondeVerandering})</span>
       </span>
     </div>
   );

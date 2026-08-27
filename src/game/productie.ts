@@ -284,7 +284,11 @@ export function verwerkProductie(state: GameState): GameState {
     }
   }
 
-  voedsel = Math.max(0, voedsel + berekenVoedselNetto(state));
+  // `Math.floor` houdt voedsel geheeltallig, net als de materiaal-voorraad
+  // hierboven (issue: "Voedsel hele getallen") — zonder deze afronding kon de
+  // onrust-productiemultiplier (onrust.ts, fractioneel tussen 0.4 en 1) een
+  // niet-geheel getal in `state.voedsel` laten belanden.
+  voedsel = Math.max(0, Math.floor(voedsel + berekenVoedselNetto(state)));
 
   // Smederij (Going West, M21d, opdracht-wampanoag-opening.md §3): 2 erts → 1
   // gereedschap per beurt, zolang er genoeg erts voorradig is — anders geen
