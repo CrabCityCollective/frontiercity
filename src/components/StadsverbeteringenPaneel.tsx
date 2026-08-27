@@ -1,6 +1,7 @@
 "use client";
 
-import { CAPPED_CITY_IMPROVEMENTS, cityImprovementCap, effectBeschrijving } from "@/game/improvements";
+import { CAPPED_CITY_IMPROVEMENTS, cityImprovementCap, effectBeschrijving, improvementNaam } from "@/game/improvements";
+import { campagneConfig } from "@/game/campagnes";
 import { frontierAfstand, stadEffectiviteit, stadVervalZone, StadVervalZone } from "@/game/stad";
 import { GameState, Improvement } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
@@ -55,6 +56,7 @@ export default function StadsverbeteringenPaneel({
   // tutorial (`cultureelOntgrendeld: true` vanaf de start) ziet dit gedrag
   // nooit.
   const zichtbareImprovements = state.cultureelOntgrendeld ? CAPPED_CITY_IMPROVEMENTS : [];
+  const campagne = campagneConfig(state.campagneId);
   const effectiviteit = stadEffectiviteit(state, stad);
   const afstand = frontierAfstand(state, stad);
   const zone = stadVervalZone(afstand);
@@ -86,7 +88,7 @@ export default function StadsverbeteringenPaneel({
 
       {inAanbouw && (
         <>
-          <p style={{ margin: 0 }}>{inAanbouw.improvement.naam} in aanbouw…</p>
+          <p style={{ margin: 0 }}>{improvementNaam(inAanbouw.improvement, campagne)} in aanbouw…</p>
           <RushMetGoudKnop
             improvement={inAanbouw.improvement}
             voortgang={inAanbouw.voortgang}
@@ -108,7 +110,7 @@ export default function StadsverbeteringenPaneel({
           if (gebouwd) {
             return (
               <span key={improvement.id} className="fc-knop" style={{ opacity: 0.7 }}>
-                {improvement.naam} (gebouwd)
+                {improvementNaam(improvement, campagne)} (gebouwd)
                 <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
                   {effectBeschrijving(improvement)}
                 </span>
@@ -129,7 +131,7 @@ export default function StadsverbeteringenPaneel({
               disabled={!kanBouwen}
               onClick={() => onStartCityVerbetering(improvement)}
             >
-              {improvement.naam} (<KostenIcons kosten={improvement.kosten} />, {improvement.bouwtijdBeurten} beurten)
+              {improvementNaam(improvement, campagne)} (<KostenIcons kosten={improvement.kosten} />, {improvement.bouwtijdBeurten} beurten)
               <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
                 {effectBeschrijving(improvement)}
               </span>

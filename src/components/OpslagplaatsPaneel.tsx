@@ -1,6 +1,7 @@
 "use client";
 
-import { OPSLAGPLAATS } from "@/game/improvements";
+import { campagneConfig } from "@/game/campagnes";
+import { OPSLAGPLAATS, improvementNaam } from "@/game/improvements";
 import { GameState } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
@@ -23,6 +24,8 @@ export default function OpslagplaatsPaneel({
   onVersnelOpslagplaats,
 }: OpslagplaatsPaneelProps) {
   const { opslagplaatsInAanbouw } = state.stad;
+  const campagne = campagneConfig(state.campagneId);
+  const naam = improvementNaam(OPSLAGPLAATS, campagne);
 
   return (
     <div
@@ -37,7 +40,7 @@ export default function OpslagplaatsPaneel({
       }}
     >
       <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
-        Opslagplaats
+        {naam}
       </strong>
       <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
         Huidige opslag-cap: {state.opslagCap} (per grondstof, hout/steen/erts/goud elk apart)
@@ -45,7 +48,7 @@ export default function OpslagplaatsPaneel({
 
       {opslagplaatsInAanbouw ? (
         <>
-          <p style={{ margin: 0 }}>Opslagplaats in aanbouw…</p>
+          <p style={{ margin: 0 }}>{naam} in aanbouw…</p>
           <RushMetGoudKnop
             improvement={opslagplaatsInAanbouw.improvement}
             voortgang={opslagplaatsInAanbouw.voortgang}
@@ -59,7 +62,7 @@ export default function OpslagplaatsPaneel({
           onClick={onStartOpslagplaats}
           style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
         >
-          Bouw Opslagplaats (<KostenIcons kosten={OPSLAGPLAATS.kosten} />, {OPSLAGPLAATS.bouwtijdBeurten} beurten, +
+          Bouw {naam} (<KostenIcons kosten={OPSLAGPLAATS.kosten} />, {OPSLAGPLAATS.bouwtijdBeurten} beurten, +
           {OPSLAGPLAATS.effect.waarde} opslag-cap)
         </button>
       )}

@@ -1,7 +1,8 @@
 "use client";
 
+import { campagneConfig } from "@/game/campagnes";
 import { kanTweedeSettlerBouwen } from "@/game/groeiEnRekrutering";
-import { aquaductVoedseldrempelVerlaging, GROTE_WOONWIJK, NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
+import { aquaductVoedseldrempelVerlaging, GROTE_WOONWIJK, improvementNaam, NIEUWE_SETTLER, WOONWIJK } from "@/game/improvements";
 import { City, GameState } from "@/game/types";
 import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "@/game/world";
 import { KostenIcons } from "./ResourceIcoon";
@@ -49,6 +50,7 @@ export default function CivielPaneel({
   onVersnelCiviel,
 }: CivielPaneelProps) {
   const { stad, voedsel, settler } = state;
+  const campagne = campagneConfig(state.campagneId);
 
   const groeiTier = groeiTierVoorGrootte(stad);
   const kanGroeien = groeiTier !== undefined;
@@ -94,7 +96,7 @@ export default function CivielPaneel({
         <p style={{ margin: 0 }}>
           {stad.civielInAanbouw.improvement.id === "nieuwe-settler"
             ? "Nieuwe settler wordt uitgerust…"
-            : `${stad.civielInAanbouw.improvement.naam} in aanbouw (groei naar ${
+            : `${improvementNaam(stad.civielInAanbouw.improvement, campagne)} in aanbouw (groei naar ${
                 (stad.civielInAanbouw.improvement.effect.naarGrootte as string) ?? "?"
               })…`}
         </p>
