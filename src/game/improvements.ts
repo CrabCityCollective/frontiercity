@@ -154,14 +154,14 @@ export function terreinEisenBeschrijving(improvement: Improvement): string | und
 }
 
 // Of `improvement` op dit specifieke vakje geplaatst mag worden: de gewone
-// terrein-eis hierboven, plus — alleen voor de Amberader (issue: "toevoeging
-// Goud" Deel 1) — de aanvullende amberader-vondst-eis (`tile.amber`, zie
-// world.ts). Een gewone Mijn mag op elk heuvel/bergvakje, maar een Amberader
-// alleen op de schaarse vakjes die daadwerkelijk een amberader hebben — het
+// terrein-eis hierboven, plus — alleen voor de Goudader (issue: "toevoeging
+// Goud" Deel 1) — de aanvullende goudader-vondst-eis (`tile.goud`, zie
+// world.ts). Een gewone Mijn mag op elk heuvel/bergvakje, maar een Goudader
+// alleen op de schaarse vakjes die daadwerkelijk een goudader hebben — het
 // enige improvement met een vakje-specifieke eis bovenop het terreintype.
 export function improvementPastOpTile(improvement: Improvement, tile: Tile): boolean {
   if (!improvementPastOpTerrein(improvement, tile.terrein)) return false;
-  if (improvement.id === "goudmijn") return Boolean(tile.amber);
+  if (improvement.id === "goudmijn") return Boolean(tile.goud);
   return true;
 }
 
@@ -269,17 +269,17 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     terreinEisen: ["vlak"],
     vereisteTech: "aardewerk",
   },
-  // Amberader (hoofdstuk 3/14, issue: "toevoeging Goud" Deel 1): functioneel
+  // Goudader (hoofdstuk 3/14, issue: "toevoeging Goud" Deel 1): functioneel
   // een goudmijn — interne sleutel `goudmijn`, tutorial-weergavenaam
-  // "Amberader" (val terug via `improvementNaam()` hierboven). Zelfde
+  // "Goudader" (val terug via `improvementNaam()` hierboven). Zelfde
   // terrein-eis en bouwkosten als de gewone Mijn hierboven (heuvel/berg, hout
   // 8/steen 4, bouwtijd 3), maar schaarser: `improvementPastOpTile` eist
-  // daarnaast `tile.amber` (zie world.ts) — niet elk heuvel/bergvakje heeft
-  // een amberader. `uitputtingBeurten` 12 ligt in het midden van de
+  // daarnaast `tile.goud` (zie world.ts) — niet elk heuvel/bergvakje heeft
+  // een goudader. `uitputtingBeurten` 12 ligt in het midden van de
   // "gewoon"-range (10-14 beurten, hoofdstuk 14) uit het issue.
   {
     id: "goudmijn",
-    naam: "Amberader",
+    naam: "Goudader",
     categorie: "economisch",
     soort: "land",
     kosten: { hout: 8, steen: 4 },
@@ -290,7 +290,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
   },
 ];
 
-export const AMBERADER = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "goudmijn")!;
+export const GOUDADER = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "goudmijn")!;
 
 export const VOORRAADKUIL = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "voorraadkuil")!;
 

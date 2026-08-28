@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { jaag, verplaatsSettlerNaar } from "./acties";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { startNieuweSettler } from "./groeiEnRekrutering";
-import { bevestigAmberOnderVuur, geefTribuut } from "./indringersEnDieren";
+import { bevestigGoudOnderVuur, geefTribuut } from "./indringersEnDieren";
 import { startBouw } from "./infrastructuurEnBouw";
-import { AMBERADER } from "./improvements";
+import { GOUDADER } from "./improvements";
 import { GameState } from "./types";
 import { KUDDE_GROTE_JACHT_BEURTEN, ROOFDIER_MIN_STREEK } from "./world";
 import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
@@ -277,7 +277,7 @@ function metOntgrendeldeStreek3(streken: GameState["streken"]): GameState["strek
   );
 }
 
-test("een streek met een actieve Amberader weegt zwaarder mee in de indringers-streek-trekking (issue: Amberader bonus/malus-koppeling)", () => {
+test("een streek met een actieve Goudader weegt zwaarder mee in de indringers-streek-trekking (issue: Goudader bonus/malus-koppeling)", () => {
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
@@ -288,7 +288,7 @@ test("een streek met een actieve Amberader weegt zwaarder mee in de indringers-s
               ...streek,
               ontgrendeld: true,
               tiles: streek.tiles.map((tile) =>
-                tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
+                tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: GOUDADER } : tile
               ),
             }
           : streek
@@ -297,9 +297,9 @@ test("een streek met een actieve Amberader weegt zwaarder mee in de indringers-s
   };
 
   // Twee ontgrendelde streken doen mee: streek 1 (gewoon, gewicht 1) en streek 2
-  // (actieve Amberader, gewicht 2) — totaalgewicht 3, drempel voor streek 1 ligt
+  // (actieve Goudader, gewicht 2) — totaalgewicht 3, drempel voor streek 1 ligt
   // dus op 1/3. Bij een zuiver uniforme trekking zou 0.4 nog altijd op streek 1
-  // uitkomen (floor(0.4 * 2) = 0); met de Amberader-weging (0.4 > 1/3) komt
+  // uitkomen (floor(0.4 * 2) = 0); met de Goudader-weging (0.4 > 1/3) komt
   // dezelfde randomwaarde juist op streek 2 uit — het bewijs dat de weging
   // daadwerkelijk effect heeft. De derde waarde (stamnaam-trekking) is
   // irrelevant voor deze assertie.
@@ -308,11 +308,11 @@ test("een streek met een actieve Amberader weegt zwaarder mee in de indringers-s
   assert.equal(
     state.indringersEvent?.streekHoogte,
     2,
-    "de streek met de actieve Amberader moet bij dubbel gewicht op deze randomwaarde geloot worden, niet de gewone streek"
+    "de streek met de actieve Goudader moet bij dubbel gewicht op deze randomwaarde geloot worden, niet de gewone streek"
   );
 });
 
-test("een uitgeputte Amberader (ghost town) telt niet meer mee voor het extra indringers-gewicht", () => {
+test("een uitgeputte Goudader (ghost town) telt niet meer mee voor het extra indringers-gewicht", () => {
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
@@ -323,7 +323,7 @@ test("een uitgeputte Amberader (ghost town) telt niet meer mee voor het extra in
               ...streek,
               ontgrendeld: true,
               tiles: streek.tiles.map((tile) =>
-                tile.positieInStreek === 4 ? { ...tile, status: "ghost_town" as const, improvement: AMBERADER } : tile
+                tile.positieInStreek === 4 ? { ...tile, status: "ghost_town" as const, improvement: GOUDADER } : tile
               ),
             }
           : streek
@@ -331,7 +331,7 @@ test("een uitgeputte Amberader (ghost town) telt niet meer mee voor het extra in
     ),
   };
 
-  // Zelfde randomwaarde als hierboven (0.4), maar nu is de Amberader
+  // Zelfde randomwaarde als hierboven (0.4), maar nu is de Goudader
   // uitgeput: beide streken wegen even zwaar (gewicht 1), dus dit gedraagt zich
   // weer als de gewone uniforme trekking en komt op streek 1 uit.
   state = metRandomReeks([0, 0.4, 0], () => volgendeBeurt(state));
@@ -339,7 +339,7 @@ test("een uitgeputte Amberader (ghost town) telt niet meer mee voor het extra in
   assert.equal(
     state.indringersEvent?.streekHoogte,
     1,
-    "een uitgeputte Amberader mag geen verhoogd gewicht meer geven — een lege put trekt niemand meer"
+    "een uitgeputte Goudader mag geen verhoogd gewicht meer geven — een lege put trekt niemand meer"
   );
 });
 
@@ -526,7 +526,7 @@ test("bonus-uitkomst: de bemanning buit goud van de indringers (issue: wachttore
   assert.equal(state.stad.strijders.length, 1, "de bemannende strijder blijft bij een bonus-uitkomst behouden");
 });
 
-test("een streek met een actieve Amberader krijgt eerst de 'Amberader onder vuur'-aankondiging, óók als de streek beschermd is — pas na bevestigAmberOnderVuur schuift de melding door naar de eigenlijke uitkomst", () => {
+test("een streek met een actieve Goudader krijgt eerst de 'Goudader onder vuur'-aankondiging, óók als de streek beschermd is — pas na bevestigGoudOnderVuur schuift de melding door naar de eigenlijke uitkomst", () => {
   let state = metBeschermdeStreek();
   state = {
     ...state,
@@ -535,7 +535,7 @@ test("een streek met een actieve Amberader krijgt eerst de 'Amberader onder vuur
         ? {
             ...streek,
             tiles: streek.tiles.map((tile) =>
-              tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: AMBERADER } : tile
+              tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: GOUDADER } : tile
             ),
           }
         : streek
@@ -547,15 +547,15 @@ test("een streek met een actieve Amberader krijgt eerst de 'Amberader onder vuur
   // stamnaam (0); uitkomst-worp (0.5) → standhouden.
   state = metRandomReeks([0, 0, 0, 0.5], () => volgendeBeurt(state));
 
-  assert.equal(state.indringersEvent?.amberOnderVuur, true);
-  assert.equal(state.indringersEvent?.fase, "amber-onder-vuur");
+  assert.equal(state.indringersEvent?.goudOnderVuur, true);
+  assert.equal(state.indringersEvent?.fase, "goud-onder-vuur");
   assert.equal(
     state.indringersEvent?.uitkomst,
     "standhouden",
     "de uitkomst is al bepaald en opgeslagen, ook al is de aankondiging nog niet weggeklikt"
   );
 
-  state = bevestigAmberOnderVuur(state);
+  state = bevestigGoudOnderVuur(state);
   assert.equal(
     state.indringersEvent?.fase,
     "gemeld",

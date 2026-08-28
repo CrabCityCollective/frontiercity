@@ -21,8 +21,8 @@ import {
 } from "./improvements";
 import { GameState, Settler, Tile } from "./types";
 import {
-  AMBER_ONTDEKKING_STREEK,
-  AMBER_ONTDEKKING_STREEK_2,
+  GOUD_ONTDEKKING_STREEK,
+  GOUD_ONTDEKKING_STREEK_2,
   cultuurKostenVoorStreek,
   hoogsteOntgrendeldeStreek,
   initialiseerBezetteStreek,
@@ -65,8 +65,8 @@ export const WOLOLO_INKOMEN_PER_MISSIONARIS = 5;
 export function verwerkStreekOntgrendeling(state: GameState): GameState {
   let streken = state.streken;
   let volgendeHoogte = hoogsteOntgrendeldeStreek(streken) + 1;
-  let amberOntdektEvent = state.amberOntdektEvent;
-  let tweedeAmberOntdektEvent = state.tweedeAmberOntdektEvent;
+  let goudOntdektEvent = state.goudOntdektEvent;
+  let tweedeGoudOntdektEvent = state.tweedeGoudOntdektEvent;
   let bezetteStreekOntdektEvent = state.bezetteStreekOntdektEvent;
   let wampanoagLaagOntdektEvent = state.wampanoagLaagOntdektEvent;
 
@@ -78,7 +78,7 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
     // verkenner", Deel 2): in plaats van normaal te ontgrendelen, komt deze
     // streek "in beeld" — dezelfde soort trigger als de gegarandeerde
-    // Amberader-vondst hieronder. De streek blijft `ontgrendeld: false` (dus
+    // Goudader-vondst hieronder. De streek blijft `ontgrendeld: false` (dus
     // de frontier blijft op de streek eronder staan) tot alle vijandelijke
     // Heiligdommen vernietigd zijn (`verwerkBelegering` hieronder in de
     // `volgendeBeurt`-pijplijn) — de `while`-lus stopt hier dus altijd,
@@ -120,20 +120,20 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     streken = streken.map((streek) =>
       streek.hoogte === volgendeHoogte ? { ...streek, ontgrendeld: true } : streek
     );
-    // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
-    // gegarandeerde eerste Amberader-locatie ligt op `AMBER_ONTDEKKING_STREEK`
+    // Goudader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
+    // gegarandeerde eerste Goudader-locatie ligt op `GOUD_ONTDEKKING_STREEK`
     // (world.ts) — deze `while`-lus loopt precies één keer door die hoogte
     // heen op het moment dat hij ontgrendelt, dus dit triggert vanzelf maar
     // één keer per run, net als de streek-ontgrendeling zelf.
-    if (volgendeHoogte === AMBER_ONTDEKKING_STREEK) {
-      amberOntdektEvent = true;
+    if (volgendeHoogte === GOUD_ONTDEKKING_STREEK) {
+      goudOntdektEvent = true;
     }
-    // Tweede Amberader-ontdekking (hoofdstuk 3/11/14, issue: "Amberader
+    // Tweede Goudader-ontdekking (hoofdstuk 3/11/14, issue: "Goudader
     // sowieso op streek 12"): zelfde eenmalige trigger als hierboven, maar op
-    // `AMBER_ONTDEKKING_STREEK_2` — de softlock-preventie vlak vóór de Bezette
+    // `GOUD_ONTDEKKING_STREEK_2` — de softlock-preventie vlak vóór de Bezette
     // Streek.
-    if (volgendeHoogte === AMBER_ONTDEKKING_STREEK_2) {
-      tweedeAmberOntdektEvent = true;
+    if (volgendeHoogte === GOUD_ONTDEKKING_STREEK_2) {
+      tweedeGoudOntdektEvent = true;
     }
     // Gegarandeerde kudde op de roofdier-introductiestreek (hoofdstuk 14/17,
     // issue: "Eerste streek geen roofdieren", vervolgvraag): zodra
@@ -141,7 +141,7 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     // kudde op `ROOFDIER_STREEK_KUDDE_POSITIE` — de speler hoeft niet op de
     // gewone, willekeurige `verwerkKuddes`-trekking te wachten om het net
     // uitgelegde roofdier-risico ook meteen in de praktijk te kunnen
-    // ervaren. Zelfde eenmalige trigger als de Amberader-ontdekkingen
+    // ervaren. Zelfde eenmalige trigger als de Goudader-ontdekkingen
     // hierboven: deze `while`-lus loopt precies één keer door deze hoogte
     // heen op het moment van ontgrendelen.
     if (volgendeHoogte === ROOFDIER_MIN_STREEK) {
@@ -165,11 +165,11 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     bezetteStreekOntdektEvent === state.bezetteStreekOntdektEvent &&
     wampanoagLaagOntdektEvent === state.wampanoagLaagOntdektEvent
     ? state
-    : { ...state, streken, amberOntdektEvent, tweedeAmberOntdektEvent, bezetteStreekOntdektEvent, wampanoagLaagOntdektEvent };
+    : { ...state, streken, goudOntdektEvent, tweedeGoudOntdektEvent, bezetteStreekOntdektEvent, wampanoagLaagOntdektEvent };
 }
 
 // Sluit de "Bezette Streek ontdekt"-melding (Deel 2) — puur een
-// UI-bevestiging, zelfde patroon als `sluitAmberOntdektMelding` hieronder.
+// UI-bevestiging, zelfde patroon als `sluitGoudOntdektMelding` hieronder.
 export function sluitBezetteStreekOntdektMelding(state: GameState): GameState {
   return { ...state, bezetteStreekOntdektEvent: undefined };
 }
@@ -183,17 +183,17 @@ export function sluitWampanoagLaagOntdektMelding(state: GameState): GameState {
   return { ...state, wampanoagLaagOntdektEvent: undefined };
 }
 
-// Sluit de Amberader-ontdekkingsmelding (hoofdstuk 3/14) — puur een
+// Sluit de Goudader-ontdekkingsmelding (hoofdstuk 3/14) — puur een
 // UI-bevestiging, zelfde patroon als `sluitKuddeMelding` hierboven.
-export function sluitAmberOntdektMelding(state: GameState): GameState {
-  return { ...state, amberOntdektEvent: undefined };
+export function sluitGoudOntdektMelding(state: GameState): GameState {
+  return { ...state, goudOntdektEvent: undefined };
 }
 
-// Sluit de tweede Amberader-ontdekkingsmelding (hoofdstuk 3/11/14, issue:
-// "Amberader sowieso op streek 12") — puur een UI-bevestiging, zelfde patroon
-// als `sluitAmberOntdektMelding` hierboven.
-export function sluitTweedeAmberOntdektMelding(state: GameState): GameState {
-  return { ...state, tweedeAmberOntdektEvent: undefined };
+// Sluit de tweede Goudader-ontdekkingsmelding (hoofdstuk 3/11/14, issue:
+// "Goudader sowieso op streek 12") — puur een UI-bevestiging, zelfde patroon
+// als `sluitGoudOntdektMelding` hierboven.
+export function sluitTweedeGoudOntdektMelding(state: GameState): GameState {
+  return { ...state, tweedeGoudOntdektEvent: undefined };
 }
 
 // Of er een voltooid Offer Altaar staat (Deel 4) — net als

@@ -143,22 +143,22 @@ function versWaterVoorTile(hoogte: number, positieInStreek: number): boolean {
   return TUTORIAL_VERS_WATER[hoogte]?.includes(positieInStreek) ?? false;
 }
 
-// Streek waarop de eerste Amberader-locatie gegarandeerd zichtbaar/beschikbaar
+// Streek waarop de eerste Goudader-locatie gegarandeerd zichtbaar/beschikbaar
 // wordt (issue: "toevoeging Goud" Deel 1) — gedeeld met `verwerkStreekOntgrendeling`
 // in economie.ts, die op precies deze streek de ontdekkings-pop-up (hoofdstuk
 // 3/14) triggert.
-export const AMBER_ONTDEKKING_STREEK = 8;
+export const GOUD_ONTDEKKING_STREEK = 8;
 
-// Streek waarop de tweede, gegarandeerde Amberader-locatie beschikbaar komt
-// (issue: "Amberader sowieso op streek 12" — softlock-preventie): een speler
-// die de eerste Amberader (streek 8) liet uitputten zonder ooit een Markt te
+// Streek waarop de tweede, gegarandeerde Goudader-locatie beschikbaar komt
+// (issue: "Goudader sowieso op streek 12" — softlock-preventie): een speler
+// die de eerste Goudader (streek 8) liet uitputten zonder ooit een Markt te
 // bouwen, zou anders zonder lopend goud-inkomen tegen de Bezette Streek (streek
 // 13, hoofdstuk 6) kunnen aanlopen terwijl zowel Offer Altaar als Legerkamp
 // goud vereisen (hoofdstuk 11/14). Bewust vlak vóór streek 13 gekozen — laat
 // (de speler heeft de kans gehad zelf een Markt te bouwen) maar nog op tijd
 // om alsnog goud op te bouwen. Zelfde trigger-patroon als
-// `AMBER_ONTDEKKING_STREEK` hierboven.
-export const AMBER_ONTDEKKING_STREEK_2 = 12;
+// `GOUD_ONTDEKKING_STREEK` hierboven.
+export const GOUD_ONTDEKKING_STREEK_2 = 12;
 
 // Streek vanaf waar de jacht een roofdier-risico met zich meebrengt
 // (hoofdstuk 14/17, issue: "Eerste streek geen roofdieren" — verplaatst van
@@ -209,32 +209,32 @@ export function kuddeJachtBeurtenVoorStreek(hoogte: number): number {
   return hoogte >= ROOFDIER_MIN_STREEK ? KUDDE_GROTE_JACHT_BEURTEN : KUDDE_JACHT_BEURTEN;
 }
 
-// Vakjes met een amberader — de vondst-eis van de Amberader/goudmijn-
+// Vakjes met een goudader — de vondst-eis van de Goudader/goudmijn-
 // improvement (hoofdstuk 3/14), bovenop de gewone heuvel/berg-terreineis van
 // een mijn (zie `improvementPastOpTile` in improvements.ts). Bewust schaarser
 // dan gewone erts-mijn-locaties: van de 33 heuvel/berg-vakjes in de hele
 // tutorial (`TUTORIAL_TILE_TERREIN` hierboven) hebben er hier maar drie een
-// amberader, tegenover "elk heuvel/bergvakje" voor een gewone mijn. Vast,
+// goudader, tegenover "elk heuvel/bergvakje" voor een gewone mijn. Vast,
 // niet-procedureel (net als `TUTORIAL_VERS_WATER` hierboven) en bewust zo
-// gekozen dat streek `AMBER_ONTDEKKING_STREEK` de eerste is met zo'n vakje — de
+// gekozen dat streek `GOUD_ONTDEKKING_STREEK` de eerste is met zo'n vakje — de
 // speler heeft dus nooit pech en hoeft nooit voorbij die streek te zoeken naar
-// de eerste kans op een Amberader. Streek `AMBER_ONTDEKKING_STREEK_2` (positie 2,
+// de eerste kans op een Goudader. Streek `GOUD_ONTDEKKING_STREEK_2` (positie 2,
 // een bergvakje) is op dezelfde manier gegarandeerd de tweede vondst.
-const TUTORIAL_AMBER: Record<number, number[]> = {
+const TUTORIAL_GOUD: Record<number, number[]> = {
   8: [0],
   9: [5],
   12: [2],
 };
 
-function amberVoorTile(hoogte: number, positieInStreek: number): boolean {
-  return TUTORIAL_AMBER[hoogte]?.includes(positieInStreek) ?? false;
+function goudVoorTile(hoogte: number, positieInStreek: number): boolean {
+  return TUTORIAL_GOUD[hoogte]?.includes(positieInStreek) ?? false;
 }
 
 // Vaste inhoud-verdeling van de Bezette Streek (hoofdstuk 6, issue: "De
 // Bezette Streek, missionaris en verkenner", Deel 1 — aantal wachttorens/
 // heiligdommen bijgesteld naar issue "laatste confrontatie tweaken")
 // — tutorial-scripting op `BEZETTE_STREEK_HOOGTE` (streek 13), net zo
-// vastgelegd/niet-procedureel als `TUTORIAL_AMBER` hierboven. Verspreid over
+// vastgelegd/niet-procedureel als `TUTORIAL_GOUD` hierboven. Verspreid over
 // 8 van de 9 vakjes: precies één vijandelijke Wachttoren (het enige
 // Confrontatie-doel) en één vijandelijk Heiligdom (het enige
 // Belegeringsdoel) — bewust op precies 1 van elk gehouden, want de streek
@@ -262,7 +262,7 @@ function bezetteStreekInhoudVoorTile(hoogte: number, positieInStreek: number): B
 
 // Initialiseert een Bezette Streek zodra ze "in beeld komt" (economie.ts:
 // `verwerkStreekOntgrendeling`, dezelfde soort trigger als de gegarandeerde
-// Amberader-vondst op streek 8): zet `bezet: true` en verhult elk vakje
+// Goudader-vondst op streek 8): zet `bezet: true` en verhult elk vakje
 // individueel (`Tile.verhuld`), los van de gewone streek-brede fog-of-war —
 // de streek zelf blijft `ontgrendeld: false` tot alle vijandelijke
 // Wachttorens/Heiligdommen opgeruimd zijn (zie `verwerkBelegering` in
@@ -297,7 +297,7 @@ function maakLegeTiles(hoogte: number): Tile[] {
     terrein: terreinVoorTile(hoogte, positieInStreek),
     status: "leeg" as const,
     versWater: versWaterVoorTile(hoogte, positieInStreek),
-    amber: amberVoorTile(hoogte, positieInStreek),
+    goud: goudVoorTile(hoogte, positieInStreek),
   }));
 }
 

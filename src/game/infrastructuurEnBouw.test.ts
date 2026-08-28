@@ -2,36 +2,36 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { maakInitieleSpelStatus } from "./economie";
 import { infrastructuurVoortgang, startBouw } from "./infrastructuurEnBouw";
-import { AMBERADER, BARAKKEN, GROTE_TEMPEL, OFFER_ALTAAR } from "./improvements";
+import { GOUDADER, BARAKKEN, GROTE_TEMPEL, OFFER_ALTAAR } from "./improvements";
 import { GameState, Improvement } from "./types";
 import { HEILIGDOM, LEGERKAMP, WACHTTOREN } from "./testHelpers";
 
 // Streek 8, positie 0 is in world.ts vastgelegd als de gegarandeerde eerste
-// amberader-vondst (TUTORIAL_AMBER); positie 1 op diezelfde streek is ook
-// heuvel/berg-terrein maar zonder amberader.
-test("Amberader mag alleen gebouwd worden op een vakje met een amberader-vondst, niet op elk heuvel/bergvakje", () => {
+// goudader-vondst (TUTORIAL_GOUD); positie 1 op diezelfde streek is ook
+// heuvel/berg-terrein maar zonder goudader.
+test("Goudader mag alleen gebouwd worden op een vakje met een goudader-vondst, niet op elk heuvel/bergvakje", () => {
   let state = maakInitieleSpelStatus();
   state = {
     ...state,
     streken: state.streken.map((streek) => (streek.hoogte === 8 ? { ...streek, ontgrendeld: true } : streek)),
   };
   const streek8 = state.streken.find((l) => l.hoogte === 8)!;
-  assert.equal(streek8.tiles[0].amber, true);
-  assert.equal(streek8.tiles[1].amber, false, "heuvel/berg-terrein zonder amberader-vondst");
+  assert.equal(streek8.tiles[0].goud, true);
+  assert.equal(streek8.tiles[1].goud, false, "heuvel/berg-terrein zonder goudader-vondst");
 
-  const nietGeplaatst = startBouw(state, 8, AMBERADER, 1);
+  const nietGeplaatst = startBouw(state, 8, GOUDADER, 1);
   assert.equal(
     nietGeplaatst.streken.find((l) => l.hoogte === 8)!.tiles[1].status,
     "leeg",
-    "een gewoon heuvel/bergvakje zonder amberader is geen geldig Amberader-doel"
+    "een gewoon heuvel/bergvakje zonder goudader is geen geldig Goudader-doel"
   );
 
-  const welGeplaatst = startBouw(state, 8, AMBERADER, 0);
+  const welGeplaatst = startBouw(state, 8, GOUDADER, 0);
   assert.equal(welGeplaatst.streken.find((l) => l.hoogte === 8)!.tiles[0].status, "in_aanbouw");
 });
 
-test("AMBERADER.uitputtingBeurten valt binnen de 'gewoon'-range uit het issue (10-14 beurten)", () => {
-  assert.ok(AMBERADER.uitputtingBeurten! >= 10 && AMBERADER.uitputtingBeurten! <= 14);
+test("GOUDADER.uitputtingBeurten valt binnen de 'gewoon'-range uit het issue (10-14 beurten)", () => {
+  assert.ok(GOUDADER.uitputtingBeurten! >= 10 && GOUDADER.uitputtingBeurten! <= 14);
 });
 
 // Plaatst `aantal` actieve land-tiles met `improvement` over de eerste

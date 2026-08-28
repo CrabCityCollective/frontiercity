@@ -867,12 +867,12 @@ function tekenSterretje(ctx: CanvasRenderingContext2D, x: number, y: number, r: 
   ctx.stroke();
 }
 
-// Amberader (hoofdstuk 3/14, interne id `goudmijn`, weergavenaam "Amberader")
+// Goudader (hoofdstuk 3/14, interne id `goudmijn`, weergavenaam "Goudader")
 // — issue: "wegen en gebouwen verbeteren" (was een kale placeholder-
 // vierkant). Bewust een kleiner rotsblok dan de Steengroeve met een gloeiende
-// amberader erdoorheen, zodat dit improvement ook zonder tile-info-popup te
+// goudader erdoorheen, zodat dit improvement ook zonder tile-info-popup te
 // onderscheiden is van de gewone Mijn en Steengroeve.
-function tekenAmberader(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+function tekenGoudader(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
   const rng = maakSeededRandom(seed);
   const baseY = y + size * 0.86;
   const cx = x + size * 0.5;
@@ -1123,7 +1123,7 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   "vijandelijk-heiligdom": (ctx, x, y, size) => tekenVijandelijkHeiligdomIcon(ctx, x, y, size),
   "bezette-streek-huisje": (ctx, x, y, size) => tekenBezetteStreekHuisje(ctx, x, y, size),
   sterrencirkel: (ctx, x, y, size, seed) => tekenSterrencirkel(ctx, x, y, size, seed),
-  goudmijn: (ctx, x, y, size, seed) => tekenAmberader(ctx, x, y, size, seed),
+  goudmijn: (ctx, x, y, size, seed) => tekenGoudader(ctx, x, y, size, seed),
   voorraadkuil: (ctx, x, y, size, seed) => tekenVoorraadkuil(ctx, x, y, size, seed),
   maisboerderij: (ctx, x, y, size, seed) => tekenMaisboerderij(ctx, x, y, size, seed),
   beverjachthut: (ctx, x, y, size) => tekenBeverjachthut(ctx, x, y, size),

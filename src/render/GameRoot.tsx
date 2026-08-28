@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import AmberOntdektPopup from "@/components/AmberOntdektPopup";
+import GoudOntdektPopup from "@/components/GoudOntdektPopup";
 import BeurtensysteemUitlegPopup from "@/components/BeurtensysteemUitlegPopup";
 import BezetteStreekPaneel from "@/components/BezetteStreekPaneel";
 import BezetteStreekPopup from "@/components/BezetteStreekPopup";
@@ -58,8 +58,8 @@ import {
 } from "@/game/streekOntgrendeling";
 import { kanStuurVerkennerWampanoag, verhuldeWampanoagPosities, wampanoagHandelOpties } from "@/game/wampanoag";
 import {
-  AMBER_ONTDEKKING_TWEEDE_TEKST,
-  AMBER_ONTDEKKING_TWEEDE_TITEL,
+  GOUD_ONTDEKKING_TWEEDE_TEKST,
+  GOUD_ONTDEKKING_TWEEDE_TITEL,
   BOERDERIJ_STREEK_UITLEG_TEKST,
   BOERDERIJ_STREEK_UITLEG_TITEL,
   HEILIGDOM_UITLEG_TEKST,
@@ -152,11 +152,11 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     jaag,
     hakHout,
     sluitIndringersMelding,
-    bevestigAmberOnderVuur,
+    bevestigGoudOnderVuur,
     sluitKuddeMelding,
     sluitRoofdierMelding,
-    sluitAmberOntdektMelding,
-    sluitTweedeAmberOntdektMelding,
+    sluitGoudOntdektMelding,
+    sluitTweedeGoudOntdektMelding,
     versnelBouwMetGoud,
     versnelCivielMetGoud,
     versnelOpslagplaatsMetGoud,
@@ -309,7 +309,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // issue: "De Bezette Streek, missionaris en verkenner", Deel 2 — vervangt de
   // eerdere MilitairUitlegPopup) is zelf géén eenmalige-uitleg-vlag maar een
   // persistente `GameState`-melding (`bezetteStreekOntdektEvent`), net als
-  // `amberOntdektEvent`: kerninhoud, geen uitleg die met de uitleg-toggle
+  // `goudOntdektEvent`: kerninhoud, geen uitleg die met de uitleg-toggle
   // uit mag.
   // Oceaan-uitleg-pop-up (issue: "tutorial laatste stad aan oceaan"): zelfde
   // eenmalige-confirm-vlag, getoond zodra de laatste streek (de oceaan aan de
@@ -609,22 +609,22 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     doelTileVoorPlaatsing?.status === "leeg" &&
     !improvementPastOpTerrein(plaatsingsImprovement, doelTileVoorPlaatsing.terrein);
 
-  // Amberader-vondst-eis (hoofdstuk 3/14, issue: "toevoeging Goud" Deel 1):
+  // Goudader-vondst-eis (hoofdstuk 3/14, issue: "toevoeging Goud" Deel 1):
   // een leeg heuvel/bergvakje voldoet aan de gewone terrein-eis van de
-  // Amberader, maar zonder een amberader-vondst (`tile.amber`, zie world.ts)
+  // Goudader, maar zonder een goudader-vondst (`tile.goud`, zie world.ts)
   // is het alsnog geen geldig plaatsingsdoel — apart van `terreinMismatch`
   // hierboven zodat de UI de juiste reden kan tonen.
-  const amberMismatch =
+  const goudMismatch =
     plaatsingsImprovement?.id === "goudmijn" &&
     doelTileVoorPlaatsing?.status === "leeg" &&
     !terreinMismatch &&
-    !doelTileVoorPlaatsing.amber;
+    !doelTileVoorPlaatsing.goud;
 
   const isGeldigPlaatsingsDoel =
     plaatsingsImprovement !== null &&
     doelTileVoorPlaatsing?.status === "leeg" &&
     !terreinMismatch &&
-    !amberMismatch;
+    !goudMismatch;
 
   // Settler actief zodra de beurt begint (issue: "de settler unit is actief
   // als je aan je beurt begint, de tegels waar je heen kunt lichten op, door
@@ -831,7 +831,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // verkenner", Deel 2 — vervangt de eerdere, kleinere MilitairUitlegPopup):
   // verschijnt zodra `verwerkStreekOntgrendeling` (economie.ts) streek 13 "in
   // beeld" brengt. Los van de uitleg-toggle (kerninhoud, geen uitleg, net als
-  // de indringers-/amberader-pop-ups) — daarom hier bewust géén `uitlegAan`-
+  // de indringers-/goudader-pop-ups) — daarom hier bewust géén `uitlegAan`-
   // check, ook al staat de flag qua prioriteit tussen de uitleg-pop-ups in.
   const toonBezetteStreekOntdektPopup =
     !toonStreekPopup &&
@@ -938,10 +938,10 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     Boolean(state.roofdierEvent);
-  // Amberader-ontdekkingspop-up (hoofdstuk 3/14, issue: "toevoeging Goud") —
+  // Goudader-ontdekkingspop-up (hoofdstuk 3/14, issue: "toevoeging Goud") —
   // zelfde blokkerende vorm en prioriteit als de kudde-/roofdier-pop-ups
   // hierboven, ook los van de uitleg-toggle: dit is kerninhoud, geen uitleg.
-  const toonAmberOntdektPopup =
+  const toonGoudOntdektPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
@@ -957,12 +957,12 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    Boolean(state.amberOntdektEvent);
-  // Tweede Amberader-ontdekkingspop-up (hoofdstuk 3/11/14, issue: "Amberader
+    Boolean(state.goudOntdektEvent);
+  // Tweede Goudader-ontdekkingspop-up (hoofdstuk 3/11/14, issue: "Goudader
   // sowieso op streek 12") — zelfde blokkerende vorm en prioriteit als de
-  // eerste Amberader-pop-up hierboven, één stap lager zodat de eerste vondst
+  // eerste Goudader-pop-up hierboven, één stap lager zodat de eerste vondst
   // altijd voorrang krijgt als beide toevallig in dezelfde beurt triggeren.
-  const toonTweedeAmberOntdektPopup =
+  const toonTweedeGoudOntdektPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
@@ -978,8 +978,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    Boolean(state.tweedeAmberOntdektEvent);
+    !toonGoudOntdektPopup &&
+    Boolean(state.tweedeGoudOntdektEvent);
   // Technologie-keuze-pop-up (hoofdstuk 3/9/11, issue: "tech tree toevoegen"
   // Deel 2) — verschijnt zodra `verwerkTechDrempel` (economie.ts) een drempel
   // bereikt heeft. Net als de indringers-/kudde-/roofdier-pop-ups hierboven
@@ -1001,8 +1001,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     Boolean(state.techKeuzeEvent);
   // Vijandelijk-Heiligdom-onthuld-/veroverd-pop-ups (hoofdstuk 6, issue: "De
   // Bezette Streek, missionaris en verkenner", Deel 4, herzien door "Bezette
@@ -1026,8 +1026,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     Boolean(state.vijandelijkHeiligdomOnthuldEvent);
   const toonVijandelijkHeiligdomVeroverdPopup =
@@ -1046,15 +1046,15 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     Boolean(state.vijandelijkHeiligdomVeroverdEvent);
   // Wachttoren-overal-uitleg-pop-up (issue: "meer uitleg", trigger verschoven
   // van streek 2 naar 3 door "Tweede streek boerderij"): laagste prioriteit
   // van de uitleg-pop-ups, zodat hij nooit kerninhoud (indringers/kudde/
-  // roofdier/amber/tech/bezette streek) onderbreekt — verschijnt zodra streek
+  // roofdier/goud/tech/bezette streek) onderbreekt — verschijnt zodra streek
   // 3 voor het eerst ontgrendelt en alle hogere-prioriteit pop-ups afgehandeld
   // zijn.
   const toonWachttorenOveralUitlegPopup =
@@ -1073,8 +1073,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1105,8 +1105,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1135,8 +1135,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1166,8 +1166,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1204,8 +1204,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1236,8 +1236,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1281,8 +1281,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1314,8 +1314,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1348,8 +1348,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1383,8 +1383,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1424,8 +1424,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1458,8 +1458,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1509,8 +1509,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1552,8 +1552,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1597,8 +1597,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1633,8 +1633,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1674,8 +1674,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1721,8 +1721,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonIndringersPopup &&
     !toonKuddePopup &&
     !toonRoofdierPopup &&
-    !toonAmberOntdektPopup &&
-    !toonTweedeAmberOntdektPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
     !toonTechKeuzePopup &&
     !toonVijandelijkHeiligdomOnthuldPopup &&
     !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -1854,7 +1854,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
         {toonIndringersPopup && state.indringersEvent && (
           <IndringersPopup
             event={state.indringersEvent}
-            onBevestigAmberOnderVuur={bevestigAmberOnderVuur}
+            onBevestigGoudOnderVuur={bevestigGoudOnderVuur}
             onGeefTribuut={geefTribuut}
             onSluiten={sluitIndringersMelding}
             wampumAfkoop={
@@ -1875,12 +1875,12 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
         {toonRoofdierPopup && state.roofdierEvent && (
           <RoofdierPopup event={state.roofdierEvent} onSluiten={sluitRoofdierMelding} />
         )}
-        {toonAmberOntdektPopup && <AmberOntdektPopup onSluiten={sluitAmberOntdektMelding} />}
-        {toonTweedeAmberOntdektPopup && (
-          <AmberOntdektPopup
-            titel={AMBER_ONTDEKKING_TWEEDE_TITEL}
-            tekst={AMBER_ONTDEKKING_TWEEDE_TEKST}
-            onSluiten={sluitTweedeAmberOntdektMelding}
+        {toonGoudOntdektPopup && <GoudOntdektPopup onSluiten={sluitGoudOntdektMelding} />}
+        {toonTweedeGoudOntdektPopup && (
+          <GoudOntdektPopup
+            titel={GOUD_ONTDEKKING_TWEEDE_TITEL}
+            tekst={GOUD_ONTDEKKING_TWEEDE_TEKST}
+            onSluiten={sluitTweedeGoudOntdektMelding}
           />
         )}
         {toonTechKeuzePopup && state.techKeuzeEvent && (
@@ -1892,14 +1892,14 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           />
         )}
         {toonCampagneOpeningPopup && (
-          <AmberOntdektPopup
+          <GoudOntdektPopup
             titel={popupContent(campagne, "campagneOpeningPopup")?.titel}
             tekst={popupContent(campagne, "campagneOpeningPopup")?.tekst}
             onSluiten={() => markeerUitlegGezien("campagneOpening")}
           />
         )}
         {toonEersteContactPopup && (
-          <AmberOntdektPopup
+          <GoudOntdektPopup
             titel={popupContent(campagne, "eersteContactPopup")?.titel}
             tekst={popupContent(campagne, "eersteContactPopup")?.tekst}
             afbeelding="/assets/scenes/wampanoag-trading.png"
@@ -1907,21 +1907,21 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           />
         )}
         {toonWampanoagRelatieGelegdPopup && (
-          <AmberOntdektPopup
+          <GoudOntdektPopup
             titel={popupContent(campagne, "wampanoagRelatieGelegdPopup")?.titel}
             tekst={popupContent(campagne, "wampanoagRelatieGelegdPopup")?.tekst}
             onSluiten={sluitWampanoagRelatieGelegdMelding}
           />
         )}
         {toonSmederijGebouwdPopup && (
-          <AmberOntdektPopup
+          <GoudOntdektPopup
             titel={popupContent(campagne, "smederijGebouwdPopup")?.titel}
             tekst={popupContent(campagne, "smederijGebouwdPopup")?.tekst}
             onSluiten={sluitSmederijGebouwdMelding}
           />
         )}
         {toonOnrustUitlegPopup && (
-          <AmberOntdektPopup
+          <GoudOntdektPopup
             titel={popupContent(campagne, "onrustUitlegPopup")?.titel}
             tekst={popupContent(campagne, "onrustUitlegPopup")?.tekst}
             afbeelding="/assets/scenes/onrust.png"
@@ -2041,7 +2041,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           />
         )}
         {toonBoonPopup && state.boonToegekendEvent && (
-          <AmberOntdektPopup
+          <GoudOntdektPopup
             titel={boonMetId(state.boonToegekendEvent)?.naam}
             tekst={boonMetId(state.boonToegekendEvent)?.beschrijving}
             onSluiten={sluitBoonMelding}
@@ -2069,8 +2069,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             !toonIndringersPopup &&
             !toonKuddePopup &&
             !toonRoofdierPopup &&
-            !toonAmberOntdektPopup &&
-            !toonTweedeAmberOntdektPopup &&
+            !toonGoudOntdektPopup &&
+            !toonTweedeGoudOntdektPopup &&
             !toonTechKeuzePopup &&
             !toonVijandelijkHeiligdomOnthuldPopup &&
             !toonVijandelijkHeiligdomVeroverdPopup &&
@@ -2104,8 +2104,8 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           terreinWaarschuwing={
             terreinMismatch
               ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — vereist ${terreinEisenBeschrijving(plaatsingsImprovement!)}.`
-              : amberMismatch
-                ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — hier is geen amberader gevonden.`
+              : goudMismatch
+                ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — hier is geen goudader gevonden.`
                 : undefined
           }
           rushVraag={

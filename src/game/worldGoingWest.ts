@@ -1,7 +1,7 @@
 // Vaste (niet-procedurele) campagnewereld voor de Amerikaanse frontier-campagne
 // ("Going West", hoofdstuk 8/9/14 design-doc) — M20b (hoofdstuk 13/15). Zelfde
 // patroon als de tutorial-worldgen (world.ts): losse `Record<hoogte, ...>`-
-// tabellen voor terreintype/subtype/vers-water/amberader/dreigingsniveau,
+// tabellen voor terreintype/subtype/vers-water/goudader/dreigingsniveau,
 // hier volledig losstaand van de tutorial-tabellen gehouden zodat die
 // ongewijzigd blijven (CLAUDE.md). Besloten (issue #247, hoofdstuk 8/11): een
 // handgeschreven, vaste kaart in plaats van seeded-RNG/procedurele
@@ -110,12 +110,12 @@ export function terreinTypeVoorStreek(hoogte: number): string {
 // berg-vakje. Sinds `beschikbareOpties` (improvements.ts) de tutorial-
 // `minStreek`-tempobeperking niet meer toepast op Going West (issue: "Going
 // west campaign geen tutorial") kan de speler daardoor al vanaf streek 1
-// tegelijk Steengroeve, Mijn, Amberader en Wachttoren willen bouwen, terwijl
+// tegelijk Steengroeve, Mijn, Goudader en Wachttoren willen bouwen, terwijl
 // er maar één geschikt vakje voor was. Streek 1-4 hebben daarom hier een
 // ruimere heuvel/berg-mix (3 in plaats van 1) gekregen, zodat "alle
 // grondstoffen komen in principe al op streek 1 voor" ook daadwerkelijk
-// tegelijk bouwbaar is — zie ook `GOING_WEST_AMBER` hieronder voor de
-// bijbehorende amber-vondst op streek 1. Streek 6 draagt het Wampanoag-kamp
+// tegelijk bouwbaar is — zie ook `GOING_WEST_GOUD` hieronder voor de
+// bijbehorende goud-vondst op streek 1. Streek 6 draagt het Wampanoag-kamp
 // op zijn vijf middelste vakjes (positie 2 t/m 6, issue "Wampanoag kamp
 // uitbreiding"): positie 2 is `vlak` voor de Maïsboerderij, positie 6 (al
 // `vlak`) krijgt zijn vers-water-vondst via `GOING_WEST_VERS_WATER` hieronder
@@ -274,17 +274,17 @@ export function initialiseerWampanoagLaag(streek: Streek): Streek {
   };
 }
 
-// Amberader/goudmijn-vondsten (hoofdstuk 3/14) — vast en niet-procedureel,
-// net als TUTORIAL_AMBER in world.ts. Altijd op een heuvel/bergvakje (de
+// Goudader/goudmijn-vondsten (hoofdstuk 3/14) — vast en niet-procedureel,
+// net als TUTORIAL_GOUD in world.ts. Altijd op een heuvel/bergvakje (de
 // gewone mijn-terreineis, zie `improvementPastOpTile` in improvements.ts).
-// Streek 1 heeft, anders dan de tutorial (waar Amberader pas op streek 8
-// verschijnt, zie AMBER_ONTDEKKING_STREEK in world.ts), meteen al een vondst
+// Streek 1 heeft, anders dan de tutorial (waar Goudader pas op streek 8
+// verschijnt, zie GOUD_ONTDEKKING_STREEK in world.ts), meteen al een vondst
 // op het berg-vakje (positie 8, GOING_WEST_TILE_TERREIN hierboven) — issue:
 // "Going west campaign geen tutorial", "alle grondstoffen moeten in principe
 // voorkomen op streek 1" (dus ook goud). De rest van de vondsten blijft
 // verspreid over de canyon/mesa- en hooggebergte-zones waar heuvel/berg-
 // vakjes veruit het talrijkst zijn.
-const GOING_WEST_AMBER: Record<number, number[]> = {
+const GOING_WEST_GOUD: Record<number, number[]> = {
   1: [8],
   11: [0],
   15: [1],
@@ -294,8 +294,8 @@ const GOING_WEST_AMBER: Record<number, number[]> = {
   31: [6],
 };
 
-function amberVoorTile(hoogte: number, positieInStreek: number): boolean {
-  return GOING_WEST_AMBER[hoogte]?.includes(positieInStreek) ?? false;
+function goudVoorTile(hoogte: number, positieInStreek: number): boolean {
+  return GOING_WEST_GOUD[hoogte]?.includes(positieInStreek) ?? false;
 }
 
 // Dreigingsniveau per streek (hoofdstuk 6) — zelfde MVP-placeholder-formule
@@ -312,7 +312,7 @@ function maakLegeTiles(hoogte: number): Tile[] {
     terrein: terreinVoorTile(hoogte, positieInStreek),
     status: "leeg" as const,
     versWater: versWaterVoorTile(hoogte, positieInStreek),
-    amber: amberVoorTile(hoogte, positieInStreek),
+    goud: goudVoorTile(hoogte, positieInStreek),
   }));
 }
 

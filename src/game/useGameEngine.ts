@@ -38,7 +38,7 @@ import {
   zetSmederijActief as zetSmederijActiefActie,
 } from "./groeiEnRekrutering";
 import {
-  bevestigAmberOnderVuur as bevestigAmberOnderVuurActie,
+  bevestigGoudOnderVuur as bevestigGoudOnderVuurActie,
   geefTribuut as geefTribuutActie,
   koopIndringersAfMetWampum as koopIndringersAfMetWampumActie,
   sluitIndringersMelding as sluitIndringersMeldingActie,
@@ -46,9 +46,9 @@ import {
   sluitRoofdierMelding as sluitRoofdierMeldingActie,
 } from "./indringersEnDieren";
 import {
-  sluitAmberOntdektMelding as sluitAmberOntdektMeldingActie,
+  sluitGoudOntdektMelding as sluitGoudOntdektMeldingActie,
   sluitBezetteStreekOntdektMelding as sluitBezetteStreekOntdektMeldingActie,
-  sluitTweedeAmberOntdektMelding as sluitTweedeAmberOntdektMeldingActie,
+  sluitTweedeGoudOntdektMelding as sluitTweedeGoudOntdektMeldingActie,
   sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
   sluitVijandelijkHeiligdomVeroverdMelding as sluitVijandelijkHeiligdomVeroverdMeldingActie,
   sluitWampanoagLaagOntdektMelding as sluitWampanoagLaagOntdektMeldingActie,
@@ -227,8 +227,8 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => sluitIndringersMeldingActie(huidig));
   }, []);
 
-  const bevestigAmberOnderVuur = useCallback(() => {
-    setState((huidig) => bevestigAmberOnderVuurActie(huidig));
+  const bevestigGoudOnderVuur = useCallback(() => {
+    setState((huidig) => bevestigGoudOnderVuurActie(huidig));
   }, []);
 
   const sluitKuddeMelding = useCallback(() => {
@@ -239,12 +239,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => sluitRoofdierMeldingActie(huidig));
   }, []);
 
-  const sluitAmberOntdektMelding = useCallback(() => {
-    setState((huidig) => sluitAmberOntdektMeldingActie(huidig));
+  const sluitGoudOntdektMelding = useCallback(() => {
+    setState((huidig) => sluitGoudOntdektMeldingActie(huidig));
   }, []);
 
-  const sluitTweedeAmberOntdektMelding = useCallback(() => {
-    setState((huidig) => sluitTweedeAmberOntdektMeldingActie(huidig));
+  const sluitTweedeGoudOntdektMelding = useCallback(() => {
+    setState((huidig) => sluitTweedeGoudOntdektMeldingActie(huidig));
   }, []);
 
   const versnelBouwMetGoud = useCallback((hoogte: number, positieInStreek: number) => {
@@ -317,7 +317,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
   }, []);
 
   // Boon-systeem (issue #411/#414) — zelfde dunne wrapper-conventie als
-  // `sluitAmberOntdektMelding` hierboven.
+  // `sluitGoudOntdektMelding` hierboven.
   const sluitBoonMelding = useCallback(() => {
     setState((huidig) => sluitBoonMeldingActie(huidig));
   }, []);
@@ -413,11 +413,11 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     jaag,
     hakHout,
     sluitIndringersMelding,
-    bevestigAmberOnderVuur,
+    bevestigGoudOnderVuur,
     sluitKuddeMelding,
     sluitRoofdierMelding,
-    sluitAmberOntdektMelding,
-    sluitTweedeAmberOntdektMelding,
+    sluitGoudOntdektMelding,
+    sluitTweedeGoudOntdektMelding,
     versnelBouwMetGoud,
     versnelCivielMetGoud,
     versnelOpslagplaatsMetGoud,

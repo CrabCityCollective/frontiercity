@@ -4,7 +4,7 @@ import { bouwStagneertVolgendeBeurt, RUSH_GOUD_PER_BEURT, rushKostenGoud, versne
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { startRecrutering } from "./groeiEnRekrutering";
 import { startBouw } from "./infrastructuurEnBouw";
-import { AMBERADER, SOLDAAT } from "./improvements";
+import { GOUDADER, SOLDAAT } from "./improvements";
 
 test("een tijdelijk tekort aan één grondstof blokkeert niet de voortgang op een andere", () => {
   let state = maakInitieleSpelStatus();
@@ -51,9 +51,9 @@ test("versnelBouwMetGoud koopt de volledige resterende bouwtijd van een land-til
     ...state,
     streken: state.streken.map((streek) => (streek.hoogte === 8 ? { ...streek, ontgrendeld: true } : streek)),
   };
-  state = startBouw(state, 8, AMBERADER, 0);
+  state = startBouw(state, 8, GOUDADER, 0);
   const voortgang = state.streken.find((l) => l.hoogte === 8)!.tiles[0].bouwVoortgang!;
-  const kosten = rushKostenGoud(AMBERADER, voortgang);
+  const kosten = rushKostenGoud(GOUDADER, voortgang);
   state = { ...state, voorraad: { ...state.voorraad, goud: kosten } };
 
   const naVersnellen = versnelBouwMetGoud(state, 8, 0);
@@ -61,7 +61,7 @@ test("versnelBouwMetGoud koopt de volledige resterende bouwtijd van een land-til
 
   assert.equal(tile.status, "actief");
   assert.equal(tile.bouwVoortgang, undefined);
-  assert.equal(tile.beurtenTotUitputting, AMBERADER.uitputtingBeurten);
+  assert.equal(tile.beurtenTotUitputting, GOUDADER.uitputtingBeurten);
   assert.equal(naVersnellen.voorraad.goud, 0, `alle ${kosten} goud is uitgegeven`);
 });
 
@@ -71,8 +71,8 @@ test("versnelBouwMetGoud koopt maar een deel van de beurten weg als er niet geno
     ...state,
     streken: state.streken.map((streek) => (streek.hoogte === 8 ? { ...streek, ontgrendeld: true } : streek)),
   };
-  state = startBouw(state, 8, AMBERADER, 0);
-  // AMBERADER kost hout 8/steen 4 over 3 beurten (perBeurt: 3 hout, 2 steen)
+  state = startBouw(state, 8, GOUDADER, 0);
+  // GOUDADER kost hout 8/steen 4 over 3 beurten (perBeurt: 3 hout, 2 steen)
   // — RUSH_GOUD_PER_BEURT goud is precies genoeg voor 1 van de 3 beurten.
   state = { ...state, voorraad: { ...state.voorraad, goud: RUSH_GOUD_PER_BEURT } };
 
