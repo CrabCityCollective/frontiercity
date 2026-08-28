@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import ResourceIcoon from "./ResourceIcoon";
 import { berekenEconomieOverzicht } from "@/game/economie";
 import { MATERIAAL_LABELS } from "@/game/improvements";
+import { berekenBoerderijOpbrengstRuw } from "@/game/productie";
 import { GameState, MateriaalType } from "@/game/types";
 
 interface EconomieOverzichtPaneelProps {
@@ -45,6 +46,28 @@ function ResourceRegel({
   );
 }
 
+// Ingesprongen sub-regel onder Voedsel (issue: "Economie scherm breakdown",
+// eerste, bewust kleinere stap — voor nu alleen de ruwe boerderijopbrengst,
+// zonder de tech-/onrust-modifiers die de latere volledige uitsplitsing wel
+// zal tonen).
+function BoerderijSubRegel({ opbrengst }: { opbrengst: number }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        gap: "0.75rem",
+        paddingLeft: "1.25rem",
+        color: "var(--kleur-tekst-gedempt)",
+        fontSize: "0.8rem",
+      }}
+    >
+      <span>Boerderijen (volgende beurt)</span>
+      <span style={{ color: "var(--kleur-groen, #4a8f4a)" }}>+{Math.round(opbrengst)}</span>
+    </div>
+  );
+}
+
 // Economie-overzicht (issue: "Economie overzicht" — "een knop waarop je een
 // economie overzicht kunt inzien ... hoeveel resources er volgende beurt
 // vanaf of en bij komen ... alle grondstoffen, voedsel, cultuur en
@@ -53,6 +76,7 @@ function ResourceRegel({
 export default function EconomieOverzichtPaneel({ state, onSluiten }: EconomieOverzichtPaneelProps) {
   const overzicht = berekenEconomieOverzicht(state);
   const materiaalTypes = Object.keys(MATERIAAL_LABELS) as MateriaalType[];
+  const boerderijOpbrengstRuw = berekenBoerderijOpbrengstRuw(state);
 
   return (
     <div
@@ -93,6 +117,7 @@ export default function EconomieOverzichtPaneel({ state, onSluiten }: EconomieOv
             />
           ))}
           <ResourceRegel label={<ResourceIcoon type="voedsel" />} huidig={state.voedsel} verandering={overzicht.voedsel} />
+          <BoerderijSubRegel opbrengst={boerderijOpbrengstRuw} />
           <ResourceRegel label={<ResourceIcoon type="cultuur" />} huidig={state.cultuur} verandering={overzicht.cultuur} />
           <ResourceRegel
             label={<ResourceIcoon type="wetenschap" />}

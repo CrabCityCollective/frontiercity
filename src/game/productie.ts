@@ -115,6 +115,37 @@ function voedselVerbruik(state: GameState): number {
   );
 }
 
+// Ruwe boerderij-opbrengst volgende beurt (issue: "Economie scherm
+// breakdown", eerste, bewust kleinere stap — nog zonder de tech-/onrust-
+// modifiers die `berekenVoedselProductie` hierboven wel toepast): som van de
+// basiswaarde van elke actieve, wegverbonden Boerderij-tile. Gebruikt door
+// EconomieOverzichtPaneel om apart van de netto voedselverandering te tonen
+// wat de boerderijen alleen opleveren.
+export function berekenBoerderijOpbrengstRuw(state: GameState): number {
+  let productie = 0;
+
+  for (const streek of state.streken) {
+    for (const tile of streek.tiles) {
+      const effect = tile.improvement?.effect;
+      if (
+        tile.status !== "actief" ||
+        tile.improvement?.id !== "boerderij" ||
+        effect?.type !== "productie" ||
+        effect.resource !== "voedsel" ||
+        !effect.waarde
+      ) {
+        continue;
+      }
+      if (!isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)) {
+        continue;
+      }
+      productie += effect.waarde;
+    }
+  }
+
+  return productie;
+}
+
 // Netto voedselverandering deze beurt: productie min verbruik. Negatief
 // betekent dat de voorraad slinkt — gebruikt door zowel `verwerkProductie`
 // (om de voorraad bij te werken) als `verwerkVerval` (om te voorspellen
