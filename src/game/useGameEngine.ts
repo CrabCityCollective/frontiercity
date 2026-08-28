@@ -9,6 +9,7 @@ import {
   stichtStad as stichtStadActie,
   verplaatsSettlerNaar as verplaatsSettlerNaarActie,
 } from "./acties";
+import { sluitBoonMelding as sluitBoonMeldingActie } from "./boons";
 import { versnelBouwMetGoud as versnelBouwMetGoudActie } from "./bouwwachtrij";
 import {
   beurtMagAutomatischDoorgaan,
@@ -315,6 +316,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => bevestigStichtingsMomentPopupActie(huidig, stedenAantal));
   }, []);
 
+  // Boon-systeem (issue #411/#414) — zelfde dunne wrapper-conventie als
+  // `sluitAmberOntdektMelding` hierboven.
+  const sluitBoonMelding = useCallback(() => {
+    setState((huidig) => sluitBoonMeldingActie(huidig));
+  }, []);
+
   const kiesTech = useCallback((techId: TechId) => {
     setState((huidig) => kiesTechActie(huidig, techId));
   }, []);
@@ -427,6 +434,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     markeerUitlegGezien,
     bevestigStreekPopup,
     bevestigStichtingsMomentPopup,
+    sluitBoonMelding,
     kiesTech,
     stuurVerkenner,
     stuurVerkennerWampanoag,

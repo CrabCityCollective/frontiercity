@@ -45,6 +45,7 @@ import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
 import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
+import { boonMetId } from "@/game/boons";
 import { campagneConfig, popupContent, streekContentVoorCampagne } from "@/game/campagnes";
 import { improvementNaam, improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { kanIndringersAfkopenMetWampum, wampumAfkoopKostenHuidig } from "@/game/indringersEnDieren";
@@ -172,6 +173,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     markeerUitlegGezien,
     bevestigStreekPopup,
     bevestigStichtingsMomentPopup,
+    sluitBoonMelding,
     kiesTech,
     stuurVerkenner,
     stuurVerkennerWampanoag,
@@ -1527,6 +1529,49 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     state.campagneId !== undefined &&
     state.steden.length > laatsteBevestigdeStedenAantal;
 
+  // Boon-toekenningspop-up (issue #411/#414, boons.ts): moet altijd direct ná
+  // de Stichtingsmoment-pop-up hierboven en vóór elke andere pop-up
+  // verschijnen (issue #414, vraag 4) — daarom, anders dan de "onderaan de
+  // keten"-conventie van de Wampanoag-/Smederij-/Onrust-pop-ups verderop,
+  // hier hoog in de keten ingevoegd (zelfde negatie-lijst als
+  // `toonStichtingsMomentPopup` plus die pop-up zelf), met de vier pop-ups
+  // erna (en `BouwPopup` hieronder) die 'm op hun beurt negeren.
+  const toonBoonPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonAmberOntdektPopup &&
+    !toonTweedeAmberOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    !toonStichtingsMomentPopup &&
+    Boolean(state.boonToegekendEvent);
+
   // Wampanoag-narratieve pop-ups (Going West, M21g, opdracht-wampanoag-opening.md
   // §7/§8): campagne-gebonden flavor-tekst uit `CampaignConfig.popupTeksten`
   // (campagnes.ts: `popupContent`). Bewust helemaal onderaan deze keten
@@ -1570,6 +1615,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
     !toonStichtingsMomentPopup &&
+    !toonBoonPopup &&
     Boolean(state.wampanoagLaagOntdektEvent);
   const toonWampanoagRelatieGelegdPopup =
     !toonStreekPopup &&
@@ -1605,6 +1651,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
     !toonStichtingsMomentPopup &&
+    !toonBoonPopup &&
     !toonEersteContactPopup &&
     Boolean(state.wampanoagRelatieGelegdEvent);
 
@@ -1645,6 +1692,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
     !toonStichtingsMomentPopup &&
+    !toonBoonPopup &&
     !toonEersteContactPopup &&
     !toonWampanoagRelatieGelegdPopup &&
     Boolean(state.smederijGebouwdEvent);
@@ -1691,6 +1739,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
     !toonStichtingsMomentPopup &&
+    !toonBoonPopup &&
     !toonEersteContactPopup &&
     !toonWampanoagRelatieGelegdPopup &&
     !toonSmederijGebouwdPopup &&
@@ -1991,6 +2040,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             onDoorgaan={() => bevestigStichtingsMomentPopup(state.steden.length)}
           />
         )}
+        {toonBoonPopup && state.boonToegekendEvent && (
+          <AmberOntdektPopup
+            titel={boonMetId(state.boonToegekendEvent)?.naam}
+            tekst={boonMetId(state.boonToegekendEvent)?.beschrijving}
+            onSluiten={sluitBoonMelding}
+          />
+        )}
         <BouwPopup
           streek={actieveStreek}
           alleStreken={state.streken}
@@ -2031,6 +2087,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             !toonSettlerWegSnelheidUitlegPopup &&
             !toonTutorialVoltooidPopup &&
             !toonStichtingsMomentPopup &&
+            !toonBoonPopup &&
             !legerkampKiesModusStrijderId &&
             !toonStichtStadPopup &&
             !toonStadMenuPopup &&

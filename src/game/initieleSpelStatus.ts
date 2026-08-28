@@ -110,6 +110,9 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     technologieen: [],
     beurt: 1,
     campagneId,
+    // Boon-systeem (issue #411/#414): begint leeg bij elke nieuwe run, zie
+    // types.ts.
+    boons: [],
     bouwKeuzeGedaanDitBeurt: false,
     bouwPopupAfgehandeldTellerPerStreek: {},
     settlerActieGedaanDitBeurt: false,
