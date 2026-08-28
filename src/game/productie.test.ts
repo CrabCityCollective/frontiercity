@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { maakInitieleSpelStatus, OPSLAG_CAP, volgendeBeurt } from "./economie";
 import { BIBLIOTHEEK, ECONOMISCH_LAND_IMPROVEMENTS, MARKT, SMEDERIJ, STERRENCIRKEL } from "./improvements";
+import { berekenBoerderijOpbrengstRuw } from "./productie";
 import { metActieveStad } from "./stad";
 import { metWerkendeSterrencirkel, MIJN } from "./testHelpers";
 
@@ -84,6 +85,83 @@ test('"vuur-temmen" verhoogt de boerderij-opbrengst met 15%', () => {
   const voedselMetTech = metTech.voedsel - state.voedsel;
 
   assert.ok(voedselMetTech > voedselZonderTech, "de boerderij-opbrengst met 'vuur-temmen' moet hoger liggen");
+});
+
+test("berekenBoerderijOpbrengstRuw telt de basisopbrengst van elke actieve, wegverbonden boerderij op, zonder tech-/onrust-modifiers", () => {
+  let state = maakInitieleSpelStatus();
+  const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
+  state = {
+    ...state,
+    streken: state.streken.map((streek, idx) =>
+      idx !== 0
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile) => {
+              if (tile.positieInStreek === 0) {
+                return { ...tile, status: "actief" as const, improvement: BOERDERIJ, heeftWeg: true };
+              }
+              // Bruggetje naar de stad-tile (positie 4), zie ook hierboven.
+              if ([1, 2, 3].includes(tile.positieInStreek)) {
+                return { ...tile, heeftWeg: true };
+              }
+              return tile;
+            }),
+          }
+    ),
+  };
+
+  assert.equal(berekenBoerderijOpbrengstRuw(state), BOERDERIJ.effect.waarde, "raw opbrengst = de ongemodificeerde basiswaarde");
+
+  // "vuur-temmen" verhoogt de daadwerkelijke productie (zie test hierboven),
+  // maar deze ruwe versie is er bewust nog blind voor.
+  const metTech = { ...state, technologieen: ["vuur-temmen" as const] };
+  assert.equal(
+    berekenBoerderijOpbrengstRuw(metTech),
+    BOERDERIJ.effect.waarde,
+    "tech-modifiers tellen (nog) niet mee in de ruwe opbrengst"
+  );
+});
+
+test("berekenBoerderijOpbrengstRuw negeert een boerderij die niet actief of niet wegverbonden is", () => {
+  let state = maakInitieleSpelStatus();
+  const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
+
+  // In aanbouw, nog niet actief.
+  state = {
+    ...state,
+    streken: state.streken.map((streek, idx) =>
+      idx !== 0
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 0
+                ? { ...tile, status: "in_aanbouw" as const, improvement: BOERDERIJ, heeftWeg: true }
+                : tile
+            ),
+          }
+    ),
+  };
+  assert.equal(berekenBoerderijOpbrengstRuw(state), 0, "een boerderij in aanbouw levert nog niets op");
+
+  // Actief, maar zonder wegverbinding naar de stad.
+  state = {
+    ...state,
+    streken: state.streken.map((streek, idx) =>
+      idx !== 0
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 0
+                ? { ...tile, status: "actief" as const, improvement: BOERDERIJ, heeftWeg: false }
+                : tile
+            ),
+          }
+    ),
+  };
+  assert.equal(berekenBoerderijOpbrengstRuw(state), 0, "een niet-wegverbonden boerderij levert nog niets op");
 });
 
 test("city-improvement-productie blijft onaangetast zolang een run maar 1 stad heeft, ook ver voorbij afstand 13 (hoofdstuk 9/11/14, M17: geen 'achtergelaten stad' zonder een tweede stad)", () => {
