@@ -140,6 +140,11 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   // flavor-tekst elders in Going West (goingWestContent.ts).
   indringersUitgeslotenTotHoogteNaVerbond: 7,
   indringersStamNamenNaVerbond: ["de Shawnee", "stam2", "stam3"],
+  // Issue "Nieuwe stad Cincinnati": de tweede gestichte Going West-stad heet
+  // Cincinnati. Verdere stadsnamen staan hier nog niet uitgewerkt (vallen
+  // terug op de generieke `GESTICHTE_STAD_NAMEN`-lijst, acties.ts) totdat er
+  // een vervolg-issue is voor de rest van de reeks.
+  stadNamen: ["Cincinnati"],
 };
 
 // Alle bestaande, niet-tutorial `CampaignConfig`-instanties, gesleuteld op

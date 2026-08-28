@@ -11,6 +11,7 @@
 // vlag), maar delen verder exact dezelfde regels/opbrengsten/risico's. Zie
 // `leesSettler`/`leesActieGedaan`/`metSettlerUpdate` hieronder voor de
 // gedeelde lees/schrijf-indirectie.
+import { campagneConfig } from "./campagnes";
 import { bereikbarePosities } from "./wegen";
 import {
   jachtVoedselBonus,
@@ -292,8 +293,16 @@ export const STICHTING_KOSTEN: { hout: number; steen: number; erts: number; voed
 // weergavenamen (hoofdstuk 9/13) bij de nog te bouwen `CampaignConfig`.
 export const GESTICHTE_STAD_NAMEN = ["Vuurbron", "Asvallei"];
 
-function nieuweStadNaam(aantalStedenVoorStichting: number): string {
-  return GESTICHTE_STAD_NAMEN[aantalStedenVoorStichting - 1] ?? `Nieuwe stad ${aantalStedenVoorStichting}`;
+// Campagne-bewust: valt terug op `GESTICHTE_STAD_NAMEN` hierboven zolang de
+// campagne geen eigen `stadNamen` heeft (of die lijst op is) — zelfde
+// terugval-patroon als `improvementNaam()`/`techNaam()` (campagnes.ts).
+function nieuweStadNaam(aantalStedenVoorStichting: number, campagneId?: string): string {
+  const campagneNamen = campagneConfig(campagneId)?.stadNamen;
+  return (
+    campagneNamen?.[aantalStedenVoorStichting - 1] ??
+    GESTICHTE_STAD_NAMEN[aantalStedenVoorStichting - 1] ??
+    `Nieuwe stad ${aantalStedenVoorStichting}`
+  );
 }
 
 // Of de settler nu op een geldig stichtingsdoel staat (hoofdstuk 2: aan
@@ -350,7 +359,7 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
   if (!kanStichten(state, slot) || !heeftGenoegVoorStichten(state)) return state;
 
   const { hoogte, positieInStreek } = leesSettler(state, slot)!;
-  const naam = nieuweStadNaam(state.steden.length);
+  const naam = nieuweStadNaam(state.steden.length, state.campagneId);
   const streken = state.streken.map((streek) => {
     if (streek.hoogte !== hoogte) return streek;
     const tiles = streek.tiles.map((tile, index) => {

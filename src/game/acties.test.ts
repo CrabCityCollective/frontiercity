@@ -94,6 +94,34 @@ test("stichtStad op een streek die niet de laatste van de wereld is, laat de run
   assert.deepEqual(naStichten.stad, naStichten.steden[1], "de nieuwe stad wordt de actieve stad");
 });
 
+test("stichtStad geeft de tweede Going West-stad de naam Cincinnati (issue: 'Nieuwe stad Cincinnati')", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  // Zelfde aanpak als de voorgaande test: een vers-water-vakje handmatig
+  // neerzetten op een niet-laatste streek om een tussentijdse stichting uit
+  // het herhalende patroon te simuleren.
+  state = {
+    ...state,
+    settler: { hoogte: 8, positieInStreek: 5 },
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 8
+        ? {
+            ...streek,
+            ontgrendeld: true,
+            tiles: streek.tiles.map((tile) => (tile.positieInStreek === 5 ? { ...tile, versWater: true } : tile)),
+          }
+        : streek
+    ),
+    voorraad: { ...state.voorraad, hout: STICHTING_KOSTEN.hout, steen: STICHTING_KOSTEN.steen, erts: STICHTING_KOSTEN.erts },
+    voedsel: STICHTING_KOSTEN.voedsel,
+  };
+  assert.equal(kanStichten(state), true);
+
+  const naStichten = stichtStad(state);
+  assert.equal(naStichten.steden.length, 2);
+  assert.equal(naStichten.steden[1].naam, "Cincinnati");
+  assert.deepEqual(naStichten.stad, naStichten.steden[1]);
+});
+
 test("kanStichten is false op een vakje zonder vers water, of als het vakje al bebouwd is", () => {
   let state = maakInitieleSpelStatus();
   // Startstreek/positie (STAD_POSITIE) heeft geen vers water in de tutorial-data.
