@@ -16,6 +16,7 @@
 
 import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
+import { onrustOpStreek } from "@/game/onrust";
 import { City, Streek, Settler, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import {
@@ -755,6 +756,18 @@ function tekenNietVerbondenIndicatorPixel(ctx: CanvasRenderingContext2D): void {
   hlijn(ctx, 1, 4, 4, "#e8dcc8");
 }
 
+// Onrust-indicator (issue: "Onrust indicator") — pixel-art variant van
+// `tekenOnrustIndicator` in canvas.ts: een klein rood pijltje rechtsboven,
+// los van de niet-verbonden-waas (linksboven) en de uitputtingsteller
+// (rechtsonder).
+function tekenOnrustIndicatorPixel(ctx: CanvasRenderingContext2D): void {
+  const kleur = "#c93a2e";
+  p(ctx, 13, 1, kleur);
+  hlijn(ctx, 12, 14, 2, kleur);
+  p(ctx, 13, 3, kleur);
+  p(ctx, 13, 4, kleur);
+}
+
 // Zachte hint van het vakje-terreinsubtype op een nog onbebouwd vakje.
 function tekenTerreinHintPixel(ctx: CanvasRenderingContext2D, terrein: Tile["terrein"], seed: number): void {
   if (terrein === "vlak") return;
@@ -922,7 +935,8 @@ function tekenActieveTilePixel(
   col: number,
   hoogte: number,
   verbondenMetStad: boolean,
-  streken: Streek[]
+  streken: Streek[],
+  heeftOnrust: boolean
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrondPixel(ctx, terreinType, seed);
@@ -966,6 +980,9 @@ function tekenActieveTilePixel(
 
     if (!verbondenMetStad) {
       tekenNietVerbondenIndicatorPixel(ctx);
+    }
+    if (heeftOnrust) {
+      tekenOnrustIndicatorPixel(ctx);
     }
     return;
   }
@@ -1011,7 +1028,10 @@ export function tekenWereldPixelArt(
   // `tekenWereld` (canvas.ts) voor de volledige toelichting; hier gebruikt
   // om dezelfde reden om de settler-skin te kiezen (`tekenSettlerPixel`
   // hieronder).
-  tegelSet?: string
+  tegelSet?: string,
+  // Zie canvas.ts (`tekenWereld`) voor de volledige toelichting — gaat de
+  // onrust-indicator (`tekenOnrustIndicatorPixel` hierboven) op Going West.
+  campagneId?: string
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
@@ -1036,6 +1056,9 @@ export function tekenWereldPixelArt(
     const rijIndex = totaalStreken - streek.hoogte;
     const y = rijIndex * tileSize + topOffset;
     const vooruitkijk = !streek.ontgrendeld && isVooruitkijkStreek(streek, streken);
+    // Zie canvas.ts (`tekenWereld`) voor de volledige toelichting: onrust
+    // geldt per streek, dus één keer per streek berekend.
+    const heeftOnrust = campagneId === "going-west" && onrustOpStreek(streken, stad.rechters, streek) > 0;
 
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
       const x = col * tileSize;
@@ -1051,7 +1074,7 @@ export function tekenWereldPixelArt(
           tekenVerhuldeTilePixel(tileCtx, tileSeed(col, streek.hoogte));
         } else {
           const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
-          tekenActieveTilePixel(tileCtx, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+          tekenActieveTilePixel(tileCtx, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken, heeftOnrust);
           if (tile.improvement?.soort === "city") {
             stadPositie = { x, y };
           }
@@ -1065,7 +1088,7 @@ export function tekenWereldPixelArt(
         tekenVooruitkijkTilePixel(tileCtx, streek.terreinType);
       } else {
         const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
-        tekenActieveTilePixel(tileCtx, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+        tekenActieveTilePixel(tileCtx, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken, heeftOnrust);
         if (streek.tiles[col].improvement?.soort === "city") {
           stadPositie = { x, y };
         }

@@ -10,6 +10,7 @@
 
 import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
+import { onrustOpStreek } from "@/game/onrust";
 import { City, Streek, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import { BAND_WIDTH_TILES, eindeOceaanZichtbaar, isVooruitkijkStreek } from "@/game/world";
@@ -267,6 +268,35 @@ function tekenNietVerbondenIndicator(ctx: CanvasRenderingContext2D, x: number, y
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.moveTo(cx - r * 0.85, cy - r * 0.85);
   ctx.lineTo(cx + r * 0.85, cy + r * 0.85);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Onrust-indicator (issue: "Onrust indicator" — "Op iedere improvement wil ik
+// graag een onrust indicator ... een klein rood pijltje in de hoek"): een
+// klein, omhoogwijzend rood pijltje rechtsboven op elk actief land improvement
+// van een streek met onrust > 0 (onrust.ts: `onrustOpStreek`). Eigen hoek, los
+// van de niet-verbonden-waas (linksboven) en de uitputtingsteller
+// (rechtsonder) hierboven/hieronder, zodat de drie badges nooit overlappen.
+function tekenOnrustIndicator(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  ctx.save();
+  const cx = x + size * 0.84;
+  const cy = y + size * 0.18;
+  const r = size * 0.13;
+
+  ctx.fillStyle = "#c93a2e";
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r);
+  ctx.lineTo(cx + r * 0.62, cy);
+  ctx.lineTo(cx + r * 0.24, cy);
+  ctx.lineTo(cx + r * 0.24, cy + r * 0.75);
+  ctx.lineTo(cx - r * 0.24, cy + r * 0.75);
+  ctx.lineTo(cx - r * 0.24, cy);
+  ctx.lineTo(cx - r * 0.62, cy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(20, 8, 6, 0.7)";
+  ctx.lineWidth = Math.max(0.8, size * 0.015);
   ctx.stroke();
   ctx.restore();
 }
@@ -1718,7 +1748,8 @@ function tekenActieveTile(
   col: number,
   hoogte: number,
   verbondenMetStad: boolean,
-  streken: Streek[]
+  streken: Streek[],
+  heeftOnrust: boolean
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrond(ctx, x, y, size, terreinType, seed);
@@ -1767,6 +1798,9 @@ function tekenActieveTile(
     // gedempte waas i.p.v. stilzwijgend niets te tonen.
     if (!verbondenMetStad) {
       tekenNietVerbondenIndicator(ctx, x, y, size);
+    }
+    if (heeftOnrust) {
+      tekenOnrustIndicator(ctx, x, y, size);
     }
     return;
   }
@@ -1819,7 +1853,12 @@ export function tekenWereld(
   // poppetje voor de tutorial vs. huifkar voor Going West, issue "Andere skin
   // oer settler") en blijft verder een aanknopingspunt voor een echte, losse
   // tegelset per campagne (hoofdstuk 12 design-doc).
-  tegelSet?: string
+  tegelSet?: string,
+  // Actieve campagne-id (`GameState.campagneId`) — alleen doorgegeven om de
+  // onrust-indicator (`tekenOnrustIndicator` hierboven) te gaten op Going
+  // West, zelfde `campagneId`-check als productie.ts/tileInfo.ts: onrust
+  // bestaat niet in de tutorial, dus daar blijft deze indicator altijd uit.
+  campagneId?: string
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
@@ -1842,6 +1881,10 @@ export function tekenWereld(
     const rijIndex = totaalStreken - streek.hoogte;
     const y = rijIndex * tileSize + topOffset;
     const vooruitkijk = !streek.ontgrendeld && isVooruitkijkStreek(streek, streken);
+    // Onrust geldt per streek, niet per tile (onrust.ts: `onrustOpStreek`) —
+    // dus één keer per streek berekend, niet opnieuw voor elke kolom
+    // hieronder.
+    const heeftOnrust = campagneId === "going-west" && onrustOpStreek(streken, stad.rechters, streek) > 0;
 
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
       const x = col * tileSize;
@@ -1859,7 +1902,7 @@ export function tekenWereld(
           tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
         } else {
           const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
-          tekenActieveTile(ctx, x, y, tileSize, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+          tekenActieveTile(ctx, x, y, tileSize, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken, heeftOnrust);
           if (tile.improvement?.soort === "city") {
             stadPositie = { x, y };
           }
@@ -1873,7 +1916,7 @@ export function tekenWereld(
         tekenVooruitkijkTile(ctx, x, y, tileSize, streek.terreinType);
       } else {
         const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
-        tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken);
+        tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken, heeftOnrust);
         if (streek.tiles[col].improvement?.soort === "city") {
           stadPositie = { x, y };
         }
