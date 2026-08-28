@@ -22,6 +22,8 @@
 // wetenschap, Militair) met alfabetische volgorde bínnen elke categorie, plus
 // een zoekveld in EncyclopediePaneel voor snel opzoeken ongeacht categorie —
 // het beste van beide.
+import { TECH_TREE, TechNode } from "./techTree";
+
 export type EncyclopedieCategorie =
   | "Stad"
   | "Streken"
@@ -48,7 +50,26 @@ export interface EncyclopedieLemma {
   tekst: string;
 }
 
-// Alfabetisch bínnen elke categorie (zie de comment hierboven).
+// Techboom-lemma's (issue: "Techtree toevoegen aan encyclopedie") worden
+// gegenereerd uit `TECH_TREE` zelf (techTree.ts) — dezelfde brondata die
+// TechboomPaneel/TechKeuzePopup al gebruiken — in plaats van de namen en
+// effecten hier los te dupliceren. Zo blijft de encyclopedie vanzelf in sync
+// als de boom ooit verandert. `Object.values` behoudt hier de
+// declaratievolgorde van `TECH_TREE` (drempel 1 → 2 → 3, ouder vóór kind) —
+// bewust géén alfabetische sortering zoals de rest van deze categorie: bij
+// een keuzeboom is de boomvolgorde (welke tech volgt op welke) veel
+// bruikbaarder dan het alfabet.
+const TECHBOOM_LEMMAS: EncyclopedieLemma[] = (Object.values(TECH_TREE) as TechNode[]).map((node) => ({
+  id: `tech-${node.id}`,
+  titel: node.tutorialNaam,
+  categorie: "Cultuur & wetenschap",
+  tekst: node.ouder
+    ? `Technologieboom-drempel ${node.drempel}, een van de twee keuzes na ${TECH_TREE[node.ouder].tutorialNaam}. ${node.beschrijving}`
+    : `Technologieboom-drempel ${node.drempel}, een van de twee startrichtingen. ${node.beschrijving}`,
+}));
+
+// Alfabetisch bínnen elke categorie (zie de comment hierboven) — behalve de
+// techboom-lemma's, zie de comment bij `TECHBOOM_LEMMAS`.
 export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
   // Stad
   {
@@ -345,6 +366,14 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     tekst:
       "Voortgangs-valuta zonder opslaglimiet, geproduceerd door de sterrencirkel en bibliotheek. Ontgrendelt technologieën in de technologieboom.",
   },
+  {
+    id: "technologieboom",
+    titel: "Technologieboom",
+    categorie: "Cultuur & wetenschap",
+    tekst:
+      "Een vertakkende keuzeboom van 3 drempels, elk met 2 opties. Bij het bereiken van een drempel kies je één van de twee getoonde technologieën; de niet-gekozen tech en alles wat daaronder in de boom hing, is voor de rest van de run permanent onbereikbaar. Elke volgende drempel kost meer wetenschap dan de vorige.",
+  },
+  ...TECHBOOM_LEMMAS,
   // Militair
   {
     id: "legerkamp",
