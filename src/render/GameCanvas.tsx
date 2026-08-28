@@ -60,6 +60,11 @@ interface GameCanvasProps {
   // hierboven, meteen een herteken via de dependency-array van het effect
   // hieronder zodra een andere campagne gestart wordt.
   tegelSet?: string;
+  // Actieve campagne-id (`GameState.campagneId`, issue: "Onrust indicator") —
+  // gaat de onrust-indicator op elk improvement (`tekenOnrustIndicator`/
+  // `tekenOnrustIndicatorPixel`) op Going West, zelfde `campagneId`-check als
+  // productie.ts/tileInfo.ts: onrust bestaat niet in de tutorial.
+  campagneId?: string;
   onTileClick: (hoogte: number, positieInStreek: number) => void;
 }
 
@@ -119,6 +124,7 @@ export default function GameCanvas({
   verkenningBereikbarePosities,
   stijl,
   tegelSet,
+  campagneId,
   onTileClick,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -149,7 +155,8 @@ export default function GameCanvas({
       legerkampBereikbarePosities,
       verkenningBereikbarePosities,
       tweedeSettler,
-      tegelSet
+      tegelSet,
+      campagneId
     );
   }, [
     streken,
@@ -163,6 +170,7 @@ export default function GameCanvas({
     verkenningBereikbarePosities,
     stijl,
     tegelSet,
+    campagneId,
   ]);
 
   function handleClick(event: MouseEvent<HTMLCanvasElement>) {

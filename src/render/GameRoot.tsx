@@ -46,7 +46,7 @@ import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopu
 import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
 import { campagneConfig, popupContent, streekContentVoorCampagne } from "@/game/campagnes";
-import { improvementNaam, improvementPastOpTerrein, ONRUST_MIN_STREEK, terreinEisenBeschrijving } from "@/game/improvements";
+import { improvementNaam, improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { kanIndringersAfkopenMetWampum, wampumAfkoopKostenHuidig } from "@/game/indringersEnDieren";
 import {
   BELEGERINGSDREMPEL,
@@ -74,6 +74,7 @@ import {
 } from "@/game/tutorialContent";
 import { TWEEDE_SETTLER_MIN_STREEK } from "@/game/groeiEnRekrutering";
 import { berekenLegerwaarde, kanConfrontatieBezetteStreek, onbemandeLegerkampPosities } from "@/game/militair";
+import { onrustOpStreek } from "@/game/onrust";
 import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij } from "@/game/productie";
 import {
   campagneStatistieken,
@@ -376,9 +377,11 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // het eerst ontgrendelt — zie `toonTweedeSettlerUitlegPopup` hieronder.
   const tweedeSettlerUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("tweedeSettler");
   // Onrust-uitleg-pop-up (issue: "Onrust, Saloon en Courthouse", issue-comment:
-  // "Laat dit vergezellen van een pop-up die dit uitlegt"): zelfde eenmalige-
-  // confirm-vlag, getoond zodra streek `ONRUST_MIN_STREEK` van Going West voor
-  // het eerst ontgrendelt — zie `toonOnrustUitlegPopup` verderop.
+  // "Laat dit vergezellen van een pop-up die dit uitlegt"; issue "Onrust
+  // indicator": "zodra dat je de eerste onrust krijgt ... een dynamische
+  // pop-up met uitleg"): zelfde eenmalige-confirm-vlag, getoond zodra de
+  // speler voor het eerst daadwerkelijk onrust > 0 heeft — zie
+  // `toonOnrustUitlegPopup` verderop.
   const onrustUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("onrust");
   // Bouw-pop-up-vervangende uitleg-pop-ups (issue: "Teksten aanpassen (nog
   // meer)"): zelfde eenmalige-confirm-vlaggen, getoond in plaats van de
@@ -1642,12 +1645,14 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonWampanoagRelatieGelegdPopup &&
     Boolean(state.smederijGebouwdEvent);
 
-  // Onrust-uitleg-pop-up (issue: "Onrust, Saloon en Courthouse"): zodra streek
-  // `ONRUST_MIN_STREEK` van Going West voor het eerst ontgrendelt — hetzelfde
-  // moment waarop Saloon/Courthouse beschikbaar komen (improvements.ts:
-  // `vereisteCampagneId`/`minStreek`). Onderaan de keten net als
-  // `toonSmederijGebouwdPopup` hierboven (laagste prioriteit): dit is
-  // Going-West-kerninhoud, geen `uitlegAan`-toggle-baar tutorial-hintje.
+  // Onrust-uitleg-pop-up (issue: "Onrust indicator" — "zodra dat je de eerste
+  // onrust krijgt ... een dynamische pop-up met uitleg"): getoond zodra een
+  // willekeurige streek voor het eerst daadwerkelijk onrust > 0 draagt
+  // (onrust.ts: `onrustOpStreek`) — niet zodra Saloon/Courthouse beschikbaar
+  // komen (`ONRUST_MIN_STREEK`, improvements.ts): een drukke vroege streek
+  // kan al onrust dragen ruim vóórdat die streek ontgrendelt. Onderaan de
+  // keten net als `toonSmederijGebouwdPopup` hierboven (laagste prioriteit):
+  // dit is Going-West-kerninhoud, geen `uitlegAan`-toggle-baar tutorial-hintje.
   const toonOnrustUitlegPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
@@ -1687,7 +1692,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonSmederijGebouwdPopup &&
     state.campagneId === "going-west" &&
     !onrustUitlegBevestigd &&
-    hoogsteOntgrendeldeStreek(state.streken) >= ONRUST_MIN_STREEK;
+    state.streken.some((streek) => onrustOpStreek(state.streken, state.stad.rechters, streek) > 0);
 
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
@@ -1730,6 +1735,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           verkenningBereikbarePosities={verkenningBereikbarePosities}
           stijl={stijl}
           tegelSet={campagne?.tegelSet}
+          campagneId={state.campagneId}
           onTileClick={handleTileClick}
         />
         <SettlerPaneel
@@ -1864,6 +1870,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           <AmberOntdektPopup
             titel={popupContent(campagne, "onrustUitlegPopup")?.titel}
             tekst={popupContent(campagne, "onrustUitlegPopup")?.tekst}
+            afbeelding="/assets/scenes/onrust.png"
             onSluiten={() => markeerUitlegGezien("onrust")}
           />
         )}
