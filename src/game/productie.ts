@@ -121,16 +121,21 @@ function voedselVerbruik(state: GameState): number {
   return berekenStadVoedselVerbruik(state) + berekenWachttorenVoedselVerbruik(state);
 }
 
-// Ruwe boerderij-opbrengst volgende beurt (issue: "Economie scherm
-// breakdown", eerste, bewust kleinere stap — nog zonder de tech-/onrust-
-// modifiers die `berekenVoedselProductie` hierboven wel toepast): som van de
-// basiswaarde van elke actieve, wegverbonden Boerderij-tile. Gebruikt door
-// EconomieOverzichtPaneel om apart van de netto voedselverandering te tonen
-// wat de boerderijen alleen opleveren.
-export function berekenBoerderijOpbrengstRuw(state: GameState): number {
-  let productie = 0;
+// Boerderij-opbrengst in drie stappen — vóór modifiers, ná de techtree-bonus,
+// ná de onrust-penalty (issue: "Economie scherm breakdown"): één gedeelde lus
+// over alle actieve, wegverbonden Boerderij-tiles, zodat de losse rijen
+// hieronder (basis/tech-modifier/onrust-modifier/netto) nooit uit elkaar
+// kunnen lopen. Alleen boerderijen, niet elke voedsel-producerende tile
+// (zelfde scope als de bestaande `berekenBoerderijOpbrengstRuw` hieronder) —
+// dit paneel gaat specifiek over de boerderij-uitsplitsing, niet over
+// hypothetische toekomstige voedselbronnen.
+function boerderijOpbrengstPerStap(state: GameState): { ruw: number; naTech: number; naOnrust: number } {
+  let ruw = 0;
+  let naTech = 0;
+  let naOnrust = 0;
 
   for (const streek of state.streken) {
+    const onrustMultiplier = onrustMultiplierVoorStreek(state, streek);
     for (const tile of streek.tiles) {
       const effect = tile.improvement?.effect;
       if (
@@ -145,11 +150,52 @@ export function berekenBoerderijOpbrengstRuw(state: GameState): number {
       if (!isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)) {
         continue;
       }
-      productie += effect.waarde;
+      const metTech = boerderijOpbrengst(effect.waarde, state.technologieen);
+      ruw += effect.waarde;
+      naTech += metTech;
+      naOnrust += metTech * onrustMultiplier;
     }
   }
 
-  return productie;
+  return { ruw, naTech, naOnrust };
+}
+
+// Ruwe boerderij-opbrengst volgende beurt (issue: "Economie scherm
+// breakdown", eerste, bewust kleinere stap — nog zonder de tech-/onrust-
+// modifiers die `berekenVoedselProductie` hierboven wel toepast): som van de
+// basiswaarde van elke actieve, wegverbonden Boerderij-tile. Gebruikt door
+// EconomieOverzichtPaneel om apart van de netto voedselverandering te tonen
+// wat de boerderijen alleen opleveren.
+export function berekenBoerderijOpbrengstRuw(state: GameState): number {
+  return boerderijOpbrengstPerStap(state).ruw;
+}
+
+// Techtree-modifier op de boerderijopbrengst (bv. "A. Vuur temmen": +20%,
+// hoofdstuk 3/9) als losse rij (issue: "Economie scherm breakdown",
+// modifiers-stap): het verschil tussen de opbrengst ná en vóór de
+// techtree-bonus. 0 zolang er geen relevante technologie ontgrendeld is.
+export function berekenBoerderijTechModifier(state: GameState): number {
+  const { ruw, naTech } = boerderijOpbrengstPerStap(state);
+  return naTech - ruw;
+}
+
+// Onrust-modifier op de boerderijopbrengst (Going West-exclusief, zie
+// `onrustMultiplierVoorStreek` hierboven) als losse rij: het verschil tussen
+// de opbrengst ná en vóór de onrust-penalty. Altijd 0 buiten Going West.
+export function berekenBoerderijOnrustModifier(state: GameState): number {
+  const { naTech, naOnrust } = boerderijOpbrengstPerStap(state);
+  return naOnrust - naTech;
+}
+
+// Netto boerderijopbrengst ná alle modifiers, vóór het voedselverbruik
+// (wachttorens/stad, zie `berekenStadVoedselVerbruik`/
+// `berekenWachttorenVoedselVerbruik` hierboven) ervan afgetrokken wordt
+// (issue: "Economie scherm breakdown", modifiers-stap) — hetzelfde totaal als
+// `berekenVoedselProductie` hieronder zolang boerderijen de enige
+// voedselbron zijn, maar hier expliciet boerderij-scoped en geëxporteerd
+// zodat EconomieOverzichtPaneel het los van het verbruik kan tonen.
+export function berekenBoerderijOpbrengstNetto(state: GameState): number {
+  return boerderijOpbrengstPerStap(state).naOnrust;
 }
 
 // Netto voedselverandering deze beurt: productie min verbruik. Negatief
