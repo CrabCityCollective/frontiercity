@@ -40,20 +40,23 @@ test("de Wampanoag-streek komt 'in beeld' als blokkerende streek met negen verhu
   assert.equal(streek.tiles.every((t) => t.wampanoagVerhuld), true, "alle negen vakjes zijn individueel verhuld");
 
   // Terrein-afgeleide toewijzing (worldGoingWest.ts: WAMPANOAG_STREEK_INHOUD)
-  // — altijd op de drie middelste vakjes van de band (positie 3/4/5, issue
-  // "Na de Wampanoag").
-  assert.equal(streek.tiles[3].wampanoagInhoud, "beverjachthut");
-  assert.equal(streek.tiles[3].versWater, true, "Beverjachthut staat op een vers-water-vakje van de Wampanoag-streek");
+  // — altijd op de vijf middelste vakjes van de band (positie 2 t/m 6, issue
+  // "Wampanoag kamp uitbreiding"), van links naar rechts: Maïsboerderij,
+  // tentje, Opperhoofdtent, tentje, Beverjachthut.
+  assert.equal(streek.tiles[2].wampanoagInhoud, "maisboerderij");
+  assert.equal(streek.tiles[2].terrein, "vlak", "Maïsboerderij staat op een vlak vakje");
 
-  assert.equal(streek.tiles[4].wampanoagInhoud, "maisboerderij");
-  assert.equal(streek.tiles[4].terrein, "vlak", "Maïsboerderij staat op een vlak vakje");
+  assert.equal(streek.tiles[3].wampanoagInhoud, "tentje");
+  assert.equal(streek.tiles[4].wampanoagInhoud, "opperhoofdtent");
+  assert.equal(streek.tiles[5].wampanoagInhoud, "tentje");
 
-  assert.equal(streek.tiles[5].wampanoagInhoud, "opperhoofdtent");
+  assert.equal(streek.tiles[6].wampanoagInhoud, "beverjachthut");
+  assert.equal(streek.tiles[6].versWater, true, "Beverjachthut staat op een vers-water-vakje van de Wampanoag-streek");
 
-  // De overige zes vakjes dragen geen bijzondere inhoud, zelfde conventie als
+  // De overige vier vakjes dragen geen bijzondere inhoud, zelfde conventie als
   // TUTORIAL_BEZETTE_STREEK_INHOUD, maar zijn wél mee verhuld.
   const inhoudTypes = streek.tiles.map((t) => t.wampanoagInhoud).filter(Boolean);
-  assert.equal(inhoudTypes.length, 3, "maar drie van de negen vakjes dragen vaste Wampanoag-inhoud");
+  assert.equal(inhoudTypes.length, 5, "vijf van de negen vakjes dragen vaste Wampanoag-inhoud (drie gebouwen + twee tentjes)");
 
   assert.deepEqual(
     verhuldeWampanoagPosities(state).map((p) => p.positieInStreek).sort((a, b) => a - b),
@@ -91,11 +94,12 @@ test("tutorial: de Wampanoag-streekhoogte krijgt geen Wampanoag-vakjes en blijft
   );
 });
 
-// Issue "Wampanoag streek pas helemaal onthuld na handel": alleen de drie
-// handelsvakjes zelf ontdekken is niet meer genoeg om de streek te
-// ontgrendelen — dat vereist sindsdien de volledige 3-3-3-handelsdrempel, zie
-// `verwerkWampanoagFaseAfsluiting` en de tests daarvoor hieronder.
-test("het ontdekken van alle drie de handelsvakjes ontgrendelt de streek zelf nog niet — de zes neutrale vakjes blijven verhuld tot de 3-3-3-drempel gehaald is", () => {
+// Issue "Wampanoag streek pas helemaal onthuld na handel": alleen de vijf
+// vaste vakjes zelf ontdekken (de drie handelsvakjes + de twee decoratieve
+// tentjes) is niet meer genoeg om de streek te ontgrendelen — dat vereist
+// sindsdien de volledige 3-3-3-handelsdrempel, zie `verwerkWampanoagFaseAfsluiting`
+// en de tests daarvoor hieronder.
+test("het ontdekken van alle vijf vaste vakjes ontgrendelt de streek zelf nog niet — de vier neutrale vakjes blijven verhuld tot de 3-3-3-drempel gehaald is", () => {
   const state = metWampanoagLaagOnthuld();
   const streek = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
 
@@ -104,12 +108,12 @@ test("het ontdekken van alle drie de handelsvakjes ontgrendelt de streek zelf no
   assert.equal(
     streek.tiles.filter((t) => t.wampanoagInhoud).every((t) => t.wampanoagVerhuld === false),
     true,
-    "de drie handelsvakjes zelf zijn wel onthuld — dat maakt ze handelbaar"
+    "de vijf vaste vakjes zelf zijn wel onthuld — dat maakt de drie handelsvakjes handelbaar"
   );
   assert.equal(
     streek.tiles.filter((t) => !t.wampanoagInhoud).every((t) => t.wampanoagVerhuld === true),
     true,
-    "de zes neutrale vakjes blijven verhuld tot de handelsdrempel gehaald is"
+    "de vier neutrale vakjes blijven verhuld tot de handelsdrempel gehaald is"
   );
   assert.equal(hoogsteOntgrendeldeStreek(state.streken), WAMPANOAG_STREEK_HOOGTE - 1, "de frontier staat nog steeds stil");
   assert.equal(
@@ -148,9 +152,9 @@ test("stuurVerkennerWampanoag betaalt grondstoffen + wetenschap, zet een aftelle
   const houtVoor = state.voorraad.hout;
   const streek4 = () => state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
 
-  state = stuurVerkennerWampanoag(state, 3);
-  assert.equal(streek4().tiles[3].wampanoagVerhuld, true, "nog niet meteen onthuld — de verkenner is onderweg");
-  assert.deepEqual(streek4().tiles[3].wampanoagVerkenningInGang, { beurtenResterend: VERKENNER.bouwtijdBeurten });
+  state = stuurVerkennerWampanoag(state, 6);
+  assert.equal(streek4().tiles[6].wampanoagVerhuld, true, "nog niet meteen onthuld — de verkenner is onderweg");
+  assert.deepEqual(streek4().tiles[6].wampanoagVerkenningInGang, { beurtenResterend: VERKENNER.bouwtijdBeurten });
   assert.equal(state.wetenschap, wetenschapVoor - VERKENNING_KOSTEN_WETENSCHAP);
   assert.equal(state.voorraad.hout, houtVoor - (VERKENNER.kosten.hout ?? 0));
   assert.equal(state.verkenningGedaanDitBeurt, true);
@@ -159,47 +163,54 @@ test("stuurVerkennerWampanoag betaalt grondstoffen + wetenschap, zet een aftelle
   assert.equal(naTweedeVerkenner, state, "een tweede verkenner dezelfde beurt heeft geen effect");
 
   for (let i = 0; i < VERKENNER.bouwtijdBeurten; i++) {
-    assert.equal(streek4().tiles[3].improvement, undefined, "nog niet onthuld tot het tellertje op 0 staat");
+    assert.equal(streek4().tiles[6].improvement, undefined, "nog niet onthuld tot het tellertje op 0 staat");
     state = volgendeBeurt(state);
   }
 
-  assert.equal(streek4().tiles[3].wampanoagVerhuld, false);
-  assert.equal(streek4().tiles[3].improvement?.id, "beverjachthut");
-  assert.equal(streek4().tiles[3].status, "actief");
-  assert.equal(streek4().tiles[3].wampanoagVerkenningInGang, undefined);
+  assert.equal(streek4().tiles[6].wampanoagVerhuld, false);
+  assert.equal(streek4().tiles[6].improvement?.id, "beverjachthut");
+  assert.equal(streek4().tiles[6].status, "actief");
+  assert.equal(streek4().tiles[6].wampanoagVerkenningInGang, undefined);
   assert.equal(state.verkenningGedaanDitBeurt, false, "de 1x-per-beurt-limiet is intussen weer teruggezet");
 });
 
 test("verwerkWampanoagVerkenningInGang onthult het juiste, terrein-afgeleide gebouw per positie", () => {
   let state = metWampanoagLaagEnVoorraadVoorVerkenning();
-  state = stuurVerkennerWampanoag(state, 3); // beverjachthut (vers water)
+  state = stuurVerkennerWampanoag(state, 6); // beverjachthut (vers water)
   for (let i = 0; i < VERKENNER.bouwtijdBeurten; i++) state = verwerkWampanoagVerkenningInGang(state);
 
   let streek4 = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
-  assert.equal(streek4.tiles[3].improvement?.id, BEVERJACHTHUT.id);
-  assert.equal(streek4.tiles[3].status, "actief");
+  assert.equal(streek4.tiles[6].improvement?.id, BEVERJACHTHUT.id);
+  assert.equal(streek4.tiles[6].status, "actief");
 
-  // Nog geen effect op de andere twee vakjes.
+  // Nog geen effect op de andere vier vakjes.
+  assert.equal(streek4.tiles[2].improvement, undefined);
+  assert.equal(streek4.tiles[3].improvement, undefined);
   assert.equal(streek4.tiles[4].improvement, undefined);
   assert.equal(streek4.tiles[5].improvement, undefined);
 
   state = { ...state, verkenningGedaanDitBeurt: false };
-  state = stuurVerkennerWampanoag(state, 4); // maisboerderij (vlak)
+  state = stuurVerkennerWampanoag(state, 2); // maisboerderij (vlak)
   state = { ...state, verkenningGedaanDitBeurt: false };
-  state = stuurVerkennerWampanoag(state, 5); // opperhoofdtent (geen terrein-eis)
+  state = stuurVerkennerWampanoag(state, 4); // opperhoofdtent (geen terrein-eis)
   for (let i = 0; i < VERKENNER.bouwtijdBeurten; i++) state = verwerkWampanoagVerkenningInGang(state);
 
   streek4 = state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
-  assert.equal(streek4.tiles[4].improvement?.id, MAISBOERDERIJ.id);
-  assert.equal(streek4.tiles[5].improvement?.id, OPPERHOOFDTENT.id);
+  assert.equal(streek4.tiles[2].improvement?.id, MAISBOERDERIJ.id);
+  assert.equal(streek4.tiles[4].improvement?.id, OPPERHOOFDTENT.id);
+  // Nog niet gestuurd — de twee decoratieve tentjes (positie 3/5) blijven
+  // verhuld tot ze zelf verkend worden, net als elk ander vakje.
+  assert.equal(streek4.tiles[3].improvement, undefined);
+  assert.equal(streek4.tiles[5].improvement, undefined);
   // Issue "Wampanoag streek pas helemaal onthuld na handel": het ontdekken
-  // van de drie handelsvakjes onthult alleen die drie zelf — de zes neutrale
-  // vakjes blijven verhuld tot de 3-3-3-handelsdrempel gehaald is
-  // (verwerkWampanoagFaseAfsluiting), dus 6 posities blijven nog verkenbaar.
+  // van de drie handelsvakjes onthult alleen die drie zelf — de overige
+  // vakjes (de twee tentjes en de vier neutrale) blijven verhuld tot de
+  // 3-3-3-handelsdrempel gehaald is (verwerkWampanoagFaseAfsluiting), dus 6
+  // posities blijven nog verkenbaar.
   assert.equal(
     verhuldeWampanoagPosities(state).length,
     6,
-    "de drie handelsvakjes zijn onthuld, de zes neutrale vakjes nog niet"
+    "de drie handelsvakjes zijn onthuld, de twee tentjes en vier neutrale vakjes nog niet"
   );
 });
 
@@ -224,10 +235,11 @@ test("isBebouwbaarLeeg sluit elk nog verhuld Wampanoag-vakje uit, ondanks status
 // Herzien door issue "Smederij inactief zetten": erts is geschrapt als
 // Wampanoag-handelskeuze, zodat gereedschap de enige handelswaar is voor
 // Maïsboerderij/Beverjachthut en de Smederij de enige erts-afzet blijft.
-test("wampanoagHandelOpties: Maïsboerderij/Beverjachthut bieden alleen gereedschap, Opperhoofdtent alleen goud", () => {
+test("wampanoagHandelOpties: Maïsboerderij/Beverjachthut bieden alleen gereedschap, Opperhoofdtent alleen goud, tentje handelt niet", () => {
   assert.deepEqual(wampanoagHandelOpties("maisboerderij"), ["gereedschap"]);
   assert.deepEqual(wampanoagHandelOpties("beverjachthut"), ["gereedschap"]);
   assert.deepEqual(wampanoagHandelOpties("opperhoofdtent"), ["goud"]);
+  assert.deepEqual(wampanoagHandelOpties("tentje"), [], "puur decoratief (issue 'Wampanoag kamp uitbreiding')");
 });
 
 test("stelWampanoagHandelIn zet/wijzigt/pauzeert de keuze, alleen op een onthuld vakje met een geldige optie", () => {
@@ -238,23 +250,27 @@ test("stelWampanoagHandelIn zet/wijzigt/pauzeert de keuze, alleen op een onthuld
   // keuze voor dit vakje — genegeerd, geen effect.
   const zonderInhoud = stelWampanoagHandelIn(state, 0, "gereedschap");
   assert.equal(zonderInhoud, state, "positie zonder wampanoagInhoud heeft geen effect");
-  const ongeldigeKeuze = stelWampanoagHandelIn(state, 5, "gereedschap"); // opperhoofdtent, alleen goud
+  const ongeldigeKeuze = stelWampanoagHandelIn(state, 4, "gereedschap"); // opperhoofdtent, alleen goud
   assert.equal(ongeldigeKeuze, state, "gereedschap is geen geldige keuze voor de Opperhoofdtent");
+  // Tentje (issue "Wampanoag kamp uitbreiding") heeft een lege optielijst —
+  // ook al onthuld, geen enkele keuze is geldig.
+  const tentjeKeuze = stelWampanoagHandelIn(state, 3, "goud");
+  assert.equal(tentjeKeuze, state, "een tentje handelt niet, geen enkele keuze is geldig");
 
-  state = stelWampanoagHandelIn(state, 4, "gereedschap"); // maisboerderij
-  assert.equal(streek4().tiles[4].wampanoagHandelKeuze, "gereedschap");
+  state = stelWampanoagHandelIn(state, 2, "gereedschap"); // maisboerderij
+  assert.equal(streek4().tiles[2].wampanoagHandelKeuze, "gereedschap");
 
   // Omkeerbaar: pauzeren met `undefined`.
-  state = stelWampanoagHandelIn(state, 4, undefined);
-  assert.equal(streek4().tiles[4].wampanoagHandelKeuze, undefined);
+  state = stelWampanoagHandelIn(state, 2, undefined);
+  assert.equal(streek4().tiles[2].wampanoagHandelKeuze, undefined);
 });
 
 test("verwerkWampanoagHandel ruilt elke beurt 1:1 per vakje, naar het juiste handelswaar, zonder kosten voor niet-gekozen vakjes", () => {
   let state = metWampanoagLaagOnthuld();
   state = { ...state, bevervellen: 0, mais: 0, wampum: 0, gereedschap: 5 };
-  state = stelWampanoagHandelIn(state, 4, "gereedschap"); // maisboerderij -> mais
-  state = stelWampanoagHandelIn(state, 3, "gereedschap"); // beverjachthut -> bevervellen
-  // Positie 5 (opperhoofdtent) blijft gepauzeerd.
+  state = stelWampanoagHandelIn(state, 2, "gereedschap"); // maisboerderij -> mais
+  state = stelWampanoagHandelIn(state, 6, "gereedschap"); // beverjachthut -> bevervellen
+  // Positie 4 (opperhoofdtent) blijft gepauzeerd.
 
   const gereedschapVoor = state.gereedschap;
 
@@ -269,14 +285,14 @@ test("verwerkWampanoagHandel ruilt elke beurt 1:1 per vakje, naar het juiste han
 test("verwerkWampanoagHandel slaat een beurt over bij onvoldoende voorraad, zonder negatief te worden of de andere vakjes te blokkeren", () => {
   let state = metWampanoagLaagOnthuld();
   state = { ...state, gereedschap: 1, bevervellen: 0, mais: 0, wampum: 0 };
-  state = stelWampanoagHandelIn(state, 3, "gereedschap"); // beverjachthut, verbruikt het laatste gereedschap (eerst aan de beurt, lagere positie)
-  state = stelWampanoagHandelIn(state, 4, "gereedschap"); // maisboerderij, komt daarna aan de beurt zonder voorraad
+  state = stelWampanoagHandelIn(state, 2, "gereedschap"); // maisboerderij, verbruikt het laatste gereedschap (eerst aan de beurt, lagere positie)
+  state = stelWampanoagHandelIn(state, 6, "gereedschap"); // beverjachthut, komt daarna aan de beurt zonder voorraad
 
   state = verwerkWampanoagHandel(state);
 
-  assert.equal(state.bevervellen, 1, "beverjachthut handelt gewoon door");
+  assert.equal(state.mais, 1, "maisboerderij handelt gewoon door");
   assert.equal(state.gereedschap, 0, "kan niet negatief worden");
-  assert.equal(state.mais, 0, "geen conversie deze beurt zonder resterend gereedschap");
+  assert.equal(state.bevervellen, 0, "geen conversie deze beurt zonder resterend gereedschap");
 });
 
 // Integratietest: `volgendeBeurt` roept `verwerkWampanoagHandel` daadwerkelijk
@@ -284,7 +300,7 @@ test("verwerkWampanoagHandel slaat een beurt over bij onvoldoende voorraad, zond
 test("volgendeBeurt verwerkt de lopende Wampanoag-handel mee", () => {
   let state = metWampanoagLaagOnthuld();
   state = { ...state, mais: 0, voedsel: 10_000, gereedschap: 5 };
-  state = stelWampanoagHandelIn(state, 4, "gereedschap");
+  state = stelWampanoagHandelIn(state, 2, "gereedschap");
 
   const gereedschapVoor = state.gereedschap;
   state = volgendeBeurt(state);
@@ -328,7 +344,7 @@ test("verwerkWampanoagFaseAfsluiting ontgrendelt de streek en zet het narratieve
   state = verwerkWampanoagFaseAfsluiting(state);
   assert.equal(streek().wampanoagBezet, false);
   assert.equal(streek().ontgrendeld, true);
-  assert.equal(streek().tiles.every((t) => t.wampanoagVerhuld === false), true, "ook de zes neutrale vakjes zijn nu onthuld");
+  assert.equal(streek().tiles.every((t) => t.wampanoagVerhuld === false), true, "ook de vier neutrale vakjes zijn nu onthuld");
   assert.equal(state.wampanoagRelatieGelegdEvent, true);
   assert.equal(state.cultureelOntgrendeld, false, "raakt de Smederij-gedreven omslag niet aan");
 
@@ -366,7 +382,7 @@ test("verwerkWampanoagFaseAfsluiting is een no-op in de tutorial (geen Wampanoag
 test("volgendeBeurt ontgrendelt de Wampanoag-streek zodra de handel deze beurt de 3-3-3-drempel bereikt", () => {
   let state = metWampanoagLaagOnthuld();
   state = { ...state, bevervellen: 3, mais: 3, wampum: 2, voedsel: 10_000 };
-  state = stelWampanoagHandelIn(state, 5, "goud"); // opperhoofdtent -> wampum, de laatste stap naar 3
+  state = stelWampanoagHandelIn(state, 4, "goud"); // opperhoofdtent -> wampum, de laatste stap naar 3
 
   state = volgendeBeurt(state);
 

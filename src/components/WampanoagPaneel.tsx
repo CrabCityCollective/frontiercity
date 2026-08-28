@@ -9,11 +9,12 @@ import { WAMPANOAG_STREEK_HOOGTE } from "@/game/worldGoingWest";
 // patroon als BezetteStreekPaneel: alle acties (verkenner sturen,
 // grondstofkeuze) lopen via een klik op het vakje zelf (TileInfoPopup:
 // `verkenningVraag`/`wampanoagHandelVraag`, zie GameRoot). Dit balkje toont
-// de onthullings-voortgang van de drie vaste Wampanoag-vakjes, welke
-// verkenner(s) onderweg zijn, én (M21f) de lopende 3-3-3-handelsvoortgang —
-// blijft daarom zichtbaar nadat alle drie vakjes onthuld zijn, i.t.t. de
-// eerdere M21e-versie. Verdwijnt (net als BezetteStreekPaneel bij een
-// opgeloste Bezette Streek) zodra de 3-3-3-drempel gehaald is
+// de onthullings-voortgang van de vijf vaste Wampanoag-vakjes (de drie
+// handelsvakjes + de twee decoratieve tentjes, issue "Wampanoag kamp
+// uitbreiding"), welke verkenner(s) onderweg zijn, én (M21f) de lopende
+// 3-3-3-handelsvoortgang — blijft daarom zichtbaar nadat alle vijf vakjes
+// onthuld zijn, i.t.t. de eerdere M21e-versie. Verdwijnt (net als
+// BezetteStreekPaneel bij een opgeloste Bezette Streek) zodra de 3-3-3-drempel gehaald is
 // (`heeftWampanoagHandelsdrempelGehaald`, wampanoag.ts) — de openingsfase is
 // dan voorbij, dit balkje hoort daarna niet meer op de kaart te staan.
 // Herzien door issue "Wampanoag streek pas helemaal onthuld na handel": niet
@@ -26,7 +27,7 @@ export default function WampanoagPaneel({ state }: { state: GameState }) {
 
   // `wampanoagInhoud` blijft ook ná onthulling gezet (wampanoag.ts wist
   // alleen `wampanoagVerhuld`/`wampanoagVerkenningInGang`) — dus dit is
-  // betrouwbaar de vaste set van drie Wampanoag-vakjes, ongeacht hun huidige
+  // betrouwbaar de vaste set van vijf Wampanoag-vakjes, ongeacht hun huidige
   // onthullingsstatus.
   const wampanoagTiles = streek.tiles.filter((tile) => tile.wampanoagInhoud !== undefined);
   if (wampanoagTiles.length === 0) return null;

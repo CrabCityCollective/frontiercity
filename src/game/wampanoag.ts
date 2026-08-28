@@ -32,7 +32,7 @@
 // tutorial-only op streek 13, Wampanoag is Going-West-only op
 // `WAMPANOAG_STREEK_HOOGTE`).
 
-import { BEVERJACHTHUT, MAISBOERDERIJ, OPPERHOOFDTENT, VERKENNER } from "./improvements";
+import { BEVERJACHTHUT, MAISBOERDERIJ, OPPERHOOFDTENT, VERKENNER, WAMPANOAG_TENTJE } from "./improvements";
 import { VERKENNING_KOSTEN_WETENSCHAP } from "./streekOntgrendeling";
 import { GameState, Improvement, Settler, WampanoagHandelKeuze, WampanoagInhoud } from "./types";
 import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
@@ -45,6 +45,7 @@ const WAMPANOAG_IMPROVEMENT_VOOR_INHOUD: Record<WampanoagInhoud, Improvement> = 
   maisboerderij: MAISBOERDERIJ,
   beverjachthut: BEVERJACHTHUT,
   opperhoofdtent: OPPERHOOFDTENT,
+  tentje: WAMPANOAG_TENTJE,
 };
 
 function vindWampanoagStreek(state: GameState) {
@@ -173,16 +174,23 @@ export function verwerkWampanoagVerkenningInGang(state: GameState): GameState {
 // gereedschap de enige handelswaar is voor Maïsboerderij/Beverjachthut en de
 // Smederij de enige plek blijft die nog erts omzet). Opperhoofdtent
 // (Cultureel/diplomatiek van aard, opdracht §2) blijft alleen goud.
+// `tentje` (issue "Wampanoag kamp uitbreiding") krijgt bewust een lege lijst
+// — puur decoratief, "handelt niet" — zodat `stelWampanoagHandelIn` er nooit
+// een keuze op toelaat en de handels-UI (TileInfoPopup) er nooit verschijnt.
 const WAMPANOAG_HANDEL_OPTIES: Record<WampanoagInhoud, WampanoagHandelKeuze[]> = {
   maisboerderij: ["gereedschap"],
   beverjachthut: ["gereedschap"],
   opperhoofdtent: ["goud"],
+  tentje: [],
 };
 
 // Welk handelswaar dit Wampanoag-vakje oplevert (opdracht §6) — losstaand van
 // `WAMPANOAG_IMPROVEMENT_VOOR_INHOUD` hierboven, dat is voor de
-// onthullings-resolutie, dit voor de lopende handelsconversie.
-const WAMPANOAG_GOED_VOOR_INHOUD: Record<WampanoagInhoud, "bevervellen" | "mais" | "wampum"> = {
+// onthullings-resolutie, dit voor de lopende handelsconversie. Geen entry
+// voor `tentje` — die heeft door de lege `WAMPANOAG_HANDEL_OPTIES` hierboven
+// nooit een `wampanoagHandelKeuze`, dus `verwerkWampanoagHandel` hieronder
+// leest deze map nooit voor een tentje-vakje.
+const WAMPANOAG_GOED_VOOR_INHOUD: Partial<Record<WampanoagInhoud, "bevervellen" | "mais" | "wampum">> = {
   maisboerderij: "mais",
   beverjachthut: "bevervellen",
   opperhoofdtent: "wampum",
@@ -294,10 +302,13 @@ export function verwerkWampanoagHandel(state: GameState): GameState {
     } else if (goed === "mais") {
       mais += 1;
       maisOntvangen = true;
-    } else {
+    } else if (goed === "wampum") {
       wampum += 1;
       wampumOntvangen = true;
     }
+    // `goed` is hier onbereikbaar `undefined` — een tentje-vakje krijgt door
+    // de lege `WAMPANOAG_HANDEL_OPTIES` hierboven nooit een `wampanoagHandelKeuze`
+    // en zit dus nooit in `handelendeTiles`.
   }
 
   return {

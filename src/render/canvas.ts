@@ -1091,6 +1091,17 @@ function tekenOpperhoofdtent(ctx: CanvasRenderingContext2D, x: number, y: number
   ctx.fill();
 }
 
+// Puur decoratief Wampanoag-tentje (issue "Wampanoag kamp uitbreiding"):
+// kleiner dan de Opperhoofdtent, geen sier-details of kampvuur-gloed — zelfde
+// stille "doet niets"-leesbaarheid als `tekenBezetteStreekHuisje` hierboven,
+// met een eigen warme huidskleur zodat het toch als Wampanoag-kamp leesbaar
+// blijft i.p.v. als "verlaten huisje".
+function tekenWampanoagTentje(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.4);
+  tekenTent(ctx, x + size * 0.5, baseY, size * 0.48, "#9c6b42");
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number, bemand: boolean) => void
@@ -1112,6 +1123,7 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   maisboerderij: (ctx, x, y, size, seed) => tekenMaisboerderij(ctx, x, y, size, seed),
   beverjachthut: (ctx, x, y, size) => tekenBeverjachthut(ctx, x, y, size),
   opperhoofdtent: (ctx, x, y, size) => tekenOpperhoofdtent(ctx, x, y, size),
+  "wampanoag-tentje": (ctx, x, y, size) => tekenWampanoagTentje(ctx, x, y, size),
 };
 
 function tekenLandImprovement(
