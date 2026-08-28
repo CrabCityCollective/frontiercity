@@ -23,6 +23,7 @@ import {
   BAND_WIDTH_TILES,
   eindeOceaanZichtbaar,
   isVooruitkijkStreek,
+  startOceaanZichtbaar,
 } from "@/game/world";
 import {
   OCEAAN_BASIS,
@@ -947,14 +948,17 @@ function tekenActieveTilePixel(
   col: number,
   hoogte: number,
   verbondenMetStad: boolean,
-  streken: Streek[],
+  // De volledige, niet-zichtbaarheids-gefilterde streken-lijst — zie
+  // `tekenWereldPixelArt` hieronder / canvas.ts (`tekenActieveTile`) voor de
+  // volledige toelichting.
+  alleStreken: Streek[],
   heeftOnrust: boolean
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrondPixel(ctx, terreinType, seed);
 
   if (tile.heeftWeg) {
-    tekenWegPixel(ctx, seed, wegVerbindingen(streken, hoogte, col));
+    tekenWegPixel(ctx, seed, wegVerbindingen(alleStreken, hoogte, col));
   }
 
   if (tile.status === "ghost_town") {
@@ -1024,6 +1028,9 @@ export function tekenWereldPixelArt(
   width: number,
   height: number,
   streken: Streek[],
+  // De volledige, niet-zichtbaarheids-gefilterde streken-lijst — zie
+  // canvas.ts (`tekenWereld`) voor de volledige toelichting.
+  alleStreken: Streek[],
   stad: City,
   plaatsingsStreekHoogte?: number,
   // Zie canvas.ts (`tekenWereld`) voor de volledige toelichting — issue
@@ -1047,6 +1054,9 @@ export function tekenWereldPixelArt(
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
+  // Hoogte van de bovenste zichtbare streek — zie canvas.ts voor de volledige
+  // toelichting.
+  const maxHoogte = totaalStreken > 0 ? streken[totaalStreken - 1].hoogte : 0;
   // Afsluitende oceaan-rij bóven de laatste streek (issue: "laatste oceaan ook
   // visueel") — zie canvas.ts voor de volledige toelichting.
   const topOffset = eindeOceaanZichtbaar(streken) ? tileSize : 0;
@@ -1065,12 +1075,13 @@ export function tekenWereldPixelArt(
   let stadPositie: { x: number; y: number } | undefined;
 
   for (const streek of streken) {
-    const rijIndex = totaalStreken - streek.hoogte;
+    const rijIndex = maxHoogte - streek.hoogte;
     const y = rijIndex * tileSize + topOffset;
     const vooruitkijk = !streek.ontgrendeld && isVooruitkijkStreek(streek, streken);
     // Zie canvas.ts (`tekenWereld`) voor de volledige toelichting: onrust
-    // geldt per streek, dus één keer per streek berekend.
-    const heeftOnrust = campagneId === "going-west" && onrustOpStreek(streken, stad.rechters, streek) > 0;
+    // geldt per streek, dus één keer per streek berekend. `alleStreken` i.p.v.
+    // `streken`: zie toelichting bovenaan deze functie.
+    const heeftOnrust = campagneId === "going-west" && onrustOpStreek(alleStreken, stad.rechters, streek) > 0;
 
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
       const x = col * tileSize;
@@ -1085,8 +1096,8 @@ export function tekenWereldPixelArt(
         if (tile.verhuld || tile.wampanoagVerhuld) {
           tekenVerhuldeTilePixel(tileCtx, tileSeed(col, streek.hoogte));
         } else {
-          const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
-          tekenActieveTilePixel(tileCtx, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken, heeftOnrust);
+          const verbonden = isTileVerbondenMetStad(alleStreken, streek.hoogte, col);
+          tekenActieveTilePixel(tileCtx, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust);
           if (tile.improvement?.soort === "city") {
             stadPositie = { x, y };
           }
@@ -1099,8 +1110,8 @@ export function tekenWereldPixelArt(
       } else if (!streek.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTilePixel(tileCtx, streek.terreinType);
       } else {
-        const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
-        tekenActieveTilePixel(tileCtx, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken, heeftOnrust);
+        const verbonden = isTileVerbondenMetStad(alleStreken, streek.hoogte, col);
+        tekenActieveTilePixel(tileCtx, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust);
         if (streek.tiles[col].improvement?.soort === "city") {
           stadPositie = { x, y };
         }
@@ -1142,7 +1153,7 @@ export function tekenWereldPixelArt(
   }
 
   if (settler) {
-    const rijIndex = totaalStreken - settler.hoogte;
+    const rijIndex = maxHoogte - settler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
       tileCtx.clearRect(0, 0, PIX, PIX);
       tekenSettlerPixel(tileCtx, "primair", tegelSet);
@@ -1150,7 +1161,7 @@ export function tekenWereldPixelArt(
     }
   }
   if (tweedeSettler) {
-    const rijIndex = totaalStreken - tweedeSettler.hoogte;
+    const rijIndex = maxHoogte - tweedeSettler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
       tileCtx.clearRect(0, 0, PIX, PIX);
       tekenSettlerPixel(tileCtx, "tweede", tegelSet);
@@ -1158,11 +1169,15 @@ export function tekenWereldPixelArt(
     }
   }
 
-  const oceaanY = totaalStreken * tileSize + topOffset;
-  for (let col = 0; col < BAND_WIDTH_TILES; col++) {
-    const x = col * tileSize;
-    tekenOceaanTilePixel(ctx, x, oceaanY, tileSize, tileSeed(col, 0));
-    tekenTileGrid(ctx, x, oceaanY, tileSize);
+  // Zie canvas.ts (`tekenWereld`) voor de volledige toelichting: alleen
+  // getekend zolang streek 1 zelf zichtbaar is.
+  if (startOceaanZichtbaar(streken)) {
+    const oceaanY = totaalStreken * tileSize + topOffset;
+    for (let col = 0; col < BAND_WIDTH_TILES; col++) {
+      const x = col * tileSize;
+      tekenOceaanTilePixel(ctx, x, oceaanY, tileSize, tileSeed(col, 0));
+      tekenTileGrid(ctx, x, oceaanY, tileSize);
+    }
   }
 
   // Afsluitende oceaan-rij bóven de laatste streek (issue: "laatste oceaan ook

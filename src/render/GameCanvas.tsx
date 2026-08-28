@@ -3,7 +3,12 @@
 import { MouseEvent, useEffect, useRef } from "react";
 import { GrafischeStijl } from "@/game/save";
 import { City, Streek, Settler } from "@/game/types";
-import { BAND_WIDTH_TILES, EINDE_OCEAAN_HOOGTE, eindeOceaanZichtbaar } from "@/game/world";
+import {
+  BAND_WIDTH_TILES,
+  EINDE_OCEAAN_HOOGTE,
+  eindeOceaanZichtbaar,
+  startOceaanZichtbaar,
+} from "@/game/world";
 import { tekenWereld } from "./canvas";
 import { tekenWereldPixelArt } from "./canvasPixelArt";
 
@@ -14,6 +19,16 @@ interface GameCanvasProps {
   // niet per se alle 12 tutorial-streken. Bepaalt zowel de canvas-hoogte als de
   // klik-geometrie hieronder, dus renderen en klikken blijven altijd in sync.
   streken: Streek[];
+  // De volledige, niet-zichtbaarheids-gefilterde streken-lijst (`GameState.streken`)
+  // — issue "Nieuwe stad Cincinnati": zodra oudere streken dichtklappen (zie
+  // `streken` hierboven) missen die niet meer uit deze prop, maar de
+  // wegennetwerk-/onrust-checks tijdens het tekenen (`isTileVerbondenMetStad`,
+  // `wegVerbindingen`, `onrustOpStreek`) moeten wél door de dichtgeklapte
+  // streken heen kunnen kijken — precies zoals de echte spellogica
+  // (productie.ts e.a.) altijd al met `state.streken` rekent, nooit met de
+  // canvas-gefilterde subset. Anders zou een tile vlak na een nieuwe
+  // stichting onterecht als "niet verbonden" getekend worden.
+  alleStreken: Streek[];
   stad: City;
   // Hoogte van de streek waarop een gekozen improvement geplaatst mag worden
   // (klik-op-tile-plaatsing) — zolang dit gezet is markeert de canvas de
@@ -77,10 +92,18 @@ interface GameCanvasProps {
 // één tegel naar beneden voor de afsluitende oceaan-rij bóven de laatste streek
 // — die rij mapt naar sentinel-hoogte `EINDE_OCEAAN_HOOGTE`, net zo min een
 // echte `Streek` als hoogte 0.
+// `maxHoogte` is de hoogte van de bovenste zichtbare streek (niet meer per se
+// gelijk aan `streken.length` sinds issue "Nieuwe stad Cincinnati": zodra de
+// onderste zichtbare streek niet langer hoogte 1 is, klopt "aantal zichtbare
+// streken = hoogste hoogte" niet meer). `heeftStartOceaan` bepaalt of er
+// ónder de streek-rijen nog een klikbare oceaan-rij (sentinel-hoogte 0) staat
+// — alleen zolang streek 1 zelf zichtbaar is (zie `startOceaanZichtbaar`).
 function bepaalAangeklikteTile(
   canvas: HTMLCanvasElement,
   event: MouseEvent<HTMLCanvasElement>,
   aantalStreken: number,
+  maxHoogte: number,
+  heeftStartOceaan: boolean,
   heeftEindeOceaan: boolean
 ): { hoogte: number; positieInStreek: number } | null {
   const rect = canvas.getBoundingClientRect();
@@ -97,23 +120,27 @@ function bepaalAangeklikteTile(
     return null;
   }
 
-  if (heeftEindeOceaan) {
-    if (ruweRij === 0) {
-      return { hoogte: EINDE_OCEAAN_HOOGTE, positieInStreek };
-    }
-    const rijIndex = ruweRij - 1;
-    const hoogte = aantalStreken - rijIndex;
-    if (hoogte < 0 || hoogte > aantalStreken) return null;
+  const topRijen = heeftEindeOceaan ? 1 : 0;
+  if (ruweRij < topRijen) {
+    return { hoogte: EINDE_OCEAAN_HOOGTE, positieInStreek };
+  }
+
+  const rijIndex = ruweRij - topRijen;
+  if (rijIndex < aantalStreken) {
+    const hoogte = maxHoogte - rijIndex;
     return { hoogte, positieInStreek };
   }
 
-  const hoogte = aantalStreken - ruweRij;
-  if (hoogte < 0 || hoogte > aantalStreken) return null;
-  return { hoogte, positieInStreek };
+  if (heeftStartOceaan && rijIndex === aantalStreken) {
+    return { hoogte: 0, positieInStreek };
+  }
+
+  return null;
 }
 
 export default function GameCanvas({
   streken,
+  alleStreken,
   stad,
   plaatsingsStreekHoogte,
   plaatsingsAlleStreken,
@@ -129,6 +156,13 @@ export default function GameCanvas({
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heeftEindeOceaan = eindeOceaanZichtbaar(streken);
+  const heeftStartOceaan = startOceaanZichtbaar(streken);
+  // Hoogte van de bovenste zichtbare streek — sinds issue "Nieuwe stad
+  // Cincinnati" niet meer per se gelijk aan `streken.length` (zie
+  // `bepaalAangeklikteTile` hierboven). `streken` staat oplopend op hoogte
+  // (zelfde volgorde als `GameState.streken`), dus het laatste element is de
+  // hoogste.
+  const maxHoogte = streken.length > 0 ? streken[streken.length - 1].hoogte : 0;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -147,6 +181,7 @@ export default function GameCanvas({
       canvas.width,
       canvas.height,
       streken,
+      alleStreken,
       stad,
       plaatsingsStreekHoogte,
       plaatsingsAlleStreken,
@@ -160,6 +195,7 @@ export default function GameCanvas({
     );
   }, [
     streken,
+    alleStreken,
     stad,
     plaatsingsStreekHoogte,
     plaatsingsAlleStreken,
@@ -177,7 +213,7 @@ export default function GameCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const tile = bepaalAangeklikteTile(canvas, event, streken.length, heeftEindeOceaan);
+    const tile = bepaalAangeklikteTile(canvas, event, streken.length, maxHoogte, heeftStartOceaan, heeftEindeOceaan);
     if (tile) onTileClick(tile.hoogte, tile.positieInStreek);
   }
 
@@ -185,12 +221,14 @@ export default function GameCanvas({
     <canvas
       ref={canvasRef}
       width={TILE_SIZE * BAND_WIDTH_TILES}
-      // +1 rij voor de klikbare oceaan onder streek 1 (hoofdstuk 2), +1 extra
+      // +1 rij voor de klikbare oceaan onder de onderste zichtbare streek
+      // (hoofdstuk 2) — alleen zolang die onderste streek nog hoogte 1 is
+      // (issue: "Nieuwe stad Cincinnati", `startOceaanZichtbaar`), +1 extra
       // rij zodra de afsluitende oceaan bóven de laatste streek ook getoond
       // wordt (issue: "laatste oceaan ook visueel"). Hoogte volgt het aantal
       // daadwerkelijk meegegeven (zichtbare) streken, niet het vaste
       // tutorial-totaal (issue: "onontdekte tegels weg" hierboven).
-      height={TILE_SIZE * (streken.length + 1 + (heeftEindeOceaan ? 1 : 0))}
+      height={TILE_SIZE * (streken.length + (heeftStartOceaan ? 1 : 0) + (heeftEindeOceaan ? 1 : 0))}
       onClick={handleClick}
       // width/height hierboven blijven de canvas-resolutie (en dus de
       // klik-geometrie in `bepaalAangeklikteTile`, die zelf al corrigeert
