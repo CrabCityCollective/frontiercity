@@ -53,7 +53,7 @@ const TUTORIAL_SCENE: PixelSceneSpec = {
 // "Going West" (Amerikaanse campagne): donkerder, stoffig palet i.p.v. de
 // warme tutorialsfeer (hoofdstuk 12 design-doc) — een huifkar bij het
 // kampvuur tegen een schemerhemel, zelfde motief als
-// public/assets/scenes/going-west-stichting.svg.
+// public/assets/scenes/stad-stichting-going-west.png.
 const GOING_WEST_SCENE: PixelSceneSpec = {
   grid: [
     "aaaaaaaaaaaaaaaa",
