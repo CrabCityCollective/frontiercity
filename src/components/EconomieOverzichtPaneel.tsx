@@ -5,7 +5,10 @@ import ResourceIcoon from "./ResourceIcoon";
 import { berekenEconomieOverzicht } from "@/game/economie";
 import { MATERIAAL_LABELS } from "@/game/improvements";
 import {
+  berekenBoerderijOnrustModifier,
+  berekenBoerderijOpbrengstNetto,
   berekenBoerderijOpbrengstRuw,
+  berekenBoerderijTechModifier,
   berekenStadVoedselVerbruik,
   berekenWachttorenVoedselVerbruik,
 } from "@/game/productie";
@@ -51,10 +54,21 @@ function ResourceRegel({
 }
 
 // Ingesprongen sub-regel onder Voedsel (issue: "Economie scherm breakdown"):
-// toont losse onderdelen van de voedselbalans — opbrengst (groen, "+") of
-// verbruik (rood, "-") — nog zonder de tech-/onrust-modifiers die de latere
-// volledige uitsplitsing wel zal tonen (dat blijft een vervolgtaak).
-function VoedselSubRegel({ label, waarde, positief }: { label: string; waarde: number; positief: boolean }) {
+// toont één onderdeel van de voedselbalans — opbrengst, verbruik, of een
+// modifier — als getekend getal (groen bij positief, rood bij negatief,
+// gedempt bij precies 0, bv. een techtree-modifier zonder relevante
+// technologie). Zelfde teken/kleur-logica als `ResourceRegel` hierboven,
+// maar zonder de "huidig"-waarde ervoor.
+function VoedselSubRegel({ label, waarde, nadruk = false }: { label: string; waarde: number; nadruk?: boolean }) {
+  const gerondeWaarde = Math.round(waarde);
+  const teken = gerondeWaarde > 0 ? "+" : gerondeWaarde < 0 ? "" : "±";
+  const kleur =
+    gerondeWaarde > 0
+      ? "var(--kleur-groen, #4a8f4a)"
+      : gerondeWaarde < 0
+        ? "var(--kleur-rood, #b04a3a)"
+        : "var(--kleur-tekst-gedempt)";
+
   return (
     <div
       style={{
@@ -62,14 +76,15 @@ function VoedselSubRegel({ label, waarde, positief }: { label: string; waarde: n
         justifyContent: "space-between",
         gap: "0.75rem",
         paddingLeft: "1.25rem",
-        color: "var(--kleur-tekst-gedempt)",
+        color: nadruk ? "var(--kleur-tekst)" : "var(--kleur-tekst-gedempt)",
         fontSize: "0.8rem",
+        fontWeight: nadruk ? 600 : 400,
       }}
     >
       <span>{label}</span>
-      <span style={{ color: positief ? "var(--kleur-groen, #4a8f4a)" : "var(--kleur-rood, #b04a3a)" }}>
-        {positief ? "+" : "-"}
-        {Math.round(waarde)}
+      <span style={{ color: kleur }}>
+        {teken}
+        {gerondeWaarde}
       </span>
     </div>
   );
@@ -84,6 +99,9 @@ export default function EconomieOverzichtPaneel({ state, onSluiten }: EconomieOv
   const overzicht = berekenEconomieOverzicht(state);
   const materiaalTypes = Object.keys(MATERIAAL_LABELS) as MateriaalType[];
   const boerderijOpbrengstRuw = berekenBoerderijOpbrengstRuw(state);
+  const boerderijTechModifier = berekenBoerderijTechModifier(state);
+  const boerderijOnrustModifier = berekenBoerderijOnrustModifier(state);
+  const boerderijOpbrengstNetto = berekenBoerderijOpbrengstNetto(state);
   const stadVerbruik = berekenStadVoedselVerbruik(state);
   const wachttorenVerbruik = berekenWachttorenVoedselVerbruik(state);
 
@@ -126,9 +144,13 @@ export default function EconomieOverzichtPaneel({ state, onSluiten }: EconomieOv
             />
           ))}
           <ResourceRegel label={<ResourceIcoon type="voedsel" />} huidig={state.voedsel} verandering={overzicht.voedsel} />
-          <VoedselSubRegel label="Wachttorens" waarde={wachttorenVerbruik} positief={false} />
-          <VoedselSubRegel label="Stad" waarde={stadVerbruik} positief={false} />
-          <VoedselSubRegel label="Boerderijen (volgende beurt)" waarde={boerderijOpbrengstRuw} positief={true} />
+          <VoedselSubRegel label="Wachttorens" waarde={-wachttorenVerbruik} />
+          <VoedselSubRegel label="Stad" waarde={-stadVerbruik} />
+          <VoedselSubRegel label="Boerderijen (basis)" waarde={boerderijOpbrengstRuw} />
+          <VoedselSubRegel label="Techtree-bonus" waarde={boerderijTechModifier} />
+          {state.campagneId === "going-west" && <VoedselSubRegel label="Onrust" waarde={boerderijOnrustModifier} />}
+          <VoedselSubRegel label="Boerderijen (netto, vóór verbruik)" waarde={boerderijOpbrengstNetto} nadruk />
+          <VoedselSubRegel label="Netto voedsel (ná verbruik)" waarde={overzicht.voedsel} nadruk />
           <ResourceRegel label={<ResourceIcoon type="cultuur" />} huidig={state.cultuur} verandering={overzicht.cultuur} />
           <ResourceRegel
             label={<ResourceIcoon type="wetenschap" />}

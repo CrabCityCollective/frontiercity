@@ -3,13 +3,16 @@ import assert from "node:assert/strict";
 import { maakInitieleSpelStatus, OPSLAG_CAP, volgendeBeurt } from "./economie";
 import { BIBLIOTHEEK, ECONOMISCH_LAND_IMPROVEMENTS, MARKT, SMEDERIJ, STERRENCIRKEL } from "./improvements";
 import {
+  berekenBoerderijOnrustModifier,
+  berekenBoerderijOpbrengstNetto,
   berekenBoerderijOpbrengstRuw,
+  berekenBoerderijTechModifier,
   berekenStadVoedselVerbruik,
   berekenWachttorenVoedselVerbruik,
   WACHTTOREN_VOEDSEL_VERBRUIK,
 } from "./productie";
 import { metActieveStad } from "./stad";
-import { metWerkendeSterrencirkel, MIJN, WACHTTOREN } from "./testHelpers";
+import { metWerkendeSterrencirkel, HOUTKAP, MIJN, WACHTTOREN } from "./testHelpers";
 
 test("de opslag-cap geldt per grondstof, niet als gezamenlijke som (basis van de STICHTING_KOSTEN-doorrekening)", () => {
   let state = maakInitieleSpelStatus();
@@ -167,6 +170,102 @@ test("berekenBoerderijOpbrengstRuw negeert een boerderij die niet actief of niet
     ),
   };
   assert.equal(berekenBoerderijOpbrengstRuw(state), 0, "een niet-wegverbonden boerderij levert nog niets op");
+});
+
+test("berekenBoerderijTechModifier is 0 zonder 'vuur-temmen', en het verschil tussen netto- en ruwe opbrengst mét", () => {
+  let state = maakInitieleSpelStatus();
+  const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
+  state = {
+    ...state,
+    streken: state.streken.map((streek, idx) =>
+      idx !== 0
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile) => {
+              if (tile.positieInStreek === 0) {
+                return { ...tile, status: "actief" as const, improvement: BOERDERIJ, heeftWeg: true };
+              }
+              if ([1, 2, 3].includes(tile.positieInStreek)) {
+                return { ...tile, heeftWeg: true };
+              }
+              return tile;
+            }),
+          }
+    ),
+  };
+
+  assert.equal(berekenBoerderijTechModifier(state), 0, "geen 'vuur-temmen' = geen techtree-modifier");
+
+  const metTech = { ...state, technologieen: ["vuur-temmen" as const] };
+  const verwachteBonus = Math.ceil((BOERDERIJ.effect.waarde ?? 0) * 1.15) - (BOERDERIJ.effect.waarde ?? 0);
+  assert.equal(berekenBoerderijTechModifier(metTech), verwachteBonus, "'vuur-temmen' geeft +15% (afgerond naar boven) als modifier");
+});
+
+test("berekenBoerderijOnrustModifier is 0 buiten Going West, en negatief zodra een streek onrust heeft binnen Going West", () => {
+  let state = maakInitieleSpelStatus();
+  const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
+  const metBoerderijEnOnrust = (s: typeof state) => ({
+    ...s,
+    streken: s.streken.map((streek, idx) =>
+      idx !== 0
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile) => {
+              if (tile.positieInStreek === 0) {
+                return { ...tile, status: "actief" as const, improvement: BOERDERIJ, heeftWeg: true };
+              }
+              if ([1, 2, 3].includes(tile.positieInStreek)) {
+                return { ...tile, heeftWeg: true };
+              }
+              // 3 extra improvements (samen met de boerderij: 4) duwt de
+              // streek over de ONRUST_DREMPEL (onrust.ts).
+              if ([5, 6, 7].includes(tile.positieInStreek)) {
+                return { ...tile, status: "actief" as const, improvement: HOUTKAP };
+              }
+              return tile;
+            }),
+          }
+    ),
+  });
+
+  state = metBoerderijEnOnrust(state);
+  assert.equal(berekenBoerderijOnrustModifier(state), 0, "buiten Going West is de onrust-multiplier altijd 1, dus geen modifier");
+
+  const goingWest = metBoerderijEnOnrust(maakInitieleSpelStatus("going-west"));
+  assert.ok(berekenBoerderijOnrustModifier(goingWest) < 0, "onrust boven de drempel verlaagt de boerderijopbrengst");
+});
+
+test("berekenBoerderijOpbrengstNetto combineert de tech- en onrust-modifiers met de basisopbrengst", () => {
+  let state = maakInitieleSpelStatus();
+  const BOERDERIJ = ECONOMISCH_LAND_IMPROVEMENTS.find((i) => i.id === "boerderij")!;
+  state = {
+    ...state,
+    technologieen: ["vuur-temmen"],
+    streken: state.streken.map((streek, idx) =>
+      idx !== 0
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile) => {
+              if (tile.positieInStreek === 0) {
+                return { ...tile, status: "actief" as const, improvement: BOERDERIJ, heeftWeg: true };
+              }
+              if ([1, 2, 3].includes(tile.positieInStreek)) {
+                return { ...tile, heeftWeg: true };
+              }
+              return tile;
+            }),
+          }
+    ),
+  };
+
+  assert.equal(
+    berekenBoerderijOpbrengstNetto(state),
+    berekenBoerderijOpbrengstRuw(state) + berekenBoerderijTechModifier(state) + berekenBoerderijOnrustModifier(state),
+    "netto = basis + alle modifiers samen"
+  );
 });
 
 test("berekenStadVoedselVerbruik geeft het stadsverbruik voor de huidige stadsgrootte, onafhankelijk van wachttorens", () => {
