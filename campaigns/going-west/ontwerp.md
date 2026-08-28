@@ -52,6 +52,23 @@ Stad stichten blijft een **settler-actie** (hoofdstuk 6/13 van het hoofddocument
 
 **Implementatiestatus**: zie de milestone-tabel in hoofdstuk 13 van het hoofddocument (M16 t/m M20g) voor de volledige, actuele stand van de code voor dit mechanisme.
 
+## Boon-systeem (voorstel, nog niet gebouwd — issue #411)
+
+Aanvulling op het herhalende drie-stichtingsmomenten-patroon hierboven (Deel 2): een beloning voor de speler die een stad daadwerkelijk tot "groot" uitbouwt vóórdat hij verder trekt, in plaats van hem alleen af te straffen als hij te lang blijft hangen (het afstandsverval, Deel 1). Nog **niet** geïmplementeerd — dit is een eerste voorstel, vastgelegd volgens de M20-voorstel-aanpak (CLAUDE.md, hoofdstuk 13/15: architectuur-rakende stappen eerst voorstellen in plaats van blind in één sessie bouwen), omdat dit een nieuw, doorlopend run-breed systeem is dat niet bij een bestaande milestone hoort.
+
+**Kernregels (uit issue #411)**:
+- Bij elke stichting (`stichtStad`, `acties.ts`) die de campagne niet afsluit (`isAfsluitendeStichting === false`) krijgt de speler kans op een random Boon uit een pool.
+- Alleen als de stad die net actief was (`state.stad`, vóór de nieuwe stad wordt toegevoegd) `grootte === "groot"` had bereikt (via de Grote Woonwijk/"Spoorwegstation", hoofdstuk 13 M15/9 van het hoofddocument) — anders geen Boon. Dit maakt voluit uitbouwen vóór vertrekken een bewuste, beloonde keuze, naast de bestaande afstandsverval-druk (Deel 1) om juist wél op tijd te vertrekken.
+- Een Boon is permanent voor de rest van de run (geen verval, geen vervanging) en de speler kan er meerdere tegelijk hebben (stapelbaar, geen slot-limiet zoals bij relics).
+- Volgorde: eerst de bestaande `StichtingsMomentPopup` ("stad gesticht"), daarna — alleen als de voorwaarde vervuld is — een nieuwe Boon-pop-up met naam, uitleg en een eigen scene-afbeelding per Boon.
+- De inhoud van de individuele Boons (welke bonussen, hoeveel) komt in aparte, losse vervolgissues — dit voorstel gaat uitsluitend over het framework (opslag, trekking, timing, pop-up).
+
+**Open ontwerpvragen, te beantwoorden vóór een bouw-milestone hiervan gemaakt wordt**:
+1. Trekking met of zonder terugleggen: kan dezelfde Boon twee keer getrokken worden (stapelt het effect dan, of is een tweede treffer een no-op), of wordt een al-bezeten Boon uit de pool gefilterd voor volgende trekkingen?
+2. Wat gebeurt er met bestaande Boons als een stad later alsnog volledig instort (hard verval/permadeath, hoofdstuk 4/11 van het hoofddocument)? Relics zijn expliciet per stad en gaan bij zo'n instorting verloren; Boons zijn hierboven bewust run-breed opgeslagen (niet per stad) — verondersteld is dus dat ze een instorting van één stad overleven, zolang de run zelf doorgaat, maar dat moet expliciet bevestigd worden voordat `GameState.boons` (of vergelijkbaar) wordt toegevoegd.
+3. Is dit systeem Going West-exclusief (zoals onrust/Saloon/Courthouse, `Improvement.vereisteCampagneId`) of generiek voor elke toekomstige multi-stad-campagne? Voorstel: net als onrust.ts voorlopig Going West-exclusief vastleggen — de tutorial sticht toch nooit meer dan die ene, afsluitende keer, dus daar heeft dit sowieso geen effect.
+4. Pop-up-plek in de bestaande gatingketen in `GameRoot.tsx` (`toonStichtingsMomentPopup` en de vele `toon...Popup`-vlaggen eronder) — voorstel is direct ná `toonStichtingsMomentPopup` en vóór de overige narratieve pop-ups, zodat de twee stichtingsmomenten altijd na elkaar verschijnen zonder dat een andere pop-up ertussen kan komen.
+
 ## Flavor-tekststijlgids
 1. Korte, vaak enkelvoudige zinnen — kracht in understatement.
 2. Geen emotie-bijvoeglijke naamwoorden ("verschrikkelijk", "triomfantelijk").
