@@ -188,6 +188,37 @@ test("versnelCivielMetGoud heeft geen effect op een Nieuwe settler in aanbouw ('
   assert.equal(naVersnellen, state, "geen wijziging: rush-bouwen geldt niet voor units");
 });
 
+// Issue "Tweede stad": een net gebouwde settler verscheen altijd terug op de
+// starttegel van de allereerste stad (streek 1, STAD_POSITIE), ook als de
+// actieve stad ondertussen een later gestichte stad was — de wachtrij
+// hardcodeerde die coördinaten in plaats van de positie van de stad die de
+// settler daadwerkelijk uitrust.
+test("een Nieuwe settler verschijnt bij de actieve (net gestichte) stad, niet bij de starttegel van de allereerste stad (issue: 'Tweede stad')", () => {
+  let state = maakInitieleSpelStatus();
+  const tweedeStad = { ...state.stad, naam: "Vuurbron", streekHoogte: 8, positieInStreek: 3 };
+  state = {
+    ...state,
+    steden: [state.steden[0], tweedeStad],
+    stad: tweedeStad,
+    settler: undefined,
+    voorraad: { hout: 99, steen: 99, erts: 99, goud: 99 },
+  };
+
+  state = startNieuweSettler(state);
+  assert.equal(state.stad.civielInAanbouw?.improvement.id, "nieuwe-settler");
+
+  const bouwtijd = state.stad.civielInAanbouw!.improvement.bouwtijdBeurten;
+  for (let i = 0; i < bouwtijd; i += 1) {
+    state = volgendeBeurt({ ...state, voorraad: { hout: 99, steen: 99, erts: 99, goud: 99 } });
+  }
+
+  assert.deepEqual(
+    state.settler,
+    { hoogte: 8, positieInStreek: 3 },
+    "de settler moet bij Vuurbron verschijnen, niet op de starttegel van Oer-stad"
+  );
+});
+
 test("heeftOfferAltaar en startMissionarisRecrutering: Missionaris is pas trainbaar na een voltooid Offer Altaar", () => {
   let state = maakInitieleSpelStatus();
   assert.equal(heeftOfferAltaar(state), false);
@@ -401,6 +432,35 @@ test("de tweede-settler-wachtrij is beschikbaar vanaf streek 7, permanent herbou
   // gaat, kan de wachtrij meteen weer gestart worden.
   state = { ...state, tweedeSettler: undefined };
   assert.equal(kanTweedeSettlerBouwen(state), true, "de tweede-settler-wachtrij is opnieuw beschikbaar na verlies");
+});
+
+// Zelfde issue als de eerste-settler-test hierboven ("Tweede stad"), maar dan
+// voor de tweede-settler-wachtrij (issue #236): ook `tweedeSettler` hoort bij
+// de actieve stad te verschijnen, niet altijd terug bij de starttegel van de
+// allereerste stad.
+test("de tweede settler verschijnt ook bij de actieve stad, niet bij de starttegel van de allereerste stad (issue: 'Tweede stad')", () => {
+  let state = maakInitieleSpelStatus();
+  state = metOntgrendeldeStreek(state, 8);
+  const tweedeStad = { ...state.stad, naam: "Vuurbron", streekHoogte: 8, positieInStreek: 3 };
+  state = {
+    ...state,
+    steden: [state.steden[0], tweedeStad],
+    stad: tweedeStad,
+    voorraad: { hout: 99, steen: 99, erts: 99, goud: 99 },
+  };
+  assert.equal(kanTweedeSettlerBouwen(state), true);
+
+  state = startTweedeSettler(state);
+  const bouwtijd = state.stad.tweedeSettlerInAanbouw!.improvement.bouwtijdBeurten;
+  for (let i = 0; i < bouwtijd; i += 1) {
+    state = volgendeBeurt({ ...state, voorraad: { hout: 99, steen: 99, erts: 99, goud: 99 } });
+  }
+
+  assert.deepEqual(
+    state.tweedeSettler,
+    { hoogte: 8, positieInStreek: 3 },
+    "de tweede settler moet bij Vuurbron verschijnen, niet op de starttegel van Oer-stad"
+  );
 });
 
 test("startGroei kiest Grote Woonwijk (middel→groot) met de hogere voedseldrempel zodra de stad al middel is (Deel 2)", () => {

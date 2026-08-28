@@ -221,14 +221,19 @@ export default function GameCanvas({
     <canvas
       ref={canvasRef}
       width={TILE_SIZE * BAND_WIDTH_TILES}
-      // +1 rij voor de klikbare oceaan onder de onderste zichtbare streek
-      // (hoofdstuk 2) — alleen zolang die onderste streek nog hoogte 1 is
-      // (issue: "Nieuwe stad Cincinnati", `startOceaanZichtbaar`), +1 extra
-      // rij zodra de afsluitende oceaan bóven de laatste streek ook getoond
-      // wordt (issue: "laatste oceaan ook visueel"). Hoogte volgt het aantal
+      // +1 rij onder de onderste zichtbare streek — altijd gereserveerd,
+      // ongeacht `heeftStartOceaan`: zolang streek 1 zichtbaar is, tekent
+      // `tekenWereld` daar de klikbare oceaan (hoofdstuk 2) in, en zodra een
+      // nieuwe stad de oudere streken laat dichtklappen (issue: "Nieuwe stad
+      // Cincinnati") blijft die rij leeg maar geeft hij nog altijd de
+      // stad-naam-overlay (issue: "Tweede stad": naam viel eerder van de
+      // canvas af omdat deze rij dan niet meer meegeteld werd) de ruimte om
+      // onder de onderste stad-tegel te tekenen. +1 extra rij zodra de
+      // afsluitende oceaan bóven de laatste streek ook getoond wordt (issue:
+      // "laatste oceaan ook visueel"). Hoogte volgt verder het aantal
       // daadwerkelijk meegegeven (zichtbare) streken, niet het vaste
       // tutorial-totaal (issue: "onontdekte tegels weg" hierboven).
-      height={TILE_SIZE * (streken.length + (heeftStartOceaan ? 1 : 0) + (heeftEindeOceaan ? 1 : 0))}
+      height={TILE_SIZE * (streken.length + 1 + (heeftEindeOceaan ? 1 : 0))}
       onClick={handleClick}
       // width/height hierboven blijven de canvas-resolutie (en dus de
       // klik-geometrie in `bepaalAangeklikteTile`, die zelf al corrigeert

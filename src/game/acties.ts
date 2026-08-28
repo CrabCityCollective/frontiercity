@@ -388,6 +388,7 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
     relics: [],
     vervalStatus: "gezond",
     streekHoogte: hoogte,
+    positieInStreek,
     strijders: [],
     missionarissen: [],
     rechters: [],

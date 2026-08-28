@@ -21,6 +21,17 @@ export function actieveStad(state: GameState): City {
   return state.stad;
 }
 
+// Streek-hoogte waar de stad-tegel van `stad` daadwerkelijk staat (issue:
+// "Tweede stad") — bijna altijd gelijk aan `City.streekHoogte`, behalve voor
+// de allereerste stad van een run: die heeft `streekHoogte: 0` ("vóór streek
+// 1", zie de toelichting in types.ts), terwijl haar tegel altijd op streek 1
+// staat (`maakStartStreek`/`maakInitieleWereldGoingWest`). Gebruikt om een
+// nieuw gebouwde settler (M6, groeiEnRekrutering.ts) bij de juiste — actieve —
+// stad te laten verschijnen in plaats van altijd terug bij streek 1.
+export function stadTileHoogte(stad: City): number {
+  return stad.streekHoogte === 0 ? 1 : stad.streekHoogte;
+}
+
 // Vervangt de actieve (laatst-gestichte) stad, in `steden` én in `stad`
 // tegelijk. Gebruik dit in plaats van `{ ...state, stad: {...} }` zodra een
 // aanroepplek de actieve stad muteert.
