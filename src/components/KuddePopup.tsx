@@ -10,8 +10,9 @@ interface KuddePopupProps {
 
 // Kudde-pop-up (hoofdstuk 17): verschijnt zodra `verwerkKuddes` (economie.ts)
 // een nieuwe wilde kudde neerzet — zelfde blokkerende meldings-frame en
-// stijl als IndringersPopup, maar zonder keuze: de speler klikt 'm gewoon
-// weg en kan de settler er daarna zelf heen sturen om te jagen.
+// stijl als IndringersPopup, incl. scene-afbeelding, maar zonder keuze: de
+// speler klikt 'm gewoon weg en kan de settler er daarna zelf heen sturen
+// om te jagen.
 export default function KuddePopup({ event, onSluiten }: KuddePopupProps) {
   return (
     <div
@@ -37,6 +38,20 @@ export default function KuddePopup({ event, onSluiten }: KuddePopupProps) {
           textAlign: "center",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/scenes/wilde-kudde.png"
+          alt=""
+          style={{
+            width: "100%",
+            maxWidth: "26rem",
+            height: "auto",
+            display: "block",
+            alignSelf: "center",
+            border: "3px solid var(--kleur-oker)",
+            boxShadow: "0 6px 18px rgba(0, 0, 0, 0.55)",
+          }}
+        />
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
           {KUDDE_TITEL}
         </strong>
