@@ -91,7 +91,18 @@ test("stichtStad op een streek die niet de laatste van de wereld is, laat de run
   assert.equal(naStichten.settler, undefined, "de settler verdwijnt nog steeds bij het stichten");
   assert.equal(naStichten.steden.length, 2);
   assert.equal(naStichten.steden[1].streekHoogte, 8);
+  assert.equal(naStichten.steden[1].positieInStreek, 5);
   assert.deepEqual(naStichten.stad, naStichten.steden[1], "de nieuwe stad wordt de actieve stad");
+
+  // Regressie (issue: "Tweede stad"): het "settler verschijnt bij beurt
+  // 2"-vangnet (economie.ts, `volgendeBeurt`) keek voorheen naar
+  // `stadGesticht`, dat alleen bij de állerlaatste, campagne-afsluitende
+  // stichting gezet wordt (zie de test hierboven) — bij zo'n tussentijdse
+  // stichting bleef `stadGesticht` dus `undefined`, en gaf het vangnet
+  // alsnog een gratis settler terug, hardgecodeerd op de starttegel van
+  // Oer-stad (streek 1) in plaats van niets.
+  const naVolgendeBeurt = volgendeBeurt(naStichten);
+  assert.equal(naVolgendeBeurt.settler, undefined, "geen gratis settler-terugval ná een tussentijdse stichting");
 });
 
 test("stichtStad geeft de tweede Going West-stad de naam Cincinnati (issue: 'Nieuwe stad Cincinnati')", () => {

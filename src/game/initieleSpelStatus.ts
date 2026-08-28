@@ -6,7 +6,7 @@
 
 import { standaardUitlegAan } from "./save";
 import { GameState, MateriaalType } from "./types";
-import { maakInitieleWereld } from "./world";
+import { maakInitieleWereld, STAD_POSITIE } from "./world";
 import { GOING_WEST_STARTSTAD_NAAM, maakInitieleWereldGoingWest } from "./worldGoingWest";
 
 export const OPSLAG_CAP = 30;
@@ -69,6 +69,7 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     relics: [],
     vervalStatus: "gezond",
     streekHoogte: 0,
+    positieInStreek: STAD_POSITIE,
     strijders: [],
     missionarissen: [],
     rechters: [],

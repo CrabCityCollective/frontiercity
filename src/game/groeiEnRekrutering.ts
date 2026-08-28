@@ -26,15 +26,10 @@ import {
   WOONWIJK,
 } from "./improvements";
 import { City, GameState, Improvement, Strijder } from "./types";
-import {
-  STAD_POSITIE,
-  VOEDSEL_DREMPEL_GROEI,
-  VOEDSEL_DREMPEL_GROEI_GROOT,
-  hoogsteOntgrendeldeStreek,
-} from "./world";
+import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT, hoogsteOntgrendeldeStreek } from "./world";
 import { investeerInBouwkosten, pasVersnellingToe } from "./bouwwachtrij";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
-import { metActieveStad } from "./stad";
+import { metActieveStad, stadTileHoogte } from "./stad";
 
 // Betaalt de bouwkosten van een lopende civiele stadsbouw (M6, hoofdstuk
 // 11/16): één gedeelde wachtrij voor de groei-tier (WOONWIJK) én een nieuwe
@@ -65,7 +60,9 @@ export function verwerkCivielInAanbouw(state: GameState): GameState {
     return {
       ...metActieveStad(state, { ...state.stad, grootte, civielInAanbouw: undefined }),
       voorraad,
-      settler: isSettler ? { hoogte: 1, positieInStreek: STAD_POSITIE } : state.settler,
+      settler: isSettler
+        ? { hoogte: stadTileHoogte(state.stad), positieInStreek: state.stad.positieInStreek }
+        : state.settler,
     };
   }
 
@@ -507,7 +504,7 @@ export function verwerkTweedeSettlerInAanbouw(state: GameState): GameState {
     return {
       ...metActieveStad(state, { ...state.stad, tweedeSettlerInAanbouw: undefined }),
       voorraad,
-      tweedeSettler: { hoogte: 1, positieInStreek: STAD_POSITIE },
+      tweedeSettler: { hoogte: stadTileHoogte(state.stad), positieInStreek: state.stad.positieInStreek },
     };
   }
 

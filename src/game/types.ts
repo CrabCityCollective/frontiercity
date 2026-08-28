@@ -410,6 +410,17 @@ export interface City {
   // (M17) het effectiviteitsverval op city-improvement-productie zodra een
   // run meer dan één stad heeft (M18, `stichtStad` in acties.ts).
   streekHoogte: number;
+  // Kolom (0-8) binnen die streek waar de stad-tegel daadwerkelijk staat
+  // (issue: "Tweede stad" — een nieuw gebouwde settler verscheen na de
+  // tweede stichting altijd terug op de vaste starttegel i.p.v. bij de net
+  // gestichte stad, omdat die positie nergens werd vastgelegd). Voor de
+  // allereerste stad altijd `STAD_POSITIE` (`maakStartStreek`/
+  // `maakInitieleWereldGoingWest`); voor elke volgende stichting de kolom
+  // waar de settler op dat moment stond (`stichtStad`, acties.ts) — kan van
+  // `STAD_POSITIE` afwijken zodra de Amerikaanse-campagnewereld (hoofdstuk
+  // 8/14) settlers niet meer dwingt om exact op de middelste kolom te
+  // stichten.
+  positieInStreek: number;
   // Lopende civiele stads-bouw (M6, hoofdstuk 4/16: "kost een civiel
   // improvement + rijptijd"). Net als een tile-in-aanbouw (M3) een per-beurt
   // investering van bouwmateriaal, maar los van de tegel-band omdat dit de

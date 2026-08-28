@@ -35,7 +35,7 @@
 // geen definitieve balans.
 
 import { EenmaligeUitlegKey, GameState, ResourceType } from "./types";
-import { STAD_POSITIE } from "./world";
+import { stadTileHoogte } from "./stad";
 import { verwerkUitputting, verwerkVerval } from "./uitputtingEnVerval";
 import { verwerkBouwwachtrij } from "./bouwwachtrij";
 import { verwerkProductie } from "./productie";
@@ -254,10 +254,21 @@ export function volgendeBeurt(state: GameState): GameState {
   // sinds hoofdstuk 17 (issue: "roofdieren toevoegen") voor een settler die
   // aan een roofdier is verloren — ook dan moet een vervanging via de
   // civiele improvement-pool (`startNieuweSettler`), niet gratis terugkomen.
+  //
+  // `steden.length === 1` (i.p.v. het eerder gebruikte `!stadGesticht`, issue:
+  // "Tweede stad") is de juiste poort hiervoor: `stadGesticht` wordt alleen
+  // gezet bij de állerlaatste, campagne-afsluitende stichting (`stichtStad`,
+  // acties.ts), dus bleef bij elke tússentijdse stichting van het herhalende
+  // patroon (M18) onterecht `undefined` — waardoor deze val-terug-regel na
+  // zo'n stichting alsnog een gratis settler teruggaf op de starttegel van de
+  // állereerste stad, in plaats van niets (of een via de wachtrij gebouwde
+  // settler bij de net gestichte stad). `steden.length === 1` betekent "nog
+  // geen enkele stad gesticht deze run" en dekt dus élke stichting, niet
+  // alleen de laatste.
   const settler =
     naRoofdieren.settler ??
-    (!naRoofdieren.stadGesticht && !naRoofdieren.settlerVerlorenAanRoofdier && nieuweBeurt >= 2
-      ? { hoogte: 1, positieInStreek: STAD_POSITIE }
+    (naRoofdieren.steden.length === 1 && !naRoofdieren.settlerVerlorenAanRoofdier && nieuweBeurt >= 2
+      ? { hoogte: stadTileHoogte(naRoofdieren.stad), positieInStreek: naRoofdieren.stad.positieInStreek }
       : undefined);
 
   return {
