@@ -603,6 +603,13 @@ export interface CampaignConfig {
   // verbond zelf geen invallen meer plegen. Ontbreekt dit veld, dan blijft
   // `indringersStamNamen` ook ná de omslag gewoon gelden.
   indringersStamNamenNaVerbond?: string[];
+  // Campagne-eigen stadsnamen voor elke stad die ná de startstad gesticht
+  // wordt (hoofdstuk 9/10/13, issue "Nieuwe stad Cincinnati"), zelfde
+  // terugval-patroon als hierboven: geïndexeerd op `state.steden.length - 1`
+  // van vóór de stichting, en ontbreekt deze lijst (of raakt ze op), dan valt
+  // `nieuweStadNaam` (acties.ts) terug op de generieke tutorial-namenlijst
+  // (`GESTICHTE_STAD_NAMEN`).
+  stadNamen?: string[];
 }
 
 // Gedeelde-opslag-grondstoffen (hoofdstuk 5): hout, steen, erts, goud delen
