@@ -15,9 +15,10 @@ interface RoofdierPopupProps {
 
 // Roofdier-pop-up (hoofdstuk 14/17, issue: "roofdieren toevoegen"): één
 // component met twee varianten, geschakeld op `event.fase` — zelfde patroon
-// als IndringersPopup. "verschenen" is de waarschuwing zodra `jaag`
-// (economie.ts) een roofdier oproept; "aanval" is het gevolg, getoond door
-// `verwerkRoofdieren` als de settler een beurt later nog op het vakje stond.
+// als IndringersPopup, incl. scene-afbeelding. "verschenen" is de waarschuwing
+// zodra `jaag` (economie.ts) een roofdier oproept; "aanval" is het gevolg,
+// getoond door `verwerkRoofdieren` als de settler een beurt later nog op het
+// vakje stond.
 export default function RoofdierPopup({ event, onSluiten }: RoofdierPopupProps) {
   const titel = event.fase === "verschenen" ? ROOFDIER_VERSCHENEN_TITEL : ROOFDIER_AANVAL_TITEL;
   const tekst = event.fase === "verschenen" ? ROOFDIER_VERSCHENEN_TEKST : ROOFDIER_AANVAL_TEKST;
@@ -46,6 +47,20 @@ export default function RoofdierPopup({ event, onSluiten }: RoofdierPopupProps) 
           textAlign: "center",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/scenes/roofdieren.png"
+          alt=""
+          style={{
+            width: "100%",
+            maxWidth: "26rem",
+            height: "auto",
+            display: "block",
+            alignSelf: "center",
+            border: "3px solid var(--kleur-oker)",
+            boxShadow: "0 6px 18px rgba(0, 0, 0, 0.55)",
+          }}
+        />
         <strong className="fc-heading" style={{ color: "var(--kleur-gevaar)" }}>
           {titel}
         </strong>
