@@ -364,6 +364,17 @@ export function eindeOceaanZichtbaar(streken: Streek[]): boolean {
   return streken.some((streek) => streek.hoogte === TUTORIAL_STREEK_AANTAL && streek.ontgrendeld);
 }
 
+// Of de startoceaan-rij (hoofdstuk 2: streek 1 begint aan een oceaan) onder de
+// onderste zichtbare streek getekend moet worden — alleen zolang streek 1 zelf
+// nog zichtbaar is. Issue "Nieuwe stad Cincinnati": zodra een nieuwe stad
+// gesticht wordt en de oudere streken dichtklappen (zie `zichtbareStreken`
+// hieronder, `ondergrens`), is streek 1 niet langer de onderste zichtbare
+// streek en hoort de losse oceaan-rij er ook niet meer onder te staan — net zo
+// min een echte `Streek` als `EINDE_OCEAAN_HOOGTE` hierboven.
+export function startOceaanZichtbaar(streken: Streek[]): boolean {
+  return streken.some((streek) => streek.hoogte === 1);
+}
+
 // Hoogste ontgrendelde streek = de huidige frontier-grens (hoofdstuk 2).
 export function hoogsteOntgrendeldeStreek(streken: Streek[]): number {
   return streken.reduce(
@@ -388,16 +399,22 @@ export function isVooruitkijkStreek(streek: Streek, streken: Streek[]): boolean 
 const ZICHTBARE_MIST_STREKEN_BOVEN_VOORUITKIJK = 2;
 
 // Het deel van `streken` dat daadwerkelijk op de canvas gerenderd wordt (zie
-// GameCanvas/tekenWereld). Snijdt simpelweg de bovenste, (nog) niet-relevante
-// mist-streken af — de resterende hoogtes blijven 1..N zonder gaten, dus de
-// bestaande rij-geometrie (hoogte → canvas-rij) blijft ongewijzigd werken.
-export function zichtbareStreken(streken: Streek[]): Streek[] {
+// GameCanvas/tekenWereld). Snijdt de bovenste, (nog) niet-relevante
+// mist-streken af, en — sinds issue "Nieuwe stad Cincinnati" — optioneel ook
+// alles ónder `ondergrens`: bij het stichten van een nieuwe stad klappen alle
+// oudere streken dicht (worden onzichtbaar) en wordt de streek met de nieuwe
+// stad de onderste zichtbare streek (`City.streekHoogte`). De hoogtes van de
+// resterende streken blijven altijd doorlopend (geen gaten en geen
+// hernummering nodig), dus de rij-geometrie in canvas.ts/canvasPixelArt.ts
+// hoeft alleen nog de hoogste zichtbare hoogte te kennen i.p.v. aan te nemen
+// dat de laagste zichtbare hoogte altijd 1 is.
+export function zichtbareStreken(streken: Streek[], ondergrens: number = 1): Streek[] {
   const frontier = hoogsteOntgrendeldeStreek(streken);
   const maxHoogte = Math.min(
     streken.length,
     frontier + 1 + ZICHTBARE_MIST_STREKEN_BOVEN_VOORUITKIJK
   );
-  return streken.filter((streek) => streek.hoogte <= maxHoogte);
+  return streken.filter((streek) => streek.hoogte >= ondergrens && streek.hoogte <= maxHoogte);
 }
 
 // Cultuurdrempel om streek `hoogte` te ontgrendelen (M5, hoofdstuk 5: "cultuur →
