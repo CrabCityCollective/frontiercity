@@ -4,7 +4,11 @@ import { ReactNode } from "react";
 import ResourceIcoon from "./ResourceIcoon";
 import { berekenEconomieOverzicht } from "@/game/economie";
 import { MATERIAAL_LABELS } from "@/game/improvements";
-import { berekenBoerderijOpbrengstRuw } from "@/game/productie";
+import {
+  berekenBoerderijOpbrengstRuw,
+  berekenStadVoedselVerbruik,
+  berekenWachttorenVoedselVerbruik,
+} from "@/game/productie";
 import { GameState, MateriaalType } from "@/game/types";
 
 interface EconomieOverzichtPaneelProps {
@@ -46,11 +50,11 @@ function ResourceRegel({
   );
 }
 
-// Ingesprongen sub-regel onder Voedsel (issue: "Economie scherm breakdown",
-// eerste, bewust kleinere stap — voor nu alleen de ruwe boerderijopbrengst,
-// zonder de tech-/onrust-modifiers die de latere volledige uitsplitsing wel
-// zal tonen).
-function BoerderijSubRegel({ opbrengst }: { opbrengst: number }) {
+// Ingesprongen sub-regel onder Voedsel (issue: "Economie scherm breakdown"):
+// toont losse onderdelen van de voedselbalans — opbrengst (groen, "+") of
+// verbruik (rood, "-") — nog zonder de tech-/onrust-modifiers die de latere
+// volledige uitsplitsing wel zal tonen (dat blijft een vervolgtaak).
+function VoedselSubRegel({ label, waarde, positief }: { label: string; waarde: number; positief: boolean }) {
   return (
     <div
       style={{
@@ -62,8 +66,11 @@ function BoerderijSubRegel({ opbrengst }: { opbrengst: number }) {
         fontSize: "0.8rem",
       }}
     >
-      <span>Boerderijen (volgende beurt)</span>
-      <span style={{ color: "var(--kleur-groen, #4a8f4a)" }}>+{Math.round(opbrengst)}</span>
+      <span>{label}</span>
+      <span style={{ color: positief ? "var(--kleur-groen, #4a8f4a)" : "var(--kleur-rood, #b04a3a)" }}>
+        {positief ? "+" : "-"}
+        {Math.round(waarde)}
+      </span>
     </div>
   );
 }
@@ -77,6 +84,8 @@ export default function EconomieOverzichtPaneel({ state, onSluiten }: EconomieOv
   const overzicht = berekenEconomieOverzicht(state);
   const materiaalTypes = Object.keys(MATERIAAL_LABELS) as MateriaalType[];
   const boerderijOpbrengstRuw = berekenBoerderijOpbrengstRuw(state);
+  const stadVerbruik = berekenStadVoedselVerbruik(state);
+  const wachttorenVerbruik = berekenWachttorenVoedselVerbruik(state);
 
   return (
     <div
@@ -117,7 +126,9 @@ export default function EconomieOverzichtPaneel({ state, onSluiten }: EconomieOv
             />
           ))}
           <ResourceRegel label={<ResourceIcoon type="voedsel" />} huidig={state.voedsel} verandering={overzicht.voedsel} />
-          <BoerderijSubRegel opbrengst={boerderijOpbrengstRuw} />
+          <VoedselSubRegel label="Wachttorens" waarde={wachttorenVerbruik} positief={false} />
+          <VoedselSubRegel label="Stad" waarde={stadVerbruik} positief={false} />
+          <VoedselSubRegel label="Boerderijen (volgende beurt)" waarde={boerderijOpbrengstRuw} positief={true} />
           <ResourceRegel label={<ResourceIcoon type="cultuur" />} huidig={state.cultuur} verandering={overzicht.cultuur} />
           <ResourceRegel
             label={<ResourceIcoon type="wetenschap" />}

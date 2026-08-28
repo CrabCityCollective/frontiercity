@@ -104,15 +104,21 @@ function berekenVoedselProductie(state: GameState): number {
 // "A2b. Voorraadschuur" (techTree.ts): verlaagt alleen het stadsverbruik
 // zelf, niet de bemannings-kosten van Wachttorens hieronder — nooit onder de
 // 1 (een stad van 0 monden bestaat niet).
+// Stadsverbruik apart van het wachttoren-verbruik hieronder (issue: "Economie
+// scherm breakdown"): geëxporteerd zodat EconomieOverzichtPaneel dit als
+// losse rij kan tonen, naast `berekenWachttorenVoedselVerbruik`.
+export function berekenStadVoedselVerbruik(state: GameState): number {
+  return Math.max(1, VOEDSEL_VERBRUIK[state.stad.grootte] - voedselVerbruikVermindering(state.technologieen));
+}
+
+// Wachttoren-verbruik apart van het stadsverbruik hierboven (issue: "Economie
+// scherm breakdown") — zelfde formule als in `voedselVerbruik` hieronder.
+export function berekenWachttorenVoedselVerbruik(state: GameState): number {
+  return telBemandeWachttorens(state) * WACHTTOREN_VOEDSEL_VERBRUIK * wachttorenVoedselkostFactor(state.technologieen);
+}
+
 function voedselVerbruik(state: GameState): number {
-  const stadVerbruik = Math.max(
-    1,
-    VOEDSEL_VERBRUIK[state.stad.grootte] - voedselVerbruikVermindering(state.technologieen)
-  );
-  return (
-    stadVerbruik +
-    telBemandeWachttorens(state) * WACHTTOREN_VOEDSEL_VERBRUIK * wachttorenVoedselkostFactor(state.technologieen)
-  );
+  return berekenStadVoedselVerbruik(state) + berekenWachttorenVoedselVerbruik(state);
 }
 
 // Ruwe boerderij-opbrengst volgende beurt (issue: "Economie scherm
