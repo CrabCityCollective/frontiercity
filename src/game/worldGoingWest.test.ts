@@ -39,9 +39,9 @@ test("alleen streek 1 begint ontgrendeld, met de startstad op de middelste posit
 // hadden oorspronkelijk maar één heuvel-vakje en géén berg-vakje, net als de
 // tutorial. Sinds `beschikbareOpties` de tutorial-`minStreek`-gating niet meer
 // toepast op Going West kan de speler daar al vanaf streek 1 tegelijk
-// Steengroeve, Mijn en Amberader willen bouwen — dus moeten er ook
+// Steengroeve, Mijn en Goudader willen bouwen — dus moeten er ook
 // daadwerkelijk minstens drie heuvel/berg-vakjes zijn.
-test("streek 1-4 hebben elk minstens drie heuvel/berg-vakjes (Steengroeve + Mijn + Amberader tegelijk bouwbaar)", () => {
+test("streek 1-4 hebben elk minstens drie heuvel/berg-vakjes (Steengroeve + Mijn + Goudader tegelijk bouwbaar)", () => {
   const streken = maakInitieleWereldGoingWest();
   for (const streek of streken.slice(0, 4)) {
     const heuvelOfBerg = streek.tiles.filter((t) => t.terrein === "heuvel" || t.terrein === "berg").length;
@@ -49,19 +49,19 @@ test("streek 1-4 hebben elk minstens drie heuvel/berg-vakjes (Steengroeve + Mijn
   }
 });
 
-test("streek 1 heeft al een amber-vondst (alle grondstoffen, inclusief goud, komen op streek 1 voor)", () => {
+test("streek 1 heeft al een goud-vondst (alle grondstoffen, inclusief goud, komen op streek 1 voor)", () => {
   const streken = maakInitieleWereldGoingWest();
-  assert.ok(streken[0].tiles.some((t) => t.amber), "streek 1 mist een amber-vakje");
+  assert.ok(streken[0].tiles.some((t) => t.goud), "streek 1 mist een goud-vakje");
 });
 
-test("amber ligt uitsluitend op een heuvel- of bergvakje (de mijn-terreineis)", () => {
+test("goud ligt uitsluitend op een heuvel- of bergvakje (de mijn-terreineis)", () => {
   const streken = maakInitieleWereldGoingWest();
   for (const streek of streken) {
     for (const tile of streek.tiles) {
-      if (tile.amber) {
+      if (tile.goud) {
         assert.ok(
           tile.terrein === "heuvel" || tile.terrein === "berg",
-          `amber op streek ${streek.hoogte} positie ${tile.positieInStreek} staat op terrein "${tile.terrein}"`
+          `goud op streek ${streek.hoogte} positie ${tile.positieInStreek} staat op terrein "${tile.terrein}"`
         );
       }
     }

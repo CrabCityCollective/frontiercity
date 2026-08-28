@@ -7,8 +7,8 @@ import {
   beschikbareMissionarissen,
   kanStuurMissionaris,
   kanStuurVerkenner,
-  sluitAmberOntdektMelding,
-  sluitTweedeAmberOntdektMelding,
+  sluitGoudOntdektMelding,
+  sluitTweedeGoudOntdektMelding,
   stuurMissionaris,
   stuurVerkenner,
   VERKENNING_KOSTEN_WETENSCHAP,
@@ -17,8 +17,8 @@ import {
 import { VERKENNER, VIJANDELIJK_HEILIGDOM } from "./improvements";
 import { bereikbarePosities } from "./wegen";
 import {
-  AMBER_ONTDEKKING_STREEK,
-  AMBER_ONTDEKKING_STREEK_2,
+  GOUD_ONTDEKKING_STREEK,
+  GOUD_ONTDEKKING_STREEK_2,
   BEZETTE_STREEK_HOOGTE,
   cultuurKostenVoorStreek,
   KUDDE_GROTE_JACHT_BEURTEN,
@@ -34,44 +34,44 @@ import {
   WACHTTOREN,
 } from "./testHelpers";
 
-test("amberOntdektEvent wordt precies één keer gezet, zodra AMBER_ONTDEKKING_STREEK voor het eerst ontgrendelt", () => {
+test("goudOntdektEvent wordt precies één keer gezet, zodra GOUD_ONTDEKKING_STREEK voor het eerst ontgrendelt", () => {
   let state = maakInitieleSpelStatus();
-  state = { ...state, cultuur: cultuurKostenVoorStreek(AMBER_ONTDEKKING_STREEK) };
+  state = { ...state, cultuur: cultuurKostenVoorStreek(GOUD_ONTDEKKING_STREEK) };
 
   const naOntgrendeling = volgendeBeurt(state);
-  assert.equal(naOntgrendeling.streken.find((l) => l.hoogte === AMBER_ONTDEKKING_STREEK)!.ontgrendeld, true);
-  assert.equal(naOntgrendeling.amberOntdektEvent, true);
+  assert.equal(naOntgrendeling.streken.find((l) => l.hoogte === GOUD_ONTDEKKING_STREEK)!.ontgrendeld, true);
+  assert.equal(naOntgrendeling.goudOntdektEvent, true);
 
-  const gesloten = sluitAmberOntdektMelding(naOntgrendeling);
-  assert.equal(gesloten.amberOntdektEvent, undefined);
+  const gesloten = sluitGoudOntdektMelding(naOntgrendeling);
+  assert.equal(gesloten.goudOntdektEvent, undefined);
 
   const nogEenBeurt = volgendeBeurt(gesloten);
-  assert.equal(nogEenBeurt.amberOntdektEvent, undefined, "geen herhaalde melding zodra de streek al ontgrendeld is");
+  assert.equal(nogEenBeurt.goudOntdektEvent, undefined, "geen herhaalde melding zodra de streek al ontgrendeld is");
 });
 
-// Softlock-preventie (issue: "Amberader sowieso op streek 12"): een tweede
-// gegarandeerde Amberader-locatie op streek 12, positie 2 — een bergvakje —
-// zodat een speler die de eerste Amberader liet uitputten zonder Markt nog
+// Softlock-preventie (issue: "Goudader sowieso op streek 12"): een tweede
+// gegarandeerde Goudader-locatie op streek 12, positie 2 — een bergvakje —
+// zodat een speler die de eerste Goudader liet uitputten zonder Markt nog
 // op tijd goud kan opbouwen vóór de Bezette Streek (streek 13) Offer
 // Altaar/Legerkamp vereist.
-test("tweedeAmberOntdektEvent wordt precies één keer gezet, zodra AMBER_ONTDEKKING_STREEK_2 voor het eerst ontgrendelt", () => {
+test("tweedeGoudOntdektEvent wordt precies één keer gezet, zodra GOUD_ONTDEKKING_STREEK_2 voor het eerst ontgrendelt", () => {
   let state = maakInitieleSpelStatus();
-  const streek12 = state.streken.find((l) => l.hoogte === AMBER_ONTDEKKING_STREEK_2)!;
-  assert.equal(streek12.tiles[2].amber, true, "de gegarandeerde tweede amberader-vondst");
-  assert.equal(streek12.tiles[2].terrein, "berg", "op een berg- of heuvelvakje, zoals de eerste Amberader");
+  const streek12 = state.streken.find((l) => l.hoogte === GOUD_ONTDEKKING_STREEK_2)!;
+  assert.equal(streek12.tiles[2].goud, true, "de gegarandeerde tweede goudader-vondst");
+  assert.equal(streek12.tiles[2].terrein, "berg", "op een berg- of heuvelvakje, zoals de eerste Goudader");
 
-  state = { ...state, cultuur: cultuurKostenVoorStreek(AMBER_ONTDEKKING_STREEK_2) };
+  state = { ...state, cultuur: cultuurKostenVoorStreek(GOUD_ONTDEKKING_STREEK_2) };
 
   const naOntgrendeling = volgendeBeurt(state);
-  assert.equal(naOntgrendeling.streken.find((l) => l.hoogte === AMBER_ONTDEKKING_STREEK_2)!.ontgrendeld, true);
-  assert.equal(naOntgrendeling.tweedeAmberOntdektEvent, true);
+  assert.equal(naOntgrendeling.streken.find((l) => l.hoogte === GOUD_ONTDEKKING_STREEK_2)!.ontgrendeld, true);
+  assert.equal(naOntgrendeling.tweedeGoudOntdektEvent, true);
 
-  const gesloten = sluitTweedeAmberOntdektMelding(naOntgrendeling);
-  assert.equal(gesloten.tweedeAmberOntdektEvent, undefined);
+  const gesloten = sluitTweedeGoudOntdektMelding(naOntgrendeling);
+  assert.equal(gesloten.tweedeGoudOntdektEvent, undefined);
 
   const nogEenBeurt = volgendeBeurt(gesloten);
   assert.equal(
-    nogEenBeurt.tweedeAmberOntdektEvent,
+    nogEenBeurt.tweedeGoudOntdektEvent,
     undefined,
     "geen herhaalde melding zodra de streek al ontgrendeld is"
   );

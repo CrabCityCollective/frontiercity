@@ -2,7 +2,7 @@
 
 import { MATERIAAL_LABELS } from "@/game/improvements";
 import {
-  AMBERADER_ONDER_VUUR_TEKST,
+  GOUDADER_ONDER_VUUR_TEKST,
   BUIT_BINNENGEHAALD_TEKST,
   INDRINGERS_TITEL,
   WACHTTOREN_OVERROMPELD_TEKST,
@@ -12,7 +12,7 @@ import { IndringersEvent } from "@/game/types";
 
 interface IndringersPopupProps {
   event: IndringersEvent;
-  onBevestigAmberOnderVuur: () => void;
+  onBevestigGoudOnderVuur: () => void;
   onGeefTribuut: () => void;
   onSluiten: () => void;
   // Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): `undefined`
@@ -42,14 +42,14 @@ interface IndringersPopupProps {
 // voorraad af én sluit de melding in één stap (issue: "Indringers 2e pop-up
 // samenvoegen" — geen apart bevestigingsscherm meer tussen de keuze en de
 // afschrijving).
-// `fase: "amber-onder-vuur"`/`"malus"`/`"bonus"` (issue: "wachttorens kunnen
+// `fase: "goud-onder-vuur"`/`"malus"`/`"bonus"` (issue: "wachttorens kunnen
 // vernietigd worden door indringers"): de derde-uitkomst-loot voor een
-// beschermde streek, en de losstaande Amberader-aankondiging die daar (of vóór
+// beschermde streek, en de losstaande Goudader-aankondiging die daar (of vóór
 // de gewone tribuut-afhandeling) aan vooraf kan gaan — zie
-// `bevestigAmberOnderVuur` in economie.ts voor de fase-overgang.
+// `bevestigGoudOnderVuur` in economie.ts voor de fase-overgang.
 export default function IndringersPopup({
   event,
-  onBevestigAmberOnderVuur,
+  onBevestigGoudOnderVuur,
   onGeefTribuut,
   onSluiten,
   wampumAfkoop,
@@ -103,14 +103,14 @@ export default function IndringersPopup({
           {INDRINGERS_TITEL}
         </strong>
 
-        {event.fase === "amber-onder-vuur" && (
+        {event.fase === "goud-onder-vuur" && (
           <>
             <p style={{ margin: 0, lineHeight: 1.6 }}>
-              {event.stamNaam} dringt streek {event.streekHoogte} binnen. {AMBERADER_ONDER_VUUR_TEKST}
+              {event.stamNaam} dringt streek {event.streekHoogte} binnen. {GOUDADER_ONDER_VUUR_TEKST}
             </p>
             <button
               className="fc-knop"
-              onClick={onBevestigAmberOnderVuur}
+              onClick={onBevestigGoudOnderVuur}
               style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}
             >
               Begrepen

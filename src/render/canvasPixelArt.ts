@@ -439,10 +439,10 @@ function tekenSterrencirkelPixel(ctx: CanvasRenderingContext2D, seed: number): v
   }
 }
 
-// Amberader (interne id `goudmijn`) — pixel-art variant van `tekenAmberader`
+// Goudader (interne id `goudmijn`) — pixel-art variant van `tekenGoudader`
 // in canvas.ts: een kleiner rotsblok dan de Steengroeve met een gloeiende
-// amberader erdoorheen.
-function tekenAmberaderPixel(ctx: CanvasRenderingContext2D, seed: number): void {
+// goudader erdoorheen.
+function tekenGoudaderPixel(ctx: CanvasRenderingContext2D, seed: number): void {
   const rng = maakSeededRandom(seed);
   const baseY = 14;
   schaduw(ctx, 8, baseY + 1, 9);
@@ -574,7 +574,7 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   "vijandelijk-heiligdom": (ctx) => tekenVijandelijkHeiligdomPixel(ctx),
   "bezette-streek-huisje": (ctx) => tekenBezetteStreekHuisjePixel(ctx),
   sterrencirkel: (ctx, seed) => tekenSterrencirkelPixel(ctx, seed),
-  goudmijn: (ctx, seed) => tekenAmberaderPixel(ctx, seed),
+  goudmijn: (ctx, seed) => tekenGoudaderPixel(ctx, seed),
   voorraadkuil: (ctx, seed) => tekenVoorraadkuilPixel(ctx, seed),
   maisboerderij: (ctx, seed) => tekenMaisboerderijPixel(ctx, seed),
   beverjachthut: (ctx) => tekenBeverjachthutPixel(ctx),

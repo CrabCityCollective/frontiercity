@@ -259,14 +259,14 @@ export interface Tile {
   // zichzelf: een vlak, bos-, heuvel- of bergvakje kan allemaal aan water
   // liggen, dus los van `terrein` bijgehouden.
   versWater?: boolean;
-  // Ligt hier een amberader — de vondst die de Amberader/goudmijn-improvement
+  // Ligt hier een goudader — de vondst die de Goudader/goudmijn-improvement
   // (hoofdstuk 3/14, issue: "toevoeging Goud") nodig heeft, bovenop de gewone
   // heuvel/berg-terreineis? Net als `versWater` hierboven vast/niet-procedureel
   // en los van `terrein` bijgehouden: niet elk heuvel/bergvakje heeft een
-  // amberader, in tegenstelling tot een gewone erts-mijn die op elk
+  // goudader, in tegenstelling tot een gewone erts-mijn die op elk
   // heuvel/bergvakje mag. De tutorial-worldgen garandeert minstens één zulk
   // vakje vanaf streek 8 (zie world.ts).
-  amber?: boolean;
+  goud?: boolean;
   // Wampanoag-laag, Going West (M21e, opdracht-wampanoag-opening.md §5; sinds
   // issue "Wampanoag streek blokkerend" alle negen vakjes van de streek, niet
   // meer alleen de drie handelsvakjes): een eigen, per-tegel verhullingslaag
@@ -562,8 +562,8 @@ export interface CampaignConfig {
   // `techNaam()` terug op de tutorial-naam.
   techNamen?: Partial<Record<TechId, string>>;
   // Zelfde herbruikbaarheid als `techNamen` hierboven, maar voor land/city
-  // improvements (hoofdstuk 3/14, issue: "toevoeging Goud" — de Amberader is
-  // hier het eerste voorbeeld van: functioneel een goudmijn, met "Amberader"
+  // improvements (hoofdstuk 3/14, issue: "toevoeging Goud" — de Goudader is
+  // hier het eerste voorbeeld van: functioneel een goudmijn, met "Goudader"
   // als tutorial-naam). Gesleuteld op `Improvement.id`, niet op een apart
   // ID-type zoals `TechId` — improvements hebben geen vaste, opgesomde
   // sleutellijst. Ontbreekt een sleutel (of de hele campagne heeft geen
@@ -644,15 +644,15 @@ export interface IndringersTribuut {
 // `"bonus"` krijgen elk hun eigen fase/pop-up hieronder. De bijbehorende
 // state-mutatie (ruïne + strijderverlies, resp. goud) is al toegepast door
 // `verwerkIndringers` op het moment dat het event gezet wordt — de latere
-// fase-overgangen (`bevestigAmberOnderVuur`/`sluitIndringersMelding` in
+// fase-overgangen (`bevestigGoudOnderVuur`/`sluitIndringersMelding` in
 // economie.ts) zijn puur UI-voortgang, geen nieuwe state-effecten.
 // `buitGoud` is alleen aanwezig bij `uitkomst: "bonus"`.
 //
-// `amberOnderVuur`/`fase: "amber-onder-vuur"`: onafhankelijk van
+// `goudOnderVuur`/`fase: "goud-onder-vuur"`: onafhankelijk van
 // `heeftWachttoren`/`uitkomst` — geldt voor élke indringers-melding op een
-// streek met een actieve Amberader (ook de gewone tribuut-afhandeling), en
+// streek met een actieve Goudader (ook de gewone tribuut-afhandeling), en
 // wordt altijd als eerste getoond vóór de eigenlijke uitkomst-fase
-// (`bevestigAmberOnderVuur` schuift daarna door naar die fase).
+// (`bevestigGoudOnderVuur` schuift daarna door naar die fase).
 //
 // `fase: "wampum-afgekocht"` (issue "Wampum — invallen tijdelijk afkopen"):
 // gezet door `koopIndringersAfMetWampum` (indringersEnDieren.ts) i.p.v. het
@@ -665,10 +665,10 @@ export interface IndringersEvent {
   stamNaam: string;
   heeftWachttoren: boolean;
   tribuut?: IndringersTribuut;
-  amberOnderVuur?: boolean;
+  goudOnderVuur?: boolean;
   uitkomst?: "standhouden" | "malus" | "bonus";
   buitGoud?: number;
-  fase: "amber-onder-vuur" | "gemeld" | "malus" | "bonus" | "wampum-afgekocht";
+  fase: "goud-onder-vuur" | "gemeld" | "malus" | "bonus" | "wampum-afgekocht";
 }
 
 // Cumulatieve indringers-statistieken voor het historiescherm van deze run
@@ -881,21 +881,21 @@ export interface GameState {
   // roofdier-trekking gelden — zelfde eenmalige-garantie-patroon als
   // `eersteKuddeVerschenen` hierboven.
   eersteRoofdierVerschenen?: boolean;
-  // Amberader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): gezet
+  // Goudader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): gezet
   // door `verwerkStreekOntgrendeling` in economie.ts zodra streek
-  // `AMBER_ONTDEKKING_STREEK` (world.ts) voor het eerst ontgrendeld wordt — de
-  // gegarandeerde eerste Amberader-locatie ligt op die streek. Puur een
+  // `GOUD_ONTDEKKING_STREEK` (world.ts) voor het eerst ontgrendeld wordt — de
+  // gegarandeerde eerste Goudader-locatie ligt op die streek. Puur een
   // meldings-vlag (geen keuze), zelfde patroon als `kuddeEvent` hierboven; de
-  // speler klikt 'm gewoon weg via `sluitAmberOntdektMelding`.
-  amberOntdektEvent?: boolean;
-  // Tweede Amberader-ontdekking (hoofdstuk 3/11/14, issue: "Amberader
+  // speler klikt 'm gewoon weg via `sluitGoudOntdektMelding`.
+  goudOntdektEvent?: boolean;
+  // Tweede Goudader-ontdekking (hoofdstuk 3/11/14, issue: "Goudader
   // sowieso op streek 12"): zelfde meldings-vlag-patroon als
-  // `amberOntdektEvent` hierboven, maar gezet zodra streek
-  // `AMBER_ONTDEKKING_STREEK_2` (world.ts) voor het eerst ontgrendeld wordt —
-  // de gegarandeerde tweede Amberader-locatie, softlock-preventie vlak vóór
-  // de Bezette Streek. Los gehouden van `amberOntdektEvent` zodat beide
+  // `goudOntdektEvent` hierboven, maar gezet zodra streek
+  // `GOUD_ONTDEKKING_STREEK_2` (world.ts) voor het eerst ontgrendeld wordt —
+  // de gegarandeerde tweede Goudader-locatie, softlock-preventie vlak vóór
+  // de Bezette Streek. Los gehouden van `goudOntdektEvent` zodat beide
   // meldingen onafhankelijk van elkaar getriggerd en weggeklikt worden.
-  tweedeAmberOntdektEvent?: boolean;
+  tweedeGoudOntdektEvent?: boolean;
   // Gezet zodra een roofdier de settler daadwerkelijk doodt (hoofdstuk 17,
   // issue: "roofdieren toevoegen"). Voorkomt dat de "settler verschijnt bij
   // beurt 2"-vangnet in `volgendeBeurt` (economie.ts) hem daarna gratis laat
@@ -910,7 +910,7 @@ export interface GameState {
   // keer per beurt, zelfde patroon, teruggezet door `volgendeBeurt`.
   verkenningGedaanDitBeurt: boolean;
   // Dynamische pop-up-meldingen voor de Bezette Streek (Deel 2/4) — zelfde
-  // meldings-vlag-patroon als `amberOntdektEvent` hierboven: `undefined`/
+  // meldings-vlag-patroon als `goudOntdektEvent` hierboven: `undefined`/
   // `false` zolang er geen (onopgeloste) melding is.
   bezetteStreekOntdektEvent?: boolean;
   vijandelijkHeiligdomOnthuldEvent?: boolean;
@@ -975,7 +975,7 @@ export interface GameState {
   boons: string[];
   // Toegekende, nog niet weggeklikte Boon (issue #414, vraag 4: pop-up direct
   // ná `StichtingsMomentPopup`) — zelfde meldings-vlag-patroon als
-  // `amberOntdektEvent` hierboven. `undefined` zolang er geen (onopgeloste)
+  // `goudOntdektEvent` hierboven. `undefined` zolang er geen (onopgeloste)
   // melding is.
   boonToegekendEvent?: string;
   // Welke van de eenmalige uitleg-pop-ups (openings-uitleg, settler, voedsel-

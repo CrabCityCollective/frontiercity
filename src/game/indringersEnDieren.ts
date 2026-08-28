@@ -54,17 +54,17 @@ const INDRINGERS_KANS = 0.2;
 const INDRINGERS_MIN_STREEK = 3;
 
 // Eerste rogue-like bonus/malus-koppeling (hoofdstuk 6/11/14, issue:
-// "Amberader: bonus/malus-koppeling" — waardevolle vondsten trekken ook
-// ongewenste aandacht): een streek met een actieve Amberader weegt zwaarder mee
+// "Goudader: bonus/malus-koppeling" — waardevolle vondsten trekken ook
+// ongewenste aandacht): een streek met een actieve Goudader weegt zwaarder mee
 // in de streek-trekking hieronder dan een gewone streek — voorstel 2x zo
 // waarschijnlijk om geloot te worden. MVP-richtwaarde, tunebaar. Vergroot
 // alleen de kans dat de streek geloot wordt, niet de uitkomst daarna: een
 // beschermende Wachttoren op die streek houdt het incident nog steeds tegen
 // (`heeftBeschermendeWachttoren` hieronder blijft ongewijzigd die uitkomst
 // bepalen). Bewust klein gehouden en volledig gebouwd op de bestaande
-// Amberader- en indringers-trekking-systemen, zonder nieuw framework — zie
+// Goudader- en indringers-trekking-systemen, zonder nieuw framework — zie
 // hoofdstuk 11 voor de volledige onderbouwing.
-const AMBERADER_INDRINGERS_GEWICHT = 2;
+const GOUDADER_INDRINGERS_GEWICHT = 2;
 
 // Tweede rogue-like bonus/malus-koppeling (hoofdstuk 6/11/14, issue:
 // "wachttorens kunnen vernietigd worden door indringers"): een beschermde
@@ -250,21 +250,21 @@ function isAlleenWachttorenStreek(streek: Streek): boolean {
   return heeftWachttoren;
 }
 
-// Een streek heeft een *actieve* Amberader (gebouwd, nog niet uitgeput) zolang
+// Een streek heeft een *actieve* Goudader (gebouwd, nog niet uitgeput) zolang
 // er een tile met de `goudmijn`-improvement (interne sleutel, zie
 // `improvements.ts`) in status `actief` op staat. Eenmaal uitgeput wordt zo'n
 // tile `ghost_town` (zie `verwerkUitputting` in uitputtingEnVerval.ts) en
 // telt hij hier niet meer mee — een lege put trekt geen indringers meer aan
 // (hoofdstuk 6/11/14).
-function heeftActieveAmberader(streek: Streek): boolean {
+function heeftActieveGoudader(streek: Streek): boolean {
   return streek.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "goudmijn");
 }
 
 // Gewicht van `streek` in de indringers-streek-trekking hieronder: een streek met
-// een actieve Amberader (zie hierboven) weegt `AMBERADER_INDRINGERS_GEWICHT`
+// een actieve Goudader (zie hierboven) weegt `GOUDADER_INDRINGERS_GEWICHT`
 // keer zo zwaar als een gewone streek.
 function indringersGewicht(streek: Streek): number {
-  return heeftActieveAmberader(streek) ? AMBERADER_INDRINGERS_GEWICHT : 1;
+  return heeftActieveGoudader(streek) ? GOUDADER_INDRINGERS_GEWICHT : 1;
 }
 
 // Loot de derde-uitkomst voor een beschermde streek (hoofdstuk 6/14, issue:
@@ -323,8 +323,8 @@ function verwerkWachttorenOverrompeling(
 // de frontier-streek zelf: meestal stand houden, soms een malus, zelden een
 // bonus). Zonder zo'n wachttoren eist de tribe tribuut (zie `kiesTribuut`); de
 // speler lost dit verder zelf op via `geefTribuut` hieronder.
-// Een streek met een actieve Amberader krijgt bovendien altijd eerst een eigen
-// aankondiging (`amberOnderVuur`/fase "amber-onder-vuur"), los van de
+// Een streek met een actieve Goudader krijgt bovendien altijd eerst een eigen
+// aankondiging (`goudOnderVuur`/fase "goud-onder-vuur"), los van de
 // uitkomst — ook bij de gewone tribuut-afhandeling. Rolt geen nieuwe
 // gebeurtenis zolang een vorige melding nog open staat.
 export function verwerkIndringers(state: GameState): GameState {
@@ -356,8 +356,8 @@ export function verwerkIndringers(state: GameState): GameState {
   );
   if (ontgrendeldeStreken.length === 0) return state;
 
-  // Gewogen trekking (issue: "Amberader: bonus/malus-koppeling") in plaats
-  // van een zuiver uniforme trekking — streken met een actieve Amberader tellen
+  // Gewogen trekking (issue: "Goudader: bonus/malus-koppeling") in plaats
+  // van een zuiver uniforme trekking — streken met een actieve Goudader tellen
   // hier zwaarder mee, zie `indringersGewicht` hierboven.
   const gewichten = ontgrendeldeStreken.map(indringersGewicht);
   const totaalGewicht = gewichten.reduce((som, gewicht) => som + gewicht, 0);
@@ -386,7 +386,7 @@ export function verwerkIndringers(state: GameState): GameState {
   const beschikbareStamNamen = stamNamenPool.filter((naam) => !heeftWampumAfkoopRust(state, naam));
   if (beschikbareStamNamen.length === 0) return state;
   const stamNaam = beschikbareStamNamen[Math.floor(Math.random() * beschikbareStamNamen.length)];
-  const amberOnderVuur = heeftActieveAmberader(streek) || undefined;
+  const goudOnderVuur = heeftActieveGoudader(streek) || undefined;
 
   const beschermendeWachttoren = vindBeschermendeWachttoren(state, streek);
   if (beschermendeWachttoren) {
@@ -429,10 +429,10 @@ export function verwerkIndringers(state: GameState): GameState {
         streekHoogte: streek.hoogte,
         stamNaam,
         heeftWachttoren: true,
-        amberOnderVuur,
+        goudOnderVuur,
         uitkomst,
         buitGoud,
-        fase: amberOnderVuur ? "amber-onder-vuur" : uitkomstFase,
+        fase: goudOnderVuur ? "goud-onder-vuur" : uitkomstFase,
       },
     };
   }
@@ -447,8 +447,8 @@ export function verwerkIndringers(state: GameState): GameState {
       stamNaam,
       heeftWachttoren: false,
       tribuut,
-      amberOnderVuur,
-      fase: amberOnderVuur ? "amber-onder-vuur" : "gemeld",
+      goudOnderVuur,
+      fase: goudOnderVuur ? "goud-onder-vuur" : "gemeld",
     },
   };
 }
@@ -670,14 +670,14 @@ export function sluitIndringersMelding(state: GameState): GameState {
   return { ...state, indringersEvent: undefined };
 }
 
-// Bevestigt de "Amberader onder vuur"-aankondiging (hoofdstuk 6, issue:
+// Bevestigt de "Goudader onder vuur"-aankondiging (hoofdstuk 6, issue:
 // "wachttorens kunnen vernietigd worden door indringers", Deel 2) en schuift
 // door naar de eigenlijke uitkomst-fase van hetzelfde incident — de
 // aankondiging en de uitkomst worden bewust na elkaar getoond, niet
 // gecombineerd tot één bericht.
-export function bevestigAmberOnderVuur(state: GameState): GameState {
+export function bevestigGoudOnderVuur(state: GameState): GameState {
   const event = state.indringersEvent;
-  if (!event || event.fase !== "amber-onder-vuur") return state;
+  if (!event || event.fase !== "goud-onder-vuur") return state;
 
   const volgendeFase = event.heeftWachttoren
     ? event.uitkomst === "standhouden"

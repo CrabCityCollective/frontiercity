@@ -30,7 +30,7 @@ Voor elke gestichte stad wordt de **afstand** bijgehouden: het aantal streken tu
 
 MVP-richtwaarden, tunebaar — doorgerekend tegen de campagne-continentlengte van 30-60 streken (hoofdstuk 14 van het hoofddocument).
 
-Dit verval raakt uitsluitend de stad-brede city-improvement-productie. **Niet aangeraakt**: land improvements (mijn, boerderij, Sterrencirkel, Amberader, etc.) blijven gewoon normaal produceren zolang ze wegverbonden zijn (hoofdstuk 16), ongeacht afstand. Ook het stadsverval/permadeath-risico (hoofdstuk 4) blijft ongewijzigd — een stad op 0% city-improvement-effectiviteit kan nog gewoon blijven bestaan, ze levert alleen niets meer op via haar gebouwen. Bij meerdere gelijktijdig actieve steden wordt dit per stad apart berekend.
+Dit verval raakt uitsluitend de stad-brede city-improvement-productie. **Niet aangeraakt**: land improvements (mijn, boerderij, Sterrencirkel, Goudader, etc.) blijven gewoon normaal produceren zolang ze wegverbonden zijn (hoofdstuk 16), ongeacht afstand. Ook het stadsverval/permadeath-risico (hoofdstuk 4) blijft ongewijzigd — een stad op 0% city-improvement-effectiviteit kan nog gewoon blijven bestaan, ze levert alleen niets meer op via haar gebouwen. Bij meerdere gelijktijdig actieve steden wordt dit per stad apart berekend.
 
 **Deel 2 — Drie gegarandeerde stichtingskansen per stad, herhalend**
 
@@ -69,7 +69,7 @@ Aanvulling op het herhalende drie-stichtingsmomenten-patroon hierboven (Deel 2):
 3. **Niet Going West-exclusief**: generiek voor elke campagne (anders dan onrust/Saloon/Courthouse, die wél `Improvement.vereisteCampagneId` gebruiken), maar niet voor de tutorial — `komtInAanmerkingVoorBoon` (boons.ts) sluit de tutorial uit via `state.campagneId !== undefined`, zelfde uitzondering als `toonStichtingsMomentPopup` in `GameRoot.tsx`.
 4. **Pop-up-plek**: direct ná `toonStichtingsMomentPopup` en vóór elke andere pop-up in de gatingketen in `GameRoot.tsx` (`toonBoonPopup`, met dezelfde negatie-lijst als de Stichtingsmoment-pop-up plus die pop-up zelf).
 
-**Implementatiestatus**: framework gebouwd (`src/game/boons.ts`: `BOON_POOL`/`trekBoon`/`komtInAanmerkingVoorBoon`/`sluitBoonMelding`, gehaakt in `stichtStad` (acties.ts), `GameState.boons`/`boonToegekendEvent` (types.ts, met save-migratie in save.ts), pop-up via het herbruikbare `AmberOntdektPopup`-component). De pool bevat vooralsnog drie Boons zonder mechanisch effect (bewust — dat volgt per Boon in losse vervolgissues, zie hierboven).
+**Implementatiestatus**: framework gebouwd (`src/game/boons.ts`: `BOON_POOL`/`trekBoon`/`komtInAanmerkingVoorBoon`/`sluitBoonMelding`, gehaakt in `stichtStad` (acties.ts), `GameState.boons`/`boonToegekendEvent` (types.ts, met save-migratie in save.ts), pop-up via het herbruikbare `GoudOntdektPopup`-component). De pool bevat vooralsnog drie Boons zonder mechanisch effect (bewust — dat volgt per Boon in losse vervolgissues, zie hierboven).
 
 ## Flavor-tekststijlgids
 1. Korte, vaak enkelvoudige zinnen — kracht in understatement.
@@ -89,7 +89,7 @@ Zelfde herbruikbaarheidspatroon als de technologie-boom en de tegel-sets uit hoo
 | Functionele sleutel (tutorial-naam) | Amerikaanse weergavenaam |
 |---|---|
 | Sterrencirkel | Observatorium |
-| Amberader/goudmijn | Goudmijn |
+| Goudader/goudmijn | Goudmijn |
 | Wachttoren | Blokhuis |
 | Legerkamp | Fort |
 | Heiligdom | Kapel |

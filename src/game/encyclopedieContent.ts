@@ -7,7 +7,7 @@
 // opzoeken, zowel vanuit het hoofdmenu (vóór een run) als tijdens het spelen
 // (EncyclopediePaneel, bereikbaar via HoofdNavigatieScherm/HoofdMenu).
 //
-// Tutorial- en Going-West-specifieke weergavenamen (bv. "Amberader" vs.
+// Tutorial- en Going-West-specifieke weergavenamen (bv. "Goudader" vs.
 // "Goudmijn", zie improvementNaam()/CampaignConfig.improvementNamen in
 // improvements.ts) blijven hier bewust buiten beschouwing — deze lemma's
 // beschrijven de onderliggende spelconcepten met hun functionele naam, niet
@@ -158,11 +158,11 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
   },
   // Gebouwen
   {
-    id: "amber-mijn",
-    titel: "Amber mijn",
+    id: "goud-mijn",
+    titel: "Goud mijn",
     categorie: "Gebouwen",
     tekst:
-      "Een zeldzame variant van de mijn: alleen te bouwen op een heuvel- of bergvakje met een amberader-vondst. Levert goud in plaats van erts.",
+      "Een zeldzame variant van de mijn: alleen te bouwen op een heuvel- of bergvakje met een goudader-vondst. Levert goud in plaats van erts.",
   },
   {
     id: "aquaduct",

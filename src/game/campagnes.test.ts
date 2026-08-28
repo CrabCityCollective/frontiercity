@@ -11,7 +11,7 @@ import {
 import { INTRO_TITEL, OCEAAN_UITLEG_TITEL, streekContent } from "./tutorialContent";
 import { GOING_WEST_STREEK_AANTAL } from "./worldGoingWest";
 import {
-  AMBERADER,
+  GOUDADER,
   BARAKKEN,
   BIBLIOTHEEK,
   GROTE_TEMPEL,
@@ -39,7 +39,7 @@ test("GOING_WEST_CAMPAGNE volgt de weergavenamen-tabel uit hoofdstuk 9 van het d
 
   // Land improvements
   assert.equal(improvementNaam(STERRENCIRKEL, GOING_WEST_CAMPAGNE), "Observatorium");
-  assert.equal(improvementNaam(AMBERADER, GOING_WEST_CAMPAGNE), "Goudmijn");
+  assert.equal(improvementNaam(GOUDADER, GOING_WEST_CAMPAGNE), "Goudmijn");
   assert.equal(improvementNaam(WACHTTOREN, GOING_WEST_CAMPAGNE), "Blokhuis");
   assert.equal(improvementNaam(LEGERKAMP, GOING_WEST_CAMPAGNE), "Fort");
   assert.equal(improvementNaam(HEILIGDOM, GOING_WEST_CAMPAGNE), "Kapel");

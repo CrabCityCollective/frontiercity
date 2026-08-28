@@ -75,7 +75,7 @@ export const TUTORIAL_STREEK_CONTENT: Record<number, StreekContent> = {
   },
   8: {
     naam: "De Rotsrichel",
-    mechaniek: "Amber en Mijnbouw",
+    mechaniek: "Goud en Mijnbouw",
     flavorTekst: "Het mooiste materiaal ooit gezien, het trekt ook de verkeerde mensen aan.",
   },
   9: {
@@ -96,7 +96,7 @@ export const TUTORIAL_STREEK_CONTENT: Record<number, StreekContent> = {
   },
   12: {
     naam: "De Besneeuwde Flank",
-    mechaniek: "Een tweede amberader",
+    mechaniek: "Een tweede goudader",
     flavorTekst: "Onder de sneeuw glinstert iets dat we al kennen. Een tweede ader, dieper dan de eerste.",
   },
   13: {
@@ -208,7 +208,7 @@ export const BEURTENSYSTEEM_UITLEG_TEKST =
 // Bezette-Streek-uitleg-pop-up (hoofdstuk 6, issue: "De Bezette Streek,
 // missionaris en verkenner", Deel 2, herzien door "Bezette streek scherm"),
 // getoond zodra streek 13 "in beeld komt" (dezelfde soort trigger als de
-// gegarandeerde Amberader-vondst op streek 8), direct na de gewone
+// gegarandeerde Goudader-vondst op streek 8), direct na de gewone
 // streek-pop-up hierboven — vervangt de eerdere, kleinere MILITAIR_UITLEG_*-
 // pop-up volledig.
 export const BEZETTE_STREEK_TITEL = "De Stam van de Mammoet";
@@ -383,12 +383,12 @@ export const INDRINGERS_TITEL = "Indringers bij de grens";
 
 // Derde-uitkomst-pop-ups voor beschermde streken (hoofdstuk 6/14, issue:
 // "wachttorens kunnen vernietigd worden door indringers"): drie korte
-// meldingen, zelfde stijlgids als de rest van dit bestand. De Amberader-tekst
-// geldt voor élke indringers-melding op een streek met een actieve Amberader
+// meldingen, zelfde stijlgids als de rest van dit bestand. De Goudader-tekst
+// geldt voor élke indringers-melding op een streek met een actieve Goudader
 // (ook de gewone tribuut-afhandeling), niet alleen de malus/bonus-uitkomsten
-// hieronder — zie `IndringersEvent.amberOnderVuur` (types.ts).
-export const AMBERADER_ONDER_VUUR_TEKST =
-  "Dit keer zijn ze niet zomaar op doortocht. Ze ruiken de amber, en komen ervoor.";
+// hieronder — zie `IndringersEvent.goudOnderVuur` (types.ts).
+export const GOUDADER_ONDER_VUUR_TEKST =
+  "Dit keer zijn ze niet zomaar op doortocht. Ze ruiken de goud, en komen ervoor.";
 export const WACHTTOREN_OVERROMPELD_TEKST =
   "Dit keer houdt de wachttoren geen stand. Balken breken, de wacht valt — er blijft een ruïne over.";
 export const BUIT_BINNENGEHAALD_TEKST =
@@ -421,24 +421,24 @@ export const ROOFDIER_AANVAL_TITEL = "De settler keert niet terug";
 export const ROOFDIER_AANVAL_TEKST =
   "Het spoor eindigt bij de kudde. Er is geen huifkar meer — een nieuwe moet eerst uitgerust worden.";
 
-// Amberader-ontdekkingsmelding (hoofdstuk 3/14, issue: "toevoeging Goud"):
+// Goudader-ontdekkingsmelding (hoofdstuk 3/14, issue: "toevoeging Goud"):
 // getoond zodra `verwerkStreekOntgrendeling` (economie.ts) streek
-// `AMBER_ONTDEKKING_STREEK` (world.ts) voor het eerst ontgrendelt — zelfde
+// `GOUD_ONTDEKKING_STREEK` (world.ts) voor het eerst ontgrendelt — zelfde
 // blokkerende meldings-vorm en stijlgids als `KUDDE_TITEL`/`KUDDE_FLAVOR_TEKST`
 // hierboven.
-export const AMBER_ONTDEKKING_TITEL = "Amber gevonden";
-export const AMBER_ONTDEKKING_TEKST =
-  "Onze verkenners hoorden verhalen over een fantastisch glimmend materiaal: Amber. We weten alleen niet precies waar we de mijn moeten bouwen. Als we maar niet per ongeluk een ander gebouw neer zetten op de amberader, dat zou zonde zijn.";
+export const GOUD_ONTDEKKING_TITEL = "Goud gevonden";
+export const GOUD_ONTDEKKING_TEKST =
+  "Onze verkenners hoorden verhalen over een fantastisch glimmend materiaal: Goud. We weten alleen niet precies waar we de mijn moeten bouwen. Als we maar niet per ongeluk een ander gebouw neer zetten op de goudader, dat zou zonde zijn.";
 
-// Tweede Amberader-ontdekkingsmelding (hoofdstuk 3/11/14, issue: "Amberader
+// Tweede Goudader-ontdekkingsmelding (hoofdstuk 3/11/14, issue: "Goudader
 // sowieso op streek 12"): getoond zodra `verwerkStreekOntgrendeling` (economie.ts)
-// streek `AMBER_ONTDEKKING_STREEK_2` (world.ts) voor het eerst ontgrendelt —
-// zelfde meldings-vorm als `AMBER_ONTDEKKING_TITEL`/`AMBER_ONTDEKKING_TEKST`
+// streek `GOUD_ONTDEKKING_STREEK_2` (world.ts) voor het eerst ontgrendelt —
+// zelfde meldings-vorm als `GOUD_ONTDEKKING_TITEL`/`GOUD_ONTDEKKING_TEKST`
 // hierboven, met een lichte variant in toon: een tweede vondst, geen eerste
 // verwondering meer.
-export const AMBER_ONTDEKKING_TWEEDE_TITEL = "Nog een amberader";
-export const AMBER_ONTDEKKING_TWEEDE_TEKST =
-  "Een tweede ader vol amber, verscholen in de rotsen. Mooi meegenomen, mocht de eerste ooit opdrogen — het goud dat eruit komt, blijft hier hard nodig.";
+export const GOUD_ONTDEKKING_TWEEDE_TITEL = "Nog een goudader";
+export const GOUD_ONTDEKKING_TWEEDE_TEKST =
+  "Een tweede ader vol goud, verscholen in de rotsen. Mooi meegenomen, mocht de eerste ooit opdrogen — het goud dat eruit komt, blijft hier hard nodig.";
 
 // Heiligdom-uitleg-pop-up (issue: "Teksten aanpassen (nog meer)"): getoond in
 // plaats van de gewone bouw-pop-up, de tweede keer dat die op streek 1 zou

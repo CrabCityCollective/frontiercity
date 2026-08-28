@@ -71,7 +71,7 @@ export function boonMetId(id: string): Boon | undefined {
 }
 
 // Sluit de Boon-toekenningsmelding — puur een UI-bevestiging, zelfde patroon
-// als `sluitAmberOntdektMelding` (streekOntgrendeling.ts).
+// als `sluitGoudOntdektMelding` (streekOntgrendeling.ts).
 export function sluitBoonMelding(state: GameState): GameState {
   return { ...state, boonToegekendEvent: undefined };
 }
