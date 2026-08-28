@@ -224,20 +224,21 @@ export function metWampanoagLaagEnVoorraadVoorVerkenning(): GameState {
   return { ...state, wetenschap: 100, voorraad: { hout: 100, steen: 100, erts: 100, goud: 100 } };
 }
 
-// De drie Wampanoag-handelsvakjes onthuld (waarmee, sinds issue "Wampanoag
-// streek blokkerend", ook de zes neutrale vakjes automatisch mee onthullen en
-// de streek zelf weer normaal ontgrendelt — zie `verwerkWampanoagVerkenningInGang`),
-// met genoeg gereedschap/goud om meteen te kunnen handelen (issue "Smederij
-// inactief zetten": erts is geen geldige Wampanoag-handelskeuze meer) —
-// gedeelde opzet voor de M21f-handelstests (opdracht-wampanoag-opening.md §6), bouwt
-// voort op `metWampanoagLaagEnVoorraadVoorVerkenning` hierboven. Stuurt op
-// elke positie een verkenner en telt zijn tellertje meteen volledig af, met
-// de 1x-per-beurt-limiet telkens teruggezet — zelfde volgorde als de
-// M21e-tests in wampanoag.test.ts.
+// Alle vijf Wampanoag-vakjes onthuld — de drie handelsvakjes én de twee
+// decoratieve tentjes (issue "Wampanoag kamp uitbreiding") — met genoeg
+// gereedschap/goud om meteen te kunnen handelen (issue "Smederij inactief
+// zetten": erts is geen geldige Wampanoag-handelskeuze meer) — gedeelde opzet
+// voor de M21f-handelstests (opdracht-wampanoag-opening.md §6), bouwt voort
+// op `metWampanoagLaagEnVoorraadVoorVerkenning` hierboven. Stuurt op elke
+// positie een verkenner en telt zijn tellertje meteen volledig af, met de
+// 1x-per-beurt-limiet telkens teruggezet — zelfde volgorde als de M21e-tests
+// in wampanoag.test.ts. Laat de streek zelf nog vergrendeld (`wampanoagBezet:
+// true`) — dat vereist sinds issue "Wampanoag streek pas helemaal onthuld na
+// handel" de volledige 3-3-3-handelsdrempel, niet alleen deze onthulling.
 export function metWampanoagLaagOnthuld(): GameState {
   let state = metWampanoagLaagEnVoorraadVoorVerkenning();
   state = { ...state, gereedschap: 100 };
-  for (const positieInStreek of [3, 4, 5]) {
+  for (const positieInStreek of [2, 3, 4, 5, 6]) {
     state = stuurVerkennerWampanoag(state, positieInStreek);
     for (let i = 0; i < VERKENNER.bouwtijdBeurten; i++) state = verwerkWampanoagVerkenningInGang(state);
     state = { ...state, verkenningGedaanDitBeurt: false };

@@ -68,11 +68,13 @@ export type BezetteStreekInhoud = "wachttoren" | "heiligdom" | "huisje";
 // pas naar een echte `Improvement` opgelost zodra Verkenning het vakje
 // onthult (zie `Tile.wampanoagVerhuld` hieronder en wampanoag.ts). Net als de
 // Bezette Streek blijft de streek zelf `ontgrendeld: false` (zie
-// `Streek.wampanoagBezet`) tot deze drie vakjes onthuld zijn — alleen deze
-// drie dragen bijzondere inhoud, de overige zes zijn "neutraal" (net als bij
-// de Bezette Streek) en onthullen automatisch mee zodra de drie hierboven
-// klaar zijn.
-export type WampanoagInhoud = "maisboerderij" | "beverjachthut" | "opperhoofdtent";
+// `Streek.wampanoagBezet`) tot de drie handelsvakjes onthuld zijn — de
+// overige vakjes zijn "neutraal" (net als bij de Bezette Streek) en
+// onthullen automatisch mee zodra die drie klaar zijn. `"tentje"` (issue
+// "Wampanoag kamp uitbreiding") is zo'n vakje met bijzondere inhoud zonder
+// handelsfunctie — puur decoratief, zie `WAMPANOAG_TENTJE` (improvements.ts):
+// laat het kamp groter/voller ogen naast de drie functionele gebouwen.
+export type WampanoagInhoud = "maisboerderij" | "beverjachthut" | "opperhoofdtent" | "tentje";
 
 // Grondstofkeuze voor de handelsconversie op een onthuld Wampanoag-vakje
 // (M21f, opdracht-wampanoag-opening.md §6): welke grondstof de speler kiest

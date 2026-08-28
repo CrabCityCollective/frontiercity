@@ -546,6 +546,17 @@ function tekenOpperhoofdtentPixel(ctx: CanvasRenderingContext2D): void {
   p(ctx, 10, baseY - 11, "#8a2a2a");
 }
 
+// Puur decoratief Wampanoag-tentje (issue "Wampanoag kamp uitbreiding"):
+// kleiner en effener dan de Opperhoofdtent, geen sier-details — hergebruikt
+// dezelfde `tekenTentPixel`-vorm als `tekenBezetteStreekHuisjePixel` hierboven,
+// met een eigen warme huidskleur zodat het toch als Wampanoag-kamp leesbaar
+// blijft i.p.v. als "verlaten huisje".
+function tekenWampanoagTentjePixel(ctx: CanvasRenderingContext2D): void {
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 6);
+  tekenTentPixel(ctx, 8, baseY, 6, "#9c6b42");
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, seed: number, bemand: boolean) => void
@@ -567,6 +578,7 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   maisboerderij: (ctx, seed) => tekenMaisboerderijPixel(ctx, seed),
   beverjachthut: (ctx) => tekenBeverjachthutPixel(ctx),
   opperhoofdtent: (ctx) => tekenOpperhoofdtentPixel(ctx),
+  "wampanoag-tentje": (ctx) => tekenWampanoagTentjePixel(ctx),
 };
 
 function tekenLandImprovementPixel(ctx: CanvasRenderingContext2D, id: string, seed: number, bemand: boolean): void {

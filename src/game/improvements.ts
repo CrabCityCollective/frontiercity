@@ -622,6 +622,23 @@ export const OPPERHOOFDTENT: Improvement = {
   effect: { type: "wampanoag" },
 };
 
+// Puur decoratief Wampanoag-tentje (issue "Wampanoag kamp uitbreiding"): twee
+// vaste vakjes naast de Opperhoofdtent die het kamp groter/voller laten ogen
+// — zelfde niet-interactieve, geen-productie-opzet als BEZETTE_STREEK_HUISJE
+// hierboven ("doet niets, handelt niet"), maar via de Wampanoag-verhullings-
+// laag i.p.v. de Bezette Streek geplaatst (`WAMPANOAG_STREEK_INHOUD`,
+// worldGoingWest.ts). `wampanoagHandelOpties("tentje")` (wampanoag.ts) geeft
+// bewust een lege lijst terug, zodat de handels-UI hier nooit verschijnt.
+export const WAMPANOAG_TENTJE: Improvement = {
+  id: "wampanoag-tentje",
+  naam: "Tentje",
+  categorie: "civiel",
+  soort: "land",
+  kosten: {},
+  bouwtijdBeurten: 0,
+  effect: { type: "decoratief" },
+};
+
 // Onrust (issue: "Onrust, Saloon en Courthouse", Going West-exclusief, zie
 // onrust.ts): Saloon en Courthouse zijn de eerste twee echte Civiele land
 // improvements (Weg/Brug blijven buiten de MVP-scope, zie de comment bij

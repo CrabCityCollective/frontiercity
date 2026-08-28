@@ -2114,7 +2114,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
                 : undefined
           }
           wampanoagHandelVraag={
-            geselecteerdeTileIsWampanoagOnthuld && geselecteerdeTile && geselecteerdeTileVoorRush?.wampanoagInhoud
+            geselecteerdeTileIsWampanoagOnthuld &&
+            geselecteerdeTile &&
+            geselecteerdeTileVoorRush?.wampanoagInhoud &&
+            // "tentje" (issue "Wampanoag kamp uitbreiding") is puur decoratief
+            // en handelt niet — `wampanoagHandelOpties` geeft dan een lege
+            // lijst terug, dus de handels-UI hoort hier niet te verschijnen.
+            wampanoagHandelOpties(geselecteerdeTileVoorRush.wampanoagInhoud).length > 0
               ? {
                   opties: wampanoagHandelOpties(geselecteerdeTileVoorRush.wampanoagInhoud),
                   huidigeKeuze: geselecteerdeTileVoorRush.wampanoagHandelKeuze,
