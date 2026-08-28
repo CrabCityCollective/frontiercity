@@ -42,7 +42,7 @@ export default function StichtingsMomentPopup({ stadNaam, onDoorgaan }: Stichtin
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/assets/scenes/going-west-stichting.svg"
+          src="/assets/scenes/stad-stichting-going-west.png"
           alt=""
           style={{
             width: "100%",
