@@ -2,9 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { maakInitieleSpelStatus, OPSLAG_CAP, volgendeBeurt } from "./economie";
 import { BIBLIOTHEEK, ECONOMISCH_LAND_IMPROVEMENTS, MARKT, SMEDERIJ, STERRENCIRKEL } from "./improvements";
-import { berekenBoerderijOpbrengstRuw } from "./productie";
+import {
+  berekenBoerderijOpbrengstRuw,
+  berekenStadVoedselVerbruik,
+  berekenWachttorenVoedselVerbruik,
+  WACHTTOREN_VOEDSEL_VERBRUIK,
+} from "./productie";
 import { metActieveStad } from "./stad";
-import { metWerkendeSterrencirkel, MIJN } from "./testHelpers";
+import { metWerkendeSterrencirkel, MIJN, WACHTTOREN } from "./testHelpers";
 
 test("de opslag-cap geldt per grondstof, niet als gezamenlijke som (basis van de STICHTING_KOSTEN-doorrekening)", () => {
   let state = maakInitieleSpelStatus();
@@ -162,6 +167,49 @@ test("berekenBoerderijOpbrengstRuw negeert een boerderij die niet actief of niet
     ),
   };
   assert.equal(berekenBoerderijOpbrengstRuw(state), 0, "een niet-wegverbonden boerderij levert nog niets op");
+});
+
+test("berekenStadVoedselVerbruik geeft het stadsverbruik voor de huidige stadsgrootte, onafhankelijk van wachttorens", () => {
+  const state = maakInitieleSpelStatus();
+  assert.equal(state.stad.grootte, "klein");
+  assert.equal(berekenStadVoedselVerbruik(state), 2, "een kleine stad verbruikt 2 voedsel/beurt");
+
+  const groteStad = metActieveStad(state, { ...state.stad, grootte: "groot" });
+  assert.equal(berekenStadVoedselVerbruik(groteStad), 6, "een grote stad verbruikt 6 voedsel/beurt");
+});
+
+test("berekenWachttorenVoedselVerbruik telt alleen bemande wachttorens, los van het stadsverbruik", () => {
+  let state = maakInitieleSpelStatus();
+  assert.equal(berekenWachttorenVoedselVerbruik(state), 0, "geen wachttorens = geen verbruik");
+
+  state = {
+    ...state,
+    stad: { ...state.stad, strijders: [{ id: "strijder-1", wachttoren: { hoogte: 2, positieInStreek: 4 } }] },
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 2
+        ? {
+            ...streek,
+            ontgrendeld: true,
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 4
+                ? { ...tile, status: "actief" as const, improvement: WACHTTOREN, heeftWeg: true }
+                : tile
+            ),
+          }
+        : streek
+    ),
+  };
+
+  assert.equal(
+    berekenWachttorenVoedselVerbruik(state),
+    WACHTTOREN_VOEDSEL_VERBRUIK,
+    "1 bemande wachttoren = 1x het verbruik per wachttoren"
+  );
+  assert.equal(
+    berekenStadVoedselVerbruik(state),
+    2,
+    "het stadsverbruik zelf blijft ongewijzigd door een bemande wachttoren"
+  );
 });
 
 test("city-improvement-productie blijft onaangetast zolang een run maar 1 stad heeft, ook ver voorbij afstand 13 (hoofdstuk 9/11/14, M17: geen 'achtergelaten stad' zonder een tweede stad)", () => {
