@@ -10,7 +10,7 @@
 
 import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
-import { onrustOpStreek } from "@/game/onrust";
+import { isCourthouseBemand, onrustOpStreek } from "@/game/onrust";
 import { City, Streek, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import {
@@ -1107,6 +1107,130 @@ function tekenWampanoagTentje(ctx: CanvasRenderingContext2D, x: number, y: numbe
   tekenTent(ctx, x + size * 0.5, baseY, size * 0.48, "#9c6b42");
 }
 
+// Saloon (issue: "Afbeeldingen courthouse en saloon", Going West-exclusief,
+// zie improvements.ts: SALOON) — een houten "false front"-gevel zoals bij
+// echte frontier-saloons: de rechte, hoge plank-gevel steekt boven het eigen
+// dak uit om de zaak groter te laten ogen. Klapdeurtjes en een uithangbord
+// maken het silhouet ook zonder tile-info-popup leesbaar als saloon i.p.v.
+// een gewoon huisje. Geen bemand-status — de Saloon werkt altijd zolang hij
+// actief staat (zie ONRUST_MIN_STREEK-comment in improvements.ts).
+function tekenSaloon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.5;
+  tekenContactschaduw(ctx, cx, baseY, size * 0.64);
+
+  // Hoofdgevel (false front): rechte, hoge plankenwand boven het lagere dak.
+  ctx.fillStyle = "#8a6038";
+  ctx.fillRect(x + size * 0.16, y + size * 0.22, size * 0.68, size * 0.22);
+  ctx.strokeStyle = "#3a2414";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + size * 0.16, y + size * 0.22, size * 0.68, size * 0.22);
+  ctx.fillStyle = "#5c3d22";
+  ctx.fillRect(x + size * 0.13, y + size * 0.2, size * 0.74, size * 0.04);
+
+  // Romp van het gebouw, met portiek-overkapping.
+  ctx.fillStyle = "#7a5230";
+  ctx.fillRect(x + size * 0.18, y + size * 0.44, size * 0.64, size * 0.42);
+  ctx.strokeStyle = "#3a2414";
+  ctx.strokeRect(x + size * 0.18, y + size * 0.44, size * 0.64, size * 0.42);
+  ctx.fillStyle = "#4a3018";
+  ctx.fillRect(x + size * 0.16, y + size * 0.5, size * 0.68, size * 0.05);
+  ctx.strokeStyle = "#3a2414";
+  ctx.lineWidth = Math.max(1, size * 0.025);
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.22, baseY);
+  ctx.lineTo(x + size * 0.22, y + size * 0.5);
+  ctx.moveTo(x + size * 0.78, baseY);
+  ctx.lineTo(x + size * 0.78, y + size * 0.5);
+  ctx.stroke();
+
+  // Klapdeurtjes, met een donkere spleet ertussen.
+  ctx.fillStyle = "#2a1c10";
+  ctx.fillRect(cx - size * 0.1, baseY - size * 0.24, size * 0.2, size * 0.24);
+  ctx.fillStyle = "#6b4425";
+  ctx.fillRect(cx - size * 0.1, baseY - size * 0.24, size * 0.08, size * 0.18);
+  ctx.fillRect(cx + size * 0.02, baseY - size * 0.24, size * 0.08, size * 0.18);
+
+  // Uithangbord boven de deur.
+  ctx.fillStyle = "#c9a668";
+  ctx.fillRect(cx - size * 0.15, y + size * 0.27, size * 0.3, size * 0.08);
+  ctx.strokeStyle = "#3a2414";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx - size * 0.15, y + size * 0.27, size * 0.3, size * 0.08);
+
+  // Ramen aan weerszijden, warm verlicht.
+  ctx.fillStyle = "rgba(255, 210, 130, 0.55)";
+  ctx.fillRect(x + size * 0.24, y + size * 0.52, size * 0.1, size * 0.1);
+  ctx.fillRect(x + size * 0.66, y + size * 0.52, size * 0.1, size * 0.1);
+}
+
+// Courthouse (issue: "Afbeeldingen courthouse en saloon", Going West-
+// exclusief, zie improvements.ts: COURTHOUSE) — een formeler stenen gebouw
+// met een driehoekig fronton en zuilen, in contrast met de houten Saloon
+// hierboven. `bemand` (zie isCourthouseBemand, onrust.ts) geeft een warme
+// lantaarngloed bij de deur zodra een Rechter is toegewezen — zelfde
+// bemand/onbemand-leesbaarheidspatroon als `tekenWachttoren` hierboven.
+function tekenCourthouse(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, bemand: boolean): void {
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.5;
+  tekenContactschaduw(ctx, cx, baseY, size * 0.68);
+
+  // Fronton (driehoekig dak).
+  ctx.fillStyle = "#6b5c48";
+  ctx.beginPath();
+  ctx.moveTo(cx, y + size * 0.08);
+  ctx.lineTo(x + size * 0.88, y + size * 0.34);
+  ctx.lineTo(x + size * 0.12, y + size * 0.34);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#3a3226";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Stenen romp.
+  ctx.fillStyle = "#8a7a68";
+  ctx.fillRect(x + size * 0.16, y + size * 0.34, size * 0.68, size * 0.52);
+  ctx.strokeStyle = "#3a3226";
+  ctx.strokeRect(x + size * 0.16, y + size * 0.34, size * 0.68, size * 0.52);
+
+  // Zuilen.
+  ctx.fillStyle = "#c9bfa8";
+  const kolomBreedte = size * 0.05;
+  for (const fx of [0.26, 0.4, 0.6, 0.74]) {
+    ctx.fillRect(x + size * fx - kolomBreedte / 2, y + size * 0.36, kolomBreedte, size * 0.46);
+  }
+
+  // Deur.
+  ctx.fillStyle = "#2a2016";
+  ctx.fillRect(cx - size * 0.08, baseY - size * 0.24, size * 0.16, size * 0.24);
+
+  // Klokkentorentje op de fronton-top.
+  ctx.strokeStyle = "#3a3226";
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.beginPath();
+  ctx.moveTo(cx, y + size * 0.08);
+  ctx.lineTo(cx, y);
+  ctx.stroke();
+  ctx.fillStyle = "#8a7a68";
+  ctx.beginPath();
+  ctx.arc(cx, y, size * 0.025, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (bemand) {
+    const gloed = ctx.createRadialGradient(cx, baseY - size * 0.26, 0, cx, baseY - size * 0.26, size * 0.14);
+    gloed.addColorStop(0, "rgba(244, 193, 92, 0.55)");
+    gloed.addColorStop(1, "rgba(244, 193, 92, 0)");
+    ctx.fillStyle = gloed;
+    ctx.beginPath();
+    ctx.arc(cx, baseY - size * 0.26, size * 0.14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f4c15c";
+    ctx.beginPath();
+    ctx.arc(cx, baseY - size * 0.26, size * 0.035, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number, bemand: boolean) => void
@@ -1129,6 +1253,8 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   beverjachthut: (ctx, x, y, size) => tekenBeverjachthut(ctx, x, y, size),
   opperhoofdtent: (ctx, x, y, size) => tekenOpperhoofdtent(ctx, x, y, size),
   "wampanoag-tentje": (ctx, x, y, size) => tekenWampanoagTentje(ctx, x, y, size),
+  saloon: (ctx, x, y, size) => tekenSaloon(ctx, x, y, size),
+  courthouse: (ctx, x, y, size, seed, bemand) => tekenCourthouse(ctx, x, y, size, bemand),
 };
 
 function tekenLandImprovement(
@@ -1800,7 +1926,8 @@ function tekenActieveTile(
 
   if (tile.status === "actief" && tile.improvement?.soort === "land") {
     const bemand =
-      tile.improvement.id === "wachttoren" && isWachttorenBemand(stad.strijders, hoogte, col);
+      (tile.improvement.id === "wachttoren" && isWachttorenBemand(stad.strijders, hoogte, col)) ||
+      (tile.improvement.id === "courthouse" && isCourthouseBemand(stad.rechters, hoogte, col));
     tekenLandImprovement(ctx, x, y, size, tile.improvement.id, seed, bemand);
 
     if (tile.beurtenTotUitputting !== undefined) {

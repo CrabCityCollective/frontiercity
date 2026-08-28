@@ -16,7 +16,7 @@
 
 import { isWachttorenBemand } from "@/game/indringersEnDieren";
 import { isBebouwbaarLeeg } from "@/game/improvements";
-import { onrustOpStreek } from "@/game/onrust";
+import { isCourthouseBemand, onrustOpStreek } from "@/game/onrust";
 import { City, Streek, Settler, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import {
@@ -558,6 +558,74 @@ function tekenWampanoagTentjePixel(ctx: CanvasRenderingContext2D): void {
   tekenTentPixel(ctx, 8, baseY, 6, "#9c6b42");
 }
 
+// Saloon (issue: "Afbeeldingen courthouse en saloon") — pixel-art variant van
+// `tekenSaloon` in canvas.ts: dezelfde "false front"-silhouet (rechte,
+// verhoogde plankgevel), klapdeurtjes en uithangbord, maar blokkerig
+// opgebouwd op het 16x16 pixel-grid i.p.v. met vloeiende paden.
+function tekenSaloonPixel(ctx: CanvasRenderingContext2D): void {
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 9);
+
+  // False front-gevel boven het dak.
+  hlijn(ctx, 3, 12, 3, "#5c3d22");
+  for (let yy = 4; yy <= 5; yy++) {
+    hlijn(ctx, 3, 12, yy, "#8a6038");
+  }
+
+  // Romp met portiek-overkapping.
+  for (let yy = 7; yy <= 13; yy++) {
+    hlijn(ctx, 3, 12, yy, "#7a5230");
+  }
+  hlijn(ctx, 3, 12, 7, "#4a3018");
+  vlijn(ctx, 3, 7, baseY, "#3a2414");
+  vlijn(ctx, 12, 7, baseY, "#3a2414");
+
+  // Klapdeurtjes.
+  vlijn(ctx, 7, 9, baseY, "#2a1c10");
+  vlijn(ctx, 8, 9, baseY, "#2a1c10");
+
+  // Uithangbord.
+  hlijn(ctx, 6, 9, 4, "#c9a668");
+
+  // Verlichte ramen.
+  p(ctx, 5, 9, "#f4c97a");
+  p(ctx, 10, 9, "#f4c97a");
+}
+
+// Courthouse (issue: "Afbeeldingen courthouse en saloon") — pixel-art
+// variant van `tekenCourthouse` in canvas.ts: stenen romp met driehoekig
+// fronton en zuilen i.p.v. de houten Saloon hierboven. `bemand` geeft
+// dezelfde warme lantaarnstip bij de deur als de bemande Wachttoren
+// (`tekenWachttorenPixel`) zodra een Rechter is toegewezen.
+function tekenCourthousePixel(ctx: CanvasRenderingContext2D, bemand: boolean): void {
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 9);
+
+  // Driehoekig fronton.
+  const frontonRijen = 4;
+  for (let i = 0; i < frontonRijen; i++) {
+    const half = frontonRijen - i;
+    blokrij(ctx, 8, 2 + i, half, "#6b5c48");
+  }
+
+  // Stenen romp.
+  for (let yy = 6; yy <= 13; yy++) {
+    hlijn(ctx, 3, 12, yy, "#8a7a68");
+  }
+
+  // Zuilen.
+  for (const cx of [5, 7, 9, 11]) {
+    vlijn(ctx, cx, 7, 13, "#c9bfa8");
+  }
+
+  // Deur.
+  vlijn(ctx, 8, 9, baseY, "#2a2016");
+
+  if (bemand) {
+    p(ctx, 8, 9, "#f4c15c");
+  }
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, seed: number, bemand: boolean) => void
@@ -580,6 +648,8 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   beverjachthut: (ctx) => tekenBeverjachthutPixel(ctx),
   opperhoofdtent: (ctx) => tekenOpperhoofdtentPixel(ctx),
   "wampanoag-tentje": (ctx) => tekenWampanoagTentjePixel(ctx),
+  saloon: (ctx) => tekenSaloonPixel(ctx),
+  courthouse: (ctx, seed, bemand) => tekenCourthousePixel(ctx, bemand),
 };
 
 function tekenLandImprovementPixel(ctx: CanvasRenderingContext2D, id: string, seed: number, bemand: boolean): void {
@@ -981,7 +1051,8 @@ function tekenActieveTilePixel(
 
   if (tile.status === "actief" && tile.improvement?.soort === "land") {
     const bemand =
-      tile.improvement.id === "wachttoren" && isWachttorenBemand(stad.strijders, hoogte, col);
+      (tile.improvement.id === "wachttoren" && isWachttorenBemand(stad.strijders, hoogte, col)) ||
+      (tile.improvement.id === "courthouse" && isCourthouseBemand(stad.rechters, hoogte, col));
     tekenLandImprovementPixel(ctx, tile.improvement.id, seed, bemand);
 
     if (tile.beurtenTotUitputting !== undefined) {
