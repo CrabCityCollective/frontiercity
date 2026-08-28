@@ -13,7 +13,12 @@ import { isBebouwbaarLeeg } from "@/game/improvements";
 import { onrustOpStreek } from "@/game/onrust";
 import { City, Streek, Settler, TerreinType, Tile } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
-import { BAND_WIDTH_TILES, eindeOceaanZichtbaar, isVooruitkijkStreek } from "@/game/world";
+import {
+  BAND_WIDTH_TILES,
+  eindeOceaanZichtbaar,
+  isVooruitkijkStreek,
+  startOceaanZichtbaar,
+} from "@/game/world";
 
 export { BAND_WIDTH_TILES };
 
@@ -1760,14 +1765,19 @@ function tekenActieveTile(
   col: number,
   hoogte: number,
   verbondenMetStad: boolean,
-  streken: Streek[],
+  // De volledige, niet-zichtbaarheids-gefilterde streken-lijst — zie
+  // `tekenWereld` hieronder voor de volledige toelichting. `wegVerbindingen`
+  // kijkt naar buurstreken (`omhoog`/`omlaag`) die na een nieuwe stichting
+  // dichtgeklapt kunnen zijn, dus dit mag nooit de canvas-gefilterde subset
+  // zijn.
+  alleStreken: Streek[],
   heeftOnrust: boolean
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrond(ctx, x, y, size, terreinType, seed);
 
   if (tile.heeftWeg) {
-    tekenWeg(ctx, x, y, size, seed, wegVerbindingen(streken, hoogte, col));
+    tekenWeg(ctx, x, y, size, seed, wegVerbindingen(alleStreken, hoogte, col));
   }
 
   if (tile.status === "ghost_town") {
@@ -1840,6 +1850,16 @@ export function tekenWereld(
   width: number,
   height: number,
   streken: Streek[],
+  // De volledige, niet-zichtbaarheids-gefilterde streken-lijst (`GameState.streken`)
+  // — issue "Nieuwe stad Cincinnati": `streken` hierboven kan sinds die issue
+  // ook van onderaf afgesneden zijn (dichtgeklapte streken van vóór de
+  // huidige stad). Het wegennetwerk/de onrust-bescherming (`isTileVerbondenMetStad`,
+  // `wegVerbindingen`, `onrustOpStreek` hieronder) moet daar wél doorheen
+  // kunnen kijken — precies zoals de echte spellogica (productie.ts e.a.)
+  // altijd al met `state.streken` rekent, nooit met een canvas-gefilterde
+  // subset. Anders zou een tile vlak na een nieuwe stichting onterecht als
+  // "niet verbonden" getekend worden.
+  alleStreken: Streek[],
   stad: City,
   plaatsingsStreekHoogte?: number,
   // `bouwbaarBuitenFrontier`-improvements (Wachttoren/Legerkamp, hoofdstuk
@@ -1874,9 +1894,15 @@ export function tekenWereld(
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
+  // Hoogte van de bovenste zichtbare streek — sinds issue "Nieuwe stad
+  // Cincinnati" niet meer per se gelijk aan `totaalStreken` zodra ook van
+  // onderaf afgesneden wordt (zie world.ts: `zichtbareStreken`, `ondergrens`).
+  // `streken` staat oplopend op hoogte, dus het laatste element is de hoogste.
+  const maxHoogte = totaalStreken > 0 ? streken[totaalStreken - 1].hoogte : 0;
   // Afsluitende oceaan-rij bóven de laatste streek (issue: "laatste oceaan ook
   // visueel") — schuift alle rijen hieronder één tegel naar beneden zodra hij
-  // getoond wordt, net zoals de startoceaan al een vaste extra rij onderaan is.
+  // getoond wordt, net zoals de startoceaan een vaste extra rij onderaan is
+  // zolang streek 1 nog zichtbaar is (`startOceaanZichtbaar`).
   const topOffset = eindeOceaanZichtbaar(streken) ? tileSize : 0;
 
   ctx.clearRect(0, 0, width, height);
@@ -1890,13 +1916,14 @@ export function tekenWereld(
   let stadPositie: { x: number; y: number } | undefined;
 
   for (const streek of streken) {
-    const rijIndex = totaalStreken - streek.hoogte;
+    const rijIndex = maxHoogte - streek.hoogte;
     const y = rijIndex * tileSize + topOffset;
     const vooruitkijk = !streek.ontgrendeld && isVooruitkijkStreek(streek, streken);
     // Onrust geldt per streek, niet per tile (onrust.ts: `onrustOpStreek`) —
     // dus één keer per streek berekend, niet opnieuw voor elke kolom
-    // hieronder.
-    const heeftOnrust = campagneId === "going-west" && onrustOpStreek(streken, stad.rechters, streek) > 0;
+    // hieronder. `alleStreken` i.p.v. `streken`: zie toelichting bovenaan
+    // deze functie.
+    const heeftOnrust = campagneId === "going-west" && onrustOpStreek(alleStreken, stad.rechters, streek) > 0;
 
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
       const x = col * tileSize;
@@ -1913,8 +1940,8 @@ export function tekenWereld(
         if (tile.verhuld || tile.wampanoagVerhuld) {
           tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
         } else {
-          const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
-          tekenActieveTile(ctx, x, y, tileSize, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, streken, heeftOnrust);
+          const verbonden = isTileVerbondenMetStad(alleStreken, streek.hoogte, col);
+          tekenActieveTile(ctx, x, y, tileSize, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust);
           if (tile.improvement?.soort === "city") {
             stadPositie = { x, y };
           }
@@ -1927,8 +1954,8 @@ export function tekenWereld(
       } else if (!streek.ontgrendeld && vooruitkijk) {
         tekenVooruitkijkTile(ctx, x, y, tileSize, streek.terreinType);
       } else {
-        const verbonden = isTileVerbondenMetStad(streken, streek.hoogte, col);
-        tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, streken, heeftOnrust);
+        const verbonden = isTileVerbondenMetStad(alleStreken, streek.hoogte, col);
+        tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust);
         if (streek.tiles[col].improvement?.soort === "city") {
           stadPositie = { x, y };
         }
@@ -1972,13 +1999,13 @@ export function tekenWereld(
   // waar hij op dat moment staat, zodat hij nooit onder een improvement-icoon
   // verdwijnt.
   if (settler) {
-    const rijIndex = totaalStreken - settler.hoogte;
+    const rijIndex = maxHoogte - settler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
       tekenSettler(ctx, settler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize, "primair", tegelSet);
     }
   }
   if (tweedeSettler) {
-    const rijIndex = totaalStreken - tweedeSettler.hoogte;
+    const rijIndex = maxHoogte - tweedeSettler.hoogte;
     if (rijIndex >= 0 && rijIndex < totaalStreken) {
       tekenSettler(ctx, tweedeSettler.positieInStreek * tileSize, rijIndex * tileSize + topOffset, tileSize, "tweede", tegelSet);
     }
@@ -1986,12 +2013,17 @@ export function tekenWereld(
 
   // Rij oceaan-tegels vlak onder streek 1 (hoofdstuk 2: startstad begint aan een
   // oceaan) — één extra rij, klikbaar via dezelfde tile-geometrie als de
-  // overige streken (zie GameCanvas: `bepaalAangeklikteTile`, hoogte 0).
-  const oceaanY = totaalStreken * tileSize + topOffset;
-  for (let col = 0; col < BAND_WIDTH_TILES; col++) {
-    const x = col * tileSize;
-    tekenOceaanTile(ctx, x, oceaanY, tileSize, tileSeed(col, 0));
-    tekenTileGrid(ctx, x, oceaanY, tileSize);
+  // overige streken (zie GameCanvas: `bepaalAangeklikteTile`, hoogte 0). Sinds
+  // issue "Nieuwe stad Cincinnati" alleen nog getekend zolang streek 1 zelf
+  // zichtbaar is (`startOceaanZichtbaar`) — na een nieuwe stichting is de
+  // onderste zichtbare streek niet meer de startstreek.
+  if (startOceaanZichtbaar(streken)) {
+    const oceaanY = totaalStreken * tileSize + topOffset;
+    for (let col = 0; col < BAND_WIDTH_TILES; col++) {
+      const x = col * tileSize;
+      tekenOceaanTile(ctx, x, oceaanY, tileSize, tileSeed(col, 0));
+      tekenTileGrid(ctx, x, oceaanY, tileSize);
+    }
   }
 
   // Afsluitende oceaan-rij bóven de laatste streek (issue: "laatste oceaan ook

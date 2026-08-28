@@ -542,8 +542,12 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   const geselecteerdeTileIsVijandelijkHeiligdom =
     geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "vijandelijk-heiligdom";
   // Alleen de relevante streken op de canvas (issue: "onderkant altijd in
-  // view" + "onontdekte tegels weg") — zie world.ts: `zichtbareStreken`.
-  const zichtbareStrekenState = zichtbareStreken(state.streken);
+  // view" + "onontdekte tegels weg", en sinds issue "Nieuwe stad Cincinnati"
+  // ook de dichtgeklapte streken van vóór de huidige stad) — zie world.ts:
+  // `zichtbareStreken`. `state.stad.streekHoogte` is de streek waarop de
+  // actieve (laatst-gestichte) stad staat — voor de tutorial en de eerste
+  // Going West-stad altijd 1, dus geen enkele streek klapt dan dicht.
+  const zichtbareStrekenState = zichtbareStreken(state.streken, state.stad.streekHoogte);
 
   // Scrolt de kaart standaard naar onderaan (de stad, issue: "onderkant van
   // het scherm altijd standaard in view") zodra het aantal zichtbare streken
@@ -1725,6 +1729,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
       <div className="game-scroll-area" ref={scrollRef}>
         <GameCanvas
           streken={zichtbareStrekenState}
+          alleStreken={state.streken}
           stad={state.stad}
           plaatsingsStreekHoogte={plaatsingsImprovement ? actieveStreek.hoogte : undefined}
           plaatsingsAlleStreken={Boolean(plaatsingsImprovement?.bouwbaarBuitenFrontier)}
