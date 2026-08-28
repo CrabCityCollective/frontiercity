@@ -962,6 +962,22 @@ export interface GameState {
   // kennen dit veld nog niet; `undefined` daar betekent, net als bij een
   // nieuwe tutorial-run, gewoon "tutorial".
   campagneId?: string;
+  // Boon-systeem (issue #411/#414, campaigns/going-west/ontwerp.md): run-brede,
+  // permanente beloningen voor het uitbouwen van een stad tot "groot" vóór het
+  // vertrek (zie `komtInAanmerkingVoorBoon`/`trekBoon`, boons.ts). Trekking
+  // zonder terugleggen (issue #414, vraag 1): een Boon-id die hier al in
+  // staat, valt uit de pool voor een volgende trekking. Staat expliciet op
+  // `GameState`, niet op `City` (zoals `Relic` hierboven, een per-stad concept
+  // dat nooit is uitgebouwd) — overleeft daardoor een latere stad-
+  // ineenstorting, zolang de run zelf doorgaat (issue #414, vraag 2). Generiek
+  // voor elke campagne behalve de tutorial (issue #414, vraag 3). Oudere
+  // saves kennen dit veld nog niet, zie `metGemigreerdeBoonsVeld` in save.ts.
+  boons: string[];
+  // Toegekende, nog niet weggeklikte Boon (issue #414, vraag 4: pop-up direct
+  // ná `StichtingsMomentPopup`) — zelfde meldings-vlag-patroon als
+  // `amberOntdektEvent` hierboven. `undefined` zolang er geen (onopgeloste)
+  // melding is.
+  boonToegekendEvent?: string;
   // Welke van de eenmalige uitleg-pop-ups (openings-uitleg, settler, voedsel-
   // balans, boerderij-klaar, enz. — zie GameRoot.tsx) de speler in déze run al
   // heeft weggeklikt (issue: "Bij laden niet alle pop-ups tonen"). Stond

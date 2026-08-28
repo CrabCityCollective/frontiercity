@@ -12,6 +12,7 @@
 // `leesSettler`/`leesActieGedaan`/`metSettlerUpdate` hieronder voor de
 // gedeelde lees/schrijf-indirectie.
 import { campagneConfig } from "./campagnes";
+import { komtInAanmerkingVoorBoon, trekBoon } from "./boons";
 import { bereikbarePosities } from "./wegen";
 import {
   jachtVoedselBonus,
@@ -398,6 +399,10 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
   // stichting (hoofdstuk 1/9) — elke andere stichting is een tussentijdse
   // kans uit het herhalende patroon en laat de run doorlopen.
   const isAfsluitendeStichting = hoogte === state.streken.length;
+  // Boon-systeem (issue #411/#414, boons.ts): getrokken vóórdat `state.stad`
+  // hieronder door `nieuweStad` vervangen wordt — `komtInAanmerkingVoorBoon`
+  // beoordeelt dus nog de zojuist verlaten stad, niet de net gestichte.
+  const boon = komtInAanmerkingVoorBoon(state, isAfsluitendeStichting) ? trekBoon(state.boons) : undefined;
 
   return {
     ...state,
@@ -413,5 +418,7 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
     voedsel: state.voedsel - STICHTING_KOSTEN.voedsel,
     ...metSettlerUpdate(state, slot, undefined, leesActieGedaan(state, slot)),
     stadGesticht: isAfsluitendeStichting ? true : state.stadGesticht,
+    boons: boon ? [...state.boons, boon.id] : state.boons,
+    boonToegekendEvent: boon ? boon.id : state.boonToegekendEvent,
   };
 }

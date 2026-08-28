@@ -40,12 +40,14 @@ export function laadSpel(campagneId?: string): GameState | null {
   try {
     const ruw = window.localStorage.getItem(saveSleutel(campagneId));
     if (!ruw) return null;
-    return metGemigreerdeWampumAfkoopVeld(
-      metGemigreerdRechtersVeld(
-        metGemigreerdeOntvangenVlaggen(
-          metGemigreerdSmederijActiefVeld(
-            metGemigreerdeSmederijVeld(
-              metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+    return metGemigreerdeBoonsVeld(
+      metGemigreerdeWampumAfkoopVeld(
+        metGemigreerdRechtersVeld(
+          metGemigreerdeOntvangenVlaggen(
+            metGemigreerdSmederijActiefVeld(
+              metGemigreerdeSmederijVeld(
+                metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+              )
             )
           )
         )
@@ -204,6 +206,14 @@ function metGemigreerdRechtersVeld(state: GameState): GameState {
 function metGemigreerdeWampumAfkoopVeld(state: GameState): GameState {
   if (state.wampumAfkoopPerStam && typeof state.wampumAfkoopPerStam === "object") return state;
   return { ...state, wampumAfkoopPerStam: {} };
+}
+
+// Migratie voor saves van vóór het Boon-systeem (issue #411/#414): oudere
+// saves kennen `GameState.boons` nog niet. Begint leeg — geen enkele oudere
+// save kan al een Boon getrokken hebben, dit veld bestond nog niet.
+function metGemigreerdeBoonsVeld(state: GameState): GameState {
+  if (Array.isArray(state.boons)) return state;
+  return { ...state, boons: [] };
 }
 
 // Verwijdert de opgeslagen run van deze campagne (issue: "Bij game over moet
