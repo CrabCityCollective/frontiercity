@@ -47,6 +47,7 @@ import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
 import { boonMetId } from "@/game/boons";
 import { campagneConfig, popupContent, streekContentVoorCampagne } from "@/game/campagnes";
+import { beurtMagAutomatischDoorgaan } from "@/game/economie";
 import { improvementNaam, improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { kanIndringersAfkopenMetWampum, wampumAfkoopKostenHuidig } from "@/game/indringersEnDieren";
 import {
@@ -136,6 +137,7 @@ interface GameRootProps {
 export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutorialAfgerond }: GameRootProps) {
   const {
     state,
+    volgendeBeurt,
     startBouw,
     sluitBouwKeuze,
     startGroei,
@@ -1804,6 +1806,32 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             setToonStichtStadPopup(true);
           }}
         />
+        {/* Vangnet-knop (issue: "Button volgende beurt indien geen
+            settlers"): de beurt gaat normaal automatisch door zodra er
+            niets meer te doen valt (zie `beurtMagAutomatischDoorgaan`,
+            economie.ts) — maar zonder settler toont `SettlerPaneel`
+            hierboven niets meer, dus zonder deze knop kon de speler daar na
+            een stad-stichting of een roofdier-aanval op vastlopen. Alleen
+            zichtbaar wanneer er geen settler(s) meer zijn om te besturen én
+            er verder niets openstaat (geen bouwkeuze). */}
+        {!state.settler && !state.tweedeSettler && beurtMagAutomatischDoorgaan(state) && (
+          <div
+            className="fc-paneel"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.4rem",
+              padding: "0.75rem 1rem",
+              fontSize: "0.9rem",
+              margin: "0.5rem",
+            }}
+          >
+            <span>Geen settler meer om te besturen deze beurt.</span>
+            <button className="fc-knop" onClick={volgendeBeurt} style={{ padding: "0.3rem 0.6rem", alignSelf: "flex-start" }}>
+              Volgende beurt
+            </button>
+          </div>
+        )}
         <StreekIntroPaneel streken={state.streken} campagneId={state.campagneId} />
         <BezetteStreekPaneel state={state} />
         <WampanoagPaneel state={state} />

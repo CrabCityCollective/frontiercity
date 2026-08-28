@@ -185,8 +185,15 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => versnelCityVerbeteringMetGoudActie(huidig));
   }, []);
 
+  // Stad stichten (issue: "Button volgende beurt indien geen settlers"):
+  // `stichtStadActie` zet de settler bewust op `undefined` ("de huifkar
+  // wordt de stad", zie acties.ts), net als `verplaatsSettlerNaar`/`legWegAan`
+  // hierboven een settler-actie is die kan maken dat er voor deze beurt
+  // niets meer te doen valt — dus ook hier `metAutomatischeVolgendeBeurt`
+  // gebruiken, anders bleef de speler na het stichten vastzitten zonder
+  // enige trigger die de automatische beurtwissel opnieuw checkt.
   const stichtStad = useCallback((slot: SettlerSlot = "primair") => {
-    setState((huidig) => stichtStadActie(huidig, slot));
+    setState((huidig) => metAutomatischeVolgendeBeurt(stichtStadActie(huidig, slot)));
   }, []);
 
   const startRecrutering = useCallback(() => {
@@ -235,8 +242,15 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => sluitKuddeMeldingActie(huidig));
   }, []);
 
+  // Roofdier-aanval (issue: "Button volgende beurt indien geen settlers"):
+  // `verwerkRoofdieren` (indringersEnDieren.ts) kan de settler al tijdens de
+  // beurtwissel zelf op `undefined` zetten (settler verloren aan een
+  // roofdier) — de speler ziet dan alleen de `RoofdierPopup`. Zonder
+  // `metAutomatischeVolgendeBeurt` hier controleert niets nadien nog of de
+  // beurt alsnog automatisch door mag, dus zat de speler vast na het sluiten
+  // van de melding.
   const sluitRoofdierMelding = useCallback(() => {
-    setState((huidig) => sluitRoofdierMeldingActie(huidig));
+    setState((huidig) => metAutomatischeVolgendeBeurt(sluitRoofdierMeldingActie(huidig)));
   }, []);
 
   const sluitGoudOntdektMelding = useCallback(() => {
