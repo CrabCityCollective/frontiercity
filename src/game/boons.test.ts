@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { BOON_POOL, VOORRAADSCHUUR_OPSLAG_BONUS, komtInAanmerkingVoorBoon, trekBoon } from "./boons";
+import {
+  BOON_POOL,
+  OUDE_HANDELSROUTE_INTERVAL_BEURTEN,
+  VOORRAADSCHUUR_OPSLAG_BONUS,
+  komtInAanmerkingVoorBoon,
+  pasBoonEffectToe,
+  trekBoon,
+  verwerkOudeHandelsrouteBoon,
+} from "./boons";
 import { stichtStad, STICHTING_KOSTEN } from "./acties";
 import { maakInitieleSpelStatus } from "./economie";
 import { metActieveStad } from "./stad";
@@ -71,10 +79,10 @@ test("stichtStad kent een Boon toe bij een tussentijdse Going West-stichting van
   assert.equal(naStichten.voorraad.erts, VOORRAADSCHUUR_OPSLAG_BONUS);
   assert.equal(naStichten.voorraad.goud, VOORRAADSCHUUR_OPSLAG_BONUS, "ook goud (dat niet bij de stichtingskosten hoort) krijgt de bonus");
 
-  // Trekking zonder terugleggen: met de pool momenteel maar één lid (issue
-  // #428: "in de praktijk krijg je dus nu altijd deze Boon"), levert een
-  // tweede tussentijdse stichting vanuit een opnieuw grote stad geen nieuwe
-  // Boon meer op — de speler heeft 'm al.
+  // Trekking zonder terugleggen: een tweede tussentijdse stichting vanuit een
+  // opnieuw grote stad trekt de andere, nog niet bezeten Boon uit de pool
+  // (issue #431 breidde de pool uit naar twee leden — vóór #431 was de pool
+  // hier al uitgeput, zie de derde stichting hieronder voor dat geval).
   let tweedeState = metActieveStad(naStichten, { ...naStichten.stad, grootte: "groot" });
   tweedeState = {
     ...tweedeState,
@@ -92,8 +100,33 @@ test("stichtStad kent een Boon toe bij een tussentijdse Going West-stichting van
     voedsel: STICHTING_KOSTEN.voedsel,
   };
   const naTweedeStichten = metVasteRandom(0, () => stichtStad(tweedeState));
-  assert.equal(naTweedeStichten.boons.length, 1, "geen tweede Boon: de pool is uitgeput zolang deze maar één lid heeft");
-  assert.equal(naTweedeStichten.opslagCap, naStichten.opslagCap, "geen tweede opslagcap-bonus zonder een nieuw getrokken Boon");
+  assert.equal(naTweedeStichten.boons.length, 2, "de tweede, nog niet bezeten Boon uit de pool wordt toegekend");
+  assert.equal(naTweedeStichten.boons[1], "oude-handelsroute");
+  assert.equal(naTweedeStichten.opslagCap, naStichten.opslagCap, "Oude Handelsroute heeft geen eigen opslagcap-effect");
+  assert.equal(naTweedeStichten.wampumOntvangen, true, "Oude Handelsroute maakt de wampum-teller meteen zichtbaar");
+
+  // Nu zijn beide Boons uit de pool bezet: een derde tussentijdse stichting
+  // levert geen nieuwe Boon meer op (issue #414, vraag 1: trekking zonder
+  // terugleggen, ook met de uitgebreide pool).
+  let derdeState = metActieveStad(naTweedeStichten, { ...naTweedeStichten.stad, grootte: "groot" });
+  derdeState = {
+    ...derdeState,
+    settler: { hoogte: 32, positieInStreek: 5 },
+    streken: derdeState.streken.map((streek) =>
+      streek.hoogte === 32
+        ? {
+            ...streek,
+            ontgrendeld: true,
+            tiles: streek.tiles.map((tile) => (tile.positieInStreek === 5 ? { ...tile, versWater: true } : tile)),
+          }
+        : streek
+    ),
+    voorraad: { ...derdeState.voorraad, hout: STICHTING_KOSTEN.hout, steen: STICHTING_KOSTEN.steen, erts: STICHTING_KOSTEN.erts },
+    voedsel: STICHTING_KOSTEN.voedsel,
+  };
+  const naDerdeStichten = metVasteRandom(0, () => stichtStad(derdeState));
+  assert.equal(naDerdeStichten.boons.length, 2, "geen derde Boon: de pool is nu uitgeput");
+  assert.equal(naDerdeStichten.opslagCap, naTweedeStichten.opslagCap, "geen extra opslagcap-bonus zonder een nieuw getrokken Boon");
 });
 
 test("stichtStad kent geen Boon toe bij de afsluitende stichting, in de tutorial, of vanuit een niet-grote stad", () => {
@@ -152,4 +185,31 @@ test("stichtStad kent geen Boon toe bij de afsluitende stichting, in de tutorial
   };
   const naKleineStad = stichtStad(kleineStad);
   assert.equal(naKleineStad.boons.length, 0);
+});
+
+test("pasBoonEffectToe zet wampumOntvangen bij toekenning van Oude Handelsroute (issue #431), zodat de HUD de wampum-teller meteen toont", () => {
+  const state = maakInitieleSpelStatus("going-west");
+  assert.equal(state.wampumOntvangen, false);
+
+  const na = pasBoonEffectToe(state, "oude-handelsroute");
+  assert.equal(na.wampumOntvangen, true);
+  assert.equal(na.wampum, state.wampum, "geen meteen-effect, alleen de HUD-zichtbaarheid verandert");
+});
+
+test("verwerkOudeHandelsrouteBoon geeft alleen wampum op een interval-beurt, en alleen aan een speler die de Boon bezit (issue #431)", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, boons: ["oude-handelsroute"] };
+
+  const nietOpInterval = verwerkOudeHandelsrouteBoon(state, OUDE_HANDELSROUTE_INTERVAL_BEURTEN - 1);
+  assert.equal(nietOpInterval.wampum, state.wampum, "geen wampum vóór het interval");
+
+  const opInterval = verwerkOudeHandelsrouteBoon(state, OUDE_HANDELSROUTE_INTERVAL_BEURTEN);
+  assert.equal(opInterval.wampum, state.wampum + 1, "+1 wampum op elk veelvoud van het interval");
+
+  const opTweedeInterval = verwerkOudeHandelsrouteBoon(state, OUDE_HANDELSROUTE_INTERVAL_BEURTEN * 2);
+  assert.equal(opTweedeInterval.wampum, state.wampum + 1, "ook elk volgend veelvoud levert wampum op");
+
+  const zonderBoon = maakInitieleSpelStatus("going-west");
+  const naZonderBoon = verwerkOudeHandelsrouteBoon(zonderBoon, OUDE_HANDELSROUTE_INTERVAL_BEURTEN);
+  assert.equal(naZonderBoon.wampum, zonderBoon.wampum, "zonder de Boon geen wampum, ook niet op een interval-beurt");
 });

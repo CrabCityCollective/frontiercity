@@ -59,6 +59,7 @@ import {
   verwerkKuddes,
   verwerkRoofdieren,
 } from "./indringersEnDieren";
+import { verwerkOudeHandelsrouteBoon } from "./boons";
 
 // Opslag-cap, startstatus en de city-improvement-cap staan inhoudelijk in
 // eigen modules (initieleSpelStatus.ts resp. improvements.ts) in plaats van
@@ -243,6 +244,11 @@ export function volgendeBeurt(state: GameState): GameState {
   const naConfrontatieKuddes = verwerkConfrontatieKuddes(naKuddes);
   const naRoofdieren = verwerkRoofdieren(naConfrontatieKuddes);
   const nieuweBeurt = naRoofdieren.beurt + 1;
+  // Oude Handelsroute-Boon (issue #431): +1 wampum elke paar beurten, los van
+  // alle kans-gebaseerde stappen hierboven — mag dus net zo goed vlak vóór de
+  // beurtteller-ophoging draaien, met `nieuweBeurt` als peildatum (zie
+  // `verwerkOudeHandelsrouteBoon`, boons.ts).
+  const naBoonEffecten = verwerkOudeHandelsrouteBoon(naRoofdieren, nieuweBeurt);
 
   // De settler verschijnt bij de stad zodra beurt 2 begint (hoofdstuk 16) —
   // en blijft daarna gewoon staan waar de speler 'm laatst neerzette. Niet
@@ -266,20 +272,20 @@ export function volgendeBeurt(state: GameState): GameState {
   // geen enkele stad gesticht deze run" en dekt dus élke stichting, niet
   // alleen de laatste.
   const settler =
-    naRoofdieren.settler ??
-    (naRoofdieren.steden.length === 1 && !naRoofdieren.settlerVerlorenAanRoofdier && nieuweBeurt >= 2
-      ? { hoogte: stadTileHoogte(naRoofdieren.stad), positieInStreek: naRoofdieren.stad.positieInStreek }
+    naBoonEffecten.settler ??
+    (naBoonEffecten.steden.length === 1 && !naBoonEffecten.settlerVerlorenAanRoofdier && nieuweBeurt >= 2
+      ? { hoogte: stadTileHoogte(naBoonEffecten.stad), positieInStreek: naBoonEffecten.stad.positieInStreek }
       : undefined);
 
   return {
-    ...naRoofdieren,
+    ...naBoonEffecten,
     beurt: nieuweBeurt,
     bouwKeuzeGedaanDitBeurt: false,
     settlerActieGedaanDitBeurt: false,
     settlerGratisBewogenDitBeurt: false,
     // Tweede settler (issue #236): geen val-terug-verschijning zoals
     // `settler` hierboven — hij bestaat alleen via `tweedeSettler` op
-    // `naRoofdieren`, hier wordt alleen zijn actie-vlag weer teruggezet.
+    // `naBoonEffecten`, hier wordt alleen zijn actie-vlag weer teruggezet.
     tweedeSettlerActieGedaanDitBeurt: false,
     tweedeSettlerGratisBewogenDitBeurt: false,
     verkenningGedaanDitBeurt: false,

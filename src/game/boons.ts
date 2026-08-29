@@ -21,6 +21,17 @@
 // Voorvaderen". Zolang de pool nog maar dit ene lid heeft, krijgt de speler
 // 'm in de praktijk altijd — dat is opzettelijk (issue #428: "geeft niet, we
 // gaan er nog veel meer Boons bij maken"), niet een bug in `trekBoon`.
+//
+// Tweede Boon, "Oude Handelsroute" (issue #431): anders dan de
+// Voorraadschuur hierboven geen eenmalig effect bij toekenning, maar een
+// terugkerende, per-beurt opbrengst — zie `verwerkOudeHandelsrouteBoon`
+// onderaan dit bestand, aangeroepen vanuit `volgendeBeurt` (economie.ts).
+// Levert wampum op (`GameState.wampum`, hetzelfde veld als de Wampanoag-
+// handel/-afkoop, indringersEnDieren.ts) — bewust geen ander/nieuw
+// resource-type: de speler kan er nu al indringers mee afkopen, en de issue
+// zelf noemt dat een latere campagne het gewoon een andere naam mag geven
+// (net als `techNamen`/`improvementNamen`, CampaignConfig in types.ts) zonder
+// dat dit bestand daarvoor hoeft te wijzigen.
 import { GameState } from "./types";
 
 export interface Boon {
@@ -36,11 +47,20 @@ export interface Boon {
 // gedeelde-opslag-grondstof (`MateriaalType`, types.ts) erbij.
 export const VOORRAADSCHUUR_OPSLAG_BONUS = 15;
 
+// Interval van "Oude Handelsroute" (issue #431): elke zoveel beurten levert
+// de Boon 1 wampum op, zie `verwerkOudeHandelsrouteBoon` onderaan dit bestand.
+export const OUDE_HANDELSROUTE_INTERVAL_BEURTEN = 5;
+
 export const BOON_POOL: Boon[] = [
   {
     id: "voorraadschuur-van-de-voorvaderen",
     naam: "Voorraadschuur van de Voorvaderen",
     beschrijving: `+${VOORRAADSCHUUR_OPSLAG_BONUS} opslagcapaciteit, bovenop je andere opslag-verhogende improvements — en je hout, steen, erts en goud vullen meteen met evenveel aan.`,
+  },
+  {
+    id: "oude-handelsroute",
+    naam: "Oude Handelsroute",
+    beschrijving: `Elke ${OUDE_HANDELSROUTE_INTERVAL_BEURTEN} beurten +1 wampum — hiermee kun je indringers tijdelijk afkopen.`,
   },
 ];
 
@@ -92,5 +112,27 @@ export function pasBoonEffectToe(state: GameState, boonId: string): GameState {
       },
     };
   }
+  // "Oude Handelsroute" (issue #431) heeft zelf geen effect-bij-toekenning —
+  // de opbrengst loopt pas via `verwerkOudeHandelsrouteBoon` hieronder, elke
+  // beurt. Wel meteen `wampumOntvangen` zetten: dat veld bepaalt of de
+  // wampum-voorraad in de HUD getoond wordt (ResourceHud.tsx), en zonder deze
+  // zet zou een speler die deze Boon buiten de Wampanoag-opening om krijgt
+  // (elke niet-tutorial-campagne, komtInAanmerkingVoorBoon hierboven) wampum
+  // zien binnenkomen zonder dat de HUD 'm laat zien.
+  if (boonId === "oude-handelsroute") {
+    return { ...state, wampumOntvangen: true };
+  }
   return state;
+}
+
+// Terugkerende opbrengst van "Oude Handelsroute" (issue #431): +1 wampum
+// elke `OUDE_HANDELSROUTE_INTERVAL_BEURTEN` beurten, zolang de speler deze
+// Boon bezit. Aangeroepen vanuit `volgendeBeurt` (economie.ts) met de zojuist
+// opgehoogde beurtteller (`nieuweBeurt`) — dezelfde beurt waarin de state
+// straks ook `beurt: nieuweBeurt` krijgt, zodat de uitkering en de zichtbare
+// beurtteller in lockstap blijven (beurt 5, 10, 15, ...).
+export function verwerkOudeHandelsrouteBoon(state: GameState, nieuweBeurt: number): GameState {
+  if (!state.boons.includes("oude-handelsroute")) return state;
+  if (nieuweBeurt % OUDE_HANDELSROUTE_INTERVAL_BEURTEN !== 0) return state;
+  return { ...state, wampum: state.wampum + 1 };
 }
