@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { BOON_POOL, komtInAanmerkingVoorBoon, trekBoon } from "./boons";
+import { BOON_POOL, VOORRAADSCHUUR_OPSLAG_BONUS, komtInAanmerkingVoorBoon, trekBoon } from "./boons";
 import { stichtStad, STICHTING_KOSTEN } from "./acties";
 import { maakInitieleSpelStatus } from "./economie";
 import { metActieveStad } from "./stad";
@@ -37,7 +37,7 @@ test("komtInAanmerkingVoorBoon: alleen bij een niet-afsluitende stichting, een '
   assert.equal(komtInAanmerkingVoorBoon(tutorial, false), false, "de tutorial doet nooit mee aan het Boon-systeem (issue #414, vraag 3)");
 });
 
-test("stichtStad kent een Boon toe bij een tussentijdse Going West-stichting vanuit een grote stad (issue #411/#414)", () => {
+test("stichtStad kent een Boon toe bij een tussentijdse Going West-stichting vanuit een grote stad, en past meteen het mechanische effect toe (issue #411/#414/#428)", () => {
   let state = maakInitieleSpelStatus("going-west");
   state = metActieveStad(state, { ...state.stad, grootte: "groot" });
   state = {
@@ -55,13 +55,26 @@ test("stichtStad kent een Boon toe bij een tussentijdse Going West-stichting van
     voorraad: { ...state.voorraad, hout: STICHTING_KOSTEN.hout, steen: STICHTING_KOSTEN.steen, erts: STICHTING_KOSTEN.erts },
     voedsel: STICHTING_KOSTEN.voedsel,
   };
+  const opslagCapVoor = state.opslagCap;
 
   const naStichten = metVasteRandom(0, () => stichtStad(state));
   assert.equal(naStichten.boons.length, 1, "een Boon wordt toegekend en run-breed opgeslagen");
   assert.equal(naStichten.boonToegekendEvent, naStichten.boons[0], "de pop-up-melding wijst naar de zojuist toegekende Boon");
+  assert.equal(naStichten.boons[0], "voorraadschuur-van-de-voorvaderen");
+  assert.equal(
+    naStichten.opslagCap,
+    opslagCapVoor + VOORRAADSCHUUR_OPSLAG_BONUS,
+    "Voorraadschuur van de Voorvaderen verhoogt de opslagcap"
+  );
+  assert.equal(naStichten.voorraad.hout, VOORRAADSCHUUR_OPSLAG_BONUS, "hout (0 ná de stichtingskosten) krijgt de Boon-bonus erbij");
+  assert.equal(naStichten.voorraad.steen, VOORRAADSCHUUR_OPSLAG_BONUS);
+  assert.equal(naStichten.voorraad.erts, VOORRAADSCHUUR_OPSLAG_BONUS);
+  assert.equal(naStichten.voorraad.goud, VOORRAADSCHUUR_OPSLAG_BONUS, "ook goud (dat niet bij de stichtingskosten hoort) krijgt de bonus");
 
-  // Trekking zonder terugleggen: de tweede stichting vanuit een opnieuw
-  // grote stad mag de zojuist getrokken Boon niet nog eens opleveren.
+  // Trekking zonder terugleggen: met de pool momenteel maar één lid (issue
+  // #428: "in de praktijk krijg je dus nu altijd deze Boon"), levert een
+  // tweede tussentijdse stichting vanuit een opnieuw grote stad geen nieuwe
+  // Boon meer op — de speler heeft 'm al.
   let tweedeState = metActieveStad(naStichten, { ...naStichten.stad, grootte: "groot" });
   tweedeState = {
     ...tweedeState,
@@ -79,8 +92,8 @@ test("stichtStad kent een Boon toe bij een tussentijdse Going West-stichting van
     voedsel: STICHTING_KOSTEN.voedsel,
   };
   const naTweedeStichten = metVasteRandom(0, () => stichtStad(tweedeState));
-  assert.equal(naTweedeStichten.boons.length, 2);
-  assert.notEqual(naTweedeStichten.boons[1], naTweedeStichten.boons[0], "dezelfde Boon wordt niet twee keer getrokken (geen terugleggen)");
+  assert.equal(naTweedeStichten.boons.length, 1, "geen tweede Boon: de pool is uitgeput zolang deze maar één lid heeft");
+  assert.equal(naTweedeStichten.opslagCap, naStichten.opslagCap, "geen tweede opslagcap-bonus zonder een nieuw getrokken Boon");
 });
 
 test("stichtStad kent geen Boon toe bij de afsluitende stichting, in de tutorial, of vanuit een niet-grote stad", () => {
