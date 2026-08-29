@@ -17,11 +17,10 @@
 //    ná `toonStichtingsMomentPopup` en vóór elke andere pop-up.
 //
 // De inhoud van de individuele Boons (welke mechanische bonussen, hoeveel)
-// is bewust nog niet uitgewerkt (zie ontwerp.md: "dit voorstel gaat
-// uitsluitend over het framework") — dat volgt in losse vervolgissues. De
-// pool hieronder is daarom bewust minimaal: genoeg om het framework
-// (opslag/trekking/timing/pop-up) end-to-end te kunnen testen en spelen,
-// zonder al een mechanisch effect toe te kennen.
+// is uitgewerkt in issue #428: de eerste echte Boon, "Voorraadschuur van de
+// Voorvaderen". Zolang de pool nog maar dit ene lid heeft, krijgt de speler
+// 'm in de praktijk altijd — dat is opzettelijk (issue #428: "geeft niet, we
+// gaan er nog veel meer Boons bij maken"), niet een bug in `trekBoon`.
 import { GameState } from "./types";
 
 export interface Boon {
@@ -30,21 +29,18 @@ export interface Boon {
   beschrijving: string;
 }
 
+// Opslagcap-bonus van "Voorraadschuur van de Voorvaderen" (issue #428):
+// bovenop andere opslag-verhogende bronnen (Opslagplaats-improvement, Weven/
+// Aardewerk-tech, zie OPSLAGPLAATS in improvements.ts resp. `kiesTech` in
+// tech.ts) — en de speler krijgt bij toekenning meteen zoveel van elke
+// gedeelde-opslag-grondstof (`MateriaalType`, types.ts) erbij.
+export const VOORRAADSCHUUR_OPSLAG_BONUS = 15;
+
 export const BOON_POOL: Boon[] = [
   {
-    id: "reizigers-instinct",
-    naam: "Reizigers instinct",
-    beschrijving: "Wat je hier leerde, vergeet je niet. (Mechanisch effect volgt in een vervolgissue.)",
-  },
-  {
-    id: "voorraad-op-de-kar",
-    naam: "Voorraad op de kar",
-    beschrijving: "Wat overbleef, laat je niet achter. (Mechanisch effect volgt in een vervolgissue.)",
-  },
-  {
-    id: "oude-route",
-    naam: "De oude route",
-    beschrijving: "Je kent deze grond nu. (Mechanisch effect volgt in een vervolgissue.)",
+    id: "voorraadschuur-van-de-voorvaderen",
+    naam: "Voorraadschuur van de Voorvaderen",
+    beschrijving: `+${VOORRAADSCHUUR_OPSLAG_BONUS} opslagcapaciteit, bovenop je andere opslag-verhogende improvements — en je hout, steen, erts en goud vullen meteen met evenveel aan.`,
   },
 ];
 
@@ -74,4 +70,27 @@ export function boonMetId(id: string): Boon | undefined {
 // als `sluitGoudOntdektMelding` (streekOntgrendeling.ts).
 export function sluitBoonMelding(state: GameState): GameState {
   return { ...state, boonToegekendEvent: undefined };
+}
+
+// Past het mechanische effect van een zojuist toegekende Boon toe (issue
+// #428) — losstaand van `trekBoon` aangeroepen, direct bij toekenning, zelfde
+// volgorde-conventie als het kiezen van Weven/Aardewerk in `kiesTech`
+// (tech.ts): het effect verwerkt zich meteen, niet pas bij het wegklikken van
+// de pop-up. Onbekende/toekomstige Boon-ids zonder mechanisch effect laten de
+// state ongewijzigd.
+export function pasBoonEffectToe(state: GameState, boonId: string): GameState {
+  if (boonId === "voorraadschuur-van-de-voorvaderen") {
+    const opslagCap = state.opslagCap + VOORRAADSCHUUR_OPSLAG_BONUS;
+    return {
+      ...state,
+      opslagCap,
+      voorraad: {
+        hout: Math.min(opslagCap, state.voorraad.hout + VOORRAADSCHUUR_OPSLAG_BONUS),
+        steen: Math.min(opslagCap, state.voorraad.steen + VOORRAADSCHUUR_OPSLAG_BONUS),
+        erts: Math.min(opslagCap, state.voorraad.erts + VOORRAADSCHUUR_OPSLAG_BONUS),
+        goud: Math.min(opslagCap, state.voorraad.goud + VOORRAADSCHUUR_OPSLAG_BONUS),
+      },
+    };
+  }
+  return state;
 }

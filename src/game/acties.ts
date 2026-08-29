@@ -12,7 +12,7 @@
 // `leesSettler`/`leesActieGedaan`/`metSettlerUpdate` hieronder voor de
 // gedeelde lees/schrijf-indirectie.
 import { campagneConfig } from "./campagnes";
-import { komtInAanmerkingVoorBoon, trekBoon } from "./boons";
+import { komtInAanmerkingVoorBoon, pasBoonEffectToe, trekBoon } from "./boons";
 import { bereikbarePosities } from "./wegen";
 import {
   jachtVoedselBonus,
@@ -405,7 +405,7 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
   // beoordeelt dus nog de zojuist verlaten stad, niet de net gestichte.
   const boon = komtInAanmerkingVoorBoon(state, isAfsluitendeStichting) ? trekBoon(state.boons) : undefined;
 
-  return {
+  const nieuweState: GameState = {
     ...state,
     streken,
     steden: [...state.steden, nieuweStad],
@@ -422,4 +422,10 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
     boons: boon ? [...state.boons, boon.id] : state.boons,
     boonToegekendEvent: boon ? boon.id : state.boonToegekendEvent,
   };
+
+  // Mechanisch Boon-effect (issue #428) wordt direct bij toekenning verwerkt
+  // — zelfde volgorde-conventie als `kiesTech` (tech.ts) — ná de rest van de
+  // stichtings-mutatie hierboven, zodat het effect op de nieuwe `voorraad`
+  // toegepast wordt, niet op de nog-niet-verrekende oude.
+  return boon ? pasBoonEffectToe(nieuweState, boon.id) : nieuweState;
 }
