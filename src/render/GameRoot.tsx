@@ -1903,11 +1903,14 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
         {toonRoofdierPopup && state.roofdierEvent && (
           <RoofdierPopup event={state.roofdierEvent} onSluiten={sluitRoofdierMelding} />
         )}
-        {toonGoudOntdektPopup && <GoudOntdektPopup onSluiten={sluitGoudOntdektMelding} />}
+        {toonGoudOntdektPopup && (
+          <GoudOntdektPopup afbeelding="/assets/scenes/goudader.png" onSluiten={sluitGoudOntdektMelding} />
+        )}
         {toonTweedeGoudOntdektPopup && (
           <GoudOntdektPopup
             titel={GOUD_ONTDEKKING_TWEEDE_TITEL}
             tekst={GOUD_ONTDEKKING_TWEEDE_TEKST}
+            afbeelding="/assets/scenes/goudader.png"
             onSluiten={sluitTweedeGoudOntdektMelding}
           />
         )}

@@ -11,10 +11,10 @@ interface GoudOntdektPopupProps {
   // alleen de flavor-tekst wijkt af.
   titel?: string;
   tekst?: string;
-  // Optioneel sfeerbeeld (issue: "Scène beelden") — alleen gezet voor
-  // popups die er een hebben (bijv. `eersteContactPopup`, Going West); de
-  // meeste hergebruikers van dit component (goudader-vondst e.d.) laten dit
-  // weg en tonen zoals voorheen geen plaatje.
+  // Optioneel sfeerbeeld (issue: "Scène beelden"/"Goud asset") — alleen gezet
+  // voor popups die er een hebben (bijv. de goudader-vondst-popups en
+  // `eersteContactPopup`, Going West); overige hergebruikers van dit
+  // component laten dit weg en tonen geen plaatje.
   afbeelding?: string;
 }
 
