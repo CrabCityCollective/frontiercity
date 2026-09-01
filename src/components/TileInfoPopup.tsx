@@ -143,7 +143,11 @@ export default function TileInfoPopup({
         justifyContent: "center",
         background: "rgba(10, 8, 6, 0.72)",
         padding: "1rem",
-        zIndex: 20,
+        // Lager dan de meeste pop-ups (zIndex 20), zelfde reden als
+        // BouwPopup: deze pop-up toont soms kosten (rush met goud,
+        // verkenning) via KostenIcons, dus moet de grondstoffenbalk
+        // (zIndex 18) zichtbaar blijven.
+        zIndex: 15,
       }}
     >
       <div

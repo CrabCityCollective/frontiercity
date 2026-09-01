@@ -87,15 +87,19 @@ main {
    labels. Wrapt op smalle (mobiele) schermen i.p.v. buiten beeld te
    schuiven (issue: "balk met resources is niet responsive"). Staat onder
    het beurt-blok (issue: "volgende beurt button naar boven"). z-index boven
-   de bouw-pop-up en vergelijkbare kaart-overlays (allemaal zIndex 20, zie
-   o.a. BouwPopup) — issue: "bouwmaterialen zichtbaar bij bouwscherm": de
-   speler moet de voorraad kunnen aflezen tijdens het maken van een
-   bouwkeuze. `.game-viewport` is een flex-container, dus z-index werkt hier
-   ook zonder expliciete `position` op deze flex-items. Blijft ruim onder de
-   volledige-schermoverlays (menu's, titelscherm: zIndex 40+).
-   Let op: `.beurt-blok` hieronder blijft bewust ónder de pop-up-overlays
+   BouwPopup/StichtStadPopup/TileInfoPopup (de pop-ups die zelf kosten-
+   iconen tonen, zie o.a. BouwPopup — die drie staan bewust op zIndex 15) —
+   issue: "bouwmaterialen zichtbaar bij bouwscherm": de speler moet de
+   voorraad kunnen aflezen tijdens het maken van zo'n kosten-keuze. Alle
+   overige pop-ups (zIndex 20) staan hier bewust wél boven: issue "pop-up
+   scrollen bottom block" — bij een lange, scrollende pop-up viel de
+   sluitknop onderin soms onder deze balk. `.game-viewport` is een flex-
+   container, dus z-index werkt hier ook zonder expliciete `position` op
+   deze flex-items. Blijft ruim onder de volledige-schermoverlays (menu's,
+   titelscherm: zIndex 40+).
+   Let op: `.beurt-blok` hieronder blijft bewust ónder alle pop-up-overlays
    (issue: "pop-up overlay moet wel over de beurt button") — alleen deze
-   balk hoort erboven te blijven. */
+   balk hoort er (deels) boven te blijven. */
 .resource-hud {
   display: flex;
   flex-wrap: wrap;
@@ -106,7 +110,7 @@ main {
   color: var(--kleur-tekst);
   font-size: 0.9rem;
   position: relative;
-  z-index: 21;
+  z-index: 18;
 }
 
 .resource-hud__items {

@@ -155,7 +155,11 @@ export default function BouwPopup({
         justifyContent: "center",
         background: "rgba(10, 8, 6, 0.72)",
         padding: "1rem",
-        zIndex: 20,
+        // Lager dan de meeste pop-ups (zIndex 20) zodat de grondstoffenbalk
+        // (.resource-hud, zIndex 18) hier zichtbaar boven blijft staan — de
+        // speler moet de voorraad kunnen aflezen tijdens het kiezen van een
+        // improvement (issue: "bouwmaterialen zichtbaar bij bouwscherm").
+        zIndex: 15,
       }}
     >
       <div
