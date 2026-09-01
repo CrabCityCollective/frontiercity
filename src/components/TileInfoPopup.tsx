@@ -155,6 +155,8 @@ export default function TileInfoPopup({
           padding: "1rem 1.25rem",
           fontSize: "0.9rem",
           minWidth: "min(24rem, 100%)",
+          maxHeight: "85vh",
+          overflowY: "auto",
         }}
       >
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
