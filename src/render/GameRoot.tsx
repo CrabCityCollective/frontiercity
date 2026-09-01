@@ -711,11 +711,14 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     setGeselecteerdeTile(null);
   }
 
-  // Alle tutorial-uitleg-pop-ups (openings/settler/voedsel/boerderij/militair)
-  // zijn via het hoofdmenu aan/uit te zetten (issue: "een setting waarmee je
-  // deze uitleg pop-ups aan en uit kunt zetten") — streek-flavor, indringers en
-  // de tutorial-voltooid-samenvatting blijven altijd zichtbaar, dat is
-  // kerninhoud, geen uitleg.
+  // Alle tutorial-uitleg-pop-ups (openings/settler/boerderij/militair) zijn
+  // via het hoofdmenu aan/uit te zetten (issue: "een setting waarmee je deze
+  // uitleg pop-ups aan en uit kunt zetten") — streek-flavor, indringers en de
+  // tutorial-voltooid-samenvatting blijven altijd zichtbaar, dat is
+  // kerninhoud, geen uitleg. De voedseltekort-waarschuwing hoort inmiddels ook
+  // bij die kerninhoud (issue: "pop-up voedseltekort hoort bij de game, niet
+  // bij de uitleg") — zie `toonVoedselWaarschuwingPopup` hieronder, die
+  // daarom niet meer van `uitlegAan` afhangt.
   const uitlegAan = state.uitlegPopupsAan;
 
   // Blocker 3 (hoofdstuk 19, design-doc): een streek-popup alleen tonen als er
@@ -748,12 +751,15 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // Voedselwaarschuwing-pop-up (issue: "uitleg pop-ups dynamisch tonen" —
   // vervangt de vroegere vaste beurt-3-pop-up) — zie economie.ts
   // `verwerkVerval` voor de trigger zelf (voedsel dreigt binnen 5 beurten op
-  // te raken).
+  // te raken). Hangt bewust niet (meer) af van `uitlegAan` (issue: "pop-up
+  // voedseltekort hoort bij de game, niet bij de uitleg"): een dreigend
+  // voedseltekort is kerninhoud van het spel, geen tutorial-uitleg, en moet
+  // dus ook zichtbaar zijn als de speler de uitleg-pop-ups heeft uitgezet —
+  // net als de streek-flavor- en indringers-pop-ups hierboven.
   const toonVoedselWaarschuwingPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
     !toonSettlerUitlegPopup &&
-    uitlegAan &&
     state.stad.vervalStatus === "kritiek" &&
     !voedselWaarschuwingBevestigd;
   // "De vijand aan de horizon"-pop-up (issue: "tutorial popups wijzigen",
