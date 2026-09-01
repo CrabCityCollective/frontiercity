@@ -208,6 +208,11 @@ export function vijandelijkeWachttorenPosities(state: GameState): Settler[] {
 // Legerkamp is de actie niet beschikbaar (uitgegrijsd/geblokkeerd), geen
 // mislukte poging.
 export function kanConfrontatieBezetteStreek(state: GameState, positieInStreek: number): boolean {
+  // Cooldown (issue: "Militaire confrontatie" — na een verlies pas volgende
+  // beurt weer beschikbaar, zie `confrontatieGeblokkeerdTotVolgendeBeurt`
+  // hieronder in `confrontatieBezetteStreek`).
+  if (state.confrontatieGeblokkeerdTotVolgendeBeurt) return false;
+
   const bezetteStreek = state.streken.find((l) => l.bezet);
   if (!bezetteStreek) return false;
   const tile = bezetteStreek.tiles[positieInStreek];
@@ -215,6 +220,20 @@ export function kanConfrontatieBezetteStreek(state: GameState, positieInStreek: 
 
   const streekOnder = state.streken.find((l) => l.hoogte === bezetteStreek.hoogte - 1);
   return streekOnder !== undefined && heeftWerkendeLegerkampOpStreek(state, streekOnder);
+}
+
+// Winkans-preview vóór bevestiging (issue: "Militaire confrontatie" — "op die
+// pop-up wil ik graag de kans zien van winnen en verlies"): dezelfde formule
+// als `confrontatieBezetteStreek` hieronder daadwerkelijk gebruikt, zodat de
+// pop-up nooit een ander percentage toont dan wat het gevecht zelf toepast.
+// Geeft 0 terug zolang er geen actieve Bezette Streek is (geen zinvol doel).
+export function winkansConfrontatieBezetteStreek(state: GameState): number {
+  const bezetteStreek = state.streken.find((l) => l.bezet);
+  if (!bezetteStreek) return 0;
+
+  const tegenstanderSterkte = bezetteStreek.dreigingsniveau ?? 0;
+  const eigenLegerwaarde = berekenLegerkampLegerwaarde(state) + stadLegerwaardeBonus(state);
+  return berekenWinkans(eigenLegerwaarde, tegenstanderSterkte);
 }
 
 // Confrontatie tegen een vijandelijke Wachttoren op een Bezette Streek
@@ -240,7 +259,11 @@ export function kanConfrontatieBezetteStreek(state: GameState, positieInStreek: 
 // 6) — dezelfde lichtere straf als voorheen (issue: "laatste confrontatie
 // tweaken": alleen de bemanning, niet de infrastructuur zelf). Zonder
 // toegewezen Legerkamp-strijders (de legerwaarde kwam dan puur van de
-// Barakken-bonus) is er niemand om te verliezen.
+// Barakken-bonus) is er niemand om te verliezen. Verlies zet ook
+// `confrontatieGeblokkeerdTotVolgendeBeurt` (issue: "Militaire confrontatie"
+// — "als je verliest dan mag je volgende beurt pas weer een confrontatie
+// proberen"): `kanConfrontatieBezetteStreek` hierboven blokkeert een nieuwe
+// poging tot `volgendeBeurt` (economie.ts) de vlag weer terugzet.
 export function confrontatieBezetteStreek(state: GameState, positieInStreek: number): GameState {
   if (!kanConfrontatieBezetteStreek(state, positieInStreek)) return state;
 
@@ -248,7 +271,7 @@ export function confrontatieBezetteStreek(state: GameState, positieInStreek: num
 
   const tegenstanderSterkte = bezetteStreek.dreigingsniveau ?? 0;
   const eigenLegerwaarde = berekenLegerkampLegerwaarde(state) + stadLegerwaardeBonus(state);
-  const winkans = berekenWinkans(eigenLegerwaarde, tegenstanderSterkte);
+  const winkans = winkansConfrontatieBezetteStreek(state);
   const gewonnen = Math.random() < winkans;
 
   const laatsteConfrontatieBezetteStreek: ConfrontatieResultaat = {
@@ -277,7 +300,11 @@ export function confrontatieBezetteStreek(state: GameState, positieInStreek: num
     ? state.stad.strijders.filter((s) => s.id !== verlorenStrijder.id)
     : state.stad.strijders;
 
-  return { ...metActieveStad(state, { ...state.stad, strijders }), laatsteConfrontatieBezetteStreek };
+  return {
+    ...metActieveStad(state, { ...state.stad, strijders }),
+    laatsteConfrontatieBezetteStreek,
+    confrontatieGeblokkeerdTotVolgendeBeurt: true,
+  };
 }
 
 // Bemant een Wachttoren met een specifieke strijder (nieuwe Wachttoren-functie,

@@ -13,6 +13,7 @@ import {
   onbemandeLegerkampPosities,
   onbemandeWachttorenPosities,
   vijandelijkeWachttorenPosities,
+  winkansConfrontatieBezetteStreek,
 } from "./militair";
 import { ECONOMISCH_LAND_IMPROVEMENTS, SOLDAAT, VIJANDELIJKE_WACHTTOREN } from "./improvements";
 import { GameState } from "./types";
@@ -229,6 +230,44 @@ test("confrontatieBezetteStreek: verlies kost één Legerkamp-toegewezen strijde
   // beschadigd of opgeruimd) — alleen de eigen bemanning is geraakt.
   const vijandTile = naVerlies.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!.tiles[0];
   assert.equal(vijandTile.improvement?.id, "vijandelijke-wachttoren");
+});
+
+test("winkansConfrontatieBezetteStreek geeft dezelfde winkans terug als confrontatieBezetteStreek daadwerkelijk toepast, en 0 zonder actieve Bezette Streek (issue: Militaire confrontatie)", () => {
+  let state = maakInitieleSpelStatus();
+  assert.equal(winkansConfrontatieBezetteStreek(state), 0, "geen actieve Bezette Streek: geen zinvolle winkans");
+
+  state = metBezetteStreekInBeeld();
+  state = metOnthuldeBezetteStreekTile(state, 0, VIJANDELIJKE_WACHTTOREN);
+  state = metLegerkampOpStreek12(state);
+
+  const winkansVooraf = winkansConfrontatieBezetteStreek(state);
+  const naConfrontatie = metVasteRandom(0, () => confrontatieBezetteStreek(state, 0));
+  assert.equal(naConfrontatie.laatsteConfrontatieBezetteStreek?.winkans, winkansVooraf);
+});
+
+test("confrontatieBezetteStreek blokkeert bij verlies een nieuwe poging tot volgendeBeurt de cooldown weer opheft (issue: Militaire confrontatie)", () => {
+  let state = metBezetteStreekInBeeld();
+  state = metOnthuldeBezetteStreekTile(state, 0, VIJANDELIJKE_WACHTTOREN);
+  state = metLegerkampOpStreek12(state);
+
+  assert.equal(Boolean(state.confrontatieGeblokkeerdTotVolgendeBeurt), false);
+
+  const naVerlies = metVasteRandom(0.999999, () => confrontatieBezetteStreek(state, 0));
+  assert.equal(naVerlies.laatsteConfrontatieBezetteStreek?.gewonnen, false);
+  assert.equal(naVerlies.confrontatieGeblokkeerdTotVolgendeBeurt, true);
+  assert.equal(
+    kanConfrontatieBezetteStreek(naVerlies, 0),
+    false,
+    "een nieuwe poging moet geblokkeerd zijn totdat de volgende beurt is verwerkt"
+  );
+
+  // Een nieuwe poging tijdens de cooldown verandert niets aan de status.
+  const naGeblokkeerdePoging = confrontatieBezetteStreek(naVerlies, 0);
+  assert.equal(naGeblokkeerdePoging, naVerlies);
+
+  const naVolgendeBeurt = volgendeBeurt(naVerlies);
+  assert.equal(naVolgendeBeurt.confrontatieGeblokkeerdTotVolgendeBeurt, false);
+  assert.equal(kanConfrontatieBezetteStreek(naVolgendeBeurt, 0), true, "volgende beurt weer beschikbaar");
 });
 
 test("bemanLegerkamp en onbemandeLegerkampPosities: dezelfde soort omkeerbare toewijzing als bij een Wachttoren", () => {

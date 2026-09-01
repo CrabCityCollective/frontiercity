@@ -67,9 +67,20 @@ interface TileInfoPopupProps {
   // Gezet als de aangeklikte tile een onthulde vijandelijke Wachttoren is
   // (issue: "Bezette streek scherm" — de Confrontatie-knop verschijnt nu bij
   // een klik op de wachttoren zelf, i.p.v. in een lijst in het stadsmenu).
+  // Sinds issue "Militaire confrontatie" een twee-staps flow (zelfde
+  // keuze-modus-patroon als `wachttorenVraag`/`courthouseVraag` hierboven):
+  // de eerste klik opent een bevestigings-pop-up met de winkans/verlieskans
+  // (`winkans`), pas de tweede klik (`onBevestig`) voert de confrontatie
+  // daadwerkelijk uit. `geblokkeerdTotVolgendeBeurt` onderscheidt "geen
+  // Legerkamp" van "vorige beurt verloren" voor de tooltip-tekst.
   confrontatieVraag?: {
     kan: boolean;
-    onConfrontatieAangaan: () => void;
+    geblokkeerdTotVolgendeBeurt: boolean;
+    winkans: number;
+    keuzeActief: boolean;
+    onStartKeuze: () => void;
+    onBevestig: () => void;
+    onAnnuleer: () => void;
   };
   // Gezet als de aangeklikte tile een al onthuld Wampanoag-vakje is (Going
   // West, M21f, opdracht-wampanoag-opening.md §6): "geen aparte
@@ -386,19 +397,39 @@ export default function TileInfoPopup({
         )}
 
         {!bouwVraag && !terreinWaarschuwing && confrontatieVraag && (
-          <button
-            className="fc-knop"
-            disabled={!confrontatieVraag.kan}
-            onClick={confrontatieVraag.onConfrontatieAangaan}
-            title={
-              confrontatieVraag.kan
-                ? undefined
-                : "Vereist een voltooid, wegverbonden eigen Legerkamp op de streek direct onder De Stam van de Mammoet"
-            }
-            style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start", opacity: confrontatieVraag.kan ? 1 : 0.5 }}
-          >
-            Confrontatie aangaan
-          </button>
+          confrontatieVraag.keuzeActief ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+              <p style={{ margin: 0 }}>
+                Winkans: {Math.round(confrontatieVraag.winkans * 100)}% — verlieskans:{" "}
+                {Math.round((1 - confrontatieVraag.winkans) * 100)}%. Bij verlies raak je een Legerkamp-strijder
+                permanent kwijt, en kun je pas volgende beurt weer een confrontatie proberen.
+              </p>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button className="fc-knop" onClick={confrontatieVraag.onBevestig} style={{ padding: "0.35rem 0.75rem" }}>
+                  Confrontatie bevestigen
+                </button>
+                <button className="fc-knop" onClick={confrontatieVraag.onAnnuleer} style={{ padding: "0.35rem 0.75rem" }}>
+                  Annuleren
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              className="fc-knop"
+              disabled={!confrontatieVraag.kan}
+              onClick={confrontatieVraag.onStartKeuze}
+              title={
+                confrontatieVraag.kan
+                  ? undefined
+                  : confrontatieVraag.geblokkeerdTotVolgendeBeurt
+                    ? "Na een verloren confrontatie kun je pas volgende beurt weer een confrontatie proberen"
+                    : "Vereist een voltooid, wegverbonden eigen Legerkamp op de streek direct onder De Stam van de Mammoet"
+              }
+              style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start", opacity: confrontatieVraag.kan ? 1 : 0.5 }}
+            >
+              Confrontatie aangaan
+            </button>
+          )
         )}
 
         {!bouwVraag && !terreinWaarschuwing && missionarisVraag && (
