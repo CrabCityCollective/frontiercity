@@ -25,7 +25,10 @@ export default function StichtStadPopup({ onBevestig, onAnnuleren }: StichtStadP
         justifyContent: "center",
         background: "rgba(10, 8, 6, 0.72)",
         padding: "1rem",
-        zIndex: 20,
+        // Lager dan de meeste pop-ups (zIndex 20), zelfde reden als
+        // BouwPopup: de grondstoffenbalk (zIndex 18) toont de
+        // stichtingskosten (STICHTING_KOSTEN) en moet zichtbaar blijven.
+        zIndex: 15,
       }}
     >
       <div
