@@ -44,6 +44,24 @@ interface TileInfoPopupProps {
     onKiesStrijder: (strijderId: string) => void;
     onStuurNaarHuis: () => void;
   };
+  // Gezet als de aangeklikte tile een actief Legerkamp is (issue: "Verschil
+  // legerkamp" — bemannen liep eerder via een los kies-icoontje in het
+  // stadsmenu gevolgd door een klik op de kaart; dat werkte anders dan de
+  // Wachttoren, die je direct op de tile zelf bemant). Zelfde
+  // klik-op-de-tile-patroon als `wachttorenVraag` hierboven, met als enige
+  // verschil dat een Legerkamp door meerdere strijders tegelijk bemand mag
+  // worden: `toegewezenStrijders` toont daarom een lijst i.p.v. een losse
+  // `bemand`-vlag, elk met een eigen "naar huis"-knop, en de
+  // "bemannen"-keuzelijst blijft ook na een toevoeging beschikbaar zodat de
+  // speler er meteen nog een kan toevoegen.
+  legerkampVraag?: {
+    toegewezenStrijders: Strijder[];
+    alleStrijders: Strijder[];
+    keuzeActief: boolean;
+    onStartKeuze: () => void;
+    onKiesStrijder: (strijderId: string) => void;
+    onStuurNaarHuis: (strijderId: string) => void;
+  };
   // Gezet als de aangeklikte tile een actief Courthouse is (issue: "Onrust,
   // Saloon en Courthouse") — zelfde bemannen/naar-huis-sturen-patroon als
   // `wachttorenVraag` hierboven, maar met een Rechter i.p.v. een Strijder.
@@ -119,6 +137,7 @@ export default function TileInfoPopup({
   terreinWaarschuwing,
   rushVraag,
   wachttorenVraag,
+  legerkampVraag,
   courthouseVraag,
   verkenningVraag,
   wampanoagHandelVraag,
@@ -281,6 +300,89 @@ export default function TileInfoPopup({
                 style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
               >
                 Wachttoren bemannen
+              </button>
+            )}
+          </div>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && legerkampVraag && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {legerkampVraag.toegewezenStrijders.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                <p style={{ margin: 0, fontWeight: "bold" }}>Toegewezen strijders:</p>
+                <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                  {legerkampVraag.toegewezenStrijders.map((strijder) => (
+                    <button
+                      key={strijder.id}
+                      className="fc-knop"
+                      onClick={() => legerkampVraag.onStuurNaarHuis(strijder.id)}
+                      title="Stuur deze strijder naar huis"
+                      aria-label="Strijder naar huis sturen"
+                      style={{ padding: "0.35rem 0.6rem", fontSize: "1rem", lineHeight: 1 }}
+                    >
+                      ⛺ ✕
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {legerkampVraag.keuzeActief ? (
+              legerkampVraag.alleStrijders.length > 0 ? (
+                <>
+                  <p style={{ margin: 0, fontWeight: "bold" }}>Kies een strijder om dit legerkamp te bemannen:</p>
+                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                    {legerkampVraag.alleStrijders.map((strijder) => {
+                      const bezet = Boolean(strijder.wachttoren || strijder.legerkamp);
+                      if (bezet) {
+                        return (
+                          <span
+                            key={strijder.id}
+                            title={
+                              strijder.wachttoren
+                                ? `Bemant al een andere wachttoren op streek ${strijder.wachttoren.hoogte}`
+                                : `Al toegewezen aan een legerkamp op streek ${strijder.legerkamp!.hoogte}`
+                            }
+                            aria-label="Strijder niet beschikbaar"
+                            style={{
+                              padding: "0.35rem 0.6rem",
+                              fontSize: "1rem",
+                              lineHeight: 1,
+                              opacity: 0.35,
+                              cursor: "not-allowed",
+                            }}
+                          >
+                            ⛺
+                          </span>
+                        );
+                      }
+                      return (
+                        <button
+                          key={strijder.id}
+                          className="fc-knop"
+                          onClick={() => legerkampVraag.onKiesStrijder(strijder.id)}
+                          title="Kies deze strijder om het legerkamp te bemannen"
+                          aria-label="Strijder beschikbaar"
+                          style={{ padding: "0.35rem 0.6rem", fontSize: "1rem", lineHeight: 1 }}
+                        >
+                          ⛺
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <p style={{ margin: 0, color: "var(--kleur-oker)" }}>
+                  Geen strijders beschikbaar — recruteer eerst een nieuwe strijder via het stadsmenu.
+                </p>
+              )
+            ) : (
+              <button
+                className="fc-knop"
+                onClick={legerkampVraag.onStartKeuze}
+                style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+              >
+                {legerkampVraag.toegewezenStrijders.length > 0 ? "Strijder toevoegen" : "Legerkamp bemannen"}
               </button>
             )}
           </div>

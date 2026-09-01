@@ -17,36 +17,20 @@ interface MilitairPaneelProps {
   // vijandelijk Heiligdom een opgeleide Missionaris krijgt, kies je met een
   // klik op de kaart (zie TileInfoPopup: `missionarisVraag`).
   onStartMissionarisRecrutering: () => void;
-  // Klik op het Legerkamp-icoontje naast een nog niet toegewezen strijder
-  // (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner", Deel
-  // 5) — zet meteen de legerkamp-kies-modus aan (zie WachttorenKiesBanner).
-  // Wachttoren-toewijzing loopt sinds issue "wachttorens bemannen" niet meer
-  // via dit paneel, maar via de wachttoren-tile zelf op de kaart (zie
-  // TileInfoPopup: `wachttorenVraag`) — hier is alleen nog te zien hoeveel
-  // strijders daarvoor nog vrij zijn.
-  onKiesStrijderVoorLegerkamp: (strijderId: string) => void;
-  // Klik op een aan een Legerkamp toegewezen strijder (hoofdstuk 6/11, issue:
-  // "wachttorens, bemanning en bevoorrading" — toewijzing is niet langer
-  // onomkeerbaar): haalt hem meteen terug, waarna hij direct weer inzetbaar
-  // is voor een andere toewijzing (issue: "wachttoren tweaks" — verplaatsen
-  // kost geen beurten). Een wachttoren-bemanning haal je terug via de
-  // wachttoren-tile zelf, niet meer via dit paneel.
-  onHaalTerug: (strijderId: string) => void;
 }
 
 // Militair (basis) (M7, hoofdstuk 6): rekruteren van Soldaat-eenheden, met de
-// legerwaarde zichtbaar voor de speler. Legerkamp-toewijzing gebeurt via het
-// kies-modus-icoontje hieronder; wachttoren-toewijzing (issue: "wachttorens
-// bemannen") niet meer — dit paneel toont daarvoor alleen nog hoeveel
-// strijders nog vrij zijn. Puur placeholder-styling — geen definitieve UI.
+// legerwaarde zichtbaar voor de speler. Legerkamp- én wachttoren-toewijzing
+// (issue: "wachttorens bemannen"/"Verschil legerkamp") lopen allebei via een
+// klik op de tile zelf op de kaart (zie TileInfoPopup: `wachttorenVraag`/
+// `legerkampVraag`) — dit paneel toont daarvoor alleen nog hoeveel strijders
+// nog vrij zijn. Puur placeholder-styling — geen definitieve UI.
 export default function MilitairPaneel({
   state,
   legerwaarde,
   tegenstanderSterkte,
   onStartRecrutering,
   onStartMissionarisRecrutering,
-  onKiesStrijderVoorLegerkamp,
-  onHaalTerug,
 }: MilitairPaneelProps) {
   const { stad } = state;
   // Vrij = nog geen Wachttoren- én geen Legerkamp-toewijzing (issue:
@@ -108,15 +92,15 @@ export default function MilitairPaneel({
           <span style={{ color: "var(--kleur-tekst-gedempt)" }}>
             Strijders: {stad.strijders.length} totaal, {wachttorenStrijders.length} in een wachttoren,{" "}
             {vrijeStrijders.length} vrij (nog niet toegewezen aan een wachttoren of legerkamp) — klik op een
-            wachttoren op de kaart om er een te bemannen.
+            wachttoren of legerkamp op de kaart om er een te bemannen.
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
             {stad.strijders.map((strijder) => {
               if (strijder.wachttoren) {
-                // Wachttoren-toewijzing wordt sinds issue "wachttorens
-                // bemannen" niet meer via dit paneel teruggehaald, maar via
-                // de wachttoren-tile zelf (zie TileInfoPopup) — hier dus
-                // puur informatief, geen knop.
+                // Wachttoren-/legerkamp-toewijzing loopt niet meer via dit
+                // paneel, maar via de tile zelf op de kaart (zie
+                // TileInfoPopup: `wachttorenVraag`/`legerkampVraag`) — hier
+                // dus puur informatief, geen knop.
                 return (
                   <span
                     key={strijder.id}
@@ -129,34 +113,26 @@ export default function MilitairPaneel({
                 );
               }
               if (strijder.legerkamp) {
-                // Toewijzing is omkeerbaar en instant (hoofdstuk 6/11, issue:
-                // "wachttorens, bemanning en bevoorrading" / "wachttoren
-                // tweaks"): een toegewezen strijder is klikbaar om terug te
-                // halen, en meteen daarna weer inzetbaar.
                 return (
-                  <button
+                  <span
                     key={strijder.id}
-                    className="fc-knop"
-                    onClick={() => onHaalTerug(strijder.id)}
-                    title={`Toegewezen aan een legerkamp op streek ${strijder.legerkamp.hoogte} — klik om terug te halen`}
-                    aria-label="Strijder"
+                    title={`Toegewezen aan een legerkamp op streek ${strijder.legerkamp.hoogte}`}
+                    aria-label="Strijder toegewezen aan een legerkamp"
                     style={{ padding: "0.3rem 0.5rem", fontSize: "1rem", lineHeight: 1 }}
                   >
                     ⛺
-                  </button>
+                  </span>
                 );
               }
               return (
-                <button
+                <span
                   key={strijder.id}
-                  className="fc-knop"
-                  onClick={() => onKiesStrijderVoorLegerkamp(strijder.id)}
-                  title="Wijs deze strijder toe aan een legerkamp (hoofdstuk 6: Bezette Streek-legerwaarde)"
-                  aria-label="Strijder naar legerkamp"
-                  style={{ padding: "0.3rem 0.4rem", fontSize: "0.8rem", lineHeight: 1 }}
+                  title="Nog niet toegewezen — klik op een wachttoren of legerkamp op de kaart om deze strijder te bemannen"
+                  aria-label="Strijder vrij"
+                  style={{ padding: "0.3rem 0.5rem", fontSize: "1rem", lineHeight: 1, opacity: 0.6 }}
                 >
-                  ⛺
-                </button>
+                  🗡
+                </span>
               );
             })}
           </div>

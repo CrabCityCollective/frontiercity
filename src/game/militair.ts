@@ -129,6 +129,17 @@ export function isLegerkampBemand(strijders: Strijder[], hoogte: number, positie
   );
 }
 
+// Alle strijders die op dit moment aan dit specifieke Legerkamp zijn
+// toegewezen (issue: "Verschil legerkamp" — een Legerkamp mag, anders dan een
+// Wachttoren, door meerdere strijders tegelijk bemand worden). Gebruikt door
+// de tile-info-pop-up (`legerkampVraag`, GameRoot) om de volledige bemanning
+// te tonen, elk met een eigen "naar huis"-knop.
+export function strijdersInLegerkamp(strijders: Strijder[], hoogte: number, positieInStreek: number): Strijder[] {
+  return strijders.filter(
+    (strijder) => strijder.legerkamp?.hoogte === hoogte && strijder.legerkamp?.positieInStreek === positieInStreek
+  );
+}
+
 export function onbemandeLegerkampPosities(state: GameState): Settler[] {
   const posities: Settler[] = [];
   for (const streek of state.streken) {
@@ -146,9 +157,12 @@ export function onbemandeLegerkampPosities(state: GameState): Settler[] {
 }
 
 // Wijst een strijder toe aan een Legerkamp — een strijder heeft hoogstens
-// één toewijzing tegelijk (Wachttoren óf Legerkamp), net als de gewone
-// Wachttoren-bemanning omkeerbaar en instant via `haalStrijderTerug`
-// hieronder.
+// één toewijzing tegelijk (Wachttoren óf Legerkamp), maar anders dan een
+// Wachttoren mag een Legerkamp door meerdere strijders tegelijk bemand worden
+// (issue: "Verschil legerkamp" — precies dezelfde bemannings-flow als een
+// Wachttoren, met als enige verschil dat je hier meerdere strijders kunt
+// toevoegen). Net als de gewone Wachttoren-bemanning omkeerbaar en instant
+// via `haalStrijderTerug` hieronder.
 export function bemanLegerkamp(state: GameState, strijderId: string, hoogte: number, positieInStreek: number): GameState {
   const strijder = state.stad.strijders.find((s) => s.id === strijderId);
   if (!strijder || strijder.wachttoren || strijder.legerkamp) return state;
@@ -156,7 +170,6 @@ export function bemanLegerkamp(state: GameState, strijderId: string, hoogte: num
   const streek = state.streken.find((l) => l.hoogte === hoogte);
   const tile = streek?.tiles[positieInStreek];
   if (!tile || tile.status !== "actief" || tile.improvement?.id !== "legerkamp") return state;
-  if (isLegerkampBemand(state.stad.strijders, hoogte, positieInStreek)) return state;
 
   const strijders = state.stad.strijders.map((s) =>
     s.id === strijderId ? { ...s, legerkamp: { hoogte, positieInStreek } } : s
