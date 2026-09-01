@@ -936,6 +936,13 @@ export interface GameState {
   // eigen eigen-legerwaarde-formule en een eigen verlies-effect (ruïne i.p.v.
   // versnelde uitputting).
   laatsteConfrontatieBezetteStreek?: ConfrontatieResultaat;
+  // Cooldown na een verloren Confrontatie tegen een Bezette Streek (issue:
+  // "Militaire confrontatie" — "als je verliest dan mag je volgende beurt pas
+  // weer een confrontatie proberen"): gezet op `true` door
+  // `confrontatieBezetteStreek` (militair.ts) bij verlies, en pas weer op
+  // `false` gezet door `volgendeBeurt` (economie.ts) — overleeft dus andere
+  // acties binnen dezelfde beurt, net als `bouwKeuzeGedaanDitBeurt` hierboven.
+  confrontatieGeblokkeerdTotVolgendeBeurt?: boolean;
   // Per-run instelling (issue: "een setting waarmee je deze uitleg pop-ups
   // aan en uit kunt zetten ... voor deze run specifiek") — schakelt alle
   // tutorial-uitleg-pop-ups (openings-uitleg, settler, voedsel/boerderij,

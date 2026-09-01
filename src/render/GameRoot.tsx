@@ -75,7 +75,12 @@ import {
   TWEEDE_SETTLER_UITLEG_TITEL,
 } from "@/game/tutorialContent";
 import { TWEEDE_SETTLER_MIN_STREEK } from "@/game/groeiEnRekrutering";
-import { berekenLegerwaarde, kanConfrontatieBezetteStreek, onbemandeLegerkampPosities } from "@/game/militair";
+import {
+  berekenLegerwaarde,
+  kanConfrontatieBezetteStreek,
+  onbemandeLegerkampPosities,
+  winkansConfrontatieBezetteStreek,
+} from "@/game/militair";
 import { onrustOpStreek } from "@/game/onrust";
 import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij } from "@/game/productie";
 import {
@@ -424,6 +429,11 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // missionaris en verkenner", Deel 5) — zelfde soort kies-modus als
   // hierboven, maar voor een Legerkamp-tile i.p.v. een Wachttoren-tile.
   const [legerkampKiesModusStrijderId, setLegerkampKiesModusStrijderId] = useState<string | null>(null);
+  // Confrontatie-bevestigingsflow (issue: "Militaire confrontatie" — eerst
+  // een pop-up met de winkans/verlieskans tonen, pas na een expliciete
+  // bevestiging de confrontatie daadwerkelijk uitvoeren): zelfde soort
+  // keuze-modus-vlag als `toonWachttorenBemanningsKeuze` hierboven.
+  const [toonConfrontatieBevestiging, setToonConfrontatieBevestiging] = useState(false);
   // Stichtings-bevestiging (hoofdstuk 2/10/16, issue: "stad stichten op de
   // frontier" deel 4): geopend via de "Stad stichten"-knop in SettlerPaneel,
   // bevestigd/geannuleerd via StichtStadPopup. `stichtStadSlot` onthoudt met
@@ -474,6 +484,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     setToonWachttorenBemanningsKeuze(false);
     setToonCourthouseBemanningsKeuze(false);
     setLegerkampKiesModusStrijderId(null);
+    setToonConfrontatieBevestiging(false);
     setToonStichtStadPopup(false);
     setToonStadMenuPopup(false);
   }, [state.beurt]);
@@ -701,6 +712,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     }
 
     setToonWachttorenBemanningsKeuze(false);
+    setToonConfrontatieBevestiging(false);
     setGeselecteerdeTile({ hoogte, positieInStreek });
   }
 
@@ -2232,9 +2244,15 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             geselecteerdeTileIsVijandelijkeWachttoren && geselecteerdeTile
               ? {
                   kan: kanConfrontatieBezetteStreek(state, geselecteerdeTile.positieInStreek),
-                  onConfrontatieAangaan: () => {
+                  geblokkeerdTotVolgendeBeurt: Boolean(state.confrontatieGeblokkeerdTotVolgendeBeurt),
+                  winkans: winkansConfrontatieBezetteStreek(state),
+                  keuzeActief: toonConfrontatieBevestiging,
+                  onStartKeuze: () => setToonConfrontatieBevestiging(true),
+                  onBevestig: () => {
                     confrontatieBezetteStreek(geselecteerdeTile.positieInStreek);
+                    setToonConfrontatieBevestiging(false);
                   },
+                  onAnnuleer: () => setToonConfrontatieBevestiging(false),
                 }
               : undefined
           }
@@ -2254,10 +2272,12 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           onAnnuleerBouw={() => {
             setGeselecteerdeTile(null);
             setToonWachttorenBemanningsKeuze(false);
+            setToonConfrontatieBevestiging(false);
           }}
           onSluiten={() => {
             setGeselecteerdeTile(null);
             setToonWachttorenBemanningsKeuze(false);
+            setToonConfrontatieBevestiging(false);
           }}
         />
         {toonHistorie && (

@@ -289,6 +289,10 @@ export function volgendeBeurt(state: GameState): GameState {
     tweedeSettlerActieGedaanDitBeurt: false,
     tweedeSettlerGratisBewogenDitBeurt: false,
     verkenningGedaanDitBeurt: false,
+    // Confrontatie-cooldown (issue: "Militaire confrontatie"): een verlies
+    // deze beurt blokkeert alleen déze beurt een nieuwe poging, zie
+    // `confrontatieBezetteStreek` (militair.ts).
+    confrontatieGeblokkeerdTotVolgendeBeurt: false,
     settler,
   };
 }
