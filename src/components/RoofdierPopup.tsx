@@ -44,6 +44,8 @@ export default function RoofdierPopup({ event, onSluiten }: RoofdierPopupProps) 
           gap: "1rem",
           padding: "1.25rem 1.5rem",
           maxWidth: "32rem",
+          maxHeight: "85vh",
+          overflowY: "auto",
           textAlign: "center",
         }}
       >

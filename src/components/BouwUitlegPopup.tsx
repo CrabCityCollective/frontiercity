@@ -34,6 +34,8 @@ export default function BouwUitlegPopup({ titel, tekst, onDoorgaan }: BouwUitleg
           gap: "1rem",
           padding: "1.25rem 1.5rem",
           maxWidth: "32rem",
+          maxHeight: "85vh",
+          overflowY: "auto",
           textAlign: "center",
         }}
       >

@@ -167,6 +167,8 @@ export default function BouwPopup({
           padding: "1rem 1.25rem",
           fontSize: "0.9rem",
           minWidth: "min(28rem, 100%)",
+          maxHeight: "85vh",
+          overflowY: "auto",
         }}
       >
         {gekozenCategorie === null && (

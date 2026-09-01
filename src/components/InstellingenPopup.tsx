@@ -58,6 +58,8 @@ export default function InstellingenPopup({ onSluiten }: InstellingenPopupProps)
           gap: "1rem",
           padding: "1.25rem 1.5rem",
           maxWidth: "26rem",
+          maxHeight: "85vh",
+          overflowY: "auto",
           textAlign: "center",
         }}
       >
