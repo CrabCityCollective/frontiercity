@@ -5,9 +5,13 @@
 // niet meer op een vast beurtnummer, maar dynamisch zodra het bijbehorende
 // spelmechanisme zijn intrede doet — zie SettlerUitlegPopup,
 // VoedselWaarschuwingPopup, BoerderijKlaarUitlegPopup en MilitairUitlegPopup.
-// Alle uitleg-pop-ups samen zijn via het hoofdmenu aan/uit te zetten (zie
+// Deze uitleg-pop-ups zijn via het hoofdmenu aan/uit te zetten (zie
 // GameState.uitlegPopupsAan) — puur verklarende UI-content, geen nieuw
-// spelmechanisme (blijft binnen de MVP-scope uit CLAUDE.md).
+// spelmechanisme (blijft binnen de MVP-scope uit CLAUDE.md). Uitzondering:
+// VoedselWaarschuwingPopup hangt niet (meer) van die instelling af (issue:
+// "pop-up voedseltekort hoort bij de game, niet bij de uitleg") — een
+// dreigend voedseltekort is kerninhoud, geen uitleg, en blijft dus altijd
+// zichtbaar, zie GameRoot.tsx `toonVoedselWaarschuwingPopup`.
 
 export const OPENINGS_UITLEG_TITEL = "Bouwmaterialen";
 export const OPENINGS_UITLEG_TEKST =
