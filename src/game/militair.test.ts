@@ -9,9 +9,11 @@ import {
   berekenLegerkampLegerwaarde,
   confrontatieBezetteStreek,
   haalStrijderTerug,
+  isLegerkampBemand,
   kanConfrontatieBezetteStreek,
   onbemandeLegerkampPosities,
   onbemandeWachttorenPosities,
+  strijdersInLegerkamp,
   vijandelijkeWachttorenPosities,
   winkansConfrontatieBezetteStreek,
 } from "./militair";
@@ -298,6 +300,48 @@ test("bemanLegerkamp en onbemandeLegerkampPosities: dezelfde soort omkeerbare to
   state = haalStrijderTerug(state, "strijder-0");
   assert.equal(state.stad.strijders[0].legerkamp, undefined);
   assert.equal(berekenLegerkampLegerwaarde(state), 0);
+});
+
+test("bemanLegerkamp: een Legerkamp mag door meerdere strijders tegelijk bemand worden, en elk is individueel terug te halen (issue: Verschil legerkamp)", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    stad: { ...state.stad, strijders: [{ id: "strijder-0" }, { id: "strijder-1" }] },
+    streken: state.streken.map((streek, idx) =>
+      idx !== 0
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile) =>
+              tile.positieInStreek === 0 ? { ...tile, status: "actief" as const, improvement: LEGERKAMP } : tile
+            ),
+          }
+    ),
+  };
+
+  state = bemanLegerkamp(state, "strijder-0", 1, 0);
+  // Anders dan bij een Wachttoren blokkeert een al bemand Legerkamp een
+  // tweede toewijzing niet.
+  state = bemanLegerkamp(state, "strijder-1", 1, 0);
+
+  assert.deepEqual(state.stad.strijders[0].legerkamp, { hoogte: 1, positieInStreek: 0 });
+  assert.deepEqual(state.stad.strijders[1].legerkamp, { hoogte: 1, positieInStreek: 0 });
+  assert.equal(isLegerkampBemand(state.stad.strijders, 1, 0), true);
+  assert.deepEqual(
+    strijdersInLegerkamp(state.stad.strijders, 1, 0).map((s) => s.id),
+    ["strijder-0", "strijder-1"]
+  );
+  assert.equal(berekenLegerkampLegerwaarde(state), SOLDAAT.effect.waarde * 2);
+
+  // Elke strijder is individueel terug te halen, zonder de andere te raken.
+  state = haalStrijderTerug(state, "strijder-0");
+  assert.equal(state.stad.strijders[0].legerkamp, undefined);
+  assert.deepEqual(state.stad.strijders[1].legerkamp, { hoogte: 1, positieInStreek: 0 });
+  assert.deepEqual(
+    strijdersInLegerkamp(state.stad.strijders, 1, 0).map((s) => s.id),
+    ["strijder-1"]
+  );
+  assert.equal(berekenLegerkampLegerwaarde(state), SOLDAAT.effect.waarde);
 });
 
 test("vijandelijkeWachttorenPosities geeft alleen onthulde, nog niet opgeruimde vijandelijke Wachttoren-tiles terug", () => {

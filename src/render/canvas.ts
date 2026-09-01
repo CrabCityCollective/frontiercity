@@ -1842,26 +1842,6 @@ export function tekenSettlerBereikbaarMarkering(
   ctx.restore();
 }
 
-// Markeert een actieve, nog onbemande Legerkamp-tile tijdens het bemannen
-// (hoofdstuk 6, issue: "De Bezette Streek, missionaris en verkenner", Deel 5)
-// — zelfde patroon als `tekenSettlerBereikbaarMarkering` hierboven, maar
-// olijfgroen (net als `tekenLegerkampIcon`) zodat de twee klik-modi ook op de
-// kaart zelf te onderscheiden zijn.
-export function tekenLegerkampBereikbaarMarkering(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number
-): void {
-  ctx.save();
-  ctx.fillStyle = "rgba(120, 150, 70, 0.18)";
-  ctx.fillRect(x, y, size, size);
-  ctx.strokeStyle = "rgba(140, 170, 80, 0.9)";
-  ctx.lineWidth = Math.max(2, size * 0.045);
-  ctx.strokeRect(x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, size - ctx.lineWidth, size - ctx.lineWidth);
-  ctx.restore();
-}
-
 // Markeert een nog verhuld vakje van de actieve Bezette Streek tijdens
 // Verkenning (Deel 3) — zelfde patroon, maar de dreigende rossige kleur van
 // `tekenVerhuldeTile` zodat de markering aansluit bij wat er onder zit.
@@ -1998,7 +1978,6 @@ export function tekenWereld(
   plaatsingsAlleStreken?: boolean,
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
-  legerkampBereikbarePosities?: Settler[],
   verkenningBereikbarePosities?: Settler[],
   // Tweede settler (issue: "Altijd 2e settler" #236) — apart van `settler`
   // hierboven, altijd los getekend zodat beide tegelijk zichtbaar zijn.
@@ -2102,14 +2081,6 @@ export function tekenWereld(
 
       if (settlerBereikbarePosities?.some((positie) => positie.hoogte === streek.hoogte && positie.positieInStreek === col)) {
         tekenSettlerBereikbaarMarkering(ctx, x, y, tileSize);
-      }
-
-      if (
-        legerkampBereikbarePosities?.some(
-          (positie) => positie.hoogte === streek.hoogte && positie.positieInStreek === col
-        )
-      ) {
-        tekenLegerkampBereikbaarMarkering(ctx, x, y, tileSize);
       }
 
       if (

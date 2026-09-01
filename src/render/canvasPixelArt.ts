@@ -29,7 +29,6 @@ import {
   OCEAAN_BASIS,
   maakSeededRandom,
   tekenBeschikbaarMarkering,
-  tekenLegerkampBereikbaarMarkering,
   tekenSettlerBereikbaarMarkering,
   tekenStadNaam,
   tekenTileGrid,
@@ -1109,7 +1108,6 @@ export function tekenWereldPixelArt(
   plaatsingsAlleStreken?: boolean,
   settler?: Settler,
   settlerBereikbarePosities?: Settler[],
-  legerkampBereikbarePosities?: Settler[],
   verkenningBereikbarePosities?: Settler[],
   // Tweede settler (issue: "Altijd 2e settler" #236) — zelfde toevoeging als
   // in `tekenWereld` (canvas.ts).
@@ -1203,14 +1201,6 @@ export function tekenWereldPixelArt(
 
       if (settlerBereikbarePosities?.some((positie) => positie.hoogte === streek.hoogte && positie.positieInStreek === col)) {
         tekenSettlerBereikbaarMarkering(ctx, x, y, tileSize);
-      }
-
-      if (
-        legerkampBereikbarePosities?.some(
-          (positie) => positie.hoogte === streek.hoogte && positie.positieInStreek === col
-        )
-      ) {
-        tekenLegerkampBereikbaarMarkering(ctx, x, y, tileSize);
       }
 
       if (

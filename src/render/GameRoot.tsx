@@ -41,7 +41,6 @@ import VijandAanDeHorizonPopup from "@/components/VijandAanDeHorizonPopup";
 import VijandelijkHeiligdomPopup from "@/components/VijandelijkHeiligdomPopup";
 import VoedselBalansUitlegPopup from "@/components/VoedselBalansUitlegPopup";
 import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
-import WachttorenKiesBanner from "@/components/WachttorenKiesBanner";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
 import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
@@ -78,7 +77,7 @@ import { TWEEDE_SETTLER_MIN_STREEK } from "@/game/groeiEnRekrutering";
 import {
   berekenLegerwaarde,
   kanConfrontatieBezetteStreek,
-  onbemandeLegerkampPosities,
+  strijdersInLegerkamp,
   winkansConfrontatieBezetteStreek,
 } from "@/game/militair";
 import { onrustOpStreek } from "@/game/onrust";
@@ -425,10 +424,11 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // Courthouse-bemanning (issue: "Onrust, Saloon en Courthouse") — zelfde
   // keuze-modus-vlag als `toonWachttorenBemanningsKeuze` hierboven.
   const [toonCourthouseBemanningsKeuze, setToonCourthouseBemanningsKeuze] = useState(false);
-  // Legerkamp-toewijzingsflow (hoofdstuk 6, issue: "De Bezette Streek,
-  // missionaris en verkenner", Deel 5) — zelfde soort kies-modus als
-  // hierboven, maar voor een Legerkamp-tile i.p.v. een Wachttoren-tile.
-  const [legerkampKiesModusStrijderId, setLegerkampKiesModusStrijderId] = useState<string | null>(null);
+  // Legerkamp-bemannen (issue: "Verschil legerkamp" — herzien zodat bemannen,
+  // net als een Wachttoren, begint bij de tile zelf i.p.v. bij een strijder in
+  // het stadsmenu): zelfde keuze-modus-vlag als `toonWachttorenBemanningsKeuze`
+  // hierboven.
+  const [toonLegerkampBemanningsKeuze, setToonLegerkampBemanningsKeuze] = useState(false);
   // Confrontatie-bevestigingsflow (issue: "Militaire confrontatie" — eerst
   // een pop-up met de winkans/verlieskans tonen, pas na een expliciete
   // bevestiging de confrontatie daadwerkelijk uitvoeren): zelfde soort
@@ -483,7 +483,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     setGeselecteerdeTile(null);
     setToonWachttorenBemanningsKeuze(false);
     setToonCourthouseBemanningsKeuze(false);
-    setLegerkampKiesModusStrijderId(null);
+    setToonLegerkampBemanningsKeuze(false);
     setToonConfrontatieBevestiging(false);
     setToonStichtStadPopup(false);
     setToonStadMenuPopup(false);
@@ -533,6 +533,16 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             r.courthouse?.positieInStreek === geselecteerdeTile.positieInStreek
         )
       : undefined;
+  // Legerkamp-bemannen (issue: "Verschil legerkamp") — zelfde patroon als
+  // `geselecteerdeTileIsWachttoren`/`wachttorenBemanner` hierboven, maar een
+  // Legerkamp mag door meerdere strijders tegelijk bemand worden
+  // (`strijdersInLegerkamp` geeft daarom een lijst terug i.p.v. één strijder).
+  const geselecteerdeTileIsLegerkamp =
+    geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "legerkamp";
+  const legerkampBemanners =
+    geselecteerdeTileIsLegerkamp && geselecteerdeTile
+      ? strijdersInLegerkamp(state.stad.strijders, geselecteerdeTile.hoogte, geselecteerdeTile.positieInStreek)
+      : [];
   // Bezette Streek — klikbare kaart i.p.v. stadsscherm (issue: "Bezette streek
   // scherm"): een klik op een nog verhuld vakje, een onthulde vijandelijke
   // Wachttoren of een onthuld vijandelijk Heiligdom geeft de tile-info-pop-up
@@ -655,17 +665,9 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   const geselecteerdeSettlerActieGedaan =
     settlerSelectie === "primair" ? state.settlerActieGedaanDitBeurt : state.tweedeSettlerActieGedaanDitBeurt;
   const settlerKanBewegen =
-    Boolean(geselecteerdeSettler) &&
-    !geselecteerdeSettlerActieGedaan &&
-    !plaatsingsImprovement &&
-    !legerkampKiesModusStrijderId;
+    Boolean(geselecteerdeSettler) && !geselecteerdeSettlerActieGedaan && !plaatsingsImprovement;
   const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.streken, geselecteerdeSettler!) : [];
 
-  // Actieve, nog onbemande Legerkamp-tiles tijdens het bemannen (hoofdstuk 6,
-  // issue: "De Bezette Streek, missionaris en verkenner", Deel 5) — zelfde
-  // alleen-tijdens-de-modus-berekenen-patroon als `settlerBereikbarePosities`
-  // hierboven, en meteen ook de enige geldige klikdoelen in `handleTileClick`.
-  const legerkampBereikbarePosities = legerkampKiesModusStrijderId ? onbemandeLegerkampPosities(state) : [];
   // Nog verhulde vakjes van de actieve Bezette Streek (issue: "Bezette streek
   // scherm") — puur een highlight op de canvas, geen losse kies-modus meer:
   // een klik op zo'n vakje opent gewoon de tile-info-pop-up met de
@@ -678,22 +680,6 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   const verkenningBereikbarePosities = [...verhuldeBezetteStreekPosities(state), ...verhuldeWampanoagPosities(state)];
 
   function handleTileClick(hoogte: number, positieInStreek: number) {
-    // Legerkamp-kies-modus (hoofdstuk 6, issue: "De Bezette Streek,
-    // missionaris en verkenner") heeft voorrang op settler-verplaatsing/tile-
-    // selectie: een klik op een gehighlight, dus geldig, vakje voert de
-    // bijbehorende actie uit en sluit de modus af; een klik ernaast laat de
-    // modus openstaan zodat de speler opnieuw kan mikken.
-    if (legerkampKiesModusStrijderId) {
-      const isGeldigLegerkampDoel = legerkampBereikbarePosities.some(
-        (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
-      );
-      if (isGeldigLegerkampDoel) {
-        bemanLegerkamp(legerkampKiesModusStrijderId, hoogte, positieInStreek);
-        setLegerkampKiesModusStrijderId(null);
-      }
-      return;
-    }
-
     const isSettlerDoel = settlerBereikbarePosities.some(
       (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
     );
@@ -712,6 +698,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     }
 
     setToonWachttorenBemanningsKeuze(false);
+    setToonLegerkampBemanningsKeuze(false);
     setToonConfrontatieBevestiging(false);
     setGeselecteerdeTile({ hoogte, positieInStreek });
   }
@@ -1805,7 +1792,6 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           settler={state.settler}
           tweedeSettler={state.tweedeSettler}
           settlerBereikbarePosities={settlerBereikbarePosities}
-          legerkampBereikbarePosities={legerkampBereikbarePosities}
           verkenningBereikbarePosities={verkenningBereikbarePosities}
           stijl={stijl}
           tegelSet={campagne?.tegelSet}
@@ -1868,11 +1854,6 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             onStartCityVerbetering={startCityVerbetering}
             onVersnelCityVerbetering={versnelCityVerbeteringMetGoud}
             onStartRecrutering={startRecrutering}
-            onKiesStrijderVoorLegerkamp={(strijderId) => {
-              setLegerkampKiesModusStrijderId(strijderId);
-              setToonStadMenuPopup(false);
-            }}
-            onHaalTerug={haalStrijderTerug}
             onVersnelCiviel={versnelCivielMetGoud}
             onVersnelOpslagplaats={versnelOpslagplaatsMetGoud}
             onStartMissionarisRecrutering={startMissionarisRecrutering}
@@ -2058,9 +2039,6 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             onDoorgaan={() => markeerUitlegGezien("settlerWegSnelheid")}
           />
         )}
-        {legerkampKiesModusStrijderId && (
-          <WachttorenKiesBanner onAnnuleren={() => setLegerkampKiesModusStrijderId(null)} />
-        )}
         {toonStichtStadPopup && (
           <StichtStadPopup
             onBevestig={() => {
@@ -2137,7 +2115,6 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             !toonTutorialVoltooidPopup &&
             !toonStichtingsMomentPopup &&
             !toonBoonPopup &&
-            !legerkampKiesModusStrijderId &&
             !toonStichtStadPopup &&
             !toonStadMenuPopup &&
             !state.bouwKeuzeGedaanDitBeurt &&
@@ -2186,6 +2163,23 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
                   onStuurNaarHuis: () => {
                     if (wachttorenBemanner) haalStrijderTerug(wachttorenBemanner.id);
                     setGeselecteerdeTile(null);
+                  },
+                }
+              : undefined
+          }
+          legerkampVraag={
+            geselecteerdeTileIsLegerkamp && geselecteerdeTile
+              ? {
+                  toegewezenStrijders: legerkampBemanners,
+                  alleStrijders: state.stad.strijders,
+                  keuzeActief: toonLegerkampBemanningsKeuze,
+                  onStartKeuze: () => setToonLegerkampBemanningsKeuze(true),
+                  onKiesStrijder: (strijderId) => {
+                    bemanLegerkamp(strijderId, geselecteerdeTile.hoogte, geselecteerdeTile.positieInStreek);
+                    setToonLegerkampBemanningsKeuze(false);
+                  },
+                  onStuurNaarHuis: (strijderId) => {
+                    haalStrijderTerug(strijderId);
                   },
                 }
               : undefined
@@ -2272,11 +2266,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           onAnnuleerBouw={() => {
             setGeselecteerdeTile(null);
             setToonWachttorenBemanningsKeuze(false);
+            setToonLegerkampBemanningsKeuze(false);
             setToonConfrontatieBevestiging(false);
           }}
           onSluiten={() => {
             setGeselecteerdeTile(null);
             setToonWachttorenBemanningsKeuze(false);
+            setToonLegerkampBemanningsKeuze(false);
             setToonConfrontatieBevestiging(false);
           }}
         />

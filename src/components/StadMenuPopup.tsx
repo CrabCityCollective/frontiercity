@@ -21,8 +21,6 @@ interface StadMenuPopupProps {
   onStartCityVerbetering: (improvement: Improvement) => void;
   onVersnelCityVerbetering: () => void;
   onStartRecrutering: () => void;
-  onKiesStrijderVoorLegerkamp: (strijderId: string) => void;
-  onHaalTerug: (strijderId: string) => void;
   onVersnelCiviel: () => void;
   onVersnelOpslagplaats: () => void;
   onStartMissionarisRecrutering: () => void;
@@ -52,8 +50,6 @@ export default function StadMenuPopup({
   onStartCityVerbetering,
   onVersnelCityVerbetering,
   onStartRecrutering,
-  onKiesStrijderVoorLegerkamp,
-  onHaalTerug,
   onVersnelCiviel,
   onVersnelOpslagplaats,
   onStartMissionarisRecrutering,
@@ -100,8 +96,6 @@ export default function StadMenuPopup({
           tegenstanderSterkte={tegenstanderSterkte}
           onStartRecrutering={onStartRecrutering}
           onStartMissionarisRecrutering={onStartMissionarisRecrutering}
-          onKiesStrijderVoorLegerkamp={onKiesStrijderVoorLegerkamp}
-          onHaalTerug={onHaalTerug}
         />
         <CivielPaneel
           state={state}

@@ -52,15 +52,6 @@ interface GameCanvasProps {
   // die vakjes en stuurt een klik erop naar `onTileClick` als verplaatsing
   // i.p.v. tile-selectie (zie GameRoot).
   settlerBereikbarePosities?: Settler[];
-  // Actieve, nog onbemande Legerkamp-tiles tijdens het bemannen (hoofdstuk 6,
-  // issue: "De Bezette Streek, missionaris en verkenner", Deel 5) — zelfde
-  // patroon als `settlerBereikbarePosities` hierboven, maar voor de
-  // legerkamp-toewijs-flow: zolang dit gezet is markeert de canvas deze
-  // vakjes en stuurt een klik erop naar `onTileClick` als toewijzen (zie
-  // GameRoot). Wachttoren-bemannen loopt sinds issue "wachttorens bemannen"
-  // niet meer via zo'n kies-modus, maar via een klik op de wachttoren-tile
-  // zelf — geen highlight-vakjes hier meer voor nodig.
-  legerkampBereikbarePosities?: Settler[];
   // Nog verhulde vakjes van de actieve Bezette Streek tijdens Verkenning (Deel
   // 3) — zelfde patroon, maar dan voor de Verkenning-kies-modus.
   verkenningBereikbarePosities?: Settler[];
@@ -147,7 +138,6 @@ export default function GameCanvas({
   settler,
   tweedeSettler,
   settlerBereikbarePosities,
-  legerkampBereikbarePosities,
   verkenningBereikbarePosities,
   stijl,
   tegelSet,
@@ -187,7 +177,6 @@ export default function GameCanvas({
       plaatsingsAlleStreken,
       settler,
       settlerBereikbarePosities,
-      legerkampBereikbarePosities,
       verkenningBereikbarePosities,
       tweedeSettler,
       tegelSet,
@@ -202,7 +191,6 @@ export default function GameCanvas({
     settler,
     tweedeSettler,
     settlerBereikbarePosities,
-    legerkampBereikbarePosities,
     verkenningBereikbarePosities,
     stijl,
     tegelSet,
