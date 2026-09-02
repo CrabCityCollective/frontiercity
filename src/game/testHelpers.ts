@@ -226,8 +226,9 @@ export function metWampanoagLaagEnVoorraadVoorVerkenning(): GameState {
 
 // Alle vijf Wampanoag-vakjes onthuld — de drie handelsvakjes én de twee
 // decoratieve tentjes (issue "Wampanoag kamp uitbreiding") — met genoeg
-// gereedschap/goud om meteen te kunnen handelen (issue "Smederij inactief
-// zetten": erts is geen geldige Wampanoag-handelskeuze meer) — gedeelde opzet
+// gereedschap om meteen te kunnen handelen (issue "Smederij inactief zetten":
+// erts is geen geldige Wampanoag-handelskeuze meer; issue "Handel versimpelen":
+// goud is dat sindsdien ook niet meer) — gedeelde opzet
 // voor de M21f-handelstests (opdracht-wampanoag-opening.md §6), bouwt voort
 // op `metWampanoagLaagEnVoorraadVoorVerkenning` hierboven. Stuurt op elke
 // positie een verkenner en telt zijn tellertje meteen volledig af, met de

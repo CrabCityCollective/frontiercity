@@ -14,6 +14,14 @@ blijft staan (§7) — staat nog steeds, ongewijzigd. De paragrafen hieronder
 zijn met dit voorbehoud gelezen te worden; ze zijn historisch gelaten in
 plaats van herschreven.
 
+**Herzien (issue "Handel versimpelen")**: de handel op §6 hieronder gebruikte
+tot deze issue twee handelswaar-invoeren — gereedschap voor Maïsboerderij/
+Beverjachthut, goud voor de Opperhoofdtent. Dat is versimpeld: goud is als
+handelswaar-invoer geschrapt, gereedschap is sindsdien de enige invoer voor
+alle drie de handelsvakjes. De tabel in §6 en de rest van deze opdracht zijn
+met dit voorbehoud gelezen te worden; ze zijn historisch gelaten in plaats
+van herschreven.
+
 **Herzien (issue "Wampanoag streek pas helemaal onthuld na handel")**: twee
 losse omslagpunten die voorheen aan hetzelfde moment (de drie handelsvakjes
 ontdekt) hingen, zijn uit elkaar getrokken. Ten eerste ontgrendelt/onthult de
@@ -162,7 +170,8 @@ Boerderij/vergelijkbaar).
 - **Geen aparte Handelaar-unit.** Klik op een **onthuld** Wampanoag-vakje →
   pop-up met grondstofkeuze:
   - Maïsboerderij / Beverjachthut: erts **of** gereedschap
-  - Opperhoofdtent: goud
+  - ~~Opperhoofdtent: goud~~ **Herzien (issue "Handel versimpelen")**: gereedschap,
+    net als de andere twee vakjes — goud is geschrapt als handelswaar-invoer.
 - Conversie **1:1**, **start direct vanaf de klik-beurt**, geen opstart-
   vertraging.
 - Elke beurt: trekt gekozen grondstof uit gedeelde opslag, voegt 1 eenheid

@@ -816,6 +816,7 @@ De hoofdtekst hierboven beschrijft steeds alleen de huidige stand van het ontwer
 
 **Hoofdstuk 9 — Amerikaanse frontier-campagne, openingsfase**
 - De Going West-openingsfase (streek 1-6, campaigns/going-west/opdracht-wampanoag-opening.md) liet streek-ontgrendeling en de zichtbaarheid van de Cultureel-categorie eerst op wetenschap draaien tot de Wampanoag-3-3-3-handelsdrempel, met een omslag naar cultuur daarna (`GameState.ontgrendelResource`). Teruggedraaid naar altijd-cultuur, net als de tutorial — issue: "Weer gewoon cultuur voor ontgrendeling". Wetenschap drijft sindsdien alleen nog de technologieboom en de Verkenner-actie; de 3-3-3-handelsdrempel bepaalt nog wel wanneer de gecapte stadsverbeteringen-pool naast de Smederij opengaat.
+- De Wampanoag-handel (§6, opdracht-wampanoag-opening.md) versimpeld: de Opperhoofdtent ruilde eerst goud tegen wampum, ruilt sindsdien gereedschap — net als de Maïsboerderij/Beverjachthut. Gereedschap is nu de enige handelswaar-invoer voor alle drie de handelsvakjes; goud speelt in de Wampanoag-handel geen rol meer — issue: "Handel versimpelen".
 
 **Hoofdstuk 3/14 — goud**
 - Goudader/goudmijn, Markt en rush-bouwen met goud (5 goud per weggekochte bouwbeurt) toegevoegd — issue: "toevoeging Goud".

@@ -79,11 +79,13 @@ export type WampanoagInhoud = "maisboerderij" | "beverjachthut" | "opperhoofdten
 // Grondstofkeuze voor de handelsconversie op een onthuld Wampanoag-vakje
 // (M21f, opdracht-wampanoag-opening.md §6): welke grondstof de speler kiest
 // om elke beurt 1:1 om te zetten in het bijbehorende handelswaar
-// (`wampanoag.ts`: `WAMPANOAG_GOED_VOOR_INHOUD`). Maïsboerderij/Beverjachthut
-// bieden alleen gereedschap aan (issue: "Smederij inactief zetten" — erts is
-// hier bewust geschrapt als keuze, zodat de Smederij de enige erts-afzet
-// blijft), Opperhoofdtent alleen goud (opdracht §6, tabel).
-export type WampanoagHandelKeuze = "gereedschap" | "goud";
+// (`wampanoag.ts`: `WAMPANOAG_GOED_VOOR_INHOUD`). Gereedschap is de enige
+// handelswaar voor alle drie de handelsvakjes (issue: "Smederij inactief
+// zetten" schrapte eerst erts als keuze voor Maïsboerderij/Beverjachthut,
+// issue "Handel versimpelen" schrapte daarna ook goud als keuze voor de
+// Opperhoofdtent) — nog steeds een apart type i.p.v. hergebruik van
+// `ResourceType`, want gereedschap zelf is geen `ResourceType`/`MateriaalType`.
+export type WampanoagHandelKeuze = "gereedschap";
 
 export interface EffectDefinition {
   type: string;

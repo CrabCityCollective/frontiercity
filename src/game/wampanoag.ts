@@ -172,15 +172,17 @@ export function verwerkWampanoagVerkenningInGang(state: GameState): GameState {
 // Geldige handelskeuzes per Wampanoag-inhoud (opdracht §6, tabel; herzien
 // door issue "Smederij inactief zetten": erts is als keuze geschrapt, zodat
 // gereedschap de enige handelswaar is voor Maïsboerderij/Beverjachthut en de
-// Smederij de enige plek blijft die nog erts omzet). Opperhoofdtent
-// (Cultureel/diplomatiek van aard, opdracht §2) blijft alleen goud.
+// Smederij de enige plek blijft die nog erts omzet). Herzien door issue
+// "Handel versimpelen": de Opperhoofdtent ruilde daarna nog goud
+// (Cultureel/diplomatiek van aard, opdracht §2), maar ruilt sindsdien ook
+// gereedschap — gereedschap is nu de enige handelswaar over de hele linie.
 // `tentje` (issue "Wampanoag kamp uitbreiding") krijgt bewust een lege lijst
 // — puur decoratief, "handelt niet" — zodat `stelWampanoagHandelIn` er nooit
 // een keuze op toelaat en de handels-UI (TileInfoPopup) er nooit verschijnt.
 const WAMPANOAG_HANDEL_OPTIES: Record<WampanoagInhoud, WampanoagHandelKeuze[]> = {
   maisboerderij: ["gereedschap"],
   beverjachthut: ["gereedschap"],
-  opperhoofdtent: ["goud"],
+  opperhoofdtent: ["gereedschap"],
   tentje: [],
 };
 
@@ -196,13 +198,12 @@ const WAMPANOAG_GOED_VOOR_INHOUD: Partial<Record<WampanoagInhoud, "bevervellen" 
   opperhoofdtent: "wampum",
 };
 
-// Weergavelabels voor de grondstofkeuze-knoppen (TileInfoPopup:
+// Weergavelabel voor de grondstofkeuze-knop (TileInfoPopup:
 // `wampanoagHandelVraag`) — "gereedschap" is geen `ResourceType`/
 // `MateriaalType`, dus geen hergebruik van `MATERIAAL_LABELS` (improvements.ts)
-// mogelijk voor deze twee samen.
+// mogelijk.
 export const WAMPANOAG_HANDEL_KEUZE_LABELS: Record<WampanoagHandelKeuze, string> = {
   gereedschap: "Gereedschap",
-  goud: "Goud",
 };
 
 // Weergavelabels voor de drie handelswaren, gebruikt door WampanoagPaneel.tsx
@@ -256,12 +257,14 @@ export function stelWampanoagHandelIn(
 }
 
 // Past elke beurt de lopende handelsconversies toe op alle onthulde
-// Wampanoag-vakjes met een actieve keuze (opdracht §6): 1 eenheid van de
-// gekozen grondstof uit de voorraad, 1 eenheid handelswaar erbij. Onvoldoende
-// voorraad = geen conversie die beurt, geen negatieve waarden — zelfde regel
-// als de Smederij-conversie (productie.ts: "zelfde regel als
-// tribuut-afhandeling"). Elk vakje wordt onafhankelijk verwerkt, zodat één
-// vakje zonder voorraad de handel op de andere twee niet blokkeert.
+// Wampanoag-vakjes met een actieve keuze (opdracht §6, herzien door issue
+// "Handel versimpelen": gereedschap is de enige handelswaar, dus geen
+// grondstofkeuze meer nodig): 1 gereedschap uit de voorraad, 1 eenheid
+// handelswaar erbij. Onvoldoende gereedschap = geen conversie die beurt,
+// geen negatieve waarden — zelfde regel als de Smederij-conversie
+// (productie.ts: "zelfde regel als tribuut-afhandeling"). Elk vakje wordt
+// onafhankelijk verwerkt, zodat één vakje zonder gereedschap de handel op de
+// andere twee niet blokkeert.
 export function verwerkWampanoagHandel(state: GameState): GameState {
   const streek = vindWampanoagStreek(state);
   if (!streek) return state;
@@ -271,7 +274,6 @@ export function verwerkWampanoagHandel(state: GameState): GameState {
   );
   if (handelendeTiles.length === 0) return state;
 
-  const voorraad = { ...state.voorraad };
   let gereedschap = state.gereedschap;
   let bevervellen = state.bevervellen;
   let mais = state.mais;
@@ -285,15 +287,8 @@ export function verwerkWampanoagHandel(state: GameState): GameState {
   let wampumOntvangen = state.wampumOntvangen;
 
   for (const tile of handelendeTiles) {
-    const keuze = tile.wampanoagHandelKeuze!;
-
-    if (keuze === "gereedschap") {
-      if (gereedschap < 1) continue;
-      gereedschap -= 1;
-    } else {
-      if (voorraad[keuze] < 1) continue;
-      voorraad[keuze] -= 1;
-    }
+    if (gereedschap < 1) continue;
+    gereedschap -= 1;
 
     const goed = WAMPANOAG_GOED_VOOR_INHOUD[tile.wampanoagInhoud!];
     if (goed === "bevervellen") {
@@ -313,7 +308,6 @@ export function verwerkWampanoagHandel(state: GameState): GameState {
 
   return {
     ...state,
-    voorraad,
     gereedschap,
     bevervellen,
     mais,

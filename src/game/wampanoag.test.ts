@@ -235,10 +235,13 @@ test("isBebouwbaarLeeg sluit elk nog verhuld Wampanoag-vakje uit, ondanks status
 // Herzien door issue "Smederij inactief zetten": erts is geschrapt als
 // Wampanoag-handelskeuze, zodat gereedschap de enige handelswaar is voor
 // Maïsboerderij/Beverjachthut en de Smederij de enige erts-afzet blijft.
-test("wampanoagHandelOpties: Maïsboerderij/Beverjachthut bieden alleen gereedschap, Opperhoofdtent alleen goud, tentje handelt niet", () => {
+// Herzien door issue "Handel versimpelen": de Opperhoofdtent ruilde daarna
+// nog goud, maar ruilt sindsdien ook gereedschap — er is nu nog maar één
+// handelswaar-invoer over de hele linie.
+test("wampanoagHandelOpties: alle drie handelsvakjes bieden alleen gereedschap, tentje handelt niet", () => {
   assert.deepEqual(wampanoagHandelOpties("maisboerderij"), ["gereedschap"]);
   assert.deepEqual(wampanoagHandelOpties("beverjachthut"), ["gereedschap"]);
-  assert.deepEqual(wampanoagHandelOpties("opperhoofdtent"), ["goud"]);
+  assert.deepEqual(wampanoagHandelOpties("opperhoofdtent"), ["gereedschap"]);
   assert.deepEqual(wampanoagHandelOpties("tentje"), [], "puur decoratief (issue 'Wampanoag kamp uitbreiding')");
 });
 
@@ -246,19 +249,21 @@ test("stelWampanoagHandelIn zet/wijzigt/pauzeert de keuze, alleen op een onthuld
   let state = metWampanoagLaagOnthuld();
   const streek4 = () => state.streken.find((l) => l.hoogte === WAMPANOAG_STREEK_HOOGTE)!;
 
-  // Nog verhuld (positie 0 heeft geen Wampanoag-inhoud) of een ongeldige
-  // keuze voor dit vakje — genegeerd, geen effect.
+  // Nog verhuld (positie 0 heeft geen Wampanoag-inhoud) — genegeerd, geen effect.
   const zonderInhoud = stelWampanoagHandelIn(state, 0, "gereedschap");
   assert.equal(zonderInhoud, state, "positie zonder wampanoagInhoud heeft geen effect");
-  const ongeldigeKeuze = stelWampanoagHandelIn(state, 4, "gereedschap"); // opperhoofdtent, alleen goud
-  assert.equal(ongeldigeKeuze, state, "gereedschap is geen geldige keuze voor de Opperhoofdtent");
   // Tentje (issue "Wampanoag kamp uitbreiding") heeft een lege optielijst —
   // ook al onthuld, geen enkele keuze is geldig.
-  const tentjeKeuze = stelWampanoagHandelIn(state, 3, "goud");
+  const tentjeKeuze = stelWampanoagHandelIn(state, 3, "gereedschap");
   assert.equal(tentjeKeuze, state, "een tentje handelt niet, geen enkele keuze is geldig");
 
   state = stelWampanoagHandelIn(state, 2, "gereedschap"); // maisboerderij
   assert.equal(streek4().tiles[2].wampanoagHandelKeuze, "gereedschap");
+
+  // Issue "Handel versimpelen": de Opperhoofdtent accepteert sindsdien ook
+  // gereedschap, waar dat voorheen alleen goud was.
+  state = stelWampanoagHandelIn(state, 4, "gereedschap"); // opperhoofdtent
+  assert.equal(streek4().tiles[4].wampanoagHandelKeuze, "gereedschap");
 
   // Omkeerbaar: pauzeren met `undefined`.
   state = stelWampanoagHandelIn(state, 2, undefined);
@@ -382,7 +387,7 @@ test("verwerkWampanoagFaseAfsluiting is een no-op in de tutorial (geen Wampanoag
 test("volgendeBeurt ontgrendelt de Wampanoag-streek zodra de handel deze beurt de 3-3-3-drempel bereikt", () => {
   let state = metWampanoagLaagOnthuld();
   state = { ...state, bevervellen: 3, mais: 3, wampum: 2, voedsel: 10_000 };
-  state = stelWampanoagHandelIn(state, 4, "goud"); // opperhoofdtent -> wampum, de laatste stap naar 3
+  state = stelWampanoagHandelIn(state, 4, "gereedschap"); // opperhoofdtent -> wampum, de laatste stap naar 3
 
   state = volgendeBeurt(state);
 
