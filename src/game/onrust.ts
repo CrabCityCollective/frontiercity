@@ -76,19 +76,20 @@ function heeftBemandCourthouse(rechters: Rechter[], streek: Streek): boolean {
   );
 }
 
-// De drie hoogten die een bemand Courthouse beschermt (issue, sectie 3): de
-// eigen streek, de streek erboven én de streek eronder — anders dan de
-// Wachttoren (die alleen naar beneden beschermt, zie
-// `vindBeschermendeWachttoren` in indringersEnDieren.ts) dus in beide
-// richtingen.
+// De drie hoogten die een bemand Courthouse beschermt (issue "Courthouse
+// streken"): de eigen streek en de twee streken direct erboven — anders dan
+// de Wachttoren (die naar beneden beschermt, zie `vindBeschermendeWachttoren`
+// in indringersEnDieren.ts) dus uitsluitend omhoog, en twee streken diep in
+// plaats van één.
 function beschermdeHoogtenDoorCourthouse(courthouseStreekHoogte: number): number[] {
-  return [courthouseStreekHoogte - 1, courthouseStreekHoogte, courthouseStreekHoogte + 1];
+  return [courthouseStreekHoogte, courthouseStreekHoogte + 1, courthouseStreekHoogte + 2];
 }
 
-// Onrust op `streek` — 0 zolang een bemand Courthouse op deze, de vorige of
-// de volgende streek deze streek beschermt (issue, sectie 3: "houdt onrust
-// op eigen streek + streek erboven + streek eronder doorlopend op 0"), anders
-// het aantal onrust-veroorzakende improvements voorbij `ONRUST_DREMPEL`,
+// Onrust op `streek` — 0 zolang een bemand Courthouse op deze streek of op
+// een van de twee streken direct eronder deze streek beschermt (issue
+// "Courthouse streken": "de courthouse zijn eigen streek en de 2 streken
+// daarboven voorziet ... daar gaat de onrust nooit boven 0"), anders het
+// aantal onrust-veroorzakende improvements voorbij `ONRUST_DREMPEL`,
 // verminderd met `SALOON_ONRUST_VERMINDERING` zolang er een actieve Saloon
 // op deze streek staat.
 export function onrustOpStreek(streken: Streek[], rechters: Rechter[], streek: Streek): number {

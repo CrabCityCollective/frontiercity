@@ -127,7 +127,7 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     titel: "Onrust",
     categorie: "Streken",
     tekst:
-      "Ontstaat zodra een streek meer dan vier gebouwen draagt — elk gebouw daarna verhoogt de onrust met 1 en verlaagt de productie van alle landverbeteringen op die streek. Gebouwen die volledig uitgeput zijn (ghost towns) tellen niet meer mee, dus onrust op oudere streken zakt vanzelf terug naarmate ze uitputten. Een Saloon verlaagt de onrust op zijn eigen streek met 1; een bemand Courthouse houdt de onrust op zijn eigen streek en de streken direct erboven en eronder blijvend op 0.",
+      "Ontstaat zodra een streek meer dan vier gebouwen draagt — elk gebouw daarna verhoogt de onrust met 1 en verlaagt de productie van alle landverbeteringen op die streek. Gebouwen die volledig uitgeput zijn (ghost towns) tellen niet meer mee, dus onrust op oudere streken zakt vanzelf terug naarmate ze uitputten. Een Saloon verlaagt de onrust op zijn eigen streek met 1; een bemand Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven blijvend op 0.",
   },
   // Grondstoffen
   {
@@ -202,7 +202,7 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     titel: "Courthouse",
     categorie: "Gebouwen",
     tekst:
-      "Civiele landverbetering (Going West), duurder dan de Saloon. Bouwbaar zonder voorwaarde, maar heeft pas effect zodra een opgeleide rechter er zitting neemt — houdt dan de onrust op zijn eigen streek en de streken direct erboven en eronder blijvend op 0, zolang bemand.",
+      "Civiele landverbetering (Going West), duurder dan de Saloon. Bouwbaar zonder voorwaarde, maar heeft pas effect zodra een opgeleide rechter er zitting neemt — houdt dan de onrust op zijn eigen streek en de 2 streken direct erboven blijvend op 0, zolang bemand.",
   },
   {
     id: "grote-tempel",
@@ -329,7 +329,7 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     titel: "Rechter",
     categorie: "Eenheden & acties",
     tekst:
-      "Trainbare eenheid (Going West) die aan een Courthouse toegewezen kan worden om onrust te onderdrukken — zelfde bemannings-patroon als een strijder op een wachttoren: instant en omkeerbaar.",
+      "Trainbare eenheid (Going West) die aan een Courthouse toegewezen kan worden om onrust op die streek en de 2 streken direct erboven te onderdrukken — zelfde bemannings-patroon als een strijder op een wachttoren: instant en omkeerbaar.",
   },
   {
     id: "roofdieren",
