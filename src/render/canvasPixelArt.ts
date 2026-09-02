@@ -204,7 +204,7 @@ function tekenBoerderijPixel(ctx: CanvasRenderingContext2D, seed: number): void 
   }
 }
 
-function tekenHeiligdomPixel(ctx: CanvasRenderingContext2D): void {
+function tekenHeiligdomTutorialPixel(ctx: CanvasRenderingContext2D): void {
   const baseY = 14;
   schaduw(ctx, 8, baseY + 1, 7);
 
@@ -230,11 +230,57 @@ function tekenHeiligdomPixel(ctx: CanvasRenderingContext2D): void {
   vlijn(ctx, 8, 8, 9, "rgba(154, 74, 138, 0.9)");
 }
 
+// "Kapel" (issue: "Icoontjes going west") — pixel-art variant van `tekenKapel`
+// in canvas.ts: eigen Going West-weergave van het Heiligdom, losstaand van
+// `tekenHeiligdomTutorialPixel` hierboven (CLAUDE.md: tutorial- en Going
+// West-content blijven gescheiden). Klein houten kapelletje met kruis en een
+// warm kaarslicht-venstertje i.p.v. de paarse rune-steen.
+function tekenKapelPixel(ctx: CanvasRenderingContext2D): void {
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 7);
+
+  // Wanden.
+  hlijn(ctx, 6, 10, baseY - 6, "#4a3a28");
+  for (let ry = baseY - 5; ry <= baseY; ry++) {
+    hlijn(ctx, 6, 10, ry, "#4a3a28");
+  }
+  ctx.strokeStyle = "#241a10";
+  ctx.strokeRect(6, baseY - 6, 4, 6);
+
+  // Puntdak.
+  const dakRijen = 4;
+  for (let i = 0; i < dakRijen; i++) {
+    const half = Math.round((i / (dakRijen - 1)) * 3);
+    blokrij(ctx, 8, baseY - 6 - dakRijen + i, half, "#33261a");
+  }
+
+  // Kruis op de nok.
+  vlijn(ctx, 8, baseY - 12, baseY - 10, "#211812");
+  hlijn(ctx, 7, 9, baseY - 11, "#211812");
+
+  // Kaarsgloed-venster.
+  ctx.fillStyle = "rgba(224, 168, 88, 0.4)";
+  p(ctx, 7, baseY - 4, "rgba(224, 168, 88, 0.4)");
+  p(ctx, 9, baseY - 4, "rgba(224, 168, 88, 0.4)");
+  p(ctx, 8, baseY - 3, "#e0a858");
+
+  // Deur.
+  vlijn(ctx, 8, baseY - 2, baseY, "#2a1e14");
+}
+
+function tekenHeiligdomPixel(ctx: CanvasRenderingContext2D, tegelSet?: string): void {
+  if (tegelSet === undefined) {
+    tekenHeiligdomTutorialPixel(ctx);
+    return;
+  }
+  tekenKapelPixel(ctx);
+}
+
 // `bemand` (nieuwe Wachttoren-functie, hoofdstuk 6, issue: "ik wil ook in het
 // wachttoren icoontje zien of er een soldaat in zit") — zelfde onderscheid
 // als `tekenWachttoren` in canvas.ts: een gedempte grijze vlag als hij leeg
 // (dus inactief) staat, een warme vlag + strijder-silhouet zodra bemand.
-function tekenWachttorenPixel(ctx: CanvasRenderingContext2D, bemand: boolean): void {
+function tekenWachttorenTutorialPixel(ctx: CanvasRenderingContext2D, bemand: boolean): void {
   const baseY = 14;
   schaduw(ctx, 8, baseY + 1, 8);
 
@@ -255,6 +301,52 @@ function tekenWachttorenPixel(ctx: CanvasRenderingContext2D, bemand: boolean): v
     p(ctx, 8, 4, "#2a2016");
     vlijn(ctx, 8, 5, 6, "#2a2016");
   }
+}
+
+// "Blokhuis" (issue: "Icoontjes going west") — pixel-art variant van
+// `tekenBlokhuis` in canvas.ts: eigen Going West-weergave van de Wachttoren,
+// losstaand van `tekenWachttorenTutorialPixel` hierboven. Gedrongen blokhut
+// met overstekende bovenverdieping i.p.v. de slanke uitkijktoren — zelfde
+// `bemand`-leesbaarheidspatroon (gedempt schietgat vs. warme lantaarngloed +
+// vlag).
+function tekenBlokhuisPixel(ctx: CanvasRenderingContext2D, bemand: boolean): void {
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 8);
+
+  // Onderverdieping.
+  hlijn(ctx, 6, 10, baseY - 6, "#4a3a28");
+  for (let ry = baseY - 5; ry <= baseY; ry++) {
+    hlijn(ctx, 6, 10, ry, "#4a3a28");
+  }
+  ctx.strokeStyle = "#241a10";
+  ctx.strokeRect(6, baseY - 6, 4, 6);
+
+  // Overstekende bovenverdieping (breder).
+  hlijn(ctx, 4, 12, baseY - 9, "#5a4630");
+  hlijn(ctx, 4, 12, baseY - 8, "#5a4630");
+  hlijn(ctx, 4, 12, baseY - 7, "#5a4630");
+  ctx.strokeStyle = "#241a10";
+  ctx.strokeRect(4, baseY - 9, 8, 3);
+
+  // Plat dak.
+  hlijn(ctx, 3, 13, baseY - 10, "#33261a");
+
+  // Schietgat: gedempt leeg (inactief), warm lantaarnlicht bemand.
+  p(ctx, 8, baseY - 8, bemand ? "#e0a858" : "#241a10");
+
+  // Vlaggenmast.
+  vlijn(ctx, 8, 1, baseY - 10, "#241a10");
+  const vlagKleur = bemand ? "#c9552f" : "#78716a";
+  blokrij(ctx, 9, 1, 2, vlagKleur);
+  blokrij(ctx, 9, 2, 2, vlagKleur);
+}
+
+function tekenWachttorenPixel(ctx: CanvasRenderingContext2D, bemand: boolean, tegelSet?: string): void {
+  if (tegelSet === undefined) {
+    tekenWachttorenTutorialPixel(ctx, bemand);
+    return;
+  }
+  tekenBlokhuisPixel(ctx, bemand);
 }
 
 // Lopend oer-poppetje (issue: "Andere skin oer settler") — pixel-art variant
@@ -627,14 +719,14 @@ function tekenCourthousePixel(ctx: CanvasRenderingContext2D, bemand: boolean): v
 
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
-  (ctx: CanvasRenderingContext2D, seed: number, bemand: boolean) => void
+  (ctx: CanvasRenderingContext2D, seed: number, bemand: boolean, tegelSet?: string) => void
 > = {
   houtkap: tekenHoutkapPixel,
   steengroeve: tekenSteengroevePixel,
   mijn: (ctx) => tekenMijnPixel(ctx),
   boerderij: tekenBoerderijPixel,
-  heiligdom: (ctx) => tekenHeiligdomPixel(ctx),
-  wachttoren: (ctx, seed, bemand) => tekenWachttorenPixel(ctx, bemand),
+  heiligdom: (ctx, seed, bemand, tegelSet) => tekenHeiligdomPixel(ctx, tegelSet),
+  wachttoren: (ctx, seed, bemand, tegelSet) => tekenWachttorenPixel(ctx, bemand, tegelSet),
   "offer-altaar": (ctx) => tekenOfferAltaarPixel(ctx),
   legerkamp: (ctx) => tekenLegerkampPixel(ctx),
   "vijandelijke-wachttoren": (ctx) => tekenVijandelijkeWachttorenPixel(ctx),
@@ -651,10 +743,16 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   courthouse: (ctx, seed, bemand) => tekenCourthousePixel(ctx, bemand),
 };
 
-function tekenLandImprovementPixel(ctx: CanvasRenderingContext2D, id: string, seed: number, bemand: boolean): void {
+function tekenLandImprovementPixel(
+  ctx: CanvasRenderingContext2D,
+  id: string,
+  seed: number,
+  bemand: boolean,
+  tegelSet?: string
+): void {
   const tekenaar = LAND_IMPROVEMENT_TEKENAARS[id];
   if (tekenaar) {
-    tekenaar(ctx, seed, bemand);
+    tekenaar(ctx, seed, bemand, tegelSet);
     return;
   }
   ctx.fillStyle = "#8a8a4a";
@@ -1021,7 +1119,8 @@ function tekenActieveTilePixel(
   // `tekenWereldPixelArt` hieronder / canvas.ts (`tekenActieveTile`) voor de
   // volledige toelichting.
   alleStreken: Streek[],
-  heeftOnrust: boolean
+  heeftOnrust: boolean,
+  tegelSet?: string
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrondPixel(ctx, terreinType, seed);
@@ -1052,7 +1151,7 @@ function tekenActieveTilePixel(
     const bemand =
       (tile.improvement.id === "wachttoren" && isWachttorenBemand(stad.strijders, hoogte, col)) ||
       (tile.improvement.id === "courthouse" && isCourthouseBemand(stad.rechters, hoogte, col));
-    tekenLandImprovementPixel(ctx, tile.improvement.id, seed, bemand);
+    tekenLandImprovementPixel(ctx, tile.improvement.id, seed, bemand, tegelSet);
 
     if (tile.beurtenTotUitputting !== undefined) {
       ctx.fillStyle = "rgba(20, 16, 10, 0.7)";
@@ -1166,7 +1265,7 @@ export function tekenWereldPixelArt(
           tekenVerhuldeTilePixel(tileCtx, tileSeed(col, streek.hoogte));
         } else {
           const verbonden = isTileVerbondenMetStad(alleStreken, streek.hoogte, col);
-          tekenActieveTilePixel(tileCtx, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust);
+          tekenActieveTilePixel(tileCtx, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust, tegelSet);
           if (tile.improvement?.soort === "city") {
             stadPositie = { x, y };
           }
@@ -1180,7 +1279,7 @@ export function tekenWereldPixelArt(
         tekenVooruitkijkTilePixel(tileCtx, streek.terreinType);
       } else {
         const verbonden = isTileVerbondenMetStad(alleStreken, streek.hoogte, col);
-        tekenActieveTilePixel(tileCtx, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust);
+        tekenActieveTilePixel(tileCtx, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust, tegelSet);
         if (streek.tiles[col].improvement?.soort === "city") {
           stadPositie = { x, y };
         }
