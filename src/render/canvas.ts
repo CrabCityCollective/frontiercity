@@ -1338,7 +1338,7 @@ function tekenWampanoagTentje(ctx: CanvasRenderingContext2D, x: number, y: numbe
 // dak uit om de zaak groter te laten ogen. Klapdeurtjes en een uithangbord
 // maken het silhouet ook zonder tile-info-popup leesbaar als saloon i.p.v.
 // een gewoon huisje. Geen bemand-status — de Saloon werkt altijd zolang hij
-// actief staat (zie ONRUST_MIN_STREEK-comment in improvements.ts).
+// actief staat.
 function tekenSaloon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
   const baseY = y + size * 0.86;
   const cx = x + size * 0.5;

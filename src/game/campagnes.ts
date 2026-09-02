@@ -104,9 +104,10 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
     smederijGebouwdPopupTekst:
       "Nu we gereedschap kunnen smeden, is onze nederzetting weer zelfvoorzienend genoeg. Je kunt vanaf nu " +
       "weer alle overige stadsverbeteringen bouwen.",
-    // Onrust (issue: "Onrust, Saloon en Courthouse"): verschijnt zodra streek
-    // `ONRUST_MIN_STREEK` (improvements.ts) voor het eerst ontgrendelt — het
-    // moment waarop Saloon en Courthouse allebei beschikbaar komen.
+    // Onrust (issue: "Onrust, Saloon en Courthouse"): verschijnt zodra een
+    // streek voor het eerst daadwerkelijk onrust draagt (`onrustOpStreek`,
+    // onrust.ts) — Saloon en Courthouse zijn zelf al vanaf streek 1
+    // beschikbaar (issue: "Saloon en courthouse direct beschikbaar").
     onrustUitlegPopupTitel: "Onrust in de nederzetting",
     onrustUitlegPopupTekst:
       "Onze streken raken vol. Zodra een streek meer dan drie gebouwen draagt, groeit er onrust die de " +

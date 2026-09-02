@@ -7,12 +7,11 @@ import {
   GROTE_WOONWIJK,
   improvementNaam,
   NIEUWE_SETTLER,
-  ONRUST_MIN_STREEK,
   RECHTER,
   WOONWIJK,
 } from "@/game/improvements";
 import { City, GameState } from "@/game/types";
-import { hoogsteOntgrendeldeStreek, VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "@/game/world";
+import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "@/game/world";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
 
@@ -67,10 +66,9 @@ export default function CivielPaneel({
   const campagne = campagneConfig(state.campagneId);
 
   // Rechter opleiden (issue: "Onrust, Saloon en Courthouse"): alleen relevant
-  // vanaf streek 8 van Going West — hetzelfde introductiepunt als Saloon/
-  // Courthouse zelf (improvements.ts: `ONRUST_MIN_STREEK`).
-  const kanRechterTrainen =
-    state.campagneId === "going-west" && hoogsteOntgrendeldeStreek(state.streken) >= ONRUST_MIN_STREEK;
+  // in Going West, net als Saloon/Courthouse zelf direct vanaf streek 1
+  // beschikbaar (issue: "Saloon en courthouse direct beschikbaar").
+  const kanRechterTrainen = state.campagneId === "going-west";
   const vrijeRechters = stad.rechters.filter((r) => !r.courthouse);
 
   const groeiTier = groeiTierVoorGrootte(stad);

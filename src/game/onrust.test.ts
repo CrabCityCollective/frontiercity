@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { maakInitieleSpelStatus } from "./economie";
-import { beschikbareOpties, COURTHOUSE, ONRUST_MIN_STREEK, SALOON } from "./improvements";
+import { beschikbareOpties, COURTHOUSE, SALOON } from "./improvements";
 import { bemanCourthouse, haalRechterTerug, onrustOpStreek, onrustProductieMultiplier } from "./onrust";
 import { metActieveStad } from "./stad";
 import { GameState, Improvement, Rechter, Streek, Tile } from "./types";
@@ -134,16 +134,11 @@ test("Saloon en Courthouse zijn uitgesloten van de tutorial", () => {
   assert.equal(opties.some((o) => o.id === "courthouse"), false);
 });
 
-test("Saloon en Courthouse zijn pas beschikbaar vanaf ONRUST_MIN_STREEK in Going West", () => {
+test("Saloon en Courthouse zijn direct vanaf streek 1 beschikbaar in Going West", () => {
   const state = maakInitieleSpelStatus("going-west");
   const vroeg = beschikbareOpties("civiel", state.streken[0], state.streken.slice(0, 1), [], "going-west");
-  assert.equal(vroeg.some((o) => o.id === "saloon"), false);
-  assert.equal(vroeg.some((o) => o.id === "courthouse"), false);
-
-  const vanafOnrustStreek = state.streken.slice(0, ONRUST_MIN_STREEK).map((streek) => ({ ...streek, ontgrendeld: true }));
-  const laat = beschikbareOpties("civiel", vanafOnrustStreek[ONRUST_MIN_STREEK - 1], vanafOnrustStreek, [], "going-west");
-  assert.equal(laat.some((o) => o.id === "saloon"), true);
-  assert.equal(laat.some((o) => o.id === "courthouse"), true);
+  assert.equal(vroeg.some((o) => o.id === "saloon"), true);
+  assert.equal(vroeg.some((o) => o.id === "courthouse"), true);
 });
 
 test("onrust verlaagt productie in Going West, maar niet in de tutorial", () => {

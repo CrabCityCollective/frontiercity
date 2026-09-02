@@ -644,12 +644,13 @@ export const WAMPANOAG_TENTJE: Improvement = {
 // improvements (Weg/Brug blijven buiten de MVP-scope, zie de comment bij
 // WOONWIJK hieronder) — `IMPROVEMENT_POOLS.civiel` was tot nu toe leeg.
 // Allebei `vereisteCampagneId: "going-west"` (types.ts): nooit in de tutorial
-// of een andere campagne, en `minStreek: 8` als hun eigen introductiepunt
-// binnen Going West (issue-comment: "Pas vanaf streek 8 van Going West geldt
-// onrust als mechanisme"), niet de gebruikelijke tutorial-only
-// `minStreek`-uitzondering die `beschikbareOpties` hieronder normaal maakt.
-export const ONRUST_MIN_STREEK = 8;
-
+// of een andere campagne. Geen `minStreek`: onrust zelf ontstaat zodra een
+// streek te vol raakt, ongeacht hoe ver de frontier al ontgrendeld is
+// (onrust.ts: `onrustOpStreek` kent geen streek-drempel), dus horen de twee
+// tegenmaatregelen er net zo direct te zijn (issue: "Saloon en courthouse
+// direct beschikbaar" — voorheen stonden ze pas vanaf streek 8 beschikbaar,
+// terwijl onrust al veel eerder kan ontstaan op een drukke vroege streek).
+//
 // Saloon: goedkoop, geen terrein-/andere eis — vermindert de onrust op de
 // eigen streek met 1 zolang hij actief staat (onrust.ts:
 // `SALOON_ONRUST_VERMINDERING`). Telt zelf niet mee als een van de
@@ -665,7 +666,6 @@ export const SALOON: Improvement = {
   bouwtijdBeurten: 1,
   effect: { type: "onrust-verlichting", waarde: 1 },
   vereisteCampagneId: "going-west",
-  minStreek: ONRUST_MIN_STREEK,
 };
 
 // Courthouse: duurder dan de Saloon, bouwbaar zonder voorwaarde vooraf — maar
@@ -683,7 +683,6 @@ export const COURTHOUSE: Improvement = {
   bouwtijdBeurten: 3,
   effect: { type: "courthouse" },
   vereisteCampagneId: "going-west",
-  minStreek: ONRUST_MIN_STREEK,
 };
 
 export const CIVIEL_LAND_IMPROVEMENTS: Improvement[] = [SALOON, COURTHOUSE];
