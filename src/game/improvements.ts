@@ -752,13 +752,19 @@ export const GROTE_WOONWIJK: Improvement = {
 // je staat, of rust je een expeditie uit om verder te trekken?" (hoofdstuk
 // 11). Geen land-vakje (soort "unit", net als SOLDAAT), dus ook geen
 // onderdeel van IMPROVEMENT_POOLS/beschikbareOpties.
+// Geen grondstofkosten (issue: "Settlers kosten geen grond stoffen" — een
+// speler die net een stad had gesticht kwam zo te vaak zonder hout/steen te
+// zitten om de volgende settler uit te rusten, en liep dan vast). Alleen de
+// bouwtijd (3 beurten) telt nog mee — zie `investeerInKosteloosBouw`
+// (groeiEnRekrutering.ts) voor de aparte, niet-grondstof-afhankelijke
+// beurten-teller die deze lege `kosten` vereist.
 export const NIEUWE_SETTLER: Improvement = {
   id: "nieuwe-settler",
   naam: "Nieuwe settler",
   categorie: "civiel",
   soort: "unit",
-  kosten: { hout: 10, steen: 4 },
-  bouwtijdBeurten: 4,
+  kosten: {},
+  bouwtijdBeurten: 3,
   effect: { type: "settler" },
 };
 

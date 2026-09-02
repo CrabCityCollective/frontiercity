@@ -25,11 +25,44 @@ import {
   SOLDAAT,
   WOONWIJK,
 } from "./improvements";
-import { City, GameState, Improvement, Strijder } from "./types";
+import { City, GameState, Improvement, MateriaalType, ResourceType, Strijder, TechId } from "./types";
 import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT, hoogsteOntgrendeldeStreek } from "./world";
 import { investeerInBouwkosten, pasVersnellingToe } from "./bouwwachtrij";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
 import { metActieveStad, stadTileHoogte } from "./stad";
+
+// Beurten-teller voor een volledig kosteloze wachtrij (NIEUWE_SETTLER, issue:
+// "Settlers kosten geen grond stoffen") — los van `investeerInBouwkosten`
+// (bouwwachtrij.ts), die per grondstof-type een resterend-bedrag aftelt en
+// dus niets te doen heeft zodra `improvement.kosten` leeg is (er is dan geen
+// enkel grondstoftype om af te tellen). Telt hier gewoon `bouwtijdBeurten`
+// keer af, ongeacht voorraad — de teller zelf leeft in `voortgang.hout` niet
+// omdat er hout bij komt kijken (er wordt nergens voorraad aangeraakt), maar
+// puur omdat `voortgang` getypeerd is als een grondstof-record; deze waarde
+// wordt nooit aan de speler getoond (CivielPaneel toont voor een settler
+// alleen de statische tekst "wordt uitgerust…", geen voortgangsgetal).
+function investeerInKosteloosBouw(
+  voortgang: Partial<Record<ResourceType, number>>,
+  bouwtijdBeurten: number
+): { nieuweVoortgang: Partial<Record<ResourceType, number>>; voltooid: boolean } {
+  const resterend = (voortgang.hout ?? bouwtijdBeurten) - 1;
+  return { nieuweVoortgang: { hout: resterend }, voltooid: resterend <= 0 };
+}
+
+// Kiest tussen de normale, grondstof-afhankelijke investering en de
+// kosteloze beurten-teller hierboven — puur op basis van of `kosten` iets
+// bevat, zodat elke toekomstige volledig-gratis wachtrij hier automatisch
+// het juiste pad neemt zonder een aparte id-check per improvement.
+function investeerInWachtrij(
+  improvement: Improvement,
+  voortgang: Partial<Record<ResourceType, number>>,
+  voorraad: Record<MateriaalType, number>,
+  technologieen: TechId[]
+) {
+  return Object.keys(improvement.kosten).length === 0
+    ? investeerInKosteloosBouw(voortgang, improvement.bouwtijdBeurten)
+    : investeerInBouwkosten(improvement, voortgang, voorraad, technologieen);
+}
 
 // Betaalt de bouwkosten van een lopende civiele stadsbouw (M6, hoofdstuk
 // 11/16): één gedeelde wachtrij voor de groei-tier (WOONWIJK) én een nieuwe
@@ -46,7 +79,7 @@ export function verwerkCivielInAanbouw(state: GameState): GameState {
   if (!civielInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(civielInAanbouw.improvement, civielInAanbouw.voortgang, voorraad, state.technologieen);
+  const resultaat = investeerInWachtrij(civielInAanbouw.improvement, civielInAanbouw.voortgang, voorraad, state.technologieen);
   if (!resultaat) return state;
 
   if (resultaat.voltooid) {
@@ -492,7 +525,7 @@ export function verwerkTweedeSettlerInAanbouw(state: GameState): GameState {
   if (!tweedeSettlerInAanbouw) return state;
 
   const voorraad = { ...state.voorraad };
-  const resultaat = investeerInBouwkosten(
+  const resultaat = investeerInWachtrij(
     tweedeSettlerInAanbouw.improvement,
     tweedeSettlerInAanbouw.voortgang,
     voorraad,

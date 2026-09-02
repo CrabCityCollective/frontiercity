@@ -28,6 +28,7 @@ import {
   GROTE_TEMPEL,
   GROTE_WOONWIJK,
   MARKT,
+  NIEUWE_SETTLER,
   SOLDAAT,
   TEMPEL,
   VIJANDELIJKE_WACHTTOREN,
@@ -217,6 +218,31 @@ test("een Nieuwe settler verschijnt bij de actieve (net gestichte) stad, niet bi
     { hoogte: 8, positieInStreek: 3 },
     "de settler moet bij Vuurbron verschijnen, niet op de starttegel van Oer-stad"
   );
+});
+
+// Issue "Settlers kosten geen grond stoffen": een speler die net een stad had
+// gesticht liep te vaak vast omdat er geen hout/steen meer over was om de
+// volgende settler uit te rusten. Een Nieuwe settler kost daarom geen
+// grondstoffen meer, alleen nog bouwtijd (3 beurten).
+test("startNieuweSettler kost geen grondstoffen — de settler voltooit na precies bouwtijdBeurten beurten met een lege voorraad", () => {
+  let state = maakInitieleSpelStatus();
+  assert.deepEqual(NIEUWE_SETTLER.kosten, {}, "Nieuwe settler heeft geen grondstofkosten meer");
+
+  state = { ...state, voorraad: { hout: 0, steen: 0, erts: 0, goud: 0 } };
+  state = startNieuweSettler(state);
+  assert.equal(state.stad.civielInAanbouw?.improvement.id, "nieuwe-settler");
+
+  const bouwtijd = state.stad.civielInAanbouw!.improvement.bouwtijdBeurten;
+  assert.equal(bouwtijd, 3);
+  for (let i = 0; i < bouwtijd - 1; i += 1) {
+    state = volgendeBeurt(state);
+    assert.notEqual(state.stad.civielInAanbouw, undefined, "nog niet klaar — een lege voorraad mag de voortgang niet blokkeren");
+  }
+  state = volgendeBeurt(state);
+
+  assert.equal(state.stad.civielInAanbouw, undefined);
+  assert.notEqual(state.settler, undefined, "de settler moet ondanks de lege voorraad gewoon verschijnen");
+  assert.deepEqual(state.voorraad, { hout: 0, steen: 0, erts: 0, goud: 0 }, "er is niets van de voorraad afgegaan");
 });
 
 test("heeftOfferAltaar en startMissionarisRecrutering: Missionaris is pas trainbaar na een voltooid Offer Altaar", () => {
