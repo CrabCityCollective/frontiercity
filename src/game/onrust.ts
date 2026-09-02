@@ -24,10 +24,10 @@
 import { metActieveStad } from "./stad";
 import { GameState, Rechter, Streek } from "./types";
 
-// Vanaf het (drempel+1)e improvement op een streek ontstaat onrust (issue,
-// sectie 1: "het 4e improvement op die streek veroorzaakt de eerste
-// onrust-punt").
-export const ONRUST_DREMPEL = 3;
+// Vanaf het (drempel+1)e improvement op een streek ontstaat onrust (issue
+// #450: "de onrust pas bij 4 gebouwen ipv 3" — oorspronkelijk gaf het 4e
+// improvement al de eerste onrust, nu pas het 5e).
+export const ONRUST_DREMPEL = 4;
 
 // Productie-penalty per onrust-punt en het plafond daarop (issue, sectie 1:
 // "percentage-gebaseerde penalty die meeschaalt met de onrust-waarde ...
