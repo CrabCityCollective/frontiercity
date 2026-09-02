@@ -499,7 +499,7 @@ function tekenVijandelijkHeiligdomPixel(ctx: CanvasRenderingContext2D): void {
 // een boog van rechtopstaande stenen met een nachtelijke gloed en sterretjes
 // erboven (issue: "wegen en gebouwen verbeteren" — was een kale
 // placeholder-vierkant).
-function tekenSterrencirkelPixel(ctx: CanvasRenderingContext2D, seed: number): void {
+function tekenSterrencirkelTutorialPixel(ctx: CanvasRenderingContext2D, seed: number): void {
   const rng = maakSeededRandom(seed);
   const baseY = 14;
   schaduw(ctx, 8, baseY + 1, 11);
@@ -528,6 +528,61 @@ function tekenSterrencirkelPixel(ctx: CanvasRenderingContext2D, seed: number): v
       p(ctx, sx + 1, sy, "rgba(232, 220, 200, 0.4)");
     }
   }
+}
+
+// "Observatorium" (issue #453, "Icoontjes going west") — pixel-art variant
+// van `tekenObservatorium` in canvas.ts: eigen Going West-weergave van de
+// Sterrencirkel, losstaand van `tekenSterrencirkelTutorialPixel` hierboven
+// (CLAUDE.md: tutorial- en Going West-content blijven gescheiden). Een
+// houten statief met een messing telescoopbuis i.p.v. de stenenkring —
+// zelfde donkerdere, aardse palet als Kapel/Blokhuis, met dezelfde
+// sterretjes als de tutorial-versie erboven.
+function tekenObservatoriumPixel(ctx: CanvasRenderingContext2D, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = 14;
+  const topY = 8;
+  schaduw(ctx, 8, baseY + 1, 8);
+
+  // Houten driepoot-statief.
+  ctx.strokeStyle = "#4a3a28";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(5, baseY);
+  ctx.lineTo(8, topY);
+  ctx.moveTo(11, baseY);
+  ctx.lineTo(8, topY);
+  ctx.moveTo(8, baseY - 1);
+  ctx.lineTo(8, topY);
+  ctx.stroke();
+
+  // Platform waar het statief samenkomt.
+  hlijn(ctx, 6, 10, topY, "#5a4630");
+
+  // Messing telescoopbuis, schuin omhoog gericht op de sterren.
+  ctx.strokeStyle = "#8a6a3a";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(8, topY);
+  ctx.lineTo(12, 2);
+  ctx.stroke();
+  p(ctx, 12, 2, "#c9a85a");
+
+  const sterren: [number, number][] = [[10, 1], [13, 4], [5, 3], [7, 1]];
+  for (const [sx, sy] of sterren) {
+    p(ctx, sx, sy, "rgba(232, 220, 200, 0.9)");
+    if (rng() > 0.4) {
+      p(ctx, sx - 1, sy, "rgba(232, 220, 200, 0.4)");
+      p(ctx, sx + 1, sy, "rgba(232, 220, 200, 0.4)");
+    }
+  }
+}
+
+function tekenSterrencirkelPixel(ctx: CanvasRenderingContext2D, seed: number, tegelSet?: string): void {
+  if (tegelSet === undefined) {
+    tekenSterrencirkelTutorialPixel(ctx, seed);
+    return;
+  }
+  tekenObservatoriumPixel(ctx, seed);
 }
 
 // Goudader (interne id `goudmijn`) — pixel-art variant van `tekenGoudader`
@@ -732,7 +787,7 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   "vijandelijke-wachttoren": (ctx) => tekenVijandelijkeWachttorenPixel(ctx),
   "vijandelijk-heiligdom": (ctx) => tekenVijandelijkHeiligdomPixel(ctx),
   "bezette-streek-huisje": (ctx) => tekenBezetteStreekHuisjePixel(ctx),
-  sterrencirkel: (ctx, seed) => tekenSterrencirkelPixel(ctx, seed),
+  sterrencirkel: (ctx, seed, bemand, tegelSet) => tekenSterrencirkelPixel(ctx, seed, tegelSet),
   goudmijn: (ctx, seed) => tekenGoudaderPixel(ctx, seed),
   voorraadkuil: (ctx, seed) => tekenVoorraadkuilPixel(ctx, seed),
   maisboerderij: (ctx, seed) => tekenMaisboerderijPixel(ctx, seed),
