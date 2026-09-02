@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { jaag, verplaatsSettlerNaar } from "./acties";
+import { GOING_WEST_CAMPAGNE } from "./campagnes";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { startNieuweSettler } from "./groeiEnRekrutering";
 import { bevestigGoudOnderVuur, geefTribuut } from "./indringersEnDieren";
@@ -365,8 +366,8 @@ test("Going West trekt de indringers-stamnaam uit de eigen Wampanoag-pool i.p.v.
 // verbond gesloten is (`heeftWampanoagVerbond`, d.w.z. de Wampanoag-streek is
 // niet langer `wampanoagBezet` — de 3-3-3-handelsdrempel is gehaald), zijn
 // streken 1-7 — het voormalige Wampanoag-invalsgebied — blijvend veilig, en
-// nemen drie nieuwe stammen (`CampaignConfig.indringersStamNamenNaVerbond`)
-// de invallen over.
+// neemt een nieuwe stammen-pool (`CampaignConfig.indringersStamNamenNaVerbond`,
+// issue #461 "Stammen na de Wampanoag") de invallen over.
 function metWampanoagVerbondGesloten(streken: GameState["streken"]): GameState["streken"] {
   return streken.map((streek) =>
     streek.hoogte === WAMPANOAG_STREEK_HOOGTE ? { ...streek, wampanoagBezet: false, ontgrendeld: true } : streek
@@ -390,7 +391,7 @@ test("na het Wampanoag-verbond doen streken 1-7 niet meer mee in de indringers-t
 
   assert.equal(state.indringersEvent?.streekHoogte, 8, "streek 1-7 zijn uitgesloten, alleen streek 8 kan nog geloot worden");
   assert.ok(
-    ["de Shawnee", "stam2", "stam3"].includes(state.indringersEvent?.stamNaam ?? ""),
+    GOING_WEST_CAMPAGNE.indringersStamNamenNaVerbond!.includes(state.indringersEvent?.stamNaam ?? ""),
     `verwacht een nieuwe-stam-naam uit de na-verbond-pool, kreeg "${state.indringersEvent?.stamNaam}"`
   );
 });
