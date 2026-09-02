@@ -963,7 +963,7 @@ function tekenWachttoren(
 // perspectief afgeplat, met een zachte nachtelijke gloed en een paar
 // sterretjes erboven — verwijst zowel naar de naam als naar de
 // wetenschap-productie (sterren en seizoenen bestuderen).
-function tekenSterrencirkel(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+function tekenSterrencirkelTutorial(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
   const rng = maakSeededRandom(seed);
   const baseY = y + size * 0.86;
   const cx = x + size * 0.5;
@@ -1011,6 +1011,85 @@ function tekenSterretje(ctx: CanvasRenderingContext2D, x: number, y: number, r: 
   ctx.moveTo(x, y - r);
   ctx.lineTo(x, y + r);
   ctx.stroke();
+}
+
+// "Observatorium" (issue #453, "Icoontjes going west") — eigen Going
+// West-weergave van de Sterrencirkel (`GOING_WEST_CAMPAGNE.improvementNamen`,
+// campagnes.ts), losstaand van `tekenSterrencirkelTutorial` hierboven zodat de
+// tutorial-tekening ongewijzigd blijft (CLAUDE.md: tutorial- en Going
+// West-content blijven gescheiden). Een houten statief met een messing
+// telescoopbuis i.p.v. de mystieke stenenkring — zelfde donkerdere,
+// aardse Diablo II-achtige palet als Kapel/Blokhuis (hoofdstuk 12
+// design-doc), maar behoudt de blauwige nachtgloed en sterretjes van de
+// tutorial-versie omdat die niet aan een specifieke setting gebonden zijn.
+function tekenObservatorium(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.5;
+  const topY = y + size * 0.4;
+  tekenContactschaduw(ctx, cx, baseY, size * 0.46);
+
+  const gloed = ctx.createRadialGradient(cx, y + size * 0.22, 0, cx, y + size * 0.22, size * 0.3);
+  gloed.addColorStop(0, "rgba(130, 150, 200, 0.26)");
+  gloed.addColorStop(1, "rgba(130, 150, 200, 0)");
+  ctx.fillStyle = gloed;
+  ctx.beginPath();
+  ctx.arc(cx, y + size * 0.22, size * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Houten driepoot-statief.
+  ctx.strokeStyle = "#4a3a28";
+  ctx.lineWidth = Math.max(1.5, size * 0.045);
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.24, baseY);
+  ctx.lineTo(cx, topY);
+  ctx.moveTo(cx + size * 0.24, baseY);
+  ctx.lineTo(cx, topY);
+  ctx.moveTo(cx, baseY - size * 0.02);
+  ctx.lineTo(cx, topY);
+  ctx.stroke();
+
+  // Klein platform waar het statief samenkomt.
+  ctx.fillStyle = "#5a4630";
+  ctx.fillRect(cx - size * 0.09, topY - size * 0.03, size * 0.18, size * 0.05);
+
+  // Messing telescoopbuis, schuin omhoog gericht op de sterren.
+  ctx.save();
+  ctx.translate(cx, topY);
+  ctx.rotate(-Math.PI / 3.2);
+  ctx.fillStyle = "#8a6a3a";
+  ctx.fillRect(-size * 0.05, -size * 0.4, size * 0.1, size * 0.4);
+  ctx.strokeStyle = "#4a3a1c";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-size * 0.05, -size * 0.4, size * 0.1, size * 0.4);
+  ctx.fillStyle = "#c9a85a";
+  ctx.fillRect(-size * 0.065, -size * 0.42, size * 0.13, size * 0.05);
+  ctx.restore();
+
+  const sterPosities: [number, number][] = [
+    [0.66, 0.08],
+    [0.8, 0.2],
+    [0.5, 0.06],
+    [0.3, 0.16],
+  ];
+  for (const [sxr, syr] of sterPosities) {
+    tekenSterretje(ctx, x + size * sxr, y + size * syr, size * (0.02 + rng() * 0.012));
+  }
+}
+
+function tekenSterrencirkel(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  seed: number,
+  tegelSet?: string
+): void {
+  if (tegelSet === undefined) {
+    tekenSterrencirkelTutorial(ctx, x, y, size, seed);
+    return;
+  }
+  tekenObservatorium(ctx, x, y, size, seed);
 }
 
 // Goudader (hoofdstuk 3/14, interne id `goudmijn`, weergavenaam "Goudader")
@@ -1400,7 +1479,7 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   "vijandelijke-wachttoren": (ctx, x, y, size) => tekenVijandelijkeWachttorenIcon(ctx, x, y, size),
   "vijandelijk-heiligdom": (ctx, x, y, size) => tekenVijandelijkHeiligdomIcon(ctx, x, y, size),
   "bezette-streek-huisje": (ctx, x, y, size) => tekenBezetteStreekHuisje(ctx, x, y, size),
-  sterrencirkel: (ctx, x, y, size, seed) => tekenSterrencirkel(ctx, x, y, size, seed),
+  sterrencirkel: (ctx, x, y, size, seed, bemand, tegelSet) => tekenSterrencirkel(ctx, x, y, size, seed, tegelSet),
   goudmijn: (ctx, x, y, size, seed) => tekenGoudader(ctx, x, y, size, seed),
   voorraadkuil: (ctx, x, y, size, seed) => tekenVoorraadkuil(ctx, x, y, size, seed),
   maisboerderij: (ctx, x, y, size, seed) => tekenMaisboerderij(ctx, x, y, size, seed),
