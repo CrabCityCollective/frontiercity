@@ -1,8 +1,6 @@
 "use client";
 
 import RushMetGoudKnop from "./RushMetGoudKnop";
-import { KostenIcons } from "./ResourceIcoon";
-import { VERKENNER } from "@/game/improvements";
 import { VERKENNING_KOSTEN_WETENSCHAP } from "@/game/streekOntgrendeling";
 import { TileInfo } from "@/game/tileInfo";
 import { WAMPANOAG_HANDEL_KEUZE_LABELS } from "@/game/wampanoag";
@@ -469,7 +467,7 @@ export default function TileInfoPopup({
                 onClick={verkenningVraag.onStuurVerkenner}
                 style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start", opacity: verkenningVraag.kan ? 1 : 0.5 }}
               >
-                Verkenner sturen (<KostenIcons kosten={VERKENNER.kosten} />, {VERKENNING_KOSTEN_WETENSCHAP} wetenschap)
+                Verkenner sturen ({VERKENNING_KOSTEN_WETENSCHAP} wetenschap)
               </button>
             )}
           </div>
