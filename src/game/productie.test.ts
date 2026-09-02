@@ -219,9 +219,9 @@ test("berekenBoerderijOnrustModifier is 0 buiten Going West, en negatief zodra e
               if ([1, 2, 3].includes(tile.positieInStreek)) {
                 return { ...tile, heeftWeg: true };
               }
-              // 3 extra improvements (samen met de boerderij: 4) duwt de
+              // 4 extra improvements (samen met de boerderij: 5) duwt de
               // streek over de ONRUST_DREMPEL (onrust.ts).
-              if ([5, 6, 7].includes(tile.positieInStreek)) {
+              if ([5, 6, 7, 8].includes(tile.positieInStreek)) {
                 return { ...tile, status: "actief" as const, improvement: HOUTKAP };
               }
               return tile;

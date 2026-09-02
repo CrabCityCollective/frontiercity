@@ -22,33 +22,33 @@ function maakStreek(hoogte: number, improvementen: Record<number, Improvement>):
   return { hoogte, ontgrendeld: true, tiles, terreinType: "test" };
 }
 
-test("onrustOpStreek is 0 zolang een streek 3 of minder improvements draagt", () => {
-  const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE });
+test("onrustOpStreek is 0 zolang een streek 4 of minder improvements draagt", () => {
+  const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP });
   assert.equal(onrustOpStreek([streek], [], streek), 0);
 });
 
-test("onrustOpStreek telt vanaf het 4e improvement, lineair", () => {
-  const streek4 = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP });
-  assert.equal(onrustOpStreek([streek4], [], streek4), 1);
-
+test("onrustOpStreek telt vanaf het 5e improvement, lineair", () => {
   const streek5 = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN });
-  assert.equal(onrustOpStreek([streek5], [], streek5), 2);
+  assert.equal(onrustOpStreek([streek5], [], streek5), 1);
+
+  const streek6 = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: STEENGROEVE });
+  assert.equal(onrustOpStreek([streek6], [], streek6), 2);
 });
 
 test("een ghost-town-tile telt niet mee voor de onrust-drempel", () => {
-  const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP });
+  const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN });
   const metGhostTown: Streek = {
     ...streek,
-    tiles: streek.tiles.map((tile) => (tile.positieInStreek === 3 ? { ...tile, status: "ghost_town" as const } : tile)),
+    tiles: streek.tiles.map((tile) => (tile.positieInStreek === 4 ? { ...tile, status: "ghost_town" as const } : tile)),
   };
   assert.equal(onrustOpStreek([metGhostTown], [], metGhostTown), 0);
 });
 
 test("een actieve Saloon verlaagt de onrust met 1 en telt zelf niet mee als onrust-veroorzakend improvement", () => {
-  // 4 gewone improvements + Saloon = 5 tiles, maar de Saloon telt niet mee
-  // voor de drempel — dus nog steeds maar 4 onrust-veroorzakende improvements
+  // 5 gewone improvements + Saloon = 6 tiles, maar de Saloon telt niet mee
+  // voor de drempel — dus nog steeds maar 5 onrust-veroorzakende improvements
   // (onrust 1), en de Saloon trekt daar nog eens 1 vanaf.
-  const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: SALOON });
+  const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: SALOON });
   assert.equal(onrustOpStreek([streek], [], streek), 0);
 });
 
@@ -67,11 +67,11 @@ test("een bemand Courthouse houdt de onrust op zijn eigen streek, de streek erbo
   assert.equal(onrustOpStreek(streken, rechters, streken[0]), 0); // eronder
   assert.equal(onrustOpStreek(streken, rechters, streken[1]), 0); // eigen streek
   assert.equal(onrustOpStreek(streken, rechters, streken[2]), 0); // erboven
-  assert.equal(onrustOpStreek(streken, rechters, streken[3]), 3); // buiten bereik: gewoon onrust
+  assert.equal(onrustOpStreek(streken, rechters, streken[3]), 2); // buiten bereik: gewoon onrust
 });
 
 test("een onbemand Courthouse onderdrukt geen onrust", () => {
-  const drukkeStreek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 6: COURTHOUSE });
+  const drukkeStreek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 6: COURTHOUSE });
   assert.equal(onrustOpStreek([drukkeStreek], [], drukkeStreek), 1);
 });
 
@@ -173,8 +173,8 @@ test("onrust verlaagt productie in Going West, maar niet in de tutorial", () => 
 
   const goingWest = drukkeTiles(maakInitieleSpelStatus("going-west"));
   const naProductieGoingWest = verwerkProductie(goingWest);
-  // 5 improvements op de streek: onrust = 5 - 3 = 2 → multiplier 0.8.
-  const verwachtGoingWest = Math.floor(houtkapWaarde * onrustProductieMultiplier(2)) * 3;
+  // 5 improvements op de streek: onrust = 5 - 4 = 1 → multiplier 0.9.
+  const verwachtGoingWest = Math.floor(houtkapWaarde * onrustProductieMultiplier(1)) * 3;
   assert.equal(naProductieGoingWest.voorraad.hout - goingWest.voorraad.hout, verwachtGoingWest);
   assert.ok(naProductieGoingWest.voorraad.hout - goingWest.voorraad.hout < naProductieTutorial.voorraad.hout - tutorial.voorraad.hout);
 });
