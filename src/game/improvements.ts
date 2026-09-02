@@ -130,10 +130,10 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
     return `Vermindert de onrust op deze streek met ${effect.waarde}.`;
   }
   if (effect.type === "courthouse") {
-    return "Vereist een toegewezen Rechter om effect te hebben — zet dan de onrust op deze streek én de streek erboven en eronder blijvend op 0, zolang bemand.";
+    return "Vereist een toegewezen Rechter om effect te hebben — zet dan de onrust op deze streek én de 2 streken direct erboven blijvend op 0, zolang bemand.";
   }
   if (effect.type === "rechter") {
-    return "Wijs deze Rechter toe aan een Courthouse om onrust op die streek en de aangrenzende streken te onderdrukken.";
+    return "Wijs deze Rechter toe aan een Courthouse om onrust op die streek en de 2 streken direct erboven te onderdrukken.";
   }
   return "";
 }

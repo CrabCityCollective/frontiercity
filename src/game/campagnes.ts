@@ -112,8 +112,7 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
       "Onze streken raken vol. Zodra een streek meer dan drie gebouwen draagt, groeit er onrust die de " +
       "productie van alles op die streek afremt.\n" +
       "Een Saloon kalmeert de gemoederen op zijn eigen streek. Een Courthouse houdt, zodra een rechter er " +
-      "zitting neemt, de onrust op zijn eigen streek én de streken direct erboven en eronder blijvend " +
-      "onderdrukt.",
+      "zitting neemt, de onrust op zijn eigen streek én de 2 streken direct erboven blijvend onderdrukt.",
     // Wampum-afkoop (issue "Wampum — invallen tijdelijk afkopen"): bevestiging
     // na het afkopen van een indringers-incident met wampum — zie
     // `koopIndringersAfMetWampum` (indringersEnDieren.ts).
