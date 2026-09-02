@@ -105,7 +105,7 @@ test("stichtStad op een streek die niet de laatste van de wereld is, laat de run
   assert.equal(naVolgendeBeurt.settler, undefined, "geen gratis settler-terugval ná een tussentijdse stichting");
 });
 
-test("stichtStad geeft de tweede Going West-stad de naam Cincinnati (issue: 'Nieuwe stad Cincinnati')", () => {
+test("stichtStad geeft de eerste Going West-stad de naam Providence (issue #444 'Going west')", () => {
   let state = maakInitieleSpelStatus("going-west");
   // Zelfde aanpak als de voorgaande test: een vers-water-vakje handmatig
   // neerzetten op een niet-laatste streek om een tussentijdse stichting uit
@@ -129,8 +129,54 @@ test("stichtStad geeft de tweede Going West-stad de naam Cincinnati (issue: 'Nie
 
   const naStichten = stichtStad(state);
   assert.equal(naStichten.steden.length, 2);
-  assert.equal(naStichten.steden[1].naam, "Cincinnati");
+  assert.equal(naStichten.steden[1].naam, "Providence");
   assert.deepEqual(naStichten.stad, naStichten.steden[1]);
+});
+
+test("stichtStad geeft de tweede Going West-stad de naam Cincinnati (issue #444 'Going west')", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  // Eerste stichting (wordt Providence, zie voorgaande test) en dan een
+  // tweede tussentijdse stichting op een volgende streek om de tweede naam
+  // uit `stadNamen` te bereiken.
+  state = {
+    ...state,
+    settler: { hoogte: 8, positieInStreek: 5 },
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 8
+        ? {
+            ...streek,
+            ontgrendeld: true,
+            tiles: streek.tiles.map((tile) => (tile.positieInStreek === 5 ? { ...tile, versWater: true } : tile)),
+          }
+        : streek
+    ),
+    voorraad: { ...state.voorraad, hout: STICHTING_KOSTEN.hout, steen: STICHTING_KOSTEN.steen, erts: STICHTING_KOSTEN.erts },
+    voedsel: STICHTING_KOSTEN.voedsel,
+  };
+  const naEersteStichting = stichtStad(state);
+  assert.equal(naEersteStichting.steden[1].naam, "Providence");
+
+  state = {
+    ...naEersteStichting,
+    settler: { hoogte: 9, positieInStreek: 5 },
+    streken: naEersteStichting.streken.map((streek) =>
+      streek.hoogte === 9
+        ? {
+            ...streek,
+            ontgrendeld: true,
+            tiles: streek.tiles.map((tile) => (tile.positieInStreek === 5 ? { ...tile, versWater: true } : tile)),
+          }
+        : streek
+    ),
+    voorraad: { ...naEersteStichting.voorraad, hout: STICHTING_KOSTEN.hout, steen: STICHTING_KOSTEN.steen, erts: STICHTING_KOSTEN.erts },
+    voedsel: STICHTING_KOSTEN.voedsel,
+  };
+  assert.equal(kanStichten(state), true);
+
+  const naTweedeStichting = stichtStad(state);
+  assert.equal(naTweedeStichting.steden.length, 3);
+  assert.equal(naTweedeStichting.steden[2].naam, "Cincinnati");
+  assert.deepEqual(naTweedeStichting.stad, naTweedeStichting.steden[2]);
 });
 
 test("kanStichten is false op een vakje zonder vers water, of als het vakje al bebouwd is", () => {
