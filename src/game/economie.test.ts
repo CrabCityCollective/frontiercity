@@ -82,9 +82,9 @@ test("berekenEconomieOverzicht: op de startstatus is er alleen voedselverbruik, 
   assert.equal(state.voedsel, 20);
 });
 
-test("berekenEconomieOverzicht: telt de opbrengst van een actieve, wegverbonden improvement mee (Heiligdom, +2 cultuur)", () => {
+test("berekenEconomieOverzicht: telt de opbrengst van een actieve, wegverbonden improvement mee (Heiligdom, +3 cultuur)", () => {
   const state = metActiefHeiligdomOpStreek1(maakInitieleSpelStatus());
   const overzicht = berekenEconomieOverzicht(state);
 
-  assert.equal(overzicht.cultuur, 2);
+  assert.equal(overzicht.cultuur, 3);
 });
