@@ -144,13 +144,26 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   // verbond gesloten is (`heeftWampanoagVerbond`, de 3-3-3-handelsdrempel uit
   // wampanoag.ts — niet `cultureelOntgrendeld`, dat hangt sinds "Wampanoag
   // streek pas helemaal onthuld na handel" alleen nog aan de Smederij), zijn
-  // streken 1-7 — het voormalige Wampanoag-invalsgebied —
-  // blijvend veilig, en nemen drie nieuwe stammen de invallen verderop over.
-  // Eén daarvan (de Shawnee) staat al vast; de andere twee zijn nog te
-  // bedenken en staan hier bewust als placeholder, net als de "todo"-
-  // flavor-tekst elders in Going West (goingWestContent.ts).
+  // streken 1-7 — het voormalige Wampanoag-invalsgebied — blijvend veilig, en
+  // neemt deze pool van twaalf stammen de invallen verderop over (issue #461
+  // "Stammen na de Wampanoag") — puur extra namen voor de bestaande
+  // indringers-mechaniek (`verwerkIndringers`, indringersEnDieren.ts), geen
+  // eigen Wampanoag-achtige ontmoeting per stam.
   indringersUitgeslotenTotHoogteNaVerbond: 7,
-  indringersStamNamenNaVerbond: ["de Shawnee", "stam2", "stam3"],
+  indringersStamNamenNaVerbond: [
+    "de Iroquois",
+    "de Huron",
+    "de Lenape",
+    "de Delaware",
+    "de Shawnee",
+    "de Sioux",
+    "de Mingo",
+    "de Pawnee",
+    "de Lakota",
+    "de Cherokee",
+    "de Piankeshaw",
+    "de Potawatomi",
+  ],
   // Issue "Nieuwe stad Cincinnati" / "Going west" (#444): de eerste gestichte
   // Going West-stad (na de startstad Plymouth) heet Providence, de tweede
   // Cincinnati. Verdere stadsnamen staan hier nog niet uitgewerkt (vallen
