@@ -608,7 +608,7 @@ function tekenBoerderij(ctx: CanvasRenderingContext2D, x: number, y: number, siz
   }
 }
 
-function tekenHeiligdom(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+function tekenHeiligdomTutorial(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
   const baseY = y + size * 0.86;
   tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.42);
 
@@ -643,6 +643,77 @@ function tekenHeiligdom(ctx: CanvasRenderingContext2D, x: number, y: number, siz
   ctx.moveTo(x + size * 0.5, y + size * 0.49);
   ctx.lineTo(x + size * 0.5, y + size * 0.66);
   ctx.stroke();
+}
+
+// "Kapel" (issue: "Icoontjes going west") — eigen Going West-weergave van het
+// Heiligdom (`GOING_WEST_CAMPAGNE.improvementNamen`, campagnes.ts), losstaand
+// van `tekenHeiligdomTutorial` hierboven zodat de tutorial-tekening ongewijzigd
+// blijft (CLAUDE.md: tutorial- en Going West-content blijven gescheiden). Een
+// klein, houten grenskapelletje i.p.v. de mystieke rechtopstaande steen —
+// donkerder/aardser palet met een warme kaarsgloed door het venster, zelfde
+// Diablo II-achtige stijl als de rest van de campagne-assets (hoofdstuk 12
+// design-doc) in plaats van de paarse gloed uit de Riven/Myst-tutorial.
+function tekenKapel(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.5;
+  tekenContactschaduw(ctx, cx, baseY, size * 0.46);
+
+  const gloed = ctx.createRadialGradient(cx, baseY - size * 0.22, 0, cx, baseY - size * 0.22, size * 0.24);
+  gloed.addColorStop(0, "rgba(224, 168, 88, 0.32)");
+  gloed.addColorStop(1, "rgba(224, 168, 88, 0)");
+  ctx.fillStyle = gloed;
+  ctx.beginPath();
+  ctx.arc(cx, baseY - size * 0.22, size * 0.24, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Houten wanden.
+  ctx.fillStyle = "#4a3a28";
+  ctx.fillRect(x + size * 0.32, y + size * 0.36, size * 0.36, size * 0.5);
+  ctx.strokeStyle = "#241a10";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + size * 0.32, y + size * 0.36, size * 0.36, size * 0.5);
+
+  // Puntdak.
+  ctx.fillStyle = "#33261a";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.26, y + size * 0.38);
+  ctx.lineTo(cx, y + size * 0.14);
+  ctx.lineTo(x + size * 0.74, y + size * 0.38);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#1a120c";
+  ctx.stroke();
+
+  // Kruis op de nok.
+  ctx.strokeStyle = "#211812";
+  ctx.lineWidth = Math.max(1, size * 0.025);
+  ctx.beginPath();
+  ctx.moveTo(cx, y + size * 0.14);
+  ctx.lineTo(cx, y + size * 0.02);
+  ctx.moveTo(cx - size * 0.05, y + size * 0.06);
+  ctx.lineTo(cx + size * 0.05, y + size * 0.06);
+  ctx.stroke();
+
+  // Rond venster met kaarsgloed.
+  ctx.fillStyle = "#e0a858";
+  ctx.beginPath();
+  ctx.arc(cx, baseY - size * 0.22, size * 0.07, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#241a10";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Deur.
+  ctx.fillStyle = "#2a1e14";
+  ctx.fillRect(cx - size * 0.06, baseY - size * 0.16, size * 0.12, size * 0.16);
+}
+
+function tekenHeiligdom(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, tegelSet?: string): void {
+  if (tegelSet === undefined) {
+    tekenHeiligdomTutorial(ctx, x, y, size);
+    return;
+  }
+  tekenKapel(ctx, x, y, size);
 }
 
 // Offer Altaar (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
@@ -774,7 +845,7 @@ function tekenVijandelijkHeiligdomIcon(ctx: CanvasRenderingContext2D, x: number,
 // wachttoren icoontje zien of er een soldaat in zit"): een gedempt grijze
 // vlag voor een lege, dus inactieve, toren; een warme vlag + een klein
 // strijder-silhouet op het platform zodra hij bemand (en dus actief) is.
-function tekenWachttoren(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, bemand: boolean): void {
+function tekenWachttorenTutorial(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, bemand: boolean): void {
   const baseY = y + size * 0.86;
   tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.5);
 
@@ -810,6 +881,81 @@ function tekenWachttoren(ctx: CanvasRenderingContext2D, x: number, y: number, si
     ctx.fill();
     ctx.fillRect(x + size * 0.47, y + size * 0.135, size * 0.06, size * 0.09);
   }
+}
+
+// "Blokhuis" (issue: "Icoontjes going west") — eigen Going West-weergave van
+// de Wachttoren, losstaand van `tekenWachttorenTutorial` hierboven (CLAUDE.md:
+// tutorial- en Going West-content blijven gescheiden). Een gedrongen, houten
+// blokhut met een overstekende bovenverdieping (het historische frontier-
+// blokhuis-silhouet) i.p.v. de slanke uitkijktoren — zelfde `bemand`-
+// leesbaarheidspatroon (gedempte vlag/donker schietgat vs. een warme
+// vlag/lantaarngloed), zodat de functionele status net zo duidelijk blijft.
+function tekenBlokhuis(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, bemand: boolean): void {
+  const baseY = y + size * 0.86;
+  const cx = x + size * 0.5;
+  tekenContactschaduw(ctx, cx, baseY, size * 0.54);
+
+  // Onderverdieping.
+  ctx.fillStyle = "#4a3a28";
+  ctx.fillRect(x + size * 0.36, y + size * 0.42, size * 0.28, size * 0.44);
+  ctx.strokeStyle = "#241a10";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + size * 0.36, y + size * 0.42, size * 0.28, size * 0.44);
+
+  // Overstekende bovenverdieping (breder dan de onderverdieping).
+  ctx.fillStyle = "#5a4630";
+  ctx.fillRect(x + size * 0.26, y + size * 0.22, size * 0.48, size * 0.22);
+  ctx.strokeStyle = "#241a10";
+  ctx.strokeRect(x + size * 0.26, y + size * 0.22, size * 0.48, size * 0.22);
+
+  // Plat dak.
+  ctx.fillStyle = "#33261a";
+  ctx.fillRect(x + size * 0.22, y + size * 0.16, size * 0.56, size * 0.08);
+
+  // Schietgat: gedempt als hij leeg (dus inactief) staat, warm lantaarnlicht
+  // zodra bemand.
+  ctx.fillStyle = bemand ? "#e0a858" : "#241a10";
+  ctx.fillRect(cx - size * 0.05, y + size * 0.29, size * 0.1, size * 0.05);
+
+  if (bemand) {
+    const gloed = ctx.createRadialGradient(cx, y + size * 0.31, 0, cx, y + size * 0.31, size * 0.14);
+    gloed.addColorStop(0, "rgba(224, 168, 88, 0.5)");
+    gloed.addColorStop(1, "rgba(224, 168, 88, 0)");
+    ctx.fillStyle = gloed;
+    ctx.beginPath();
+    ctx.arc(cx, y + size * 0.31, size * 0.14, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Vlaggenmast.
+  ctx.strokeStyle = "#241a10";
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  ctx.beginPath();
+  ctx.moveTo(cx, y + size * 0.16);
+  ctx.lineTo(cx, y + size * 0.02);
+  ctx.stroke();
+  ctx.fillStyle = bemand ? "#c9552f" : "#78716a";
+  ctx.beginPath();
+  ctx.moveTo(cx, y + size * 0.02);
+  ctx.lineTo(cx, y + size * 0.1);
+  ctx.lineTo(cx + size * 0.1, y + size * 0.06);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function tekenWachttoren(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  bemand: boolean,
+  tegelSet?: string
+): void {
+  if (tegelSet === undefined) {
+    tekenWachttorenTutorial(ctx, x, y, size, bemand);
+    return;
+  }
+  tekenBlokhuis(ctx, x, y, size, bemand);
 }
 
 // Sterrencirkel (hoofdstuk 3/9, issue: "wegen en gebouwen verbeteren" — was
@@ -1233,14 +1379,22 @@ function tekenCourthouse(ctx: CanvasRenderingContext2D, x: number, y: number, si
 
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
-  (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number, bemand: boolean) => void
+  (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    seed: number,
+    bemand: boolean,
+    tegelSet?: string
+  ) => void
 > = {
   houtkap: tekenHoutkap,
   steengroeve: tekenSteengroeve,
   mijn: (ctx, x, y, size) => tekenMijn(ctx, x, y, size),
   boerderij: tekenBoerderij,
-  heiligdom: (ctx, x, y, size) => tekenHeiligdom(ctx, x, y, size),
-  wachttoren: (ctx, x, y, size, seed, bemand) => tekenWachttoren(ctx, x, y, size, bemand),
+  heiligdom: (ctx, x, y, size, seed, bemand, tegelSet) => tekenHeiligdom(ctx, x, y, size, tegelSet),
+  wachttoren: (ctx, x, y, size, seed, bemand, tegelSet) => tekenWachttoren(ctx, x, y, size, bemand, tegelSet),
   "offer-altaar": (ctx, x, y, size) => tekenOfferAltaar(ctx, x, y, size),
   legerkamp: (ctx, x, y, size) => tekenLegerkampIcon(ctx, x, y, size),
   "vijandelijke-wachttoren": (ctx, x, y, size) => tekenVijandelijkeWachttorenIcon(ctx, x, y, size),
@@ -1264,11 +1418,12 @@ function tekenLandImprovement(
   size: number,
   id: string,
   seed: number,
-  bemand: boolean
+  bemand: boolean,
+  tegelSet?: string
 ): void {
   const tekenaar = LAND_IMPROVEMENT_TEKENAARS[id];
   if (tekenaar) {
-    tekenaar(ctx, x, y, size, seed, bemand);
+    tekenaar(ctx, x, y, size, seed, bemand, tegelSet);
     return;
   }
   // Onbekend/toekomstig improvement-type: neutrale plek-houder zodat nieuwe
@@ -1877,7 +2032,8 @@ function tekenActieveTile(
   // dichtgeklapt kunnen zijn, dus dit mag nooit de canvas-gefilterde subset
   // zijn.
   alleStreken: Streek[],
-  heeftOnrust: boolean
+  heeftOnrust: boolean,
+  tegelSet?: string
 ): void {
   const seed = tileSeed(col, hoogte);
   tekenTerreinOndergrond(ctx, x, y, size, terreinType, seed);
@@ -1908,7 +2064,7 @@ function tekenActieveTile(
     const bemand =
       (tile.improvement.id === "wachttoren" && isWachttorenBemand(stad.strijders, hoogte, col)) ||
       (tile.improvement.id === "courthouse" && isCourthouseBemand(stad.rechters, hoogte, col));
-    tekenLandImprovement(ctx, x, y, size, tile.improvement.id, seed, bemand);
+    tekenLandImprovement(ctx, x, y, size, tile.improvement.id, seed, bemand, tegelSet);
 
     if (tile.beurtenTotUitputting !== undefined) {
       ctx.fillStyle = "rgba(20, 16, 10, 0.7)";
@@ -2047,7 +2203,7 @@ export function tekenWereld(
           tekenVerhuldeTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
         } else {
           const verbonden = isTileVerbondenMetStad(alleStreken, streek.hoogte, col);
-          tekenActieveTile(ctx, x, y, tileSize, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust);
+          tekenActieveTile(ctx, x, y, tileSize, tile, streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust, tegelSet);
           if (tile.improvement?.soort === "city") {
             stadPositie = { x, y };
           }
@@ -2061,7 +2217,7 @@ export function tekenWereld(
         tekenVooruitkijkTile(ctx, x, y, tileSize, streek.terreinType);
       } else {
         const verbonden = isTileVerbondenMetStad(alleStreken, streek.hoogte, col);
-        tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust);
+        tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust, tegelSet);
         if (streek.tiles[col].improvement?.soort === "city") {
           stadPositie = { x, y };
         }
