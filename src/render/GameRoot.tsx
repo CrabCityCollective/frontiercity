@@ -1708,11 +1708,12 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // Onrust-uitleg-pop-up (issue: "Onrust indicator" — "zodra dat je de eerste
   // onrust krijgt ... een dynamische pop-up met uitleg"): getoond zodra een
   // willekeurige streek voor het eerst daadwerkelijk onrust > 0 draagt
-  // (onrust.ts: `onrustOpStreek`) — niet zodra Saloon/Courthouse beschikbaar
-  // komen (`ONRUST_MIN_STREEK`, improvements.ts): een drukke vroege streek
-  // kan al onrust dragen ruim vóórdat die streek ontgrendelt. Onderaan de
-  // keten net als `toonSmederijGebouwdPopup` hierboven (laagste prioriteit):
-  // dit is Going-West-kerninhoud, geen `uitlegAan`-toggle-baar tutorial-hintje.
+  // (onrust.ts: `onrustOpStreek`) — niet zodra Saloon/Courthouse gebouwd
+  // worden: die zijn zelf al vanaf streek 1 beschikbaar (issue: "Saloon en
+  // courthouse direct beschikbaar"), een drukke vroege streek kan dus al
+  // onrust dragen ruim vóórdat streek 8 ontgrendelt. Onderaan de keten net
+  // als `toonSmederijGebouwdPopup` hierboven (laagste prioriteit): dit is
+  // Going-West-kerninhoud, geen `uitlegAan`-toggle-baar tutorial-hintje.
   const toonOnrustUitlegPopup =
     !toonStreekPopup &&
     !toonUitlegPopup &&
