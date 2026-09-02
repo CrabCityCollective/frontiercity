@@ -594,7 +594,7 @@ Het verschil met de vergelijkbare cultuurstreek loopt op van ~3 naar ~10+ beurte
 
 *Stichtingskosten (hoofdstuk 2/10/14, issue: "stad stichten op de frontier" deel 3)*: **10 hout, 4 steen, 3 erts, 8 voedsel**. Oorspronkelijk vastgesteld op 40 hout, 15 steen, 10 erts, 30 voedsel (zie git-historie voor de volledige doorrekening tegen de per-grondstof opslag-cap uit die tijd) — **issue #187 ("stad stichten veel goedkoper")** heeft alle vier bedragen daarna 4x zo goedkoop gemaakt (gedeeld door 4, afgerond). Gevolg: het stichten forceert niet langer een Opslagplaats vóór streek 13 (10 hout blijft ruim onder de start-cap van 30) — dat was met de oorspronkelijke bedragen wel bewust het geval, maar de expliciete kostenverlaging weegt hier zwaarder.
 
-*Nieuwe settler (hoofdstuk 3/11/16)*: kosten **10 hout, 4 steen**, bouwtijd **4 beurten** — vergelijkbaar met Woonwijk (6 hout, 4 steen, 4 beurten), de improvement waarmee hij in dezelfde civiele wachtrij concurreert.
+*Nieuwe settler (hoofdstuk 3/11/16)*: **geen grondstofkosten**, bouwtijd **3 beurten** — oorspronkelijk 10 hout/4 steen en 4 beurten (vergelijkbaar met Woonwijk), maar issue "Settlers kosten geen grond stoffen" liet spelers te vaak vastlopen zodra ze net een stad hadden gesticht en zonder hout/steen zaten om de volgende settler uit te rusten. Alleen de bouwtijd blijft nog een rem op het tempo; hij concurreert nog steeds met Woonwijk in dezelfde civiele wachtrij (hoogstens één van de twee tegelijk).
 
 *Groei-tier kosten (voedsel)*: **correctie op eerdere beschrijving** — de huidige code gebruikt klein→middel = **40 voedsel** (`VOEDSEL_DREMPEL_GROEI`, `src/game/world.ts`) + **4 beurten** bouwtijd (Woonwijk-improvement, `src/game/improvements.ts`), lager dan de eerder hier genoemde 100 voedsel/5 beurten. Dit is in de huidige MVP-scope (hoofdstuk 13: één groei-tier-stap) ook de enige geïmplementeerde stap; middel→groot bestaat nog niet in de code — er is geen aparte formule of kostenwaarde voor deze tier vastgelegd.
 
@@ -825,6 +825,7 @@ De hoofdtekst hierboven beschrijft steeds alleen de huidige stand van het ontwer
 - Nieuwe settler in de civiele bouw-pool gezet (concurrerend met groei), gekoppeld aan het aantal gestichte steden (max. 1), en het stichten zelf als settler-actie uitgewerkt — issue: "stad stichten op de frontier".
 - Stichtingskosten (oorspronkelijk 40 hout/15 steen/10 erts/30 voedsel) 4× verlaagd naar 10 hout/4 steen/3 erts/8 voedsel, waardoor een Opslagplaats niet langer verplicht is vóór het stichten — issue #187 ("stad stichten veel goedkoper").
 - Een permanent herbouwbare tweede settler vanaf streek 7 toegevoegd, los van de "max. 1 per gestichte stad"-regel — issue: "Altijd 2e settler" (GitHub-issue #236).
+- Nieuwe-settler-kosten (10 hout/4 steen, 4 beurten) verlaagd naar puur bouwtijd (3 beurten, geen grondstoffen) — spelers liepen te vaak vast bij het uitrusten van een volgende settler vlak na het stichten van een stad — issue: "Settlers kosten geen grond stoffen".
 
 **Hoofdstuk 17 — kuddes & roofdieren**
 - Kans op een nieuwe wilde kudde per beurt verlaagd van 15% naar 5% (bij 15% liep het gemiddeld aantal tegelijk aanwezige kuddes op tot ruim boven de bedoelde 1-2) — issue: "kudde frequentie verlagen".
