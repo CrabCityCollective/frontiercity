@@ -123,23 +123,14 @@ test("het ontdekken van alle vijf vaste vakjes ontgrendelt de streek zelf nog ni
   );
 });
 
-test("kanStuurVerkennerWampanoag vereist een verhuld vakje zonder lopende verkenning, genoeg grondstoffen/wetenschap en de 1x-per-beurt-limiet", () => {
+test("kanStuurVerkennerWampanoag vereist een verhuld vakje zonder lopende verkenning, genoeg wetenschap en de 1x-per-beurt-limiet", () => {
   const zonderVoorraad = metWampanoagLaagInBeeld();
-  assert.equal(
-    kanStuurVerkennerWampanoag(zonderVoorraad, 3),
-    false,
-    "de Going West-startvoorraad heeft nog geen erts (VERKENNER.kosten.erts)"
-  );
+  assert.equal(kanStuurVerkennerWampanoag(zonderVoorraad, 3), false, "onvoldoende wetenschap bij de startstatus");
 
   const state = metWampanoagLaagEnVoorraadVoorVerkenning();
   assert.equal(kanStuurVerkennerWampanoag(state, 3), true);
   assert.equal(kanStuurVerkennerWampanoag({ ...state, wetenschap: 0 }, 3), false);
   assert.equal(kanStuurVerkennerWampanoag({ ...state, verkenningGedaanDitBeurt: true }, 3), false);
-  assert.equal(
-    kanStuurVerkennerWampanoag({ ...state, voorraad: { ...state.voorraad, hout: 0 } }, 3),
-    false,
-    "grondstoffen van VERKENNER.kosten moeten betaalbaar zijn"
-  );
   // Positie 0 draagt geen Wampanoag-inhoud, maar is (issue: "Wampanoag streek
   // blokkerend") toch verhuld en dus net zo goed verkenbaar — net als een
   // neutraal vakje bij de Bezette Streek.

@@ -177,19 +177,14 @@ test("cultuur-voortgang bevriest volledig zolang de Bezette Streek actief is, oo
   assert.equal(state.cultuur, bevrorenCultuur, "cultuur blijft precies gelijk — bevroren, niet verloren, niet oplopend");
 });
 
-test("kanStuurVerkenner vereist een verhuld vakje zonder lopende verkenning, genoeg grondstoffen/wetenschap en de 1x-per-beurt-limiet", () => {
+test("kanStuurVerkenner vereist een verhuld vakje zonder lopende verkenning, genoeg wetenschap en de 1x-per-beurt-limiet", () => {
   const zonderVoorraad = metBezetteStreekInBeeld();
-  assert.equal(kanStuurVerkenner(zonderVoorraad, 0), false, "onvoldoende wetenschap/grondstoffen bij de startstatus");
+  assert.equal(kanStuurVerkenner(zonderVoorraad, 0), false, "onvoldoende wetenschap bij de startstatus");
 
   const state = metBezetteStreekEnVoorraadVoorVerkenning();
   assert.equal(kanStuurVerkenner(state, 0), true);
   assert.equal(kanStuurVerkenner({ ...state, wetenschap: 0 }, 0), false);
   assert.equal(kanStuurVerkenner({ ...state, verkenningGedaanDitBeurt: true }, 0), false);
-  assert.equal(
-    kanStuurVerkenner({ ...state, voorraad: { ...state.voorraad, hout: 0 } }, 0),
-    false,
-    "grondstoffen van VERKENNER.kosten moeten betaalbaar zijn"
-  );
 });
 
 test("stuurVerkenner betaalt grondstoffen + wetenschap, zet een aftellend tellertje i.p.v. direct te onthullen, en mag maar 1x per beurt", () => {
@@ -221,16 +216,16 @@ test("stuurVerkenner betaalt grondstoffen + wetenschap, zet een aftellend teller
   assert.equal(state.verkenningGedaanDitBeurt, false, "de 1x-per-beurt-limiet is intussen weer teruggezet");
 });
 
-test("meerdere vakjes kunnen tegelijk 'onderweg' zijn als ze op verschillende beurten gestart zijn", () => {
+test("na het onthullen van één vakje kan een volgend vakje op een latere beurt los verkend worden", () => {
   let state = metBezetteStreekEnVoorraadVoorVerkenning();
   const streek12 = () => state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
 
   state = stuurVerkenner(state, 0);
-  state = volgendeBeurt(state); // 1 beurt verstreken voor positie 0, limiet weer vrij
-  state = stuurVerkenner(state, 1);
+  state = volgendeBeurt(state); // met bouwtijdBeurten 1 is positie 0 na deze beurt al onthuld, limiet weer vrij
+  assert.equal(streek12().tiles[0].verkenningInGang, undefined, "positie 0 is al onthuld");
 
-  assert.equal(streek12().tiles[0].verkenningInGang?.beurtenResterend, VERKENNER.bouwtijdBeurten - 1);
-  assert.equal(streek12().tiles[1].verkenningInGang?.beurtenResterend, VERKENNER.bouwtijdBeurten);
+  state = stuurVerkenner(state, 1);
+  assert.deepEqual(streek12().tiles[1].verkenningInGang, { beurtenResterend: VERKENNER.bouwtijdBeurten });
 });
 
 test("stuurVerkenner op het neutrale middelste vakje onthult uiteindelijk gewoon een leeg vakje", () => {

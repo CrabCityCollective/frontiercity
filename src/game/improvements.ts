@@ -497,8 +497,8 @@ export const VERKENNER: Improvement = {
   naam: "Verkenner",
   categorie: "wetenschappelijk",
   soort: "unit",
-  kosten: { hout: 3, erts: 1 },
-  bouwtijdBeurten: 2,
+  kosten: {},
+  bouwtijdBeurten: 1,
   effect: { type: "verkenning" },
 };
 
