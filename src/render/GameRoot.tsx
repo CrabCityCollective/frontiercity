@@ -194,6 +194,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     sluitWampanoagLaagOntdektMelding,
     sluitWampanoagRelatieGelegdMelding,
     sluitSmederijGebouwdMelding,
+    sluitStichtingskansOntdektMelding,
   } = useGameEngine(campagneId, laadBijStart);
 
   // Actieve campagne (hoofdstuk 9/13, M20d deelstap 3): `state.campagneId` is
@@ -1754,6 +1755,50 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !onrustUitlegBevestigd &&
     state.streken.some((streek) => onrustOpStreek(state.streken, state.stad.rechters, streek) > 0);
 
+  // Nieuwe-stichtingskans-pop-up (Going West, issue #459): onderaan de keten,
+  // net als de Wampanoag-/Smederij-/Onrust-pop-ups hierboven (laagste
+  // prioriteit — negeert dus ook `toonOnrustUitlegPopup`).
+  const toonStichtingskansPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    !toonStichtingsMomentPopup &&
+    !toonBoonPopup &&
+    !toonEersteContactPopup &&
+    !toonWampanoagRelatieGelegdPopup &&
+    !toonSmederijGebouwdPopup &&
+    !toonOnrustUitlegPopup &&
+    Boolean(state.stichtingskansOntdektEvent);
+
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -1956,6 +2001,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             tekst={popupContent(campagne, "onrustUitlegPopup")?.tekst}
             afbeelding="/assets/scenes/onrust.png"
             onSluiten={() => markeerUitlegGezien("onrust")}
+          />
+        )}
+        {toonStichtingskansPopup && (
+          <GoudOntdektPopup
+            titel={popupContent(campagne, "stichtingskansPopup")?.titel}
+            tekst={popupContent(campagne, "stichtingskansPopup")?.tekst}
+            onSluiten={sluitStichtingskansOntdektMelding}
           />
         )}
         {toonUitlegPopup && <UitlegPopup onDoorgaan={() => markeerUitlegGezien("opening")} />}

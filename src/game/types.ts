@@ -1073,6 +1073,16 @@ export interface GameState {
   // hierboven, drijft de narratieve `smederijGebouwdPopup`-tekst ("je kunt nu
   // weer alle stadsverbeteringen bouwen").
   smederijGebouwdEvent?: boolean;
+  // Nieuwe stichtingskans ontdekt (Going West, issue #459): gezet door
+  // `verwerkStreekOntgrendeling` (streekOntgrendeling.ts) zodra een net
+  // ontgrendelde streek een vers-water-vakje bevat — één van de drie
+  // gegarandeerde stichtingskansen uit het herhalende
+  // drie-stichtingsmomenten-patroon (hoofdstuk 9 Deel 2,
+  // `gegarandeerdeStichtingskansHoogten()` in stad.ts). Zelfde eenmalige
+  // meldings-vlag-patroon als `wampanoagLaagOntdektEvent` hierboven, drijft de
+  // narratieve `stichtingskansPopup`-tekst; alleen voor Going West (de
+  // tutorial kent geen herhalend patroon en geen Boon-beloning voor wachten).
+  stichtingskansOntdektEvent?: boolean;
   // Eenmalige "ontvangen"-vlaggen voor Gereedschap en de drie
   // Wampanoag-handelswaren (issue: "Alle voorraden tonen in resource block"):
   // bepalen of `ResourceHud` het bijbehorende icoontje toont. Gezet op `true`

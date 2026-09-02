@@ -69,6 +69,7 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
   let tweedeGoudOntdektEvent = state.tweedeGoudOntdektEvent;
   let bezetteStreekOntdektEvent = state.bezetteStreekOntdektEvent;
   let wampanoagLaagOntdektEvent = state.wampanoagLaagOntdektEvent;
+  let stichtingskansOntdektEvent = state.stichtingskansOntdektEvent;
 
   const heeftDrempelGehaald = (hoogte: number) => state.cultuur >= cultuurKostenVoorStreek(hoogte);
 
@@ -120,6 +121,19 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     streken = streken.map((streek) =>
       streek.hoogte === volgendeHoogte ? { ...streek, ontgrendeld: true } : streek
     );
+    // Nieuwe stichtingskans ontdekt (Going West, issue #459): een net
+    // ontgrendelde streek met een vers-water-vakje is één van de drie
+    // gegarandeerde stichtingskansen uit het herhalende
+    // drie-stichtingsmomenten-patroon (hoofdstuk 9 Deel 2,
+    // `gegarandeerdeStichtingskansHoogten()` in stad.ts) — de speler kan hier
+    // met de settler een nieuwe stad stichten, maar kan ook wachten tot de
+    // huidige stad "groot" is voor de Boon-beloning (boons.ts). Alleen voor
+    // Going West: de tutorial heeft precies één vers-water-vakje en kent geen
+    // herhalend patroon of Boon-systeem (zelfde `campagneId`-check als de
+    // Wampanoag-laag hierboven).
+    if (state.campagneId === "going-west" && huidigeStreek.tiles.some((tile) => tile.versWater)) {
+      stichtingskansOntdektEvent = true;
+    }
     // Goudader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
     // gegarandeerde eerste Goudader-locatie ligt op `GOUD_ONTDEKKING_STREEK`
     // (world.ts) — deze `while`-lus loopt precies één keer door die hoogte
@@ -163,9 +177,18 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
 
   return streken === state.streken &&
     bezetteStreekOntdektEvent === state.bezetteStreekOntdektEvent &&
-    wampanoagLaagOntdektEvent === state.wampanoagLaagOntdektEvent
+    wampanoagLaagOntdektEvent === state.wampanoagLaagOntdektEvent &&
+    stichtingskansOntdektEvent === state.stichtingskansOntdektEvent
     ? state
-    : { ...state, streken, goudOntdektEvent, tweedeGoudOntdektEvent, bezetteStreekOntdektEvent, wampanoagLaagOntdektEvent };
+    : {
+        ...state,
+        streken,
+        goudOntdektEvent,
+        tweedeGoudOntdektEvent,
+        bezetteStreekOntdektEvent,
+        wampanoagLaagOntdektEvent,
+        stichtingskansOntdektEvent,
+      };
 }
 
 // Sluit de "Bezette Streek ontdekt"-melding (Deel 2) — puur een
@@ -187,6 +210,13 @@ export function sluitWampanoagLaagOntdektMelding(state: GameState): GameState {
 // UI-bevestiging, zelfde patroon als `sluitKuddeMelding` hierboven.
 export function sluitGoudOntdektMelding(state: GameState): GameState {
   return { ...state, goudOntdektEvent: undefined };
+}
+
+// Sluit de "nieuwe stichtingskans ontdekt"-melding (Going West, issue #459)
+// — puur een UI-bevestiging, zelfde patroon als `sluitWampanoagLaagOntdektMelding`
+// hierboven.
+export function sluitStichtingskansOntdektMelding(state: GameState): GameState {
+  return { ...state, stichtingskansOntdektEvent: undefined };
 }
 
 // Sluit de tweede Goudader-ontdekkingsmelding (hoofdstuk 3/11/14, issue:
