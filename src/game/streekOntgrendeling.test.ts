@@ -8,6 +8,7 @@ import {
   kanStuurMissionaris,
   kanStuurVerkenner,
   sluitGoudOntdektMelding,
+  sluitStichtingskansOntdektMelding,
   sluitTweedeGoudOntdektMelding,
   stuurMissionaris,
   stuurVerkenner,
@@ -75,6 +76,47 @@ test("tweedeGoudOntdektEvent wordt precies één keer gezet, zodra GOUD_ONTDEKKI
     undefined,
     "geen herhaalde melding zodra de streek al ontgrendeld is"
   );
+});
+
+// Nieuwe stichtingskans (issue #459, "Going west stad stichting"): streek 4
+// is de eerste gegarandeerde vers-water-stichtingskans van het herhalende
+// drie-stichtingsmomenten-patroon (hoofdstuk 9 Deel 2) — de pop-up legt de
+// afweging uit tussen nu stichten en wachten op de Boon-beloning.
+test("stichtingskansOntdektEvent wordt gezet zodra een Going West-streek met een vers-water-vakje ontgrendelt", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  const streek4 = state.streken.find((l) => l.hoogte === 4)!;
+  assert.equal(streek4.tiles.some((t) => t.versWater), true, "streek 4 is de eerste gegarandeerde stichtingskans");
+
+  state = { ...state, cultuur: cultuurKostenVoorStreek(4) };
+
+  const naOntgrendeling = volgendeBeurt(state);
+  assert.equal(naOntgrendeling.streken.find((l) => l.hoogte === 4)!.ontgrendeld, true);
+  assert.equal(naOntgrendeling.stichtingskansOntdektEvent, true);
+
+  const gesloten = sluitStichtingskansOntdektMelding(naOntgrendeling);
+  assert.equal(gesloten.stichtingskansOntdektEvent, undefined);
+
+  const nogEenBeurt = volgendeBeurt(gesloten);
+  assert.equal(
+    nogEenBeurt.stichtingskansOntdektEvent,
+    undefined,
+    "geen herhaalde melding zodra de streek al ontgrendeld is"
+  );
+});
+
+// Zelfde issue: de tutorial heeft ook een vers-water-vakje (de allerlaatste
+// streek, hoofdstuk 2), maar kent geen herhalend stichtingspatroon of
+// Boon-systeem — de pop-up hoort daar dus niet te verschijnen.
+test("tutorial: geen stichtingskansOntdektEvent bij haar eigen vers-water-streek", () => {
+  let state = maakInitieleSpelStatus();
+  const laatsteStreek = state.streken[state.streken.length - 1];
+  assert.equal(laatsteStreek.tiles.some((t) => t.versWater), true, "de tutorial heeft precies één vers-water-vakje");
+
+  state = { ...state, cultuur: cultuurKostenVoorStreek(laatsteStreek.hoogte) };
+  const naOntgrendeling = volgendeBeurt(state);
+
+  assert.equal(naOntgrendeling.streken.find((l) => l.hoogte === laatsteStreek.hoogte)!.ontgrendeld, true);
+  assert.equal(naOntgrendeling.stichtingskansOntdektEvent, undefined);
 });
 
 // Compensatie bij de roofdier-introductie (issue: "Eerste streek geen

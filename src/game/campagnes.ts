@@ -119,6 +119,18 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
     wampumAfkoopPopupTitel: "Tijdelijke rust gekocht",
     wampumAfkoopPopupTekst:
       "Wampum wisselt van eigenaar, en de onrust zakt — voorlopig. Vroeg of laat zullen ze terugkomen.",
+    // Nieuwe stichtingskans (issue #459): verschijnt zodra een streek met een
+    // vers-water-vakje ontgrendelt — elk van de drie gegarandeerde
+    // stichtingskansen uit het herhalende drie-stichtingsmomenten-patroon
+    // (hoofdstuk 9 Deel 2), niet alleen de eerste op streek 4. Legt de
+    // afweging uit tussen nu stichten en wachten tot de huidige stad "groot"
+    // is voor de Boon-beloning (boons.ts).
+    stichtingskansPopupTitel: "Een nieuwe stichtingsplek",
+    stichtingskansPopupTekst:
+      "We hebben een waterbron gevonden, we zouden hier een nieuwe nederzetting kunnen stichten. Dat kun je doen " +
+      "met je settler. Echter, als we wachten tot onze oorspronkelijke stad gegroeid is tot Groot, krijgen we een " +
+      "hele mooie bonus. Het kan dus het wachten waard zijn om een nieuwe stad te stichten, en voor nu verder te " +
+      "trekken. De keuze is aan jou.",
   },
   // Issue "Going west: indringers": de indringers-incidenten (verwerkIndringers,
   // indringersEnDieren.ts) moeten op Going West niet de generieke fictieve

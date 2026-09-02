@@ -48,6 +48,7 @@ import {
 import {
   sluitGoudOntdektMelding as sluitGoudOntdektMeldingActie,
   sluitBezetteStreekOntdektMelding as sluitBezetteStreekOntdektMeldingActie,
+  sluitStichtingskansOntdektMelding as sluitStichtingskansOntdektMeldingActie,
   sluitTweedeGoudOntdektMelding as sluitTweedeGoudOntdektMeldingActie,
   sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
   sluitVijandelijkHeiligdomVeroverdMelding as sluitVijandelijkHeiligdomVeroverdMeldingActie,
@@ -407,6 +408,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => sluitSmederijGebouwdMeldingActie(huidig));
   }, []);
 
+  // Nieuwe-stichtingskans-pop-up (Going West, issue #459) — zelfde dunne
+  // wrapper-conventie als de overige `sluit...Melding`-acties hierboven.
+  const sluitStichtingskansOntdektMelding = useCallback(() => {
+    setState((huidig) => sluitStichtingskansOntdektMeldingActie(huidig));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -463,5 +470,6 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     sluitWampanoagLaagOntdektMelding,
     sluitWampanoagRelatieGelegdMelding,
     sluitSmederijGebouwdMelding,
+    sluitStichtingskansOntdektMelding,
   };
 }
