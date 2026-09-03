@@ -376,11 +376,25 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
   ...TECHBOOM_LEMMAS,
   // Militair
   {
+    id: "dreiging",
+    titel: "Dreiging",
+    categorie: "Militair",
+    tekst:
+      "De tegenstandersterkte van een streek, waar je legerwaarde bij een militaire confrontatie tegenover komt te staan. Loopt op naarmate je verder de frontier op trekt — een streek dicht bij huis is een stuk overzichtelijker dan eentje ver weg.",
+  },
+  {
     id: "legerkamp",
     titel: "Legerkamp",
     categorie: "Militair",
     tekst:
       "Militaire landverbetering waaraan je strijders kunt toewijzen. Elke toegewezen strijder telt mee als legerwaarde bij een confrontatie tegen een bezette streek.",
+  },
+  {
+    id: "legerwaarde",
+    titel: "Legerwaarde",
+    categorie: "Militair",
+    tekst:
+      "Je totale militaire kracht: elke opgeleide strijder telt mee, aangevuld met een bonus van bemande, voltooide en wegverbonden wachttorens en een vaste stad-brede bonus zodra je barakken hebt voltooid. Hoe hoger je legerwaarde tegenover de dreiging van een streek, hoe groter je winkans bij een militaire confrontatie.",
   },
   {
     id: "militaire-confrontatie",
@@ -408,5 +422,12 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
     categorie: "Militair",
     tekst:
       "Militaire landverbetering: geeft verdediging bij een militaire confrontatie en beschermt de streek tegen indringers-tribuut — maar alleen zolang hij bemand is met een strijder.",
+  },
+  {
+    id: "winkans",
+    titel: "Winkans",
+    categorie: "Militair",
+    tekst:
+      "Bij een militaire confrontatie bepaalt de verhouding tussen je legerwaarde en de dreiging van de streek je winkans: hoe groter je overwicht, hoe hoger die kans. Een confrontatie blijft altijd kansspel — zelfs een overmachtig leger wint niet gegarandeerd, en een zwak leger houdt altijd een kleine kans.",
   },
 ];
