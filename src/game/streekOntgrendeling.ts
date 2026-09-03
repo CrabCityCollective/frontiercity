@@ -31,7 +31,11 @@ import {
   ROOFDIER_MIN_STREEK,
   ROOFDIER_STREEK_KUDDE_POSITIE,
 } from "./world";
-import { initialiseerWampanoagLaag, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
+import {
+  initialiseerWampanoagLaag,
+  RIVIER_AANKONDIGING_STREEK_HOOGTE,
+  WAMPANOAG_STREEK_HOOGTE,
+} from "./worldGoingWest";
 import { metActieveStad } from "./stad";
 
 // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
@@ -70,6 +74,7 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
   let bezetteStreekOntdektEvent = state.bezetteStreekOntdektEvent;
   let wampanoagLaagOntdektEvent = state.wampanoagLaagOntdektEvent;
   let stichtingskansOntdektEvent = state.stichtingskansOntdektEvent;
+  let rivierAangekondigdEvent = state.rivierAangekondigdEvent;
 
   const heeftDrempelGehaald = (hoogte: number) => state.cultuur >= cultuurKostenVoorStreek(hoogte);
 
@@ -134,6 +139,14 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     if (state.campagneId === "going-west" && huidigeStreek.tiles.some((tile) => tile.versWater)) {
       stichtingskansOntdektEvent = true;
     }
+    // Rivier-aankondiging (issue "Pop-up rivier"): eenmalige trigger zodra
+    // `RIVIER_AANKONDIGING_STREEK_HOOGTE` (worldGoingWest.ts) voor het eerst
+    // ontgrendelt — zelfde eenmalige-trigger-conventie als de
+    // Goudader-ontdekkingen hieronder. Alleen voor Going West: de tutorial
+    // heeft toevallig ook een streek met deze hoogte, maar kent geen rivier.
+    if (volgendeHoogte === RIVIER_AANKONDIGING_STREEK_HOOGTE && state.campagneId === "going-west") {
+      rivierAangekondigdEvent = true;
+    }
     // Goudader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
     // gegarandeerde eerste Goudader-locatie ligt op `GOUD_ONTDEKKING_STREEK`
     // (world.ts) — deze `while`-lus loopt precies één keer door die hoogte
@@ -178,7 +191,8 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
   return streken === state.streken &&
     bezetteStreekOntdektEvent === state.bezetteStreekOntdektEvent &&
     wampanoagLaagOntdektEvent === state.wampanoagLaagOntdektEvent &&
-    stichtingskansOntdektEvent === state.stichtingskansOntdektEvent
+    stichtingskansOntdektEvent === state.stichtingskansOntdektEvent &&
+    rivierAangekondigdEvent === state.rivierAangekondigdEvent
     ? state
     : {
         ...state,
@@ -188,6 +202,7 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
         bezetteStreekOntdektEvent,
         wampanoagLaagOntdektEvent,
         stichtingskansOntdektEvent,
+        rivierAangekondigdEvent,
       };
 }
 
@@ -217,6 +232,13 @@ export function sluitGoudOntdektMelding(state: GameState): GameState {
 // hierboven.
 export function sluitStichtingskansOntdektMelding(state: GameState): GameState {
   return { ...state, stichtingskansOntdektEvent: undefined };
+}
+
+// Sluit de "rivier aangekondigd"-melding (issue "Pop-up rivier") — puur een
+// UI-bevestiging, zelfde patroon als `sluitStichtingskansOntdektMelding`
+// hierboven.
+export function sluitRivierAangekondigdMelding(state: GameState): GameState {
+  return { ...state, rivierAangekondigdEvent: undefined };
 }
 
 // Sluit de tweede Goudader-ontdekkingsmelding (hoofdstuk 3/11/14, issue:

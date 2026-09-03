@@ -195,6 +195,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     sluitWampanoagRelatieGelegdMelding,
     sluitSmederijGebouwdMelding,
     sluitStichtingskansOntdektMelding,
+    sluitRivierAangekondigdMelding,
   } = useGameEngine(campagneId, laadBijStart);
 
   // Actieve campagne (hoofdstuk 9/13, M20d deelstap 3): `state.campagneId` is
@@ -1800,6 +1801,51 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonOnrustUitlegPopup &&
     Boolean(state.stichtingskansOntdektEvent);
 
+  // Rivier-aankondiging-pop-up (Going West, issue "Pop-up rivier"): helemaal
+  // onderaan de keten gehangen, net als de Stichtingskans-pop-up hierboven
+  // (laagste prioriteit — negeert dus ook `toonStichtingskansPopup`).
+  const toonRivierAangekondigdPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    !toonStichtingsMomentPopup &&
+    !toonBoonPopup &&
+    !toonEersteContactPopup &&
+    !toonWampanoagRelatieGelegdPopup &&
+    !toonSmederijGebouwdPopup &&
+    !toonOnrustUitlegPopup &&
+    !toonStichtingskansPopup &&
+    Boolean(state.rivierAangekondigdEvent);
+
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -2009,6 +2055,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             titel={popupContent(campagne, "stichtingskansPopup")?.titel}
             tekst={popupContent(campagne, "stichtingskansPopup")?.tekst}
             onSluiten={sluitStichtingskansOntdektMelding}
+          />
+        )}
+        {toonRivierAangekondigdPopup && (
+          <GoudOntdektPopup
+            titel={popupContent(campagne, "rivierAangekondigdPopup")?.titel}
+            tekst={popupContent(campagne, "rivierAangekondigdPopup")?.tekst}
+            onSluiten={sluitRivierAangekondigdMelding}
           />
         )}
         {toonUitlegPopup && <UitlegPopup onDoorgaan={() => markeerUitlegGezien("opening")} />}

@@ -41,6 +41,14 @@ export const GOING_WEST_STREEK_AANTAL = 35;
 // Verkenning-flow zelf) zodat beide dezelfde hoogte hanteren.
 export const WAMPANOAG_STREEK_HOOGTE = 6;
 
+// Streek-hoogte waarop de Ohio-rivier wordt aangekondigd (issue "Pop-up
+// rivier"): zodra deze streek ontgrendelt, hoort de speler voor het eerst
+// over een machtige rivier verderop naar het westen. De rivier zelf (met
+// eigen rivier-vakjes, een op te leiden Ingenieur en de brug-bouwmechaniek)
+// ligt op streek 12 — dat deel is een apart, later issue en staat hier nog
+// niet uitgewerkt.
+export const RIVIER_AANKONDIGING_STREEK_HOOGTE = 9;
+
 // Vaste, beschrijvende terreinnaam per streek (flavor, geen invloed op
 // spelmechaniek — zelfde rol als TUTORIAL_TERREINTYPES in world.ts). Volgt de
 // reisroute van het groene, kustnabije Wampanoag-thuisland (streek 1-6, tot en
