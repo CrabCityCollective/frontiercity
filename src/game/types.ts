@@ -1083,6 +1083,15 @@ export interface GameState {
   // narratieve `stichtingskansPopup`-tekst; alleen voor Going West (de
   // tutorial kent geen herhalend patroon en geen Boon-beloning voor wachten).
   stichtingskansOntdektEvent?: boolean;
+  // Rivier-aankondiging (Going West, issue "Pop-up rivier"): gezet door
+  // `verwerkStreekOntgrendeling` (streekOntgrendeling.ts) zodra streek
+  // `RIVIER_AANKONDIGING_STREEK_HOOGTE` (worldGoingWest.ts) voor Going West
+  // ontgrendelt — zelfde eenmalige meldings-vlag-patroon als
+  // `stichtingskansOntdektEvent` hierboven. Drijft de narratieve
+  // `rivierAangekondigdPopup`-tekst (over de Ohio-rivier, verderop op streek
+  // 12) — de rivier-vakjes en brug-mechaniek zelf zijn een apart, later
+  // issue.
+  rivierAangekondigdEvent?: boolean;
   // Eenmalige "ontvangen"-vlaggen voor Gereedschap en de drie
   // Wampanoag-handelswaren (issue: "Alle voorraden tonen in resource block"):
   // bepalen of `ResourceHud` het bijbehorende icoontje toont. Gezet op `true`

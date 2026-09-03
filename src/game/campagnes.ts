@@ -132,6 +132,16 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
       "met je settler. Echter, als we wachten tot onze oorspronkelijke stad gegroeid is tot Groot, krijgen we een " +
       "hele mooie bonus. Het kan dus het wachten waard zijn om een nieuwe stad te stichten, en voor nu verder te " +
       "trekken. De keuze is aan jou.",
+    // Rivier-aankondiging (issue "Pop-up rivier"): verschijnt zodra streek
+    // `RIVIER_AANKONDIGING_STREEK_HOOGTE` (worldGoingWest.ts) ontgrendelt —
+    // kondigt de Ohio-rivier aan die verderop, op streek 12, de kaart
+    // doorsnijdt. De rivier-vakjes en brug-mechaniek zelf zijn een apart,
+    // later issue.
+    rivierAangekondigdPopupTitel: "De Ohio-rivier",
+    rivierAangekondigdPopupTekst:
+      "Van naburige stammen horen we verhalen over een machtige rivier, verder naar het westen. Ze noemen het de " +
+      "Ohio-rivier. Het vormt een natuurlijke grens. We moeten de rivier zien te vinden, en een brug zien te " +
+      "bouwen, zodat we verder het land in kunnen trekken.",
   },
   // Issue "Going west: indringers": de indringers-incidenten (verwerkIndringers,
   // indringersEnDieren.ts) moeten op Going West niet de generieke fictieve

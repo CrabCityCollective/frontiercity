@@ -8,6 +8,7 @@ import {
   kanStuurMissionaris,
   kanStuurVerkenner,
   sluitGoudOntdektMelding,
+  sluitRivierAangekondigdMelding,
   sluitStichtingskansOntdektMelding,
   sluitTweedeGoudOntdektMelding,
   stuurMissionaris,
@@ -15,6 +16,7 @@ import {
   VERKENNING_KOSTEN_WETENSCHAP,
   WOLOLO_INKOMEN_PER_MISSIONARIS,
 } from "./streekOntgrendeling";
+import { RIVIER_AANKONDIGING_STREEK_HOOGTE, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 import { VERKENNER, VIJANDELIJK_HEILIGDOM } from "./improvements";
 import { bereikbarePosities } from "./wegen";
 import {
@@ -117,6 +119,59 @@ test("tutorial: geen stichtingskansOntdektEvent bij haar eigen vers-water-streek
 
   assert.equal(naOntgrendeling.streken.find((l) => l.hoogte === laatsteStreek.hoogte)!.ontgrendeld, true);
   assert.equal(naOntgrendeling.stichtingskansOntdektEvent, undefined);
+});
+
+// Rivier-aankondiging (issue "Pop-up rivier"): kondigt de Ohio-rivier aan
+// zodra streek RIVIER_AANKONDIGING_STREEK_HOOGTE ontgrendelt — de rivier zelf
+// ligt verderop op streek 12 en is een apart, later issue.
+test("rivierAangekondigdEvent wordt precies één keer gezet, zodra RIVIER_AANKONDIGING_STREEK_HOOGTE voor het eerst ontgrendelt in Going West", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  // RIVIER_AANKONDIGING_STREEK_HOOGTE (9) ligt ná de blokkerende
+  // Wampanoag-laag (WAMPANOAG_STREEK_HOOGTE, 6) — zonder deze bypass stopt de
+  // ontgrendel-lus daar altijd eerst (zelfde bypass-patroon als
+  // `metWampanoagVerbondGesloten` in indringersEnDieren.test.ts).
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte === WAMPANOAG_STREEK_HOOGTE
+        ? { ...streek, wampanoagBezet: false, ontgrendeld: true }
+        : streek.hoogte < RIVIER_AANKONDIGING_STREEK_HOOGTE
+          ? { ...streek, ontgrendeld: true }
+          : streek
+    ),
+    cultuur: cultuurKostenVoorStreek(RIVIER_AANKONDIGING_STREEK_HOOGTE),
+  };
+
+  const naOntgrendeling = volgendeBeurt(state);
+  assert.equal(
+    naOntgrendeling.streken.find((l) => l.hoogte === RIVIER_AANKONDIGING_STREEK_HOOGTE)!.ontgrendeld,
+    true
+  );
+  assert.equal(naOntgrendeling.rivierAangekondigdEvent, true);
+
+  const gesloten = sluitRivierAangekondigdMelding(naOntgrendeling);
+  assert.equal(gesloten.rivierAangekondigdEvent, undefined);
+
+  const nogEenBeurt = volgendeBeurt(gesloten);
+  assert.equal(
+    nogEenBeurt.rivierAangekondigdEvent,
+    undefined,
+    "geen herhaalde melding zodra de streek al ontgrendeld is"
+  );
+});
+
+// Zelfde issue: de tutorial heeft toevallig ook een streek op deze hoogte,
+// maar kent geen rivier — de pop-up hoort daar dus niet te verschijnen.
+test("tutorial: geen rivierAangekondigdEvent bij haar eigen streek op RIVIER_AANKONDIGING_STREEK_HOOGTE", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, cultuur: cultuurKostenVoorStreek(RIVIER_AANKONDIGING_STREEK_HOOGTE) };
+
+  const naOntgrendeling = volgendeBeurt(state);
+  assert.equal(
+    naOntgrendeling.streken.find((l) => l.hoogte === RIVIER_AANKONDIGING_STREEK_HOOGTE)!.ontgrendeld,
+    true
+  );
+  assert.equal(naOntgrendeling.rivierAangekondigdEvent, undefined);
 });
 
 // Compensatie bij de roofdier-introductie (issue: "Eerste streek geen

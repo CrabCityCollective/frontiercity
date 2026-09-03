@@ -48,6 +48,7 @@ import {
 import {
   sluitGoudOntdektMelding as sluitGoudOntdektMeldingActie,
   sluitBezetteStreekOntdektMelding as sluitBezetteStreekOntdektMeldingActie,
+  sluitRivierAangekondigdMelding as sluitRivierAangekondigdMeldingActie,
   sluitStichtingskansOntdektMelding as sluitStichtingskansOntdektMeldingActie,
   sluitTweedeGoudOntdektMelding as sluitTweedeGoudOntdektMeldingActie,
   sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
@@ -414,6 +415,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => sluitStichtingskansOntdektMeldingActie(huidig));
   }, []);
 
+  // Rivier-aankondiging-pop-up (issue "Pop-up rivier") — zelfde dunne
+  // wrapper-conventie als de overige `sluit...Melding`-acties hierboven.
+  const sluitRivierAangekondigdMelding = useCallback(() => {
+    setState((huidig) => sluitRivierAangekondigdMeldingActie(huidig));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -471,5 +478,6 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     sluitWampanoagRelatieGelegdMelding,
     sluitSmederijGebouwdMelding,
     sluitStichtingskansOntdektMelding,
+    sluitRivierAangekondigdMelding,
   };
 }
