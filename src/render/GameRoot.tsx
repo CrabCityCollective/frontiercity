@@ -2235,7 +2235,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
           bouwVraag={isGeldigPlaatsingsDoel ? { improvementNaam: improvementNaam(plaatsingsImprovement!, campagne) } : undefined}
           terreinWaarschuwing={
             terreinMismatch
-              ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — vereist ${terreinEisenBeschrijving(plaatsingsImprovement!)}.`
+              ? // Rivier (issue "Pop-up rivier", vervolg): blokkeert élk improvement,
+                // ook terreinEis-loze (Heiligdom/Sterrencirkel/Wachttoren) —
+                // `terreinEisenBeschrijving` zou daar `undefined` voor teruggeven, dus
+                // een eigen tekst i.p.v. de generieke "vereist ..."-melding hieronder.
+                doelTileVoorPlaatsing?.terrein === "rivier"
+                ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — dit is een rivier.`
+                : `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — vereist ${terreinEisenBeschrijving(plaatsingsImprovement!)}.`
               : goudMismatch
                 ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — hier is geen goudader gevonden.`
                 : undefined

@@ -49,7 +49,15 @@ export type TechDrempel = 1 | 2 | 3;
 // (bv. "loofbos"), maar de 9 losse vakjes binnen die streek kunnen onderling
 // verschillen — dat verschil bepaalt welke land improvements er geplaatst
 // mogen worden (zie `Improvement.terreinEisen`).
-export type TerreinType = "vlak" | "bos" | "heuvel" | "berg";
+// "rivier" (issue "Pop-up rivier", vervolg: de rivier zelf, Going West streek
+// `RIVIER_STREEK_HOOGTE` in worldGoingWest.ts) is een uitzondering op de
+// gewone terrein-eis-opzet: geen enkel land improvement heeft `"rivier"` in
+// zijn `terreinEisen`, dus `improvementPastOpTerrein` (improvements.ts) sluit
+// dit terrein expliciet uit i.p.v. via de gewone allow-list — anders zouden
+// terreinEis-loze improvements (Heiligdom, Sterrencirkel, Wachttoren) er per
+// ongeluk toch op geplaatst kunnen worden. Alleen een brug (nog niet gebouwd,
+// apart issue) hoort hier ooit op te mogen.
+export type TerreinType = "vlak" | "bos" | "heuvel" | "berg" | "rivier";
 
 // Vaste, verhulde inhoud van een vakje binnen een Bezette Streek (hoofdstuk 6,
 // issue: "De Bezette Streek, missionaris en verkenner"), bepaald bij het

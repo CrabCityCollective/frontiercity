@@ -43,11 +43,20 @@ export const WAMPANOAG_STREEK_HOOGTE = 6;
 
 // Streek-hoogte waarop de Ohio-rivier wordt aangekondigd (issue "Pop-up
 // rivier"): zodra deze streek ontgrendelt, hoort de speler voor het eerst
-// over een machtige rivier verderop naar het westen. De rivier zelf (met
-// eigen rivier-vakjes, een op te leiden Ingenieur en de brug-bouwmechaniek)
-// ligt op streek 12 — dat deel is een apart, later issue en staat hier nog
-// niet uitgewerkt.
+// over een machtige rivier verderop naar het westen. De rivier zelf ligt op
+// `RIVIER_STREEK_HOOGTE` hieronder.
 export const RIVIER_AANKONDIGING_STREEK_HOOGTE = 9;
+
+// Streek-hoogte van de rivier zelf (issue "Pop-up rivier", vervolg): de
+// volledige streek bestaat uit rivier-vakjes (`GOING_WEST_TILE_TERREIN`
+// hieronder) waar geen enkel gewoon land improvement op geplaatst kan worden
+// (`improvementPastOpTerrein`, improvements.ts). Bewust geen vers-water- of
+// goud-vondst hier (zie `GOING_WEST_VERS_WATER`/`GOING_WEST_GOUD` hieronder) —
+// je kunt hier geen stad stichten, dit is een barrière die je over moet.
+// De Ingenieur-opleiding en de brug-bouwmechaniek zelf (waarmee een
+// rivier-vakje ooit wél een geldig plaatsingsdoel wordt) zijn expliciet nog
+// niet gebouwd — apart, later issue.
+export const RIVIER_STREEK_HOOGTE = 12;
 
 // Vaste, beschrijvende terreinnaam per streek (flavor, geen invloed op
 // spelmechaniek — zelfde rol als TUTORIAL_TERREINTYPES in world.ts). Volgt de
@@ -73,7 +82,10 @@ const GOING_WEST_TERREINTYPES = [
   "droge vlakte",
   "canyonrand",
   "mesa",
-  "zandsteenplateau",
+  // Streek 12 = `RIVIER_STREEK_HOOGTE` hierboven: de Ohio-rivier zelf, dus
+  // deze flavornaam (i.p.v. het oorspronkelijke "zandsteenplateau") sluit aan
+  // op de daadwerkelijke tile-inhoud van deze streek.
+  "rivier",
   "ravijn",
   "cottonwood-oase",
   "steppegras",
@@ -151,7 +163,11 @@ const GOING_WEST_TILE_TERREIN: Record<number, TerreinType[]> = {
   9: ["vlak", "bos", "heuvel", "vlak", "vlak", "heuvel", "vlak", "bos", "vlak"],
   10: ["heuvel", "vlak", "heuvel", "bos", "vlak", "heuvel", "vlak", "berg", "vlak"],
   11: ["berg", "heuvel", "vlak", "heuvel", "bos", "vlak", "heuvel", "vlak", "berg"],
-  12: ["heuvel", "berg", "vlak", "heuvel", "vlak", "bos", "berg", "heuvel", "vlak"],
+  // Streek 12 = `RIVIER_STREEK_HOOGTE`: bewust een uitzondering op de
+  // "minstens 1 vlak/bos/heuvel-of-berg"-mix hierboven — de hele streek is
+  // rivier (issue "Pop-up rivier", vervolg), geen enkel gewoon land
+  // improvement past hier (`improvementPastOpTerrein`, improvements.ts).
+  12: ["rivier", "rivier", "rivier", "rivier", "rivier", "rivier", "rivier", "rivier", "rivier"],
   13: ["vlak", "heuvel", "berg", "heuvel", "bos", "heuvel", "vlak", "berg", "heuvel"],
   14: ["berg", "heuvel", "vlak", "berg", "heuvel", "bos", "heuvel", "vlak", "berg"],
   15: ["heuvel", "berg", "heuvel", "vlak", "bos", "heuvel", "berg", "heuvel", "vlak"],
@@ -206,11 +222,21 @@ function terreinVoorTile(hoogte: number, positieInStreek: number): TerreinType {
 // `WAMPANOAG_STREEK_HOOGTE` (worldGoingWest.ts). Verhoogt de dichtheid alleen
 // maar, dus de M20c-stichtingskans-garantie (`vindStichtingskansGaten()`,
 // getoetst in worldGoingWest.test.ts) blijft hierdoor gewoon gehaald.
+// Streek 12 (`RIVIER_STREEK_HOOGTE`) draagt bewust géén vers-water-vondst
+// (meer) — de hele streek is rivier (issue "Pop-up rivier", vervolg), je kunt
+// hier geen stad stichten. De oorspronkelijke vondst op deze hoogte is
+// vervangen door twee nieuwe, op streek 10 en 13 (in plaats van vlak vóór en
+// ná de rivier) — nodig omdat de M20c-garantie hierboven specifiek leunt op
+// een treffer binnen [streek 8 + 1, streek 8 + 4] én binnen het venster van
+// elke nieuwe stichtingshoogte zelf; één enkele vervangende hoogte bleek
+// steeds een nieuw gat op te leveren (zie worldGoingWest.test.ts), vandaar
+// deze twee in plaats van één-op-één.
 const GOING_WEST_VERS_WATER: Record<number, number[]> = {
   4: [1],
   6: [6],
   8: [3],
-  12: [2],
+  10: [1],
+  13: [0],
   16: [1],
   20: [1],
   24: [7],

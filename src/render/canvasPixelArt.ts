@@ -1016,6 +1016,19 @@ function tekenTerreinHintPixel(ctx: CanvasRenderingContext2D, terrein: Tile["ter
     return;
   }
 
+  if (terrein === "rivier") {
+    // Rivier (issue "Pop-up rivier", vervolg): een paar lichte golfstrepen
+    // i.p.v. het heuvel/berg-silhouet hieronder — de blauwe streek-basiskleur
+    // (TERREIN_BASIS.rivier, canvas.ts) maakt het terrein al herkenbaar.
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    hlijn(ctx, 2, 12, 5, "rgba(210, 230, 240, 0.85)");
+    hlijn(ctx, 3, 13, 9, "rgba(210, 230, 240, 0.85)");
+    hlijn(ctx, 2, 12, 13, "rgba(210, 230, 240, 0.85)");
+    ctx.restore();
+    return;
+  }
+
   // Issue: "berg/heuvel niet goed zichtbaar in pixel art" — een vlakke vulling
   // zonder rand viel op sommige streken bijna samen met de terreinkleur (bv. de
   // olijfbruine oevervlakte-ondergrond van streek 1 tegen de vergelijkbaar

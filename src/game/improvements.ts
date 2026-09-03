@@ -34,6 +34,7 @@ export const TERREIN_LABELS: Record<TerreinType, string> = {
   bos: "bos",
   heuvel: "heuvel",
   berg: "berg",
+  rivier: "rivier",
 };
 
 // Nederlandse labels per gedeelde-opslag-grondstof (hoofdstuk 5), gedeeld
@@ -141,7 +142,14 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
 // Of `improvement` op een vakje met dit terrein geplaatst mag worden (issue:
 // "houtkap alleen op bos", "mijn alleen op heuvel/berg", "boerderij alleen op
 // vlakke grond"). Geen `terreinEisen` = geen beperking.
+//
+// Rivier (issue "Pop-up rivier", vervolg) is de enige uitzondering op die
+// regel: geen enkel land improvement mag hier staan, ook niet de
+// terreinEis-loze (Heiligdom, Sterrencirkel, Wachttoren) — alleen een brug
+// (nog niet gebouwd, apart issue) hoort hier ooit te mogen. Vandaar de
+// expliciete check vóór de gewone allow-list-logica.
 export function improvementPastOpTerrein(improvement: Improvement, terrein: TerreinType): boolean {
+  if (terrein === "rivier") return false;
   return !improvement.terreinEisen || improvement.terreinEisen.includes(terrein);
 }
 

@@ -258,6 +258,20 @@ export function beschrijfTile(
     };
   }
 
+  // Rivier (issue "Pop-up rivier", vervolg): dit terrein kan nooit een gewoon
+  // land improvement dragen (`improvementPastOpTerrein`, improvements.ts) —
+  // vervangt de gewone "Leeg vakje"-tekst hieronder volledig, ongeacht of dit
+  // de frontier-streek is. De Ingenieur-opleiding en de brug-bouwmechaniek
+  // zelf zijn nog niet gebouwd (apart, later issue), dus deze tekst is voor nu
+  // altijd van toepassing.
+  if (tile.terrein === "rivier") {
+    return {
+      titel: "Rivier",
+      ondertitel: `${streek.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
+      tekst: "Hier kun je een brug bouwen. Leid eerst een engineer op in je stad.",
+    };
+  }
+
   // Bouwen kan normaal alleen op de frontier-streek (de hoogst ontgrendelde) —
   // de Wachttoren is daarop een expliciete uitzondering (hoofdstuk 6/11,
   // issue: "wachttorens, bemanning en bevoorrading") en blijft dus overal
