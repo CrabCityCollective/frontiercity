@@ -2159,12 +2159,18 @@ function tekenActieveTile(
 
     // Wegverbinding (M10, hoofdstuk 16): een gebouwd, actief land improvement
     // zonder wegverbinding produceert nog niks — zichtbaar gemaakt met een
-    // gedempte waas i.p.v. stilzwijgend niets te tonen.
-    if (!verbondenMetStad) {
-      tekenNietVerbondenIndicator(ctx, x, y, size);
-    }
-    if (heeftOnrust) {
-      tekenOnrustIndicator(ctx, x, y, size);
+    // gedempte waas i.p.v. stilzwijgend niets te tonen. Vijandelijke tile-
+    // varianten (dreiging/belegeringsdoel, hoofdstuk 6) zijn nooit
+    // wegverbonden en vallen nooit onder onrust — beide indicatoren zijn
+    // daar dus altijd misleidend (issue: "Vijandelijke gebouwen anders
+    // tonen").
+    if (!tile.improvement.vijandelijk) {
+      if (!verbondenMetStad) {
+        tekenNietVerbondenIndicator(ctx, x, y, size);
+      }
+      if (heeftOnrust) {
+        tekenOnrustIndicator(ctx, x, y, size);
+      }
     }
     return;
   }
