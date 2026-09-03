@@ -1218,11 +1218,17 @@ function tekenActieveTilePixel(
       ctx.fillText(String(tile.beurtenTotUitputting), 15, 14);
     }
 
-    if (!verbondenMetStad) {
-      tekenNietVerbondenIndicatorPixel(ctx);
-    }
-    if (heeftOnrust) {
-      tekenOnrustIndicatorPixel(ctx);
+    // Vijandelijke tile-varianten zijn nooit wegverbonden en vallen nooit
+    // onder onrust — beide indicatoren zijn daar dus altijd misleidend (zie
+    // canvas.ts: `tekenActieveTile`, issue: "Vijandelijke gebouwen anders
+    // tonen").
+    if (!tile.improvement.vijandelijk) {
+      if (!verbondenMetStad) {
+        tekenNietVerbondenIndicatorPixel(ctx);
+      }
+      if (heeftOnrust) {
+        tekenOnrustIndicatorPixel(ctx);
+      }
     }
     return;
   }

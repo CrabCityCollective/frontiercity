@@ -226,10 +226,14 @@ export function beschrijfTile(
       tile.improvement.id === "vijandelijk-heiligdom"
         ? ` Wololo-meter: ${tile.wololoVoortgang ?? 0} / ${BELEGERINGSDREMPEL}.`
         : "";
+    // Onrust (issue: "Vijandelijke gebouwen anders tonen"): vijandelijke
+    // tile-varianten vallen nooit onder onrust — zelfde uitsluiting als
+    // `wegStatus` hierboven, dus ook hier weggelaten.
+    const onrustStatus = tile.improvement.vijandelijk ? "" : onrustStatusTekst(streek, streken, stad, campagne);
     return {
       titel: improvementNaam(tile.improvement, campagne),
       ondertitel: CATEGORIE_LABELS[tile.improvement.categorie],
-      tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${bemandStatus}${wololoStatus}${wegStatus}${uitputting}${onrustStatusTekst(streek, streken, stad, campagne)}`.trim(),
+      tekst: `${effectBeschrijving(tile.improvement, opFrontier)}${bemandStatus}${wololoStatus}${wegStatus}${uitputting}${onrustStatus}`.trim(),
     };
   }
 
