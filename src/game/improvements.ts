@@ -186,7 +186,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     soort: "land",
     kosten: { steen: 6 },
     bouwtijdBeurten: 2,
-    effect: { type: "productie", resource: "hout", waarde: 3 },
+    effect: { type: "productie", resource: "hout", waarde: 4 },
     uitputtingBeurten: 14,
     // Alleen op bos-vakjes: je kapt geen bomen op vlakke grond of een kale
     // heuvel (issue: "een houtkap alleen maar op een bos zetten").
@@ -203,7 +203,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     soort: "land",
     kosten: { hout: 6 },
     bouwtijdBeurten: 2,
-    effect: { type: "productie", resource: "steen", waarde: 2 },
+    effect: { type: "productie", resource: "steen", waarde: 3 },
     uitputtingBeurten: 10,
     // Alleen op heuvel/berg (issue: "de steengroeve moet ook op een berg of
     // heuvel staan") — zelfde terrein-eis als de mijn.
@@ -216,7 +216,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     soort: "land",
     kosten: { hout: 8, steen: 4 },
     bouwtijdBeurten: 3,
-    effect: { type: "productie", resource: "erts", waarde: 2 },
+    effect: { type: "productie", resource: "erts", waarde: 3 },
     uitputtingBeurten: 6,
     // Alleen op heuvel/berg (issue: "een mijn kun je alleen op een heuvel of
     // berg zetten").
@@ -236,7 +236,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     soort: "land",
     kosten: { hout: 4 },
     bouwtijdBeurten: 2,
-    effect: { type: "productie", resource: "voedsel", waarde: 4 },
+    effect: { type: "productie", resource: "voedsel", waarde: 5 },
     uitputtingBeurten: 18,
     // Alleen op vlakke grond (issue: "boerderij kun je juist niet op bergen
     // en bossen zetten, alleen op vlakke grond").
@@ -284,7 +284,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     soort: "land",
     kosten: { hout: 8, steen: 4 },
     bouwtijdBeurten: 3,
-    effect: { type: "productie", resource: "goud", waarde: 2 },
+    effect: { type: "productie", resource: "goud", waarde: 3 },
     uitputtingBeurten: 12,
     terreinEisen: ["heuvel", "berg"],
   },
@@ -347,7 +347,7 @@ export const HEILIGDOM: Improvement = {
   soort: "land",
   kosten: { hout: 4, steen: 4 },
   bouwtijdBeurten: 2,
-  effect: { type: "productie", resource: "cultuur", waarde: 2 },
+  effect: { type: "productie", resource: "cultuur", waarde: 3 },
 };
 
 export const CULTUREEL_LAND_IMPROVEMENTS: Improvement[] = [HEILIGDOM, OFFER_ALTAAR];
@@ -382,7 +382,7 @@ export const STERRENCIRKEL: Improvement = {
   soort: "land",
   kosten: { hout: 6, steen: 2 },
   bouwtijdBeurten: 2,
-  effect: { type: "productie", resource: "wetenschap", waarde: 2 },
+  effect: { type: "productie", resource: "wetenschap", waarde: 3 },
   minStreek: 4,
 };
 
