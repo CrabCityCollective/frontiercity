@@ -1,7 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { vindStichtingskansGaten } from "./stad";
-import { GOING_WEST_STREEK_AANTAL, maakInitieleWereldGoingWest } from "./worldGoingWest";
+import { GOING_WEST_STREEK_AANTAL, RIVIER_STREEK_HOOGTE, maakInitieleWereldGoingWest } from "./worldGoingWest";
+import {
+  CIVIEL_LAND_IMPROVEMENTS,
+  CULTUREEL_LAND_IMPROVEMENTS,
+  ECONOMISCH_LAND_IMPROVEMENTS,
+  MILITAIR_LAND_IMPROVEMENTS,
+  WETENSCHAPPELIJK_LAND_IMPROVEMENTS,
+  improvementPastOpTile,
+} from "./improvements";
+
+const ALLE_LAND_IMPROVEMENTS = [
+  ...ECONOMISCH_LAND_IMPROVEMENTS,
+  ...WETENSCHAPPELIJK_LAND_IMPROVEMENTS,
+  ...MILITAIR_LAND_IMPROVEMENTS,
+  ...CIVIEL_LAND_IMPROVEMENTS,
+  ...CULTUREEL_LAND_IMPROVEMENTS,
+];
 
 test("maakInitieleWereldGoingWest levert de volledige Normaal-lengte kaart, ononderbroken van hoogte 1", () => {
   const streken = maakInitieleWereldGoingWest();
@@ -10,10 +26,14 @@ test("maakInitieleWereldGoingWest levert de volledige Normaal-lengte kaart, onon
   streken.forEach((streek, i) => assert.equal(streek.hoogte, i + 1));
 });
 
-test("elke streek heeft precies 9 tiles en houdt minstens 1 vlak/bos/heuvel-of-berg vakje aan", () => {
+test("elke streek heeft precies 9 tiles en houdt minstens 1 vlak/bos/heuvel-of-berg vakje aan (behalve de rivier-streek)", () => {
   const streken = maakInitieleWereldGoingWest();
   for (const streek of streken) {
     assert.equal(streek.tiles.length, 9);
+    // Streek 12 (RIVIER_STREEK_HOOGTE) is bewust een uitzondering — de hele
+    // streek is rivier, geen enkel gewoon terrein-subtype (issue "Pop-up
+    // rivier", vervolg), zie de aparte rivier-tests hieronder.
+    if (streek.hoogte === RIVIER_STREEK_HOOGTE) continue;
     const terreinen = streek.tiles.map((t) => t.terrein);
     assert.ok(terreinen.includes("vlak"), `streek ${streek.hoogte} mist een vlak vakje`);
     assert.ok(terreinen.includes("bos"), `streek ${streek.hoogte} mist een bos-vakje`);
@@ -21,6 +41,24 @@ test("elke streek heeft precies 9 tiles en houdt minstens 1 vlak/bos/heuvel-of-b
       terreinen.includes("heuvel") || terreinen.includes("berg"),
       `streek ${streek.hoogte} mist een heuvel/berg-vakje`
     );
+  }
+});
+
+test("de rivier-streek bestaat volledig uit rivier-vakjes waar geen enkel land improvement op past", () => {
+  const streken = maakInitieleWereldGoingWest();
+  const rivierStreek = streken.find((streek) => streek.hoogte === RIVIER_STREEK_HOOGTE)!;
+
+  for (const tile of rivierStreek.tiles) {
+    assert.equal(tile.terrein, "rivier", `positie ${tile.positieInStreek} is geen rivier-vakje`);
+    assert.equal(tile.versWater, false, `positie ${tile.positieInStreek} zou geen vers water moeten hebben`);
+    assert.equal(tile.goud, false, `positie ${tile.positieInStreek} zou geen goud moeten hebben`);
+    for (const improvement of ALLE_LAND_IMPROVEMENTS) {
+      assert.equal(
+        improvementPastOpTile(improvement, tile),
+        false,
+        `${improvement.id} zou niet op een rivier-vakje moeten passen`
+      );
+    }
   }
 });
 

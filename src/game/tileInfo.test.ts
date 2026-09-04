@@ -37,3 +37,19 @@ test("de tile-info van een gewoon land improvement op dezelfde streek toont de o
   const info = beschrijfTile(streek, [streek], LEGE_STAD, 0, { hout: 0, steen: 0, erts: 0, goud: 0 }, [], GOING_WEST_CAMPAGNE);
   assert.equal(info.tekst.includes("Onrust op deze streek"), true);
 });
+
+// Issue "Pop-up rivier" (vervolg): een rivier-vakje toont zijn eigen tekst
+// i.p.v. de gewone "Leeg vakje"-beschrijving, ook op de frontier-streek.
+test("de tile-info van een rivier-vakje verwijst naar de brug/engineer, niet naar de gewone bouwtekst", () => {
+  const tiles: Tile[] = Array.from({ length: 9 }, (_, positieInStreek) => ({
+    positieInStreek,
+    terrein: "rivier" as const,
+    status: "leeg" as const,
+  }));
+  const streek: Streek = { hoogte: 1, ontgrendeld: true, tiles, terreinType: "rivier" };
+  const info = beschrijfTile(streek, [streek], LEGE_STAD, 0, { hout: 0, steen: 0, erts: 0, goud: 0 }, [], GOING_WEST_CAMPAGNE);
+  assert.equal(info.titel, "Rivier");
+  assert.equal(info.tekst.includes("brug"), true);
+  assert.equal(info.tekst.includes("engineer"), true);
+  assert.equal(info.tekst.includes("Hier kun je bouwen"), false);
+});

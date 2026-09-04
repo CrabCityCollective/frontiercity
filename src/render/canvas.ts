@@ -99,6 +99,10 @@ const TERREIN_BASIS: Record<string, string> = {
   eikenbos: "#4c5c34",
   "beboste heuvelrug": "#556b3a",
   maisakker: "#748b42",
+  // Streek 12 (RIVIER_STREEK_HOOGTE, worldGoingWest.ts, issue "Pop-up
+  // rivier"): een eigen blauwe basiskleur i.p.v. de bruine default — de hele
+  // streek bestaat uit rivier-vakjes.
+  rivier: "#2f4a5e",
 };
 
 export function terreinBasisKleur(terreinType: string): string {
@@ -1910,6 +1914,19 @@ function tekenTerreinHint(
   if (terrein === "bos") {
     const rng = maakSeededRandom(seed);
     tekenBoom(ctx, x + size * 0.5, y + size * 0.74, size * 0.36, rng() > 0.5);
+  } else if (terrein === "rivier") {
+    // Rivier (issue "Pop-up rivier", vervolg): een paar zachte golflijnen
+    // i.p.v. het heuvel/berg-silhouet hieronder — de blauwe streek-basiskleur
+    // (TERREIN_BASIS.rivier hierboven) maakt het terrein al herkenbaar, dit is
+    // puur extra textuur.
+    ctx.strokeStyle = "rgba(210, 230, 240, 0.55)";
+    ctx.lineWidth = Math.max(1, size * 0.03);
+    for (const relY of [0.38, 0.58, 0.78]) {
+      ctx.beginPath();
+      ctx.moveTo(x + size * 0.12, y + size * relY);
+      ctx.quadraticCurveTo(x + size * 0.5, y + size * (relY - 0.06), x + size * 0.88, y + size * relY);
+      ctx.stroke();
+    }
   } else {
     const baseY = y + size * 0.78;
     const h = size * (terrein === "berg" ? 0.36 : 0.24);
