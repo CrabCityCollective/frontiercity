@@ -9,9 +9,13 @@
 //
 // Tutorial- en Going-West-specifieke weergavenamen (bv. "Goudader" vs.
 // "Goudmijn", zie improvementNaam()/CampaignConfig.improvementNamen in
-// improvements.ts) blijven hier bewust buiten beschouwing — deze lemma's
-// beschrijven de onderliggende spelconcepten met hun functionele naam, niet
-// de per-campagne flavor-tekst.
+// campagnes.ts) beschrijven dezelfde onderliggende spelconcepten — de
+// hoofdlemma's hieronder gebruiken daarom hun functionele (tutorial-)naam,
+// niet de per-campagne flavor-tekst. Voor gebouwen waar de Going West-naam
+// écht afwijkt (issue "Going west gebouwen in encyclopedie") staat er wél een
+// eigen, kort lemma bij: alleen een verwijzing naar het bijbehorende
+// tutorial-lemma, zodat een speler die "Blokhuis" opzoekt ook iets vindt.
+// Zie `GOING_WEST_NAAM_LEMMAS` onderaan dit bestand.
 //
 // Categorie-indeling (issue vraagt: "is alfabetische volgorde het
 // handigst?"): een encyclopedie met een handvol losse lemma's is prima
@@ -22,6 +26,7 @@
 // wetenschap, Militair) met alfabetische volgorde bínnen elke categorie, plus
 // een zoekveld in EncyclopediePaneel voor snel opzoeken ongeacht categorie —
 // het beste van beide.
+import { GOING_WEST_CAMPAGNE } from "./campagnes";
 import { TECH_TREE, TechNode } from "./techTree";
 
 export type EncyclopedieCategorie =
@@ -70,7 +75,7 @@ const TECHBOOM_LEMMAS: EncyclopedieLemma[] = (Object.values(TECH_TREE) as TechNo
 
 // Alfabetisch bínnen elke categorie (zie de comment hierboven) — behalve de
 // techboom-lemma's, zie de comment bij `TECHBOOM_LEMMAS`.
-export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
+const BASE_LEMMAS: EncyclopedieLemma[] = [
   // Stad
   {
     id: "stad",
@@ -431,3 +436,48 @@ export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [
       "Bij een militaire confrontatie bepaalt de verhouding tussen je legerwaarde en de dreiging van de streek je winkans: hoe groter je overwicht, hoe hoger die kans. Een confrontatie blijft altijd kansspel — zelfs een overmachtig leger wint niet gegarandeerd, en een zwak leger houdt altijd een kleine kans.",
   },
 ];
+
+// Going West-gebouwen met een afwijkende naam (issue "Going west gebouwen in
+// encyclopedie"): sleutel is de bijbehorende `BASE_LEMMAS`-id, waarde het
+// `Improvement.id` waaronder `CampaignConfig.improvementNamen`
+// (campagnes.ts) de Going West-naam voert. Alleen gebouwen (land-/
+// stadsverbeteringen) — Verkenner/Missionaris zijn eenheden en blijven hier
+// dus buiten beeld, de issue vraagt specifiek naar gebouwen.
+const GOING_WEST_GEBOUW_NAAM_BRON: { lemmaId: string; improvementId: string }[] = [
+  { lemmaId: "sterrencirkel", improvementId: "sterrencirkel" },
+  { lemmaId: "goud-mijn", improvementId: "goudmijn" },
+  { lemmaId: "wachttoren", improvementId: "wachttoren" },
+  { lemmaId: "legerkamp", improvementId: "legerkamp" },
+  { lemmaId: "heiligdom", improvementId: "heiligdom" },
+  { lemmaId: "offeraltaar", improvementId: "offer-altaar" },
+  { lemmaId: "markt", improvementId: "markt" },
+  { lemmaId: "opslagplaats", improvementId: "opslagplaats" },
+  { lemmaId: "bibliotheek", improvementId: "bibliotheek" },
+  { lemmaId: "barakken", improvementId: "barakken" },
+  { lemmaId: "tempel", improvementId: "tempel" },
+  { lemmaId: "grote-tempel", improvementId: "grote-tempel" },
+  { lemmaId: "woonwijk", improvementId: "woonwijk" },
+  { lemmaId: "grote-woonwijk", improvementId: "grote-woonwijk" },
+];
+
+// Puur een verwijzing naar het tutorial-lemma (issue vraagt expliciet "gewoon
+// met een verwijzing naar het gebouw in de tutorial"), geen dubbele uitleg —
+// zo blijft er één bron van waarheid voor het spelconcept zelf. Haalt de
+// Going West-naam live uit `GOING_WEST_CAMPAGNE.improvementNamen` in plaats
+// van 'm hier te dupliceren, en slaat automatisch over zodra een naam ooit
+// gelijk zou worden aan de tutorial-naam (dan is een apart lemma overbodig).
+const GOING_WEST_NAAM_LEMMAS: EncyclopedieLemma[] = GOING_WEST_GEBOUW_NAAM_BRON.flatMap(({ lemmaId, improvementId }) => {
+  const basisLemma = BASE_LEMMAS.find((lemma) => lemma.id === lemmaId)!;
+  const goingWestNaam = GOING_WEST_CAMPAGNE.improvementNamen?.[improvementId];
+  if (!goingWestNaam || goingWestNaam === basisLemma.titel) return [];
+  return [
+    {
+      id: `going-west-${lemmaId}`,
+      titel: goingWestNaam,
+      categorie: basisLemma.categorie,
+      tekst: `Going West-naam voor de ${basisLemma.titel} — zie dat lemma voor de volledige uitleg.`,
+    },
+  ];
+});
+
+export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [...BASE_LEMMAS, ...GOING_WEST_NAAM_LEMMAS];
