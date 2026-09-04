@@ -144,6 +144,13 @@ export const STICHTING_AFSLUITENDE_SCENE =
   "Oer-stad ligt nu ver onder hen, stil, achtergelaten maar niet vergeten.\n" +
   "Het Hertenpad-volk is niet langer op doortocht. Het is aangekomen — voor nu.";
 
+// Stad-gesticht-pop-up (issue: "Tutorial" — "ik wil ook graag de pop-up van
+// de gestichte stad tonen ... ook al staat er nog geen tekst"): een korte,
+// losse afsluiter op het stichtingsmoment zelf, vóór de streken-opsomming
+// van TutorialVoltooidPopup hieronder. Tekst is bewust nog placeholder,
+// zelfde patroon als Going West's `STICHTINGSMOMENT_TEKST` (goingWestContent.ts).
+export const STAD_GESTICHT_TEKST = "todo";
+
 export function streekContent(hoogte: number): StreekContent | undefined {
   return TUTORIAL_STREEK_CONTENT[hoogte];
 }
