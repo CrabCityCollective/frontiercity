@@ -22,6 +22,7 @@ import {
   zetSmederijActief,
 } from "./groeiEnRekrutering";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
+import { metActieveStad } from "./stad";
 import { bemanWachttoren, berekenLegerwaarde, confrontatieBezetteStreek } from "./militair";
 import {
   AQUADUCT,
@@ -366,7 +367,7 @@ test("stadsgrootte-eis blokkeert Barakken/Tempel/Aquaduct voor een kleine stad e
 
 test("Tempel en Grote Tempel tellen als twee losse sloten en hun cultuurproductie is cumulatief (Deel 3)", () => {
   let state = maakInitieleSpelStatus();
-  state = { ...state, stad: { ...state.stad, grootte: "groot", cityImprovements: [TEMPEL, GROTE_TEMPEL] } };
+  state = metActieveStad(state, { ...state.stad, grootte: "groot", cityImprovements: [TEMPEL, GROTE_TEMPEL] });
   assert.equal(kanCityVerbeteringBouwen(state, TEMPEL), false, "Tempel is al gebouwd");
   assert.equal(kanCityVerbeteringBouwen(state, GROTE_TEMPEL), false, "Grote Tempel is al gebouwd");
 
@@ -381,15 +382,12 @@ test("Tempel en Grote Tempel tellen als twee losse sloten en hun cultuurproducti
 
 test("Bibliotheek en Markt produceren automatisch zodra ze gebouwd zijn, zonder wegverbinding nodig (Deel 3)", () => {
   let state = maakInitieleSpelStatus();
-  state = { ...state, stad: { ...state.stad, cityImprovements: [BIBLIOTHEEK] } };
+  state = metActieveStad(state, { ...state.stad, cityImprovements: [BIBLIOTHEEK] });
   state = volgendeBeurt(state);
   assert.equal(state.wetenschap, BIBLIOTHEEK.effect.waarde);
 
   let middelStaat = maakInitieleSpelStatus();
-  middelStaat = {
-    ...middelStaat,
-    stad: { ...middelStaat.stad, grootte: "middel", cityImprovements: [MARKT] },
-  };
+  middelStaat = metActieveStad(middelStaat, { ...middelStaat.stad, grootte: "middel", cityImprovements: [MARKT] });
   const goudVoor = middelStaat.voorraad.goud;
   middelStaat = volgendeBeurt(middelStaat);
   assert.equal(middelStaat.voorraad.goud, goudVoor + (MARKT.effect.waarde ?? 0));
