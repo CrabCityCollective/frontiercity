@@ -405,6 +405,15 @@ export interface Rechter {
   courthouse?: { hoogte: number; positieInStreek: number };
 }
 
+// Individuele opgeleide Ingenieur-eenheid (issue "Pop-up rivier", vervolg:
+// engineer + brug) — opgeleid via `leidIngenieurOp` (groeiEnRekrutering.ts),
+// zelfde soort losstaande unit als `Rechter` hierboven. Bewust nog geen
+// brug-toewijzingsveld: de brug-bouwmechaniek zelf is een apart, later
+// issue, dit is alleen de opleiding.
+export interface Ingenieur {
+  id: string;
+}
+
 export interface City {
   naam: string;
   grootte: "klein" | "middel" | "groot";
@@ -503,6 +512,12 @@ export interface City {
     improvement: Improvement;
     voortgang: Partial<Record<ResourceType, number>>;
   };
+  // Ingenieur-eenheden (issue "Pop-up rivier", vervolg: engineer + brug) —
+  // anders dan Rechter/Missionaris geen wachtrij: opleiden kost direct
+  // `INGENIEUR_KOSTEN_WETENSCHAP` (worldGoingWest.ts) wetenschap, zelfde
+  // instant-patroon als `stuurVerkenner` (streekOntgrendeling.ts), maar dan
+  // stad-breed i.p.v. per tegel. Alleen relevant in Going West.
+  ingenieurs: Ingenieur[];
   // Gebouwde, gelijktijdig-gecapte city improvements (hoofdstuk 3/4/11/14,
   // issue: "city improvements" Deel 1/3) — Bibliotheek, Markt, Barakken,
   // Tempel en Grote Tempel. Vervangt het nooit-gebouwde relic-slot-concept

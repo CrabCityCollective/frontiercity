@@ -21,6 +21,7 @@ import {
   zetUitlegPopups as zetUitlegPopupsActie,
 } from "./economie";
 import {
+  leidIngenieurOp as leidIngenieurOpActie,
   startCityVerbetering as startCityVerbeteringActie,
   startGroei as startGroeiActie,
   startMissionarisRecrutering as startMissionarisRecruteringActie,
@@ -375,6 +376,10 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => startRechterTrainingActie(huidig));
   }, []);
 
+  const leidIngenieurOp = useCallback(() => {
+    setState((huidig) => leidIngenieurOpActie(huidig));
+  }, []);
+
   const bemanLegerkamp = useCallback((strijderId: string, hoogte: number, positieInStreek: number) => {
     setState((huidig) => bemanLegerkampActie(huidig, strijderId, hoogte, positieInStreek));
   }, []);
@@ -458,6 +463,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     bemanCourthouse,
     haalRechterTerug,
     startRechterTraining,
+    leidIngenieurOp,
     zetUitlegPopups,
     markeerUitlegGezien,
     bevestigStreekPopup,

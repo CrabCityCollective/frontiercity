@@ -30,6 +30,7 @@ import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT, hoogsteOntgrendelde
 import { investeerInBouwkosten, pasVersnellingToe } from "./bouwwachtrij";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
 import { metActieveStad, stadTileHoogte } from "./stad";
+import { INGENIEUR_KOSTEN_WETENSCHAP } from "./worldGoingWest";
 
 // Beurten-teller voor een volledig kosteloze wachtrij (NIEUWE_SETTLER, issue:
 // "Settlers kosten geen grond stoffen") — los van `investeerInBouwkosten`
@@ -710,4 +711,32 @@ export function startRechterTraining(state: GameState): GameState {
   if (state.campagneId !== "going-west" || state.stad.rechterInAanbouw) return state;
 
   return metActieveStad(state, { ...state.stad, rechterInAanbouw: { improvement: RECHTER, voortgang: { ...RECHTER.kosten } } });
+}
+
+// Of een Ingenieur opgeleid mag worden (issue "Pop-up rivier", vervolg:
+// engineer + brug) — alleen in Going West, en alleen als er genoeg
+// wetenschap is (`INGENIEUR_KOSTEN_WETENSCHAP`). Geen andere voorwaarde
+// (geen Courthouse-achtig gebouw nodig, en herhaalbaar: elke Ingenieur kost
+// opnieuw de volle prijs) — zelfde soort losse, direct-betaalde actie als
+// `kanStuurVerkenner` (streekOntgrendeling.ts), maar stad-breed i.p.v. per
+// tegel.
+export function kanIngenieurOpleiden(state: GameState): boolean {
+  return state.campagneId === "going-west" && state.wetenschap >= INGENIEUR_KOSTEN_WETENSCHAP;
+}
+
+// Leidt direct een Ingenieur op (issue "Pop-up rivier", vervolg): trekt
+// meteen `INGENIEUR_KOSTEN_WETENSCHAP` wetenschap af en voegt een vrije
+// Ingenieur toe — geen wachtrij/bouwtijd, in tegenstelling tot
+// Rechter/Missionaris hierboven. Negeert de aanroep stilzwijgend bij een
+// ongeldige aanroep, zelfde veilige-aanroep-conventie als `stuurVerkenner`.
+export function leidIngenieurOp(state: GameState): GameState {
+  if (!kanIngenieurOpleiden(state)) return state;
+
+  return {
+    ...metActieveStad(state, {
+      ...state.stad,
+      ingenieurs: [...state.stad.ingenieurs, { id: `ingenieur-${state.stad.ingenieurs.length}` }],
+    }),
+    wetenschap: state.wetenschap - INGENIEUR_KOSTEN_WETENSCHAP,
+  };
 }

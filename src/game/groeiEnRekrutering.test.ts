@@ -4,7 +4,9 @@ import { rushKostenGoud } from "./bouwwachtrij";
 import { CITY_IMPROVEMENT_CAP, cityImprovementCap, maakInitieleSpelStatus, OPSLAG_CAP, volgendeBeurt } from "./economie";
 import {
   kanCityVerbeteringBouwen,
+  kanIngenieurOpleiden,
   kanTweedeSettlerBouwen,
+  leidIngenieurOp,
   startCityVerbetering,
   startGroei,
   startMissionarisRecrutering,
@@ -523,4 +525,36 @@ test("een gebouwd Aquaduct verlaagt de voedseldrempel voor groei naar Groot (iss
   assert.ok(verlaagdeDrempel < VOEDSEL_DREMPEL_GROEI_GROOT);
   state = startGroei(state);
   assert.equal(state.stad.civielInAanbouw?.improvement.id, "grote-woonwijk");
+});
+
+test("kanIngenieurOpleiden vereist Going West en genoeg wetenschap", () => {
+  const tutorial = { ...maakInitieleSpelStatus(), wetenschap: 999 };
+  assert.equal(kanIngenieurOpleiden(tutorial), false, "geen Ingenieur buiten Going West");
+
+  let state = maakInitieleSpelStatus("going-west");
+  assert.equal(kanIngenieurOpleiden(state), false, "nog niet genoeg wetenschap bij de startstatus");
+
+  state = { ...state, wetenschap: 29 };
+  assert.equal(kanIngenieurOpleiden(state), false, "1 wetenschap te weinig");
+
+  state = { ...state, wetenschap: 30 };
+  assert.equal(kanIngenieurOpleiden(state), true);
+});
+
+test("leidIngenieurOp trekt 30 wetenschap af en voegt een Ingenieur toe, herhaalbaar, geen effect zonder genoeg wetenschap of in de tutorial", () => {
+  let state = { ...maakInitieleSpelStatus("going-west"), wetenschap: 65 };
+
+  state = leidIngenieurOp(state);
+  assert.equal(state.wetenschap, 35);
+  assert.equal(state.stad.ingenieurs.length, 1);
+
+  state = leidIngenieurOp(state);
+  assert.equal(state.wetenschap, 5);
+  assert.equal(state.stad.ingenieurs.length, 2, "herhaalbaar — elke Ingenieur kost opnieuw de volle prijs");
+
+  const naOnvoldoendeWetenschap = leidIngenieurOp(state);
+  assert.equal(naOnvoldoendeWetenschap, state, "geen effect zonder genoeg wetenschap");
+
+  const tutorial = { ...maakInitieleSpelStatus(), wetenschap: 999 };
+  assert.equal(leidIngenieurOp(tutorial), tutorial, "geen effect in de tutorial");
 });
