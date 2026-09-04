@@ -64,7 +64,11 @@ import {
   stelWampanoagHandelIn as stelWampanoagHandelActie,
   stuurVerkennerWampanoag as stuurVerkennerWampanoagActie,
 } from "./wampanoag";
-import { sluitBouwKeuze as sluitBouwKeuzeActie, startBouw as startBouwActie } from "./infrastructuurEnBouw";
+import {
+  sloopImprovement as sloopImprovementActie,
+  sluitBouwKeuze as sluitBouwKeuzeActie,
+  startBouw as startBouwActie,
+} from "./infrastructuurEnBouw";
 import {
   bemanLegerkamp as bemanLegerkampActie,
   bemanWachttoren as bemanWachttorenActie,
@@ -153,6 +157,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
 
   const sluitBouwKeuze = useCallback(() => {
     setState((huidig) => metAutomatischeVolgendeBeurt(sluitBouwKeuzeActie(huidig)));
+  }, []);
+
+  // Sloop (issue: "Gebouwen slopen") — geen bouwkeuze/-ritme betrokken, dus
+  // geen `metAutomatischeVolgendeBeurt` nodig zoals bij `startBouw` hierboven.
+  const sloopImprovement = useCallback((streekHoogte: number, positieInStreek: number) => {
+    setState((huidig) => sloopImprovementActie(huidig, streekHoogte, positieInStreek));
   }, []);
 
   const startGroei = useCallback(() => {
@@ -467,6 +477,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     koopIndringersAfMetWampum,
     bemanWachttoren,
     haalStrijderTerug,
+    sloopImprovement,
     bemanCourthouse,
     haalRechterTerug,
     startRechterTraining,

@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { maakInitieleSpelStatus } from "./economie";
-import { infrastructuurVoortgang, startBouw } from "./infrastructuurEnBouw";
+import { infrastructuurVoortgang, sloopImprovement, startBouw } from "./infrastructuurEnBouw";
 import { GOUDADER, BARAKKEN, GROTE_TEMPEL, OFFER_ALTAAR } from "./improvements";
 import { GameState, Improvement } from "./types";
-import { HEILIGDOM, LEGERKAMP, WACHTTOREN } from "./testHelpers";
+import { HEILIGDOM, HOUTKAP, LEGERKAMP, WACHTTOREN, metWerkendeSterrencirkel } from "./testHelpers";
 
 // Streek 8, positie 0 is in world.ts vastgelegd als de gegarandeerde eerste
 // goudader-vondst (TUTORIAL_GOUD); positie 1 op diezelfde streek is ook
@@ -97,4 +97,107 @@ test("Legerkamp en Offer Altaar blijven geblokkeerd door startBouw tot hun infra
   };
   const naOfferAltaar = startBouw(metGroteTempel, 1, OFFER_ALTAAR, 6);
   assert.equal(naOfferAltaar.streken[0].tiles[6].improvement?.id, "offer-altaar");
+});
+
+// Zet een actieve `improvement` direct op één specifieke tile — zonder de
+// tussenstap van `startBouw`/wegverbinding, die voor `sloopImprovement` niet
+// relevant is (sloop kijkt alleen naar `status`/`improvement.id`).
+function metActieveImprovementOpTile(
+  state: GameState,
+  hoogte: number,
+  positieInStreek: number,
+  improvement: Improvement
+): GameState {
+  return {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte !== hoogte
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile, i) =>
+              i !== positieInStreek ? tile : { ...tile, status: "actief" as const, improvement }
+            ),
+          },
+    ),
+  };
+}
+
+test("sloopImprovement: geeft de bouwkosten terug en maakt de tile weer leeg (Wachttoren, Heiligdom, Sterrencirkel)", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, voorraad: { hout: 10, steen: 10, erts: 10, goud: 10 } };
+
+  const metWachttoren = metActieveImprovementOpTile(state, 1, 0, WACHTTOREN);
+  const naWachttorenSloop = sloopImprovement(metWachttoren, 1, 0);
+  const wachttorenTile = naWachttorenSloop.streken.find((s) => s.hoogte === 1)!.tiles[0];
+  assert.equal(wachttorenTile.status, "leeg");
+  assert.equal(wachttorenTile.improvement, undefined);
+  assert.equal(naWachttorenSloop.voorraad.hout, 10 + WACHTTOREN.kosten.hout!);
+  assert.equal(naWachttorenSloop.voorraad.steen, 10 + WACHTTOREN.kosten.steen!);
+
+  const metHeiligdom = metActieveImprovementOpTile(state, 1, 1, HEILIGDOM);
+  const naHeiligdomSloop = sloopImprovement(metHeiligdom, 1, 1);
+  const heiligdomTile = naHeiligdomSloop.streken.find((s) => s.hoogte === 1)!.tiles[1];
+  assert.equal(heiligdomTile.status, "leeg");
+  assert.equal(heiligdomTile.improvement, undefined);
+  assert.equal(naHeiligdomSloop.voorraad.hout, 10 + HEILIGDOM.kosten.hout!);
+  assert.equal(naHeiligdomSloop.voorraad.steen, 10 + HEILIGDOM.kosten.steen!);
+
+  const metSterrencirkel = { ...metWerkendeSterrencirkel(), voorraad: { hout: 10, steen: 10, erts: 10, goud: 10 } };
+  const sterrencirkelImprovement = metSterrencirkel.streken.find((s) => s.hoogte === 1)!.tiles[2].improvement!;
+  const naSterrencirkelSloop = sloopImprovement(metSterrencirkel, 1, 2);
+  const sterrencirkelTile = naSterrencirkelSloop.streken.find((s) => s.hoogte === 1)!.tiles[2];
+  assert.equal(sterrencirkelTile.status, "leeg");
+  assert.equal(sterrencirkelTile.improvement, undefined);
+  assert.equal(naSterrencirkelSloop.voorraad.hout, 10 + sterrencirkelImprovement.kosten.hout!);
+  assert.equal(naSterrencirkelSloop.voorraad.steen, 10 + sterrencirkelImprovement.kosten.steen!);
+});
+
+test("sloopImprovement: stuurt een strijder die de gesloopte Wachttoren bemande automatisch naar huis", () => {
+  let state = maakInitieleSpelStatus();
+  state = metActieveImprovementOpTile(state, 1, 0, WACHTTOREN);
+  const strijders = [{ id: "s1", wachttoren: { hoogte: 1, positieInStreek: 0 } }];
+  state = { ...state, stad: { ...state.stad, strijders }, steden: [{ ...state.stad, strijders }] };
+
+  const naSloop = sloopImprovement(state, 1, 0);
+  assert.equal(naSloop.stad.strijders[0].wachttoren, undefined, "strijder is vrij zodra zijn Wachttoren weg is");
+});
+
+test("sloopImprovement: geen effect op een niet-sloopbare improvement (Houtkap put vanzelf uit, mag niet gesloopt worden)", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, voorraad: { hout: 10, steen: 10, erts: 10, goud: 10 } };
+  state = metActieveImprovementOpTile(state, 1, 0, HOUTKAP);
+
+  const naPoging = sloopImprovement(state, 1, 0);
+  assert.equal(naPoging, state, "Houtkap staat niet in SLOOPBARE_IMPROVEMENT_IDS, dus geen wijziging");
+});
+
+test("sloopImprovement: geen effect op een Wachttoren die nog 'in_aanbouw' is (nog niet 'actief')", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte !== 1
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile, i) =>
+              i !== 0 ? tile : { ...tile, status: "in_aanbouw" as const, improvement: WACHTTOREN, bouwVoortgang: { ...WACHTTOREN.kosten } }
+            ),
+          }
+    ),
+  };
+
+  const naPoging = sloopImprovement(state, 1, 0);
+  assert.equal(naPoging, state, "nog in aanbouw, dus (nog) niet sloopbaar");
+});
+
+test("sloopImprovement: gerefundeerde bouwmaterialen worden gekapt aan opslagCap, net als reguliere productie", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, voorraad: { hout: state.opslagCap - 2, steen: state.opslagCap - 1, erts: 0, goud: 0 } };
+  state = metActieveImprovementOpTile(state, 1, 0, WACHTTOREN);
+
+  const naSloop = sloopImprovement(state, 1, 0);
+  assert.equal(naSloop.voorraad.hout, state.opslagCap);
+  assert.equal(naSloop.voorraad.steen, state.opslagCap);
 });

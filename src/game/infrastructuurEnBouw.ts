@@ -11,6 +11,8 @@
 // — de tussenliggende beurten zijn voor de settler (wegen aanleggen).
 
 import { improvementPastOpTile, isBebouwbaarLeeg } from "./improvements";
+import { isMateriaalType } from "./materiaal";
+import { metActieveStad } from "./stad";
 import { GameState, Improvement, Streek } from "./types";
 import { hoogsteOntgrendeldeStreek } from "./world";
 
@@ -164,4 +166,54 @@ export function sluitBouwKeuze(state: GameState): GameState {
     volgendeBouwBeurt: state.beurt + BOUW_RITME_BEURTEN,
     ...metOpgehoogdeBouwPopupTeller(state),
   };
+}
+
+// Sloopbaar: alleen de drie improvements die (hoofdstuk 3/11) nooit uitputten
+// — Wachttoren, Heiligdom, Sterrencirkel — staan de speler toe om ze zelf
+// weer af te breken (issue: "Gebouwen slopen"); alle andere land-improvements
+// putten vanzelf uit en worden dus nooit door de speler zelf opgeruimd.
+export const SLOOPBARE_IMPROVEMENT_IDS = ["wachttoren", "heiligdom", "sterrencirkel"];
+
+// Sloopt een actieve, sloopbare land-improvement en geeft de bouwmaterialen
+// (improvement.kosten) terug aan de voorraad — gekapt aan `opslagCap`, net
+// als reguliere productie (productie.ts). Geen wijziging als de tile geen
+// actieve, sloopbare improvement bevat (bijvoorbeeld nog "in_aanbouw", of een
+// improvement-type dat niet in `SLOOPBARE_IMPROVEMENT_IDS` staat) — de
+// aanroeper (GameRoot) toont de sloop-knop sowieso alleen dan, dit is een
+// tweede, veilige check zoals ook `startBouw` hierboven die heeft.
+export function sloopImprovement(state: GameState, streekHoogte: number, positieInStreek: number): GameState {
+  const streek = state.streken.find((s) => s.hoogte === streekHoogte);
+  const doelTile = streek?.tiles[positieInStreek];
+  if (!doelTile || doelTile.status !== "actief" || !doelTile.improvement) return state;
+  const improvement = doelTile.improvement;
+  if (!SLOOPBARE_IMPROVEMENT_IDS.includes(improvement.id)) return state;
+
+  const voorraad = { ...state.voorraad };
+  for (const [resource, aantal] of Object.entries(improvement.kosten)) {
+    if (isMateriaalType(resource) && aantal) {
+      voorraad[resource] = Math.min(state.opslagCap, voorraad[resource] + aantal);
+    }
+  }
+
+  const streken = state.streken.map((s) => {
+    if (s.hoogte !== streekHoogte) return s;
+    const tiles = s.tiles.map((tile, index) =>
+      index !== positieInStreek ? tile : { ...tile, status: "leeg" as const, improvement: undefined }
+    );
+    return { ...s, tiles };
+  });
+
+  // Een strijder die deze Wachttoren bemande (`bemanWachttoren`, militair.ts)
+  // raakt zijn toewijzing kwijt zodra de tile zelf verdwijnt — anders zou hij
+  // "vast" blijven zitten op een niet meer bestaande Wachttoren.
+  const strijders =
+    improvement.id === "wachttoren"
+      ? state.stad.strijders.map((s) =>
+          s.wachttoren?.hoogte === streekHoogte && s.wachttoren?.positieInStreek === positieInStreek
+            ? { ...s, wachttoren: undefined }
+            : s
+        )
+      : state.stad.strijders;
+
+  return metActieveStad({ ...state, streken, voorraad }, { ...state.stad, strijders });
 }
