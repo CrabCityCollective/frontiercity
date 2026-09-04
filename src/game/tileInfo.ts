@@ -12,6 +12,7 @@ import { BELEGERINGSDREMPEL } from "./streekOntgrendeling";
 import { wachttorenVoedselkostFactor } from "./techTree";
 import { CampaignConfig, City, Improvement, Streek, MateriaalType, ResourceType, TechId, Tile } from "./types";
 import { isTileVerbondenMetStad } from "./wegen";
+import { BRUG_KOSTEN } from "./worldGoingWest";
 import { hoogsteOntgrendeldeStreek, isVooruitkijkStreek } from "./world";
 
 export interface TileInfo {
@@ -261,14 +262,29 @@ export function beschrijfTile(
   // Rivier (issue "Pop-up rivier", vervolg): dit terrein kan nooit een gewoon
   // land improvement dragen (`improvementPastOpTerrein`, improvements.ts) —
   // vervangt de gewone "Leeg vakje"-tekst hieronder volledig, ongeacht of dit
-  // de frontier-streek is. De Ingenieur-opleiding en de brug-bouwmechaniek
-  // zelf zijn nog niet gebouwd (apart, later issue), dus deze tekst is voor nu
-  // altijd van toepassing.
+  // de frontier-streek is. Een al gebouwde brug (`tile.brug`,
+  // `bouwBrug`/streekOntgrendeling.ts) krijgt een eigen tekst; zonder brug
+  // hangt de tekst af van of er al een beschikbare Ingenieur is — de
+  // daadwerkelijke "hier brug bouwen?"-vraag zit in TileInfoPopup
+  // (`brugVraag`), net als de bouwvraag van een gewoon land improvement.
   if (tile.terrein === "rivier") {
+    if (tile.brug) {
+      return {
+        titel: "Brug",
+        ondertitel: `${streek.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
+        tekst: "Een brug over de rivier, gebouwd door een Ingenieur. Fungeert zelf al als weg — settlers en land improvements verderop hebben hier geen aparte wegaanleg nodig.",
+      };
+    }
+    const heeftIngenieur = stad.ingenieurs.some((ingenieur) => !ingenieur.brug);
+    const brugKostenTekst = (Object.entries(BRUG_KOSTEN) as [MateriaalType, number][])
+      .map(([resource, aantal]) => `${aantal} ${MATERIAAL_LABELS[resource].toLowerCase()}`)
+      .join(", ");
     return {
       titel: "Rivier",
       ondertitel: `${streek.terreinType} — ${TERREIN_LABELS[tile.terrein]}`,
-      tekst: "Hier kun je een brug bouwen. Leid eerst een engineer op in je stad.",
+      tekst: heeftIngenieur
+        ? `Hier kun je een brug bouwen (${brugKostenTekst}).`
+        : "Hier kun je een brug bouwen. Leid eerst een engineer op in je stad.",
     };
   }
 

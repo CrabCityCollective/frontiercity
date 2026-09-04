@@ -1052,6 +1052,18 @@ function tekenTerreinHintPixel(ctx: CanvasRenderingContext2D, terrein: Tile["ter
   }
 }
 
+// Brug (issue "Pop-up rivier", vervolg: brug-bouwmechaniek) — een grove
+// houten-plankenbrug over de rivier-golfstrepen heen. Grove
+// placeholder-vorm, functionaliteit gaat voor polish (CLAUDE.md).
+function tekenBrugPixel(ctx: CanvasRenderingContext2D): void {
+  blokrij(ctx, 8, 7, 6, "#6b4a2f");
+  blokrij(ctx, 8, 8, 6, "#6b4a2f");
+  const rand = "rgba(40, 26, 14, 0.7)";
+  for (const x of [3, 6, 9, 12]) {
+    vlijn(ctx, x, 6, 9, rand);
+  }
+}
+
 function tekenHertSilhouetPixel(ctx: CanvasRenderingContext2D, cx: number, baseY: number, h: number): void {
   const rijen = 3;
   for (let i = 0; i < rijen; i++) {
@@ -1253,6 +1265,9 @@ function tekenActieveTilePixel(
 
   if (tile.status === "leeg") {
     tekenTerreinHintPixel(ctx, tile.terrein, seed);
+    if (tile.terrein === "rivier" && tile.brug) {
+      tekenBrugPixel(ctx);
+    }
     if (tile.kudde) {
       tekenKuddePixel(ctx, seed + 1);
     }

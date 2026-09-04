@@ -4,7 +4,10 @@ import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { startBouw } from "./infrastructuurEnBouw";
 import {
   BELEGERINGSDREMPEL,
+  beschikbareIngenieurs,
   beschikbareMissionarissen,
+  bouwBrug,
+  kanBrugBouwen,
   kanStuurMissionaris,
   kanStuurVerkenner,
   sluitGoudOntdektMelding,
@@ -16,7 +19,7 @@ import {
   VERKENNING_KOSTEN_WETENSCHAP,
   WOLOLO_INKOMEN_PER_MISSIONARIS,
 } from "./streekOntgrendeling";
-import { RIVIER_AANKONDIGING_STREEK_HOOGTE, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
+import { RIVIER_AANKONDIGING_STREEK_HOOGTE, RIVIER_STREEK_HOOGTE, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 import { VERKENNER, VIJANDELIJK_HEILIGDOM } from "./improvements";
 import { bereikbarePosities } from "./wegen";
 import {
@@ -172,6 +175,57 @@ test("tutorial: geen rivierAangekondigdEvent bij haar eigen streek op RIVIER_AAN
     true
   );
   assert.equal(naOntgrendeling.rivierAangekondigdEvent, undefined);
+});
+
+// Brug-bouwmechaniek (issue "Pop-up rivier", vervolg): een klik op een
+// rivier-vakje (RIVIER_STREEK_HOOGTE) mag alleen een brug bouwen met een
+// beschikbare Ingenieur en genoeg hout/steen — zelfde soort toewijs-test als
+// `kanStuurMissionaris`/`stuurMissionaris` hierboven.
+test("kanBrugBouwen/bouwBrug: vereist een beschikbare Ingenieur en genoeg hout/steen, en wijst de Ingenieur permanent toe", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, voorraad: { ...state.voorraad, hout: 6, steen: 6 } };
+
+  assert.equal(kanBrugBouwen(state, RIVIER_STREEK_HOOGTE, 0), false, "nog geen Ingenieur");
+  assert.equal(kanBrugBouwen(state, 1, 0), false, "geen rivier-vakje op streek 1");
+
+  state = metActieveStad(state, { ...state.stad, ingenieurs: [{ id: "ingenieur-0" }] });
+  assert.equal(kanBrugBouwen(state, RIVIER_STREEK_HOOGTE, 0), true);
+  assert.equal(beschikbareIngenieurs(state).length, 1);
+
+  state = bouwBrug(state, RIVIER_STREEK_HOOGTE, 0);
+  const tile = state.streken.find((l) => l.hoogte === RIVIER_STREEK_HOOGTE)!.tiles[0];
+  assert.equal(tile.brug, true);
+  assert.equal(state.voorraad.hout, 0);
+  assert.equal(state.voorraad.steen, 0);
+  assert.deepEqual(state.stad.ingenieurs[0].brug, { hoogte: RIVIER_STREEK_HOOGTE, positieInStreek: 0 });
+  assert.equal(beschikbareIngenieurs(state).length, 0, "de Ingenieur is niet meer vrij inzetbaar voor een volgende brug");
+  assert.equal(kanBrugBouwen(state, RIVIER_STREEK_HOOGTE, 1), false, "geen vrije Ingenieur meer over");
+
+  const naNogmaals = bouwBrug(state, RIVIER_STREEK_HOOGTE, 0);
+  assert.equal(naNogmaals, state, "een vakje met al een brug kan niet nogmaals gebouwd worden");
+});
+
+test("bouwBrug op een tweede rivier-vakje vereist een nieuwe, nog niet toegewezen Ingenieur", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, voorraad: { ...state.voorraad, hout: 12, steen: 12 } };
+  state = metActieveStad(state, { ...state.stad, ingenieurs: [{ id: "ingenieur-0" }] });
+  state = bouwBrug(state, RIVIER_STREEK_HOOGTE, 0);
+
+  state = metActieveStad(state, { ...state.stad, ingenieurs: [...state.stad.ingenieurs, { id: "ingenieur-1" }] });
+  state = bouwBrug(state, RIVIER_STREEK_HOOGTE, 1);
+
+  const streek = state.streken.find((l) => l.hoogte === RIVIER_STREEK_HOOGTE)!;
+  assert.equal(streek.tiles[0].brug, true);
+  assert.equal(streek.tiles[1].brug, true);
+});
+
+test("bouwBrug negeert de aanroep stilzwijgend zonder genoeg hout/steen", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, voorraad: { ...state.voorraad, hout: 5, steen: 6 } };
+  state = metActieveStad(state, { ...state.stad, ingenieurs: [{ id: "ingenieur-0" }] });
+
+  const naBouw = bouwBrug(state, RIVIER_STREEK_HOOGTE, 0);
+  assert.equal(naBouw, state);
 });
 
 // Compensatie bij de roofdier-introductie (issue: "Eerste streek geen

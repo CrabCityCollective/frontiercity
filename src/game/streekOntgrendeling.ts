@@ -32,6 +32,7 @@ import {
   ROOFDIER_STREEK_KUDDE_POSITIE,
 } from "./world";
 import {
+  BRUG_KOSTEN,
   initialiseerWampanoagLaag,
   RIVIER_AANKONDIGING_STREEK_HOOGTE,
   WAMPANOAG_STREEK_HOOGTE,
@@ -552,4 +553,58 @@ export function stuurMissionaris(state: GameState, missionarisId: string, positi
   );
 
   return metActieveStad(state, { ...state.stad, missionarissen });
+}
+
+// Brug-bouwmechaniek (issue "Pop-up rivier", vervolg): een opgeleide
+// Ingenieur (`leidIngenieurOp`, groeiEnRekrutering.ts) maakt een rivier-vakje
+// (`RIVIER_STREEK_HOOGTE`, worldGoingWest.ts) begaanbaar/wegverbonden. Zelfde
+// klik-op-de-tile-patroon als `stuurMissionaris` hierboven: een klik toont de
+// bouwvraag (TileInfoPopup: `brugVraag`), bevestigen kost meteen
+// `BRUG_KOSTEN` en wijst blijvend een beschikbare Ingenieur toe — geen
+// wachtrij/bouwtijd, en geen "naar huis sturen" (een brug heeft, anders dan
+// een Wachttoren/Legerkamp, geen doorlopende bemanning nodig).
+
+// Ingenieurs die nog niet aan een brug toegewezen zijn — vrij inzetbaar.
+export function beschikbareIngenieurs(state: GameState) {
+  return state.stad.ingenieurs.filter((i) => !i.brug);
+}
+
+// Of een klik op dit rivier-vakje een brug mag bouwen: het vakje moet
+// daadwerkelijk rivier zijn en nog geen brug hebben, er moet minstens één
+// vrije Ingenieur zijn, en de speler moet `BRUG_KOSTEN` kunnen betalen.
+export function kanBrugBouwen(state: GameState, hoogte: number, positieInStreek: number): boolean {
+  const streek = state.streken.find((l) => l.hoogte === hoogte);
+  const tile = streek?.tiles[positieInStreek];
+  if (!tile || tile.terrein !== "rivier" || tile.brug) return false;
+  if (beschikbareIngenieurs(state).length === 0) return false;
+
+  return Object.entries(BRUG_KOSTEN).every(
+    ([resource, aantal]) => (state.voorraad[resource as keyof typeof state.voorraad] ?? 0) >= (aantal ?? 0)
+  );
+}
+
+// Bouwt direct een brug op `positieInStreek`/`hoogte`: betaalt meteen
+// `BRUG_KOSTEN` en wijst de eerste beschikbare Ingenieur blijvend toe.
+// Negeert de aanroep stilzwijgend bij een ongeldige aanroep — zelfde
+// veilige-aanroep-conventie als `stuurVerkenner`/`stuurMissionaris`.
+export function bouwBrug(state: GameState, hoogte: number, positieInStreek: number): GameState {
+  if (!kanBrugBouwen(state, hoogte, positieInStreek)) return state;
+
+  const ingenieur = beschikbareIngenieurs(state)[0];
+  const voorraad = { ...state.voorraad };
+  for (const [resource, aantal] of Object.entries(BRUG_KOSTEN)) {
+    voorraad[resource as keyof typeof voorraad] -= aantal ?? 0;
+  }
+
+  const streken = state.streken.map((streek) =>
+    streek.hoogte !== hoogte
+      ? streek
+      : { ...streek, tiles: streek.tiles.map((t, index) => (index !== positieInStreek ? t : { ...t, brug: true })) }
+  );
+
+  const ingenieurs = state.stad.ingenieurs.map((i) =>
+    i.id === ingenieur.id ? { ...i, brug: { hoogte, positieInStreek } } : i
+  );
+
+  return metActieveStad({ ...state, streken, voorraad }, { ...state.stad, ingenieurs });
 }

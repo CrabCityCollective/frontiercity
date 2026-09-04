@@ -1,10 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bereikbarePosities } from "./wegen";
+import { bereikbarePosities, isTileVerbondenMetStad, magSettlerNaar } from "./wegen";
 import { verplaatsSettlerNaar } from "./acties";
 import { maakInitieleSpelStatus } from "./economie";
 import { GameState } from "./types";
 import { metWegCorridorNaarStreek } from "./testHelpers";
+import { RIVIER_STREEK_HOOGTE } from "./worldGoingWest";
 
 // Ontgrendelt een streek zonder de rest van de wereldstatus aan te raken —
 // gedeelde opzet voor de tests hieronder (de settler mag alleen naar
@@ -82,4 +83,75 @@ test("verplaatsSettlerNaar: een klik op een vakje 2 stappen verderop over de weg
 
   assert.deepEqual(naVerplaatsing.settler, { hoogte: 3, positieInStreek: 4 });
   assert.equal(naVerplaatsing.settlerActieGedaanDitBeurt, true, "verbruikt de gewone settler-actie, net als een enkele stap");
+});
+
+// Rivier & brug (issue "Pop-up rivier", vervolg: brug-bouwmechaniek): "een
+// rivier vakje mag niet begaanbaar zijn voor settlers zonder een brug".
+test("magSettlerNaar: een rivier-vakje zonder brug is onbegaanbaar, met brug wel", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = metOntgrendeldeStreek(state, RIVIER_STREEK_HOOGTE);
+
+  assert.equal(
+    magSettlerNaar(state.streken, { hoogte: RIVIER_STREEK_HOOGTE, positieInStreek: 0 }),
+    false,
+    "geen brug — onbegaanbaar"
+  );
+
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte === RIVIER_STREEK_HOOGTE
+        ? { ...streek, tiles: streek.tiles.map((t) => (t.positieInStreek === 0 ? { ...t, brug: true } : t)) }
+        : streek
+    ),
+  };
+
+  assert.equal(
+    magSettlerNaar(state.streken, { hoogte: RIVIER_STREEK_HOOGTE, positieInStreek: 0 }),
+    true,
+    "met brug — wel begaanbaar"
+  );
+  // Een ander rivier-vakje op dezelfde streek, zonder eigen brug, blijft
+  // gewoon onbegaanbaar — de brug geldt alleen voor het vakje waar hij op
+  // gebouwd is.
+  assert.equal(magSettlerNaar(state.streken, { hoogte: RIVIER_STREEK_HOOGTE, positieInStreek: 1 }), false);
+});
+
+// "een brug hoeft geen weg te hebben, hij fungeert al als weg" (issue) — een
+// brug-vakje telt vanzelf mee in het wegennetwerk (`heeftWegOp`, wegen.ts),
+// zonder dat de settler er ook nog eens los een weg op hoeft aan te leggen.
+test("isTileVerbondenMetStad: een brug op een rivier-vakje telt vanzelf al als weg, zonder aparte wegaanleg", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  // Weg tot en met de streek net onder de rivier-streek.
+  state = metWegCorridorNaarStreek(state, RIVIER_STREEK_HOOGTE - 1);
+  // Een land improvement ná de rivier heeft zelf ook al een weg.
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte === RIVIER_STREEK_HOOGTE + 1
+        ? { ...streek, tiles: streek.tiles.map((t) => (t.positieInStreek === 4 ? { ...t, heeftWeg: true } : t)) }
+        : streek
+    ),
+  };
+
+  assert.equal(
+    isTileVerbondenMetStad(state.streken, RIVIER_STREEK_HOOGTE + 1, 4),
+    false,
+    "geen brug op de rivier-streek zelf — nog niet verbonden"
+  );
+
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte === RIVIER_STREEK_HOOGTE
+        ? { ...streek, tiles: streek.tiles.map((t) => (t.positieInStreek === 4 ? { ...t, brug: true } : t)) }
+        : streek
+    ),
+  };
+
+  assert.equal(
+    isTileVerbondenMetStad(state.streken, RIVIER_STREEK_HOOGTE + 1, 4),
+    true,
+    "de brug zelf telt al als weg — geen los aangelegde weg nodig op het brug-vakje"
+  );
 });

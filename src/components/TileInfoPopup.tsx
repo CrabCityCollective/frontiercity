@@ -1,10 +1,16 @@
 "use client";
 
 import RushMetGoudKnop from "./RushMetGoudKnop";
+import { MATERIAAL_LABELS } from "@/game/improvements";
 import { VERKENNING_KOSTEN_WETENSCHAP } from "@/game/streekOntgrendeling";
 import { TileInfo } from "@/game/tileInfo";
 import { WAMPANOAG_HANDEL_KEUZE_LABELS } from "@/game/wampanoag";
-import { Improvement, Missionaris, Rechter, ResourceType, Strijder, TechId, WampanoagHandelKeuze } from "@/game/types";
+import { Improvement, MateriaalType, Missionaris, Rechter, ResourceType, Strijder, TechId, WampanoagHandelKeuze } from "@/game/types";
+import { BRUG_KOSTEN } from "@/game/worldGoingWest";
+
+const BRUG_KOSTEN_TEKST = (Object.entries(BRUG_KOSTEN) as [MateriaalType, number][])
+  .map(([resource, aantal]) => `${aantal} ${MATERIAAL_LABELS[resource].toLowerCase()}`)
+  .join(", ");
 
 interface TileInfoPopupProps {
   tileInfo: TileInfo | null;
@@ -119,6 +125,17 @@ interface TileInfoPopupProps {
     beschikbareMissionarissen: Missionaris[];
     onStuurMissionaris: (missionarisId: string) => void;
   };
+  // Gezet als de aangeklikte tile een rivier-vakje zonder brug is (issue
+  // "Pop-up rivier", vervolg: brug-bouwmechaniek) — alleen relevant zolang er
+  // minstens één beschikbare Ingenieur is (`heeftIngenieur`); zonder Ingenieur
+  // legt `tileInfo.tekst` zelf al uit dat er eerst een opgeleid moet worden,
+  // dus toont deze pop-up dan geen extra knop. `kan` dekt ook de
+  // grondstofkosten (`BRUG_KOSTEN`, worldGoingWest.ts).
+  brugVraag?: {
+    heeftIngenieur: boolean;
+    kan: boolean;
+    onBouwBrug: () => void;
+  };
   onBevestigBouw: () => void;
   onAnnuleerBouw: () => void;
   onSluiten: () => void;
@@ -141,6 +158,7 @@ export default function TileInfoPopup({
   wampanoagHandelVraag,
   confrontatieVraag,
   missionarisVraag,
+  brugVraag,
   onBevestigBouw,
   onAnnuleerBouw,
   onSluiten,
@@ -562,6 +580,21 @@ export default function TileInfoPopup({
                 Geen beschikbare Missionarissen — leid er een op via het stadsmenu.
               </p>
             )}
+          </div>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && brugVraag?.heeftIngenieur && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+            <p style={{ margin: 0, fontWeight: "bold" }}>Hier brug bouwen? (Kosten: {BRUG_KOSTEN_TEKST})</p>
+            <button
+              className="fc-knop"
+              disabled={!brugVraag.kan}
+              onClick={brugVraag.onBouwBrug}
+              title={brugVraag.kan ? undefined : `Niet genoeg grondstoffen — vereist ${BRUG_KOSTEN_TEKST}`}
+              style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start", opacity: brugVraag.kan ? 1 : 0.5 }}
+            >
+              Brug bouwen
+            </button>
           </div>
         )}
 

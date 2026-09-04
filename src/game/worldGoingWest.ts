@@ -20,7 +20,7 @@
 // echter nog altijd als `beschikbaar: false` ("Binnenkort beschikbaar") —
 // pas de laatste M20d-deelstap zet die knop aan, zie het M20d-issue.
 
-import { Streek, TerreinType, Tile, WampanoagInhoud } from "./types";
+import { MateriaalType, Streek, TerreinType, Tile, WampanoagInhoud } from "./types";
 
 export const BAND_WIDTH_TILES = 9;
 export const STAD_POSITIE = 4; // middelste vakje van de band = stad — zelfde conventie als de tutorial
@@ -61,10 +61,15 @@ export const RIVIER_STREEK_HOOGTE = 12;
 // Wetenschapskosten om één Ingenieur op te leiden (issue "Pop-up rivier",
 // vervolg: engineer + brug) — instant betaald, geen bouwtijd, zelfde
 // instant-wetenschap-patroon als `VERKENNING_KOSTEN_WETENSCHAP`
-// (streekOntgrendeling.ts). De brug-bouwmechaniek zelf (die een opgeleide
-// Ingenieur nodig heeft) is een apart, later issue — dit is alleen de
-// opleiding.
+// (streekOntgrendeling.ts).
 export const INGENIEUR_KOSTEN_WETENSCHAP = 30;
+
+// Grondstofkosten om één brug te bouwen op een rivier-vakje (issue "Pop-up
+// rivier", vervolg: brug-bouwmechaniek) — instant betaald bij de klik op het
+// vakje (`bouwBrug`, streekOntgrendeling.ts), geen bouwtijd. Vereist daarnaast
+// een nog niet aan een andere brug toegewezen Ingenieur (zie
+// `beschikbareIngenieurs`/`kanBrugBouwen`, streekOntgrendeling.ts).
+export const BRUG_KOSTEN: Partial<Record<MateriaalType, number>> = { hout: 6, steen: 6 };
 
 // Vaste, beschrijvende terreinnaam per streek (flavor, geen invloed op
 // spelmechaniek — zelfde rol als TUTORIAL_TERREINTYPES in world.ts). Volgt de
