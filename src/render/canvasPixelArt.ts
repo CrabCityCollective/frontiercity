@@ -1077,14 +1077,19 @@ function tekenTerreinHintPixel(
 }
 
 // Brug (issue "Pop-up rivier", vervolg: brug-bouwmechaniek) — een grove
-// houten-plankenbrug over de rivier-golfstrepen heen. Grove
-// placeholder-vorm, functionaliteit gaat voor polish (CLAUDE.md).
+// houten-plankenbrug over de rivier-golfstrepen heen. De rivier zelf
+// stroomt horizontaal (zie `tekenTerreinHintPixel` hierboven, banden lopen
+// edge-to-edge in x), dus de brug moet er verticaal overheen lopen — de
+// oversteekrichting tussen twee streken (issue "Brug mooier": brug liep
+// verkeerd-om, en moest breder). Grove placeholder-vorm, functionaliteit
+// gaat voor polish (CLAUDE.md).
 function tekenBrugPixel(ctx: CanvasRenderingContext2D): void {
-  blokrij(ctx, 8, 7, 6, "#6b4a2f");
-  blokrij(ctx, 8, 8, 6, "#6b4a2f");
+  for (const x of [6, 7, 8, 9]) {
+    vlijn(ctx, x, 1, 14, "#6b4a2f");
+  }
   const rand = "rgba(40, 26, 14, 0.7)";
-  for (const x of [3, 6, 9, 12]) {
-    vlijn(ctx, x, 6, 9, rand);
+  for (const y of [3, 6, 9, 12]) {
+    hlijn(ctx, 5, 10, y, rand);
   }
 }
 
