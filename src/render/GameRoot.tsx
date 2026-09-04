@@ -36,6 +36,7 @@ import EncyclopediePaneel from "@/components/EncyclopediePaneel";
 import TechKeuzePopup from "@/components/TechKeuzePopup";
 import TileInfoPopup from "@/components/TileInfoPopup";
 import TutorialVoltooidPopup from "@/components/TutorialVoltooidPopup";
+import StadGestichtPopup from "@/components/StadGestichtPopup";
 import UitlegPopup from "@/components/UitlegPopup";
 import VijandAanDeHorizonPopup from "@/components/VijandAanDeHorizonPopup";
 import VijandelijkHeiligdomPopup from "@/components/VijandelijkHeiligdomPopup";
@@ -328,6 +329,10 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // overkant) bereikt is.
   const oceaanUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("oceaan");
   const [tutorialVoltooidBevestigd, setTutorialVoltooidBevestigd] = useState(false);
+  // Stad-gesticht-pop-up (issue: "Tutorial"): eenmalige-confirm-vlag voor de
+  // korte afsluiter op het stichtingsmoment zelf, vóór `tutorialVoltooidBevestigd`
+  // hierboven — zie `toonStadGestichtPopup` verderop.
+  const [stadGestichtBevestigd, setStadGestichtBevestigd] = useState(false);
   // Settler-uitleg-pop-up (M10, hoofdstuk 16): zelfde eenmalige-confirm-vlag
   // als de twee hierboven, getoond zodra de settler in beurt 2 verschijnt.
   const settlerUitlegBevestigd = state.gezieneEenmaligeUitleg.includes("settler");
@@ -1459,6 +1464,46 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     uitlegAan &&
     !settlerWegSnelheidUitlegBevestigd &&
     aantalAangelegdeWegen(state.streken) >= 2;
+  // Stad-gesticht-pop-up (issue: "Tutorial" — "ik wil ook graag de pop-up
+  // van de gestichte stad tonen ... en daarna pas graag de pop-up met de
+  // opsomming van alle streken"): zelfde trigger als `toonTutorialVoltooidPopup`
+  // hieronder, maar met hoogere prioriteit — deze pop-up sluit het
+  // stichtingsmoment zelf af, vóór de streken-samenvatting.
+  const toonStadGestichtPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    state.campagneId === undefined &&
+    state.stadGesticht === true &&
+    !stadGestichtBevestigd;
   // Tutorial-voltooid-samenvatting zodra een nieuwe stad gesticht is
   // (hoofdstuk 2/10/16, issue: "stad stichten op de frontier" — vervangt
   // "confrontatie op streek 12 gewonnen" als trigger: het stichten is nu het
@@ -1495,6 +1540,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonBoerderijStreekUitlegPopup &&
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
+    !toonStadGestichtPopup &&
     // Blijft uitsluitend de tutorial (hoofdstuk 19 design-doc, "Samenhang"):
     // zonder deze eis zou een Going West-run bij de allerlaatste, afsluitende
     // stichting (acties.ts: `isAfsluitendeStichting`) dit tutorial-specifieke
@@ -1547,6 +1593,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
     state.campagneId !== undefined &&
     state.steden.length > laatsteBevestigdeStedenAantal;
 
@@ -1590,6 +1637,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
     !toonStichtingsMomentPopup &&
     Boolean(state.boonToegekendEvent);
 
@@ -1635,6 +1683,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
     !toonStichtingsMomentPopup &&
     !toonBoonPopup &&
     Boolean(state.wampanoagLaagOntdektEvent);
@@ -1671,6 +1720,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
     !toonStichtingsMomentPopup &&
     !toonBoonPopup &&
     !toonEersteContactPopup &&
@@ -1712,6 +1762,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
     !toonStichtingsMomentPopup &&
     !toonBoonPopup &&
     !toonEersteContactPopup &&
@@ -1760,6 +1811,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
     !toonStichtingsMomentPopup &&
     !toonBoonPopup &&
     !toonEersteContactPopup &&
@@ -1805,6 +1857,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
     !toonStichtingsMomentPopup &&
     !toonBoonPopup &&
     !toonEersteContactPopup &&
@@ -1849,6 +1902,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonHoutkapStreekUitlegPopup &&
     !toonSettlerWegSnelheidUitlegPopup &&
     !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
     !toonStichtingsMomentPopup &&
     !toonBoonPopup &&
     !toonEersteContactPopup &&
@@ -2166,6 +2220,9 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             }}
             onAnnuleren={() => setToonStichtStadPopup(false)}
           />
+        )}
+        {toonStadGestichtPopup && (
+          <StadGestichtPopup stadNaam={state.stad.naam} onDoorgaan={() => setStadGestichtBevestigd(true)} />
         )}
         {toonTutorialVoltooidPopup && (
           <TutorialVoltooidPopup
