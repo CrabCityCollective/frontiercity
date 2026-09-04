@@ -117,7 +117,13 @@ test("tutorial: geen stichtingskansOntdektEvent bij haar eigen vers-water-streek
   const laatsteStreek = state.streken[state.streken.length - 1];
   assert.equal(laatsteStreek.tiles.some((t) => t.versWater), true, "de tutorial heeft precies één vers-water-vakje");
 
-  state = { ...state, cultuur: cultuurKostenVoorStreek(laatsteStreek.hoogte) };
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte < laatsteStreek.hoogte ? { ...streek, ontgrendeld: true, bezet: false } : streek
+    ),
+    cultuur: cultuurKostenVoorStreek(laatsteStreek.hoogte),
+  };
   const naOntgrendeling = volgendeBeurt(state);
 
   assert.equal(naOntgrendeling.streken.find((l) => l.hoogte === laatsteStreek.hoogte)!.ontgrendeld, true);
