@@ -297,6 +297,60 @@ function cityImprovementProductie(state: GameState, resource: ResourceType): num
   return productie;
 }
 
+// Achterliggende productie (issue: "Nieuwe stad: wetenschap en cultuur"):
+// hoeveel cultuur/wetenschap er dít moment nog binnenkomt uit alles vóór de
+// frontier van de actieve stad — puur informatief, voor het overzichtsblokje
+// in StadsverbeteringenPaneel (geen nieuwe spelregel, geen basisinkomen; dat
+// blijft een aparte, nog open ontwerpvraag). Telt twee al bestaande bronnen
+// op:
+// - de gehalveerde land-improvement-productie (Heiligdom/Sterrencirkel) op
+//   elke niet-frontier-streek — dezelfde frontier-halvering als hierboven in
+//   `verwerkProductie`;
+// - de nog resterende, na-afstandsverval city-improvement-productie
+//   (Bibliotheek/Tempel/Grote Tempel) van elke eerder gestichte stad
+//   (`state.steden`, elk met haar eigen `stadEffectiviteit()`, hoofdstuk
+//   9/11/14 Deel 1). De actieve stad zelf (`state.stad`, altijd 100%) telt
+//   niet mee — dat is "de nieuwe stad", niet iets "achterliggends".
+export function berekenAchterliggendeProductie(state: GameState): { cultuur: number; wetenschap: number } {
+  let cultuur = 0;
+  let wetenschap = 0;
+  const frontierHoogte = hoogsteOntgrendeldeStreek(state.streken);
+
+  for (const streek of state.streken) {
+    if (streek.hoogte === frontierHoogte) continue;
+    const onrustMultiplier = onrustMultiplierVoorStreek(state, streek);
+    for (const tile of streek.tiles) {
+      const effect = tile.improvement?.effect;
+      if (
+        tile.status !== "actief" ||
+        tile.improvement?.soort !== "land" ||
+        effect?.type !== "productie" ||
+        !effect.waarde ||
+        (effect.resource !== "cultuur" && effect.resource !== "wetenschap")
+      ) {
+        continue;
+      }
+      if (!isTileVerbondenMetStad(state.streken, streek.hoogte, tile.positieInStreek)) continue;
+      const opbrengst = (effect.waarde / 2) * onrustMultiplier;
+      if (effect.resource === "cultuur") cultuur += opbrengst;
+      else wetenschap += opbrengst;
+    }
+  }
+
+  for (const stad of state.steden) {
+    if (stad === state.stad) continue;
+    const effectiviteit = stadEffectiviteit(state, stad);
+    for (const improvement of stad.cityImprovements) {
+      const effect = improvement.effect;
+      if (effect.type !== "productie" || !effect.waarde) continue;
+      if (effect.resource === "cultuur") cultuur += effect.waarde * effectiviteit;
+      else if (effect.resource === "wetenschap") wetenschap += effect.waarde * effectiviteit;
+    }
+  }
+
+  return { cultuur, wetenschap };
+}
+
 export function verwerkProductie(state: GameState): GameState {
   const voorraad = { ...state.voorraad };
   let voedsel = state.voedsel;

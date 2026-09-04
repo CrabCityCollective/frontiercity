@@ -2,9 +2,10 @@
 
 import { CAPPED_CITY_IMPROVEMENTS, cityImprovementCap, effectBeschrijving, improvementNaam } from "@/game/improvements";
 import { campagneConfig } from "@/game/campagnes";
+import { berekenAchterliggendeProductie } from "@/game/productie";
 import { frontierAfstand, stadEffectiviteit, stadVervalZone, StadVervalZone } from "@/game/stad";
 import { GameState, Improvement } from "@/game/types";
-import { KostenIcons } from "./ResourceIcoon";
+import ResourceIcoon, { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
 
 interface StadsverbeteringenPaneelProps {
@@ -60,6 +61,8 @@ export default function StadsverbeteringenPaneel({
   const effectiviteit = stadEffectiviteit(state, stad);
   const afstand = frontierAfstand(state, stad);
   const zone = stadVervalZone(afstand);
+  const achterliggend = berekenAchterliggendeProductie(state);
+  const heeftAchterliggendeProductie = achterliggend.cultuur > 0 || achterliggend.wetenschap > 0;
 
   return (
     <div
@@ -83,6 +86,25 @@ export default function StadsverbeteringenPaneel({
       {effectiviteit < 1 && (
         <span style={{ color: "var(--kleur-gevaar)", fontSize: "0.8rem" }}>
           Afstand tot de frontier: {afstand} streken — {ZONE_LABEL[zone]}, productie op {Math.round(effectiviteit * 100)}%
+        </span>
+      )}
+
+      {heeftAchterliggendeProductie && (
+        <span
+          style={{
+            color: "var(--kleur-tekst-gedempt)",
+            fontSize: "0.8rem",
+            display: "flex",
+            gap: "0.6rem",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          Achterliggende productie (alles vóór de frontier, per beurt):
+          {achterliggend.cultuur > 0 && <ResourceIcoon type="cultuur" waarde={Math.round(achterliggend.cultuur)} />}
+          {achterliggend.wetenschap > 0 && (
+            <ResourceIcoon type="wetenschap" waarde={Math.round(achterliggend.wetenschap)} />
+          )}
         </span>
       )}
 
