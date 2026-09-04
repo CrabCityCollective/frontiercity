@@ -90,8 +90,15 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     // Heiligdommen vernietigd zijn (`verwerkBelegering` hieronder in de
     // `volgendeBeurt`-pijplijn) — de `while`-lus stopt hier dus altijd,
     // zowel de eerste keer (initialisatie) als op elke latere beurt zolang
-    // de streek nog bezet is.
-    if (isBezetteStreekHoogte(volgendeHoogte)) {
+    // de streek nog bezet is. Tutorial-only (issue "Stam van de mammoet niet
+    // in campaigns"): net als de Wampanoag-laag hieronder toevallig dezelfde
+    // hoogte kan raken in een andere campagne, kan een niet-tutorial-campagne
+    // toevallig dezelfde hoogte als `BEZETTE_STREEK_HOOGTE` (13) hebben —
+    // zonder deze `campagneId`-check zou De Stam van de Mammoet daar dan per
+    // ongeluk ook opduiken, terwijl dat mechanisme (net als de Wampanoag-laag
+    // voor Going West) uitsluitend tutorial-scripting is (zie `BEZETTE_STREEK_HOOGTE`,
+    // world.ts).
+    if (isBezetteStreekHoogte(volgendeHoogte) && state.campagneId === undefined) {
       if (!huidigeStreek.bezet) {
         streken = streken.map((streek) => (streek.hoogte === volgendeHoogte ? initialiseerBezetteStreek(streek) : streek));
         bezetteStreekOntdektEvent = true;

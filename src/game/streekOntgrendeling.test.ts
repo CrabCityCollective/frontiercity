@@ -282,6 +282,21 @@ test('streek 13 komt "in beeld" als Bezette Streek i.p.v. normaal te ontgrendele
   assert.equal(state.streken.find((l) => l.hoogte === 14)!.ontgrendeld, false, "streek 14 blijft geblokkeerd achter de Bezette Streek");
 });
 
+// Regressietest (issue "Stam van de mammoet niet in campaigns"): De Stam van
+// de Mammoet is tutorial-scripting op deze ene hoogte (world.ts,
+// `BEZETTE_STREEK_HOOGTE`) — Going West heeft op dezelfde hoogte gewoon een
+// normale streek en moet die dus ook normaal ontgrendelen, net zoals de
+// Wampanoag-laag hierboven al een `campagneId`-check had maar deze niet.
+test("streek 13 wordt in Going West gewoon normaal ontgrendeld — geen Bezette Streek/Stam van de Mammoet buiten de tutorial", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, cultuur: cultuurKostenVoorStreek(BEZETTE_STREEK_HOOGTE), voedsel: 10_000 };
+  state = volgendeBeurt(state);
+
+  const streek13 = state.streken.find((l) => l.hoogte === BEZETTE_STREEK_HOOGTE)!;
+  assert.equal(streek13.bezet, undefined, "geen Bezette-Streek-vlag in Going West");
+  assert.equal(state.bezetteStreekOntdektEvent, undefined, "geen Bezette-Streek-melding in Going West");
+});
+
 test("cultuur-voortgang bevriest volledig zolang de Bezette Streek actief is, ook met Heiligdom-productie elders", () => {
   let state = metBezetteStreekInBeeld();
   const bevrorenCultuur = state.cultuur;
