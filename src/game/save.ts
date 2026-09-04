@@ -42,11 +42,13 @@ export function laadSpel(campagneId?: string): GameState | null {
     if (!ruw) return null;
     return metGemigreerdeBoonsVeld(
       metGemigreerdeWampumAfkoopVeld(
-        metGemigreerdRechtersVeld(
-          metGemigreerdeOntvangenVlaggen(
-            metGemigreerdSmederijActiefVeld(
-              metGemigreerdeSmederijVeld(
-                metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+        metGemigreerdIngenieursVeld(
+          metGemigreerdRechtersVeld(
+            metGemigreerdeOntvangenVlaggen(
+              metGemigreerdSmederijActiefVeld(
+                metGemigreerdeSmederijVeld(
+                  metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+                )
               )
             )
           )
@@ -195,6 +197,18 @@ function metGemigreerdRechtersVeld(state: GameState): GameState {
   if (Array.isArray(state.stad.rechters)) return state;
   const stad = { ...state.stad, rechters: state.stad.rechters ?? [] };
   const steden = state.steden.map((s) => ({ ...s, rechters: s.rechters ?? [] }));
+  return { ...state, stad, steden };
+}
+
+// Migratie voor saves van vóór de Ingenieur-eenheid (issue "Pop-up rivier",
+// vervolg: engineer + brug): oudere saves kennen `City.ingenieurs` nog niet,
+// op zowel `stad` als elke stad in `steden`. Zelfde aanpak als
+// `metGemigreerdRechtersVeld` hierboven — valt terug op een lege lijst, geen
+// enkele oudere save kan al een Ingenieur opgeleid hebben.
+function metGemigreerdIngenieursVeld(state: GameState): GameState {
+  if (Array.isArray(state.stad.ingenieurs)) return state;
+  const stad = { ...state.stad, ingenieurs: state.stad.ingenieurs ?? [] };
+  const steden = state.steden.map((s) => ({ ...s, ingenieurs: s.ingenieurs ?? [] }));
   return { ...state, stad, steden };
 }
 

@@ -12,6 +12,7 @@ import {
 } from "@/game/improvements";
 import { City, GameState } from "@/game/types";
 import { VOEDSEL_DREMPEL_GROEI, VOEDSEL_DREMPEL_GROEI_GROOT } from "@/game/world";
+import { INGENIEUR_KOSTEN_WETENSCHAP } from "@/game/worldGoingWest";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
 
@@ -43,6 +44,11 @@ interface CivielPaneelProps {
   // toewijzing aan een Courthouse gebeurt via een klik op de tile zelf (zie
   // TileInfoPopup: `courthouseVraag`), niet via dit paneel.
   onStartRechterTraining: () => void;
+  // Ingenieur-opleiding (issue "Pop-up rivier", vervolg: engineer + brug) —
+  // anders dan Rechter hierboven een instant actie (geen bouwtijd), zelfde
+  // knop-patroon. De brug-bouwmechaniek zelf (via een klik op een
+  // rivier-vakje) is een apart, later issue.
+  onLeidIngenieurOp: () => void;
 }
 
 // Civiele keuzes (M6, hoofdstuk 4/11/16): toont de voortgang richting de
@@ -61,6 +67,7 @@ export default function CivielPaneel({
   onStartTweedeSettler,
   onVersnelCiviel,
   onStartRechterTraining,
+  onLeidIngenieurOp,
 }: CivielPaneelProps) {
   const { stad, voedsel, settler } = state;
   const campagne = campagneConfig(state.campagneId);
@@ -70,6 +77,12 @@ export default function CivielPaneel({
   // beschikbaar (issue: "Saloon en courthouse direct beschikbaar").
   const kanRechterTrainen = state.campagneId === "going-west";
   const vrijeRechters = stad.rechters.filter((r) => !r.courthouse);
+
+  // Ingenieur opleiden (issue "Pop-up rivier", vervolg: engineer + brug) —
+  // alleen relevant in Going West, zelfde soort direct-zichtbare knop als
+  // Rechter hierboven, maar instant i.p.v. een wachtrij.
+  const kanIngenieurTrainen = state.campagneId === "going-west";
+  const genoegWetenschapVoorIngenieur = state.wetenschap >= INGENIEUR_KOSTEN_WETENSCHAP;
 
   const groeiTier = groeiTierVoorGrootte(stad);
   const kanGroeien = groeiTier !== undefined;
@@ -92,7 +105,9 @@ export default function CivielPaneel({
     !stad.tweedeSettlerInAanbouw &&
     !kanRechterTrainen &&
     !stad.rechterInAanbouw &&
-    stad.rechters.length === 0
+    stad.rechters.length === 0 &&
+    !kanIngenieurTrainen &&
+    stad.ingenieurs.length === 0
   ) {
     return null;
   }
@@ -209,6 +224,32 @@ export default function CivielPaneel({
               </button>
             )
           )}
+        </div>
+      )}
+
+      {/* Ingenieur-opleiding (issue "Pop-up rivier", vervolg: engineer +
+          brug) — instant i.p.v. een wachtrij zoals Rechter hierboven; het
+          daadwerkelijk bouwen van een brug gebeurt via een klik op een
+          rivier-vakje zelf, niet via dit paneel. */}
+      {(kanIngenieurTrainen || stad.ingenieurs.length > 0) && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginTop: "0.3rem" }}>
+          {stad.ingenieurs.length > 0 && (
+            <span style={{ color: "var(--kleur-tekst-gedempt)" }}>Ingenieurs: {stad.ingenieurs.length}</span>
+          )}
+          {kanIngenieurTrainen &&
+            (genoegWetenschapVoorIngenieur ? (
+              <button
+                className="fc-knop"
+                onClick={onLeidIngenieurOp}
+                style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+              >
+                Ingenieur opleiden ({INGENIEUR_KOSTEN_WETENSCHAP} wetenschap)
+              </button>
+            ) : (
+              <p style={{ margin: 0 }}>
+                Wetenschap: {state.wetenschap} / {INGENIEUR_KOSTEN_WETENSCHAP} voor een Ingenieur
+              </p>
+            ))}
         </div>
       )}
     </div>

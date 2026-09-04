@@ -175,6 +175,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     bemanCourthouse,
     haalRechterTerug,
     startRechterTraining,
+    leidIngenieurOp,
     zetUitlegPopups,
     markeerUitlegGezien,
     bevestigStreekPopup,
@@ -1950,6 +1951,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             onVersnelOpslagplaats={versnelOpslagplaatsMetGoud}
             onStartMissionarisRecrutering={startMissionarisRecrutering}
             onStartRechterTraining={startRechterTraining}
+            onLeidIngenieurOp={leidIngenieurOp}
             onSluiten={() => setToonStadMenuPopup(false)}
           />
         )}

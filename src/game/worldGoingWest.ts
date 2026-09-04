@@ -58,6 +58,14 @@ export const RIVIER_AANKONDIGING_STREEK_HOOGTE = 9;
 // niet gebouwd — apart, later issue.
 export const RIVIER_STREEK_HOOGTE = 12;
 
+// Wetenschapskosten om één Ingenieur op te leiden (issue "Pop-up rivier",
+// vervolg: engineer + brug) — instant betaald, geen bouwtijd, zelfde
+// instant-wetenschap-patroon als `VERKENNING_KOSTEN_WETENSCHAP`
+// (streekOntgrendeling.ts). De brug-bouwmechaniek zelf (die een opgeleide
+// Ingenieur nodig heeft) is een apart, later issue — dit is alleen de
+// opleiding.
+export const INGENIEUR_KOSTEN_WETENSCHAP = 30;
+
 // Vaste, beschrijvende terreinnaam per streek (flavor, geen invloed op
 // spelmechaniek — zelfde rol als TUTORIAL_TERREINTYPES in world.ts). Volgt de
 // reisroute van het groene, kustnabije Wampanoag-thuisland (streek 1-6, tot en

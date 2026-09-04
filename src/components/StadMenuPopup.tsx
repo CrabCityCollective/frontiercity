@@ -25,6 +25,7 @@ interface StadMenuPopupProps {
   onVersnelOpslagplaats: () => void;
   onStartMissionarisRecrutering: () => void;
   onStartRechterTraining: () => void;
+  onLeidIngenieurOp: () => void;
   onSluiten: () => void;
 }
 
@@ -54,6 +55,7 @@ export default function StadMenuPopup({
   onVersnelOpslagplaats,
   onStartMissionarisRecrutering,
   onStartRechterTraining,
+  onLeidIngenieurOp,
   onSluiten,
 }: StadMenuPopupProps) {
   return (
@@ -104,6 +106,7 @@ export default function StadMenuPopup({
           onStartTweedeSettler={onStartTweedeSettler}
           onVersnelCiviel={onVersnelCiviel}
           onStartRechterTraining={onStartRechterTraining}
+          onLeidIngenieurOp={onLeidIngenieurOp}
         />
         <OpslagplaatsPaneel
           state={state}
