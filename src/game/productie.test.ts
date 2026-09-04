@@ -364,6 +364,36 @@ test("city-improvement-productie van de actieve stad valt volledig weg vanaf afs
   assert.equal(state.voorraad.goud, 0, "afstand 13 → 0% effectiviteit: geen goud");
 });
 
+test("city-improvement-productie van élke eerder gestichte stad blijft meetellen, met haar eigen afstandsverval (issue: 'Nieuwe stad: wetenschap en cultuur' — de harde knip naar 0 die M17 juist had moeten vervangen)", () => {
+  let state = maakInitieleSpelStatus();
+  const eersteStad = { ...state.stad, naam: "Oude stad", cityImprovements: [BIBLIOTHEEK, MARKT], streekHoogte: 0 };
+  const actieveStad = { ...state.stad, naam: "Nieuwe stad", cityImprovements: [BIBLIOTHEEK], streekHoogte: 6 };
+  state = {
+    ...state,
+    steden: [eersteStad, actieveStad],
+    stad: actieveStad,
+    // Frontier op 10: eersteStad (streekHoogte 0) zit op afstand 10 → 30%
+    // ("flink-verminderd"); actieveStad (streekHoogte 6) zit op afstand 4 →
+    // 100% ("gezond"). Vóór de fix viel de productie van eersteStad hoe dan
+    // ook meteen naar 0 zodra er een tweede stad was, ongeacht haar eigen
+    // (hier nog altijd 30%, dus niet-nul) afstand.
+    streken: state.streken.map((streek) => (streek.hoogte <= 10 ? { ...streek, ontgrendeld: true } : streek)),
+  };
+
+  state = volgendeBeurt(state);
+
+  assert.equal(
+    state.wetenschap,
+    (BIBLIOTHEEK.effect.waarde ?? 0) * 1 + (BIBLIOTHEEK.effect.waarde ?? 0) * 0.3,
+    "actieveStad's Bibliotheek (100%) plus eersteStad's Bibliotheek (30%, niet 0) tellen allebei mee"
+  );
+  assert.equal(
+    state.voorraad.goud,
+    Math.floor((MARKT.effect.waarde ?? 0) * 0.3),
+    "eersteStad's Markt (afstand 10, 30%-zone) levert nog gewoon iets op, in plaats van meteen 0 zodra er een tweede stad is"
+  );
+});
+
 test("een Smederij zet elke beurt 2 erts om in 1 gereedschap, zolang er genoeg erts voorradig is (Going West, M21d)", () => {
   let state = maakInitieleSpelStatus();
   state = metActieveStad(state, { ...state.stad, heeftSmederij: true });

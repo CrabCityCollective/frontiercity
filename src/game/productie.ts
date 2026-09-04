@@ -269,23 +269,32 @@ export function berekenCultuurProductieDitBeurt(state: GameState): number {
   return productie;
 }
 
-// Opgetelde productie van alle gebouwde city improvements van de actieve
-// stad (hoofdstuk 3/4/11/14, issue: "city improvements" Deel 3) voor één
-// specifieke resource — Bibliotheek (wetenschap), Markt (goud), Tempel/Grote
-// Tempel (cultuur) — vermenigvuldigd met het afstandsverval-percentage van
-// die stad (hoofdstuk 9/11/14, issue: "Eerste bouwsteen van de Amerikaanse
-// frontier-campagne" Deel 1, `stadEffectiviteit` in stad.ts). Gebruikt door
-// `berekenCultuurProductieDitBeurt` hierboven; `verwerkProductie` hieronder
-// herhaalt dezelfde effectiviteit voor de overige resource-types.
+// Opgetelde productie van alle gebouwde city improvements van élke gestichte
+// stad (hoofdstuk 3/4/11/14, issue: "city improvements" Deel 3; issue:
+// "Nieuwe stad: wetenschap en cultuur") voor één specifieke resource —
+// Bibliotheek (wetenschap), Markt (goud), Tempel/Grote Tempel (cultuur) —
+// elk vermenigvuldigd met het afstandsverval-percentage van díe specifieke
+// stad (hoofdstuk 9/11/14, issue: "Eerste bouwsteen van de Amerikaanse
+// frontier-campagne" Deel 1, `stadEffectiviteit` in stad.ts). Loopt over
+// `state.steden` (niet alleen de actieve `state.stad`) zodat het geleidelijke
+// afstandsverval — 100/65/30/0% naarmate een stad verder van de frontier
+// ligt — ook daadwerkelijk geldt voor elke eerder gestichte stad, in plaats
+// van dat haar productie per direct naar 0 valt zodra een nieuwe stad
+// gesticht wordt. Gebruikt door `berekenCultuurProductieDitBeurt` hierboven;
+// `verwerkProductie` hieronder herhaalt hetzelfde patroon voor de overige
+// resource-types.
 function cityImprovementProductie(state: GameState, resource: ResourceType): number {
   let productie = 0;
-  for (const improvement of state.stad.cityImprovements) {
-    const effect = improvement.effect;
-    if (effect.type === "productie" && effect.resource === resource && effect.waarde) {
-      productie += effect.waarde;
+  for (const stad of state.steden) {
+    const effectiviteit = stadEffectiviteit(state, stad);
+    for (const improvement of stad.cityImprovements) {
+      const effect = improvement.effect;
+      if (effect.type === "productie" && effect.resource === resource && effect.waarde) {
+        productie += effect.waarde * effectiviteit;
+      }
     }
   }
-  return productie * stadEffectiviteit(state, state.stad);
+  return productie;
 }
 
 export function verwerkProductie(state: GameState): GameState {
@@ -350,26 +359,31 @@ export function verwerkProductie(state: GameState): GameState {
   // Opslagplaats, zonder wegverbinding en zonder frontier-halvering — een
   // city improvement staat niet op een land-vakje. De Bezette-Streek-
   // cultuurbevriezing hierboven geldt onverkort ook voor Tempel/Grote Tempel.
-  // `effectiviteit` is het afstandsverval van de actieve stad (hoofdstuk
-  // 9/11/14, Deel 1, `stadEffectiviteit` in stad.ts) — 100% zolang deze run
-  // nog nooit meer dan 1 stad heeft gehad (dus altijd tijdens de tutorial).
-  // `Math.floor` op bouwmateriaal/goud houdt de voorraad geheeltallig, net
-  // als overal elders in deze module; cultuur/wetenschap blijven fractioneel
-  // toegestaan, net als de frontier-halvering hierboven.
-  const effectiviteit = stadEffectiviteit(state, state.stad);
-  for (const improvement of state.stad.cityImprovements) {
-    const effect = improvement.effect;
-    if (effect.type !== "productie" || !effect.resource || !effect.waarde) continue;
+  // Loopt over `state.steden` — niet alleen `state.stad` — zodat élke eerder
+  // gestichte stad haar eigen afstandsverval (hoofdstuk 9/11/14, Deel 1,
+  // `stadEffectiviteit` in stad.ts) behoudt in plaats van meteen naar 0 te
+  // vallen zodra een nieuwe stad gesticht wordt (issue: "Nieuwe stad:
+  // wetenschap en cultuur") — 100% voor elke stad zolang deze run nog nooit
+  // meer dan 1 stad heeft gehad (dus altijd tijdens de tutorial). `Math.floor`
+  // op bouwmateriaal/goud houdt de voorraad geheeltallig, net als overal
+  // elders in deze module; cultuur/wetenschap blijven fractioneel toegestaan,
+  // net als de frontier-halvering hierboven.
+  for (const stad of state.steden) {
+    const effectiviteit = stadEffectiviteit(state, stad);
+    for (const improvement of stad.cityImprovements) {
+      const effect = improvement.effect;
+      if (effect.type !== "productie" || !effect.resource || !effect.waarde) continue;
 
-    if (effect.resource === "cultuur") {
-      if (!bezetteStreek) cultuur += effect.waarde * effectiviteit;
-    } else if (effect.resource === "wetenschap") {
-      wetenschap += effect.waarde * effectiviteit;
-    } else if (isMateriaalType(effect.resource)) {
-      voorraad[effect.resource] = Math.min(
-        state.opslagCap,
-        voorraad[effect.resource] + Math.floor(effect.waarde * effectiviteit)
-      );
+      if (effect.resource === "cultuur") {
+        if (!bezetteStreek) cultuur += effect.waarde * effectiviteit;
+      } else if (effect.resource === "wetenschap") {
+        wetenschap += effect.waarde * effectiviteit;
+      } else if (isMateriaalType(effect.resource)) {
+        voorraad[effect.resource] = Math.min(
+          state.opslagCap,
+          voorraad[effect.resource] + Math.floor(effect.waarde * effectiviteit)
+        );
+      }
     }
   }
 
