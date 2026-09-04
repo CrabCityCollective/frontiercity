@@ -50,6 +50,7 @@ import { campagneConfig, popupContent, streekContentVoorCampagne } from "@/game/
 import { beurtMagAutomatischDoorgaan } from "@/game/economie";
 import { improvementNaam, improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
 import { kanIndringersAfkopenMetWampum, wampumAfkoopKostenHuidig } from "@/game/indringersEnDieren";
+import { SLOOPBARE_IMPROVEMENT_IDS } from "@/game/infrastructuurEnBouw";
 import {
   BELEGERINGSDREMPEL,
   beschikbareIngenieurs,
@@ -175,6 +176,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     koopIndringersAfMetWampum,
     bemanWachttoren,
     haalStrijderTerug,
+    sloopImprovement,
     bemanCourthouse,
     haalRechterTerug,
     startRechterTraining,
@@ -585,6 +587,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
   // improvement-gebonden vlaggen hierboven.
   const geselecteerdeTileIsRivierZonderBrug =
     geselecteerdeTileVoorRush?.terrein === "rivier" && !geselecteerdeTileVoorRush.brug;
+  // Slopen (issue: "Gebouwen slopen") — alleen relevant als de aangeklikte
+  // tile een actieve Wachttoren, Heiligdom of Sterrencirkel is (de enige drie
+  // improvements die nooit vanzelf uitputten, hoofdstuk 3/11); geeft de
+  // tile-info-pop-up er een sloop-knop bij (`sloopVraag` hieronder).
+  const geselecteerdeTileIsSloopbaar =
+    geselecteerdeTileVoorRush?.status === "actief" &&
+    SLOOPBARE_IMPROVEMENT_IDS.includes(geselecteerdeTileVoorRush.improvement?.id ?? "");
   // Alleen de relevante streken op de canvas (issue: "onderkant altijd in
   // view" + "onontdekte tegels weg", en sinds issue "Nieuwe stad Cincinnati"
   // ook de dichtgeklapte streken van vóór de huidige stad) — zie world.ts:
@@ -2451,6 +2460,18 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
                   kan: kanBrugBouwen(state, geselecteerdeTile.hoogte, geselecteerdeTile.positieInStreek),
                   onBouwBrug: () => {
                     bouwBrug(geselecteerdeTile.hoogte, geselecteerdeTile.positieInStreek);
+                    setGeselecteerdeTile(null);
+                  },
+                }
+              : undefined
+          }
+          sloopVraag={
+            geselecteerdeTileIsSloopbaar && geselecteerdeTile && geselecteerdeTileVoorRush?.improvement
+              ? {
+                  improvementNaam: geselecteerdeTileVoorRush.improvement.naam,
+                  terugTeKrijgen: geselecteerdeTileVoorRush.improvement.kosten,
+                  onSlopen: () => {
+                    sloopImprovement(geselecteerdeTile.hoogte, geselecteerdeTile.positieInStreek);
                     setGeselecteerdeTile(null);
                   },
                 }

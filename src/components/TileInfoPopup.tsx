@@ -136,6 +136,17 @@ interface TileInfoPopupProps {
     kan: boolean;
     onBouwBrug: () => void;
   };
+  // Gezet als de aangeklikte tile een actieve, sloopbare improvement is
+  // (Wachttoren, Heiligdom of Sterrencirkel — issue: "Gebouwen slopen"; deze
+  // drie putten nooit vanzelf uit, hoofdstuk 3/11, dus slopen is de enige
+  // manier waarop de speler ze weer kwijtraakt). Sloop geeft de
+  // bouwmaterialen terug — `terugTeKrijgen` toont dat vooraf, net als
+  // `brugVraag` hierboven de kosten al toont vóór bevestiging.
+  sloopVraag?: {
+    improvementNaam: string;
+    terugTeKrijgen: Partial<Record<MateriaalType, number>>;
+    onSlopen: () => void;
+  };
   onBevestigBouw: () => void;
   onAnnuleerBouw: () => void;
   onSluiten: () => void;
@@ -159,6 +170,7 @@ export default function TileInfoPopup({
   confrontatieVraag,
   missionarisVraag,
   brugVraag,
+  sloopVraag,
   onBevestigBouw,
   onAnnuleerBouw,
   onSluiten,
@@ -594,6 +606,25 @@ export default function TileInfoPopup({
               style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start", opacity: brugVraag.kan ? 1 : 0.5 }}
             >
               Brug bouwen
+            </button>
+          </div>
+        )}
+
+        {!bouwVraag && !terreinWaarschuwing && sloopVraag && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+            <p style={{ margin: 0 }}>
+              {sloopVraag.improvementNaam} slopen? Je krijgt{" "}
+              {(Object.entries(sloopVraag.terugTeKrijgen) as [MateriaalType, number][])
+                .map(([resource, aantal]) => `${aantal} ${MATERIAAL_LABELS[resource].toLowerCase()}`)
+                .join(", ")}{" "}
+              terug.
+            </p>
+            <button
+              className="fc-knop"
+              onClick={sloopVraag.onSlopen}
+              style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
+            >
+              Slopen
             </button>
           </div>
         )}
