@@ -1246,8 +1246,9 @@ function tekenActieveTilePixel(
     // Vijandelijke tile-varianten zijn nooit wegverbonden en vallen nooit
     // onder onrust — beide indicatoren zijn daar dus altijd misleidend (zie
     // canvas.ts: `tekenActieveTile`, issue: "Vijandelijke gebouwen anders
-    // tonen").
-    if (!tile.improvement.vijandelijk) {
+    // tonen"). Zelfde reden voor een onthuld Wampanoag-vakje (`wampanoagInhoud`,
+    // wampanoag.ts, issue: "Wampanoag huisjes").
+    if (!tile.improvement.vijandelijk && !tile.wampanoagInhoud) {
       if (!verbondenMetStad) {
         tekenNietVerbondenIndicatorPixel(ctx);
       }
