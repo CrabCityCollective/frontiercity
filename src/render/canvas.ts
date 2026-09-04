@@ -2200,8 +2200,11 @@ function tekenActieveTile(
     // varianten (dreiging/belegeringsdoel, hoofdstuk 6) zijn nooit
     // wegverbonden en vallen nooit onder onrust — beide indicatoren zijn
     // daar dus altijd misleidend (issue: "Vijandelijke gebouwen anders
-    // tonen").
-    if (!tile.improvement.vijandelijk) {
+    // tonen"). Zelfde reden voor een onthuld Wampanoag-vakje (`wampanoagInhoud`,
+    // wampanoag.ts): die produceert via de aparte handelsconversie, niet via
+    // het wegennetwerk, dus wegverbinding is daar altijd irrelevant (issue:
+    // "Wampanoag huisjes").
+    if (!tile.improvement.vijandelijk && !tile.wampanoagInhoud) {
       if (!verbondenMetStad) {
         tekenNietVerbondenIndicator(ctx, x, y, size);
       }

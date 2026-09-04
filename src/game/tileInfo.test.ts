@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { GOING_WEST_CAMPAGNE } from "./campagnes";
-import { VIJANDELIJKE_WACHTTOREN } from "./improvements";
+import { MAISBOERDERIJ, VIJANDELIJKE_WACHTTOREN } from "./improvements";
 import { beschrijfTile } from "./tileInfo";
 import { City, Streek, Tile } from "./types";
 import { HOUTKAP } from "./testHelpers";
@@ -36,6 +36,24 @@ test("de tile-info van een gewoon land improvement op dezelfde streek toont de o
   const streek = maakStreekMetVijandelijkeWachttoren();
   const info = beschrijfTile(streek, [streek], LEGE_STAD, 0, { hout: 0, steen: 0, erts: 0, goud: 0 }, [], GOING_WEST_CAMPAGNE);
   assert.equal(info.tekst.includes("Onrust op deze streek"), true);
+});
+
+// Issue "Wampanoag huisjes": een onthuld Wampanoag-vakje produceert via de
+// aparte handelsconversie (wampanoag.ts), niet via het wegennetwerk — de
+// wegverbindings- en onrusttekst zijn daar dus net zo misleidend als bij een
+// vijandelijke tile hierboven, en horen dus ook weggelaten te worden.
+test("de tile-info van een onthuld Wampanoag-vakje laat de wegverbindings- en onrusttekst weg", () => {
+  const streek = maakStreekMetVijandelijkeWachttoren();
+  streek.tiles[5] = {
+    positieInStreek: 5,
+    terrein: "vlak",
+    status: "actief",
+    improvement: MAISBOERDERIJ,
+    wampanoagInhoud: "maisboerderij",
+  };
+  const info = beschrijfTile(streek, [streek], LEGE_STAD, 5, { hout: 0, steen: 0, erts: 0, goud: 0 }, [], GOING_WEST_CAMPAGNE);
+  assert.equal(info.tekst.includes("verbonden met de stad"), false);
+  assert.equal(info.tekst.includes("Onrust"), false);
 });
 
 // Issue "Pop-up rivier" (vervolg): een rivier-vakje toont zijn eigen tekst
