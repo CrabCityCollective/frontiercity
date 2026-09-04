@@ -305,6 +305,15 @@ export interface Tile {
   // gepauzeerd) — instant omkeerbaar door opnieuw te klikken, zelfde patroon
   // als Wachttoren-bemanning.
   wampanoagHandelKeuze?: WampanoagHandelKeuze;
+  // Brug (issue "Pop-up rivier", vervolg: brug-bouwmechaniek) — alleen
+  // relevant op een `terrein: "rivier"`-vakje (worldGoingWest.ts). Zonder
+  // brug is zo'n vakje onbegaanbaar voor de settler (`magSettlerNaar`,
+  // wegen.ts). Gebouwd via `bouwBrug` (streekOntgrendeling.ts), instant en
+  // permanent — geen bouwtijd/wachtrij zoals een land improvement. Telt
+  // vanzelf al als weg (`heeftWegOp`, wegen.ts): "een brug hoeft geen weg te
+  // hebben, hij fungeert al als weg" (issue), dus geen aparte
+  // `heeftWeg`-aanleg nodig op een brug-vakje.
+  brug?: boolean;
 }
 
 // Positie van de settler-eenheid (M10, hoofdstuk 16). Bestaat pas vanaf beurt
@@ -407,11 +416,17 @@ export interface Rechter {
 
 // Individuele opgeleide Ingenieur-eenheid (issue "Pop-up rivier", vervolg:
 // engineer + brug) — opgeleid via `leidIngenieurOp` (groeiEnRekrutering.ts),
-// zelfde soort losstaande unit als `Rechter` hierboven. Bewust nog geen
-// brug-toewijzingsveld: de brug-bouwmechaniek zelf is een apart, later
-// issue, dit is alleen de opleiding.
+// zelfde soort losstaande unit als `Rechter` hierboven.
 export interface Ingenieur {
   id: string;
+  // Brug-toewijzing (issue "Pop-up rivier", vervolg: brug-bouwmechaniek,
+  // `bouwBrug`/`beschikbareIngenieurs`/`kanBrugBouwen` in
+  // streekOntgrendeling.ts) — zelfde soort permanente toewijzing als
+  // `Missionaris.doelHeiligdom`, maar zonder terugroepen: een brug heeft,
+  // anders dan een Wachttoren of Legerkamp, geen doorlopende bemanning nodig
+  // — eenmaal gebouwd is de Ingenieur simpelweg niet meer vrij inzetbaar
+  // voor een volgende brug.
+  brug?: { hoogte: number; positieInStreek: number };
 }
 
 export interface City {

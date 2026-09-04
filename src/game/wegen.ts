@@ -29,10 +29,17 @@ export function volgendePositie(settler: Settler, richting: SettlerRichting): Se
 }
 
 // De settler blijft, net als de speler zelf, binnen al ontgrendeld gebied —
-// geen stappen de mist of de klikbare oceaan-rij in.
+// geen stappen de mist of de klikbare oceaan-rij in. Een rivier-vakje (issue
+// "Pop-up rivier", vervolg: brug-bouwmechaniek) is bovendien onbegaanbaar
+// zolang er geen brug op staat — "een rivier vakje mag niet begaanbaar zijn
+// voor settlers zonder een brug".
 export function magSettlerNaar(streken: Streek[], positie: Settler): boolean {
   if (positie.positieInStreek < 0 || positie.positieInStreek >= BAND_WIDTH_TILES) return false;
-  return positie.hoogte >= 1 && positie.hoogte <= hoogsteOntgrendeldeStreek(streken);
+  if (positie.hoogte < 1 || positie.hoogte > hoogsteOntgrendeldeStreek(streken)) return false;
+  const streek = streken.find((l) => l.hoogte === positie.hoogte);
+  const tile = streek?.tiles[positie.positieInStreek];
+  if (tile?.terrein === "rivier" && !tile.brug) return false;
+  return true;
 }
 
 const ALLE_RICHTINGEN: SettlerRichting[] = ["vooruit", "achteruit", "links", "rechts"];
@@ -90,11 +97,11 @@ function buurPosities(positie: Settler): Settler[] {
 }
 
 // Of dit vakje "doorgang" biedt aan het wegennetwerk: de stad zelf (het
-// beginpunt) of een vakje met een aangelegde weg.
+// beginpunt), een vakje met een aangelegde weg, of — sinds de brug-
+// bouwmechaniek, zie `heeftWegOp` hieronder — een brug-vakje.
 function biedtDoorgang(streken: Streek[], positie: Settler): boolean {
   if (positie.hoogte === 1 && positie.positieInStreek === STAD_POSITIE) return true;
-  const streek = streken.find((l) => l.hoogte === positie.hoogte);
-  return Boolean(streek?.tiles[positie.positieInStreek]?.heeftWeg);
+  return heeftWegOp(streken, positie.hoogte, positie.positieInStreek);
 }
 
 // Alle vakjes die via een aaneengesloten keten van wegen (of de stad zelf) te
@@ -144,9 +151,17 @@ export interface WegVerbindingen {
   omlaag: boolean;
 }
 
+// Een brug (issue "Pop-up rivier", vervolg: brug-bouwmechaniek) telt hier
+// vanzelf mee als weg — "een brug hoeft geen weg te hebben, hij fungeert al
+// als weg" (issue). Dit ene punt bepaalt zowel het wegennetwerk
+// (`wegNetwerk`/`biedtDoorgang` hieronder, dus ook `isTileVerbondenMetStad`)
+// als de sneller-over-wegen-settlersnelheid (`tweedeStapOverWeg` hierboven)
+// als de kruispunt-rendering (`wegVerbindingen` hieronder) — een brug sluit
+// zo overal naadloos aan op het wegennetwerk zonder los aangelegd te worden.
 function heeftWegOp(streken: Streek[], hoogte: number, positieInStreek: number): boolean {
   const streek = streken.find((l) => l.hoogte === hoogte);
-  return Boolean(streek?.tiles[positieInStreek]?.heeftWeg);
+  const tile = streek?.tiles[positieInStreek];
+  return Boolean(tile?.heeftWeg || tile?.brug);
 }
 
 export function wegVerbindingen(streken: Streek[], hoogte: number, positieInStreek: number): WegVerbindingen {

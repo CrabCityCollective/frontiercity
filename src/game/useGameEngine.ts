@@ -47,6 +47,7 @@ import {
   sluitRoofdierMelding as sluitRoofdierMeldingActie,
 } from "./indringersEnDieren";
 import {
+  bouwBrug as bouwBrugActie,
   sluitGoudOntdektMelding as sluitGoudOntdektMeldingActie,
   sluitBezetteStreekOntdektMelding as sluitBezetteStreekOntdektMeldingActie,
   sluitRivierAangekondigdMelding as sluitRivierAangekondigdMeldingActie,
@@ -380,6 +381,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => leidIngenieurOpActie(huidig));
   }, []);
 
+  // Brug-bouwmechaniek (issue "Pop-up rivier", vervolg) — zelfde dunne
+  // wrapper-conventie als `stuurMissionaris` hierboven.
+  const bouwBrug = useCallback((hoogte: number, positieInStreek: number) => {
+    setState((huidig) => bouwBrugActie(huidig, hoogte, positieInStreek));
+  }, []);
+
   const bemanLegerkamp = useCallback((strijderId: string, hoogte: number, positieInStreek: number) => {
     setState((huidig) => bemanLegerkampActie(huidig, strijderId, hoogte, positieInStreek));
   }, []);
@@ -464,6 +471,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     haalRechterTerug,
     startRechterTraining,
     leidIngenieurOp,
+    bouwBrug,
     zetUitlegPopups,
     markeerUitlegGezien,
     bevestigStreekPopup,

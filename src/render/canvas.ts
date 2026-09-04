@@ -1945,6 +1945,26 @@ function tekenTerreinHint(
   ctx.restore();
 }
 
+// Brug (issue "Pop-up rivier", vervolg: brug-bouwmechaniek) — een grove
+// houten-plankenbrug over de rivier-golflijnen heen (`tekenTerreinHint`
+// hierboven blijft ook op een brug-vakje getekend, `tile.status` blijft
+// "leeg"). Grove placeholder-vorm, functionaliteit gaat voor polish
+// (CLAUDE.md).
+function tekenBrug(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  ctx.save();
+  ctx.fillStyle = "#6b4a2f";
+  ctx.fillRect(x + size * 0.08, y + size * 0.42, size * 0.84, size * 0.16);
+  ctx.strokeStyle = "rgba(40, 26, 14, 0.6)";
+  ctx.lineWidth = Math.max(1, size * 0.02);
+  for (const relX of [0.2, 0.36, 0.52, 0.68, 0.84]) {
+    ctx.beginPath();
+    ctx.moveTo(x + size * relX, y + size * 0.42);
+    ctx.lineTo(x + size * relX, y + size * 0.58);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // Wilde kudde (hoofdstuk 16/17, issue: "kuddes met dieren waar je op kunt
 // jagen voor voedsel"): een paar eenvoudige hertsilhouetten op een leeg vakje
 // — in lijn met de MVP-plaatshouderstijl (hoofdstuk 13), passend bij het
@@ -2199,6 +2219,9 @@ function tekenActieveTile(
 
   if (tile.status === "leeg") {
     tekenTerreinHint(ctx, x, y, size, tile.terrein, seed);
+    if (tile.terrein === "rivier" && tile.brug) {
+      tekenBrug(ctx, x, y, size);
+    }
     if (tile.kudde) {
       tekenKudde(ctx, x, y, size, seed + 1);
     }

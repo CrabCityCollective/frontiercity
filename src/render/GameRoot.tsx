@@ -51,7 +51,9 @@ import { improvementNaam, improvementPastOpTerrein, terreinEisenBeschrijving } f
 import { kanIndringersAfkopenMetWampum, wampumAfkoopKostenHuidig } from "@/game/indringersEnDieren";
 import {
   BELEGERINGSDREMPEL,
+  beschikbareIngenieurs,
   beschikbareMissionarissen,
+  kanBrugBouwen,
   kanStuurMissionaris,
   kanStuurVerkenner,
   verhuldeBezetteStreekPosities,
@@ -176,6 +178,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     haalRechterTerug,
     startRechterTraining,
     leidIngenieurOp,
+    bouwBrug,
     zetUitlegPopups,
     markeerUitlegGezien,
     bevestigStreekPopup,
@@ -569,6 +572,14 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "vijandelijke-wachttoren";
   const geselecteerdeTileIsVijandelijkHeiligdom =
     geselecteerdeTileVoorRush?.status === "actief" && geselecteerdeTileVoorRush.improvement?.id === "vijandelijk-heiligdom";
+  // Rivier zonder brug (issue "Pop-up rivier", vervolg: brug-bouwmechaniek) —
+  // zelfde soort afgeleide vlag als hierboven, geeft de tile-info-pop-up de
+  // "hier brug bouwen?"-vraag (`brugVraag` hieronder). Een rivier-vakje ís
+  // altijd "leeg" (nooit een gewoon land improvement, zie
+  // `improvementPastOpTerrein`), dus geen `status`-check nodig zoals bij de
+  // improvement-gebonden vlaggen hierboven.
+  const geselecteerdeTileIsRivierZonderBrug =
+    geselecteerdeTileVoorRush?.terrein === "rivier" && !geselecteerdeTileVoorRush.brug;
   // Alleen de relevante streken op de canvas (issue: "onderkant altijd in
   // view" + "onontdekte tegels weg", en sinds issue "Nieuwe stad Cincinnati"
   // ook de dichtgeklapte streken van vóór de huidige stad) — zie world.ts:
@@ -2372,6 +2383,18 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
                   beschikbareMissionarissen: beschikbareMissionarissen(state),
                   onStuurMissionaris: (missionarisId) => {
                     stuurMissionaris(missionarisId, geselecteerdeTile.positieInStreek);
+                  },
+                }
+              : undefined
+          }
+          brugVraag={
+            geselecteerdeTileIsRivierZonderBrug && geselecteerdeTile
+              ? {
+                  heeftIngenieur: beschikbareIngenieurs(state).length > 0,
+                  kan: kanBrugBouwen(state, geselecteerdeTile.hoogte, geselecteerdeTile.positieInStreek),
+                  onBouwBrug: () => {
+                    bouwBrug(geselecteerdeTile.hoogte, geselecteerdeTile.positieInStreek);
+                    setGeselecteerdeTile(null);
                   },
                 }
               : undefined
