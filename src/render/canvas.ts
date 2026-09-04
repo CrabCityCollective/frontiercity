@@ -101,8 +101,10 @@ const TERREIN_BASIS: Record<string, string> = {
   maisakker: "#748b42",
   // Streek 12 (RIVIER_STREEK_HOOGTE, worldGoingWest.ts, issue "Pop-up
   // rivier"): een eigen blauwe basiskleur i.p.v. de bruine default — de hele
-  // streek bestaat uit rivier-vakjes.
-  rivier: "#2f4a5e",
+  // streek bestaat uit rivier-vakjes. Verzadigder/blauwer gemaakt (issue
+  // "Rivier mooier") dan de oorspronkelijke blauwgrijze tint — de golfdetails
+  // in `tekenTerreinHint` hieronder rusten hier bovenop.
+  rivier: "#1c4f75",
 };
 
 export function terreinBasisKleur(terreinType: string): string {
@@ -1904,7 +1906,8 @@ function tekenTerreinHint(
   y: number,
   size: number,
   terrein: TerreinType,
-  seed: number
+  seed: number,
+  col: number
 ): void {
   if (terrein === "vlak") return;
 
@@ -1915,17 +1918,67 @@ function tekenTerreinHint(
     const rng = maakSeededRandom(seed);
     tekenBoom(ctx, x + size * 0.5, y + size * 0.74, size * 0.36, rng() > 0.5);
   } else if (terrein === "rivier") {
-    // Rivier (issue "Pop-up rivier", vervolg): een paar zachte golflijnen
-    // i.p.v. het heuvel/berg-silhouet hieronder — de blauwe streek-basiskleur
-    // (TERREIN_BASIS.rivier hierboven) maakt het terrein al herkenbaar, dit is
-    // puur extra textuur.
-    ctx.strokeStyle = "rgba(210, 230, 240, 0.55)";
-    ctx.lineWidth = Math.max(1, size * 0.03);
-    for (const relY of [0.38, 0.58, 0.78]) {
+    // Rivier (issue "Rivier mooier"): een paar dikke, gedetailleerde
+    // stromingsbanden i.p.v. de eerdere dunne, halfdoorzichtige golflijnen —
+    // duidelijk blauwer en met glinsterende hoogtepunten. Een rivier-streek
+    // bestaat uitsluitend uit rivier-vakjes (worldGoingWest.ts:
+    // RIVIER_STREEK_HOOGTE), dus de golffase gebruikt de absolute
+    // kolompositie (`col`) i.p.v. een per-vakje offset: bij `t = 1` van dit
+    // vakje is de golf-wereld-x gelijk aan `t = 0` van het volgende vakje,
+    // zodat de stroming naadloos doorloopt van de linker- tot de
+    // rechterrand van de hele streek — één rivier, geen losse vakjes.
+    ctx.globalAlpha = 1;
+    const rng = maakSeededRandom(seed);
+    const segmenten = 8;
+
+    const golfBand = (
+      relY: number,
+      amplitude: number,
+      frequentie: number,
+      faseOffset: number,
+      kleur: string,
+      breedte: number
+    ): void => {
+      ctx.strokeStyle = kleur;
+      ctx.lineWidth = breedte;
+      ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(x + size * 0.12, y + size * relY);
-      ctx.quadraticCurveTo(x + size * 0.5, y + size * (relY - 0.06), x + size * 0.88, y + size * relY);
+      for (let i = 0; i <= segmenten; i++) {
+        const t = i / segmenten;
+        const wereldX = col + t;
+        const golfY = Math.sin(wereldX * frequentie + faseOffset) * amplitude;
+        const px = x + t * size;
+        const py = y + size * (relY + golfY);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
       ctx.stroke();
+    };
+
+    const banden: [number, number, number, number][] = [
+      [0.3, 0.05, Math.PI * 1.4, 0],
+      [0.55, 0.055, Math.PI * 1.15, 2.4],
+      [0.8, 0.05, Math.PI * 1.3, 4.6],
+    ];
+    for (const [relY, amplitude, frequentie, faseOffset] of banden) {
+      // Diepe onderstroom-schaduw, dan een verzadigde middenblauwe band, dan
+      // een smallere lichte glinster-crest — zelfde gelaagde aanpak als de
+      // rand+vulling-truc bij het bergsilhouet elders in dit bestand.
+      golfBand(relY, amplitude, frequentie, faseOffset, "rgba(9, 28, 45, 0.55)", size * 0.16);
+      golfBand(relY, amplitude, frequentie, faseOffset, "rgba(70, 150, 197, 0.85)", size * 0.09);
+      golfBand(relY, amplitude, frequentie, faseOffset, "rgba(210, 234, 246, 0.65)", size * 0.025);
+    }
+
+    // Losse schittering-vlekjes (issue: "gedetailleerder") — seeded per
+    // vakje zodat het patroon stabiel blijft tussen renders.
+    for (let i = 0; i < 5; i++) {
+      const gx = x + rng() * size;
+      const gy = y + size * (0.15 + rng() * 0.7);
+      const r = size * (0.015 + rng() * 0.02);
+      ctx.fillStyle = `rgba(230, 244, 250, ${0.35 + rng() * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(gx, gy, r, 0, Math.PI * 2);
+      ctx.fill();
     }
   } else {
     const baseY = y + size * 0.78;
@@ -2221,7 +2274,7 @@ function tekenActieveTile(
   }
 
   if (tile.status === "leeg") {
-    tekenTerreinHint(ctx, x, y, size, tile.terrein, seed);
+    tekenTerreinHint(ctx, x, y, size, tile.terrein, seed, col);
     if (tile.terrein === "rivier" && tile.brug) {
       tekenBrug(ctx, x, y, size);
     }

@@ -1004,7 +1004,12 @@ function tekenOnrustIndicatorPixel(ctx: CanvasRenderingContext2D): void {
 }
 
 // Zachte hint van het vakje-terreinsubtype op een nog onbebouwd vakje.
-function tekenTerreinHintPixel(ctx: CanvasRenderingContext2D, terrein: Tile["terrein"], seed: number): void {
+function tekenTerreinHintPixel(
+  ctx: CanvasRenderingContext2D,
+  terrein: Tile["terrein"],
+  seed: number,
+  col: number
+): void {
   if (terrein === "vlak") return;
 
   if (terrein === "bos") {
@@ -1017,15 +1022,34 @@ function tekenTerreinHintPixel(ctx: CanvasRenderingContext2D, terrein: Tile["ter
   }
 
   if (terrein === "rivier") {
-    // Rivier (issue "Pop-up rivier", vervolg): een paar lichte golfstrepen
-    // i.p.v. het heuvel/berg-silhouet hieronder — de blauwe streek-basiskleur
-    // (TERREIN_BASIS.rivier, canvas.ts) maakt het terrein al herkenbaar.
-    ctx.save();
-    ctx.globalAlpha = 0.6;
-    hlijn(ctx, 2, 12, 5, "rgba(210, 230, 240, 0.85)");
-    hlijn(ctx, 3, 13, 9, "rgba(210, 230, 240, 0.85)");
-    hlijn(ctx, 2, 12, 13, "rgba(210, 230, 240, 0.85)");
-    ctx.restore();
+    // Rivier (issue "Rivier mooier"): dikke, gelaagde stromingsbanden
+    // (schaduw-rand, verzadigd middenblauw, lichte glinster-kern — zelfde
+    // rand+vulling-truc als het berg/heuvel-silhouet hieronder) i.p.v. de
+    // eerdere drie dunne halfdoorzichtige golfstrepen. Een rivier-streek
+    // bestaat uitsluitend uit rivier-vakjes (worldGoingWest.ts:
+    // RIVIER_STREEK_HOOGTE), dus elke band loopt edge-to-edge (x=0..PIX-1)
+    // en de verticale meander hangt af van `col` i.p.v. willekeur — daardoor
+    // sluiten de banden van buurvakjes op dezelfde rij naadloos op elkaar
+    // aan en oogt de hele streek als één doorlopende rivier van links naar
+    // rechts.
+    const rng = maakSeededRandom(seed);
+    const bend = Math.round(Math.sin(col * 0.8) * 1.5);
+    const diep = "rgba(8, 26, 42, 0.6)";
+    const midden = "#3f83ab";
+    const highlight = "rgba(210, 234, 246, 0.9)";
+
+    for (const rij of [4, 9, 13]) {
+      const y = rij + bend;
+      hlijn(ctx, 0, PIX - 1, y, diep);
+      hlijn(ctx, 0, PIX - 1, y + 1, midden);
+      hlijn(ctx, 1, PIX - 2, y, highlight);
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const gx = Math.floor(rng() * PIX);
+      const gy = Math.floor(rng() * PIX);
+      p(ctx, gx, gy, "rgba(230, 244, 250, 0.85)");
+    }
     return;
   }
 
@@ -1265,7 +1289,7 @@ function tekenActieveTilePixel(
   }
 
   if (tile.status === "leeg") {
-    tekenTerreinHintPixel(ctx, tile.terrein, seed);
+    tekenTerreinHintPixel(ctx, tile.terrein, seed, col);
     if (tile.terrein === "rivier" && tile.brug) {
       tekenBrugPixel(ctx);
     }
