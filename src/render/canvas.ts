@@ -2001,18 +2001,23 @@ function tekenTerreinHint(
 // Brug (issue "Pop-up rivier", vervolg: brug-bouwmechaniek) — een grove
 // houten-plankenbrug over de rivier-golflijnen heen (`tekenTerreinHint`
 // hierboven blijft ook op een brug-vakje getekend, `tile.status` blijft
-// "leeg"). Grove placeholder-vorm, functionaliteit gaat voor polish
-// (CLAUDE.md).
+// "leeg"). De rivier zelf stroomt horizontaal (zie `tekenTerreinHint`
+// hierboven, banden lopen edge-to-edge in x), dus de brug moet er
+// verticaal overheen lopen — de oversteekrichting tussen twee streken
+// (issue "Brug mooier": brug liep verkeerd-om, en moest breder). Grove
+// placeholder-vorm, functionaliteit gaat voor polish (CLAUDE.md).
 function tekenBrug(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
   ctx.save();
+  const dekX = x + size * 0.36;
+  const dekBreedte = size * 0.28;
   ctx.fillStyle = "#6b4a2f";
-  ctx.fillRect(x + size * 0.08, y + size * 0.42, size * 0.84, size * 0.16);
+  ctx.fillRect(dekX, y + size * 0.08, dekBreedte, size * 0.84);
   ctx.strokeStyle = "rgba(40, 26, 14, 0.6)";
   ctx.lineWidth = Math.max(1, size * 0.02);
-  for (const relX of [0.2, 0.36, 0.52, 0.68, 0.84]) {
+  for (const relY of [0.2, 0.36, 0.52, 0.68, 0.84]) {
     ctx.beginPath();
-    ctx.moveTo(x + size * relX, y + size * 0.42);
-    ctx.lineTo(x + size * relX, y + size * 0.58);
+    ctx.moveTo(dekX, y + size * relY);
+    ctx.lineTo(dekX + dekBreedte, y + size * relY);
     ctx.stroke();
   }
   ctx.restore();
