@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { maakInitieleSpelStatus, OPSLAG_CAP, volgendeBeurt } from "./economie";
-import { BIBLIOTHEEK, ECONOMISCH_LAND_IMPROVEMENTS, MARKT, SMEDERIJ, STERRENCIRKEL } from "./improvements";
+import { BIBLIOTHEEK, ECONOMISCH_LAND_IMPROVEMENTS, MARKT, SMEDERIJ, STERRENCIRKEL, TEMPEL } from "./improvements";
 import {
+  berekenAchterliggendeProductie,
   berekenBoerderijOnrustModifier,
   berekenBoerderijOpbrengstNetto,
   berekenBoerderijOpbrengstRuw,
@@ -12,7 +13,7 @@ import {
   WACHTTOREN_VOEDSEL_VERBRUIK,
 } from "./productie";
 import { metActieveStad } from "./stad";
-import { metWerkendeSterrencirkel, HOUTKAP, MIJN, WACHTTOREN } from "./testHelpers";
+import { HEILIGDOM, metActiefHeiligdomOpStreek1, metWerkendeSterrencirkel, HOUTKAP, MIJN, WACHTTOREN } from "./testHelpers";
 
 test("de opslag-cap geldt per grondstof, niet als gezamenlijke som (basis van de STICHTING_KOSTEN-doorrekening)", () => {
   let state = maakInitieleSpelStatus();
@@ -392,6 +393,50 @@ test("city-improvement-productie van élke eerder gestichte stad blijft meetelle
     Math.floor((MARKT.effect.waarde ?? 0) * 0.3),
     "eersteStad's Markt (afstand 10, 30%-zone) levert nog gewoon iets op, in plaats van meteen 0 zodra er een tweede stad is"
   );
+});
+
+test("berekenAchterliggendeProductie is 0 zolang een run maar 1 stad heeft en geen niet-frontier land-improvements produceren (M17: geen 'achterliggend' zonder iets erachter)", () => {
+  const state = maakInitieleSpelStatus();
+
+  const achterliggend = berekenAchterliggendeProductie(state);
+
+  assert.deepEqual(achterliggend, { cultuur: 0, wetenschap: 0 });
+});
+
+test("berekenAchterliggendeProductie telt de gehalveerde Heiligdom-opbrengst van een niet-frontier-streek mee, niet van de frontier zelf (issue: 'Nieuwe stad: wetenschap en cultuur')", () => {
+  let state = maakInitieleSpelStatus();
+  state = metActiefHeiligdomOpStreek1(state);
+  // Frontier op streek 2: het Heiligdom op streek 1 is dus niet meer de
+  // frontier-streek zelf, en telt hier voor de helft mee (zelfde
+  // frontier-halvering als `verwerkProductie`).
+  state = { ...state, streken: state.streken.map((streek) => (streek.hoogte <= 2 ? { ...streek, ontgrendeld: true } : streek)) };
+
+  const achterliggend = berekenAchterliggendeProductie(state);
+
+  assert.equal(achterliggend.cultuur, (HEILIGDOM.effect.waarde ?? 0) / 2);
+  assert.equal(achterliggend.wetenschap, 0);
+});
+
+test("berekenAchterliggendeProductie telt de na-afstandsverval city-improvement-productie van elke eerder gestichte stad mee, niet van de actieve stad zelf (issue: 'Nieuwe stad: wetenschap en cultuur')", () => {
+  let state = maakInitieleSpelStatus();
+  const eersteStad = { ...state.stad, naam: "Oude stad", cityImprovements: [TEMPEL, BIBLIOTHEEK], streekHoogte: 0 };
+  const actieveStad = { ...state.stad, naam: "Nieuwe stad", cityImprovements: [TEMPEL], streekHoogte: 6 };
+  state = {
+    ...state,
+    steden: [eersteStad, actieveStad],
+    stad: actieveStad,
+    // Frontier op 10: eersteStad (streekHoogte 0) zit op afstand 10 → 30%.
+    streken: state.streken.map((streek) => (streek.hoogte <= 10 ? { ...streek, ontgrendeld: true } : streek)),
+  };
+
+  const achterliggend = berekenAchterliggendeProductie(state);
+
+  assert.equal(
+    achterliggend.cultuur,
+    (TEMPEL.effect.waarde ?? 0) * 0.3,
+    "alleen eersteStad's Tempel (30%) telt mee, niet de 100% van de actieve stad zelf"
+  );
+  assert.equal(achterliggend.wetenschap, (BIBLIOTHEEK.effect.waarde ?? 0) * 0.3);
 });
 
 test("een Smederij zet elke beurt 2 erts om in 1 gereedschap, zolang er genoeg erts voorradig is (Going West, M21d)", () => {
