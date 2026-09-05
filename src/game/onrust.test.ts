@@ -22,6 +22,16 @@ function maakStreek(hoogte: number, improvementen: Record<number, Improvement>):
   return { hoogte, ontgrendeld: true, tiles, terreinType: "test" };
 }
 
+// Zet `heeftWeg: true` op de opgegeven posities van `streek` — gebruikt om een
+// wegverbinding met de (hardcoded) stad-positie (`STAD_POSITIE`, hoogte 1) te
+// simuleren voor de Saloon/Courthouse-effect-tests hieronder (issue "Weg naar
+// saloon": hun effect vereist nu, net als elk ander niet-productie
+// land-improvement, `isTileVerbondenMetStad`).
+function metWeg(streek: Streek, ...posities: number[]): Streek {
+  const set = new Set(posities);
+  return { ...streek, tiles: streek.tiles.map((tile) => (set.has(tile.positieInStreek) ? { ...tile, heeftWeg: true } : tile)) };
+}
+
 test("onrustOpStreek is 0 zolang een streek 4 of minder improvements draagt", () => {
   const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP });
   assert.equal(onrustOpStreek([streek], [], streek), 0);
@@ -44,23 +54,35 @@ test("een ghost-town-tile telt niet mee voor de onrust-drempel", () => {
   assert.equal(onrustOpStreek([metGhostTown], [], metGhostTown), 0);
 });
 
-test("een actieve Saloon verlaagt de onrust met 1 en telt zelf niet mee als onrust-veroorzakend improvement", () => {
+test("een actieve, wegverbonden Saloon verlaagt de onrust met 1 en telt zelf niet mee als onrust-veroorzakend improvement", () => {
   // 5 gewone improvements + Saloon = 6 tiles, maar de Saloon telt niet mee
   // voor de drempel — dus nog steeds maar 5 onrust-veroorzakende improvements
-  // (onrust 1), en de Saloon trekt daar nog eens 1 vanaf.
-  const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: SALOON });
+  // (onrust 1), en de Saloon trekt daar nog eens 1 vanaf. Positie 5 ligt naast
+  // de (hardcoded) stad-positie 4, dus alleen de Saloon-tile zelf heeft een
+  // weg nodig om verbonden te zijn.
+  const streek = metWeg(maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: SALOON }), 5);
   assert.equal(onrustOpStreek([streek], [], streek), 0);
+});
+
+test("een actieve maar niet-wegverbonden Saloon vermindert de onrust niet", () => {
+  // Zelfde opstelling als hierboven, maar zonder de weg op positie 5 — de
+  // Saloon telt nog steeds niet mee als onrust-veroorzaker (dat blijft altijd
+  // zo), maar haar -1-effect blijft uit zolang ze niet wegverbonden is.
+  const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: SALOON });
+  assert.equal(onrustOpStreek([streek], [], streek), 1);
 });
 
 test("onrust kan door de Saloon niet onder 0 zakken", () => {
-  const streek = maakStreek(1, { 0: HOUTKAP, 1: SALOON });
+  const streek = metWeg(maakStreek(1, { 0: HOUTKAP, 1: SALOON }), 1, 2, 3);
   assert.equal(onrustOpStreek([streek], [], streek), 0);
 });
 
-test("een bemand Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven op 0", () => {
+test("een bemand, wegverbonden Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven op 0", () => {
   const drukkeStreek = (hoogte: number) =>
     maakStreek(hoogte, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: STEENGROEVE });
-  const courthouseStreek = { ...maakStreek(2, { 6: COURTHOUSE }) };
+  // Weg van de (hardcoded) stad-positie (hoogte 1, positie 4) recht omhoog
+  // naar en over de Courthouse-tile: (2,4) → (2,5) → (2,6).
+  const courthouseStreek = metWeg(maakStreek(2, { 6: COURTHOUSE }), 4, 5, 6);
   const rechters: Rechter[] = [{ id: "rechter-0", courthouse: { hoogte: 2, positieInStreek: 6 } }];
   const streken = [drukkeStreek(1), courthouseStreek, drukkeStreek(3), drukkeStreek(4), drukkeStreek(5)];
 
@@ -69,6 +91,17 @@ test("een bemand Courthouse houdt de onrust op zijn eigen streek en de 2 streken
   assert.equal(onrustOpStreek(streken, rechters, streken[2]), 0); // 1 erboven
   assert.equal(onrustOpStreek(streken, rechters, streken[3]), 0); // 2 erboven
   assert.equal(onrustOpStreek(streken, rechters, streken[4]), 2); // 3 erboven: buiten bereik, gewoon onrust
+});
+
+test("een bemand maar niet-wegverbonden Courthouse onderdrukt geen onrust", () => {
+  // Zelfde opstelling als de vorige test, maar zonder de weg naar/op de
+  // Courthouse-tile — het bemannen alleen is niet genoeg zolang de tile niet
+  // via het wegennetwerk met de stad verbonden is, dus blijft de eigen,
+  // boven-de-drempel onrust (5 improvements → 1) gewoon staan.
+  const courthouseStreek = maakStreek(2, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 6: COURTHOUSE });
+  const rechters: Rechter[] = [{ id: "rechter-0", courthouse: { hoogte: 2, positieInStreek: 6 } }];
+
+  assert.equal(onrustOpStreek([courthouseStreek], rechters, courthouseStreek), 1);
 });
 
 test("een onbemand Courthouse onderdrukt geen onrust", () => {

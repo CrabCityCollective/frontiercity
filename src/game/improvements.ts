@@ -126,12 +126,14 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
   }
   // Onrust (issue: "Onrust, Saloon en Courthouse", Going West, zie
   // onrust.ts): Saloon en Courthouse hebben geen productie-effect, dus geen
-  // van de generieke gevallen hierboven.
+  // van de generieke gevallen hierboven. Beide vereisen, net als elk ander
+  // niet-productie land-improvement (Wachttoren/Legerkamp), een wegverbinding
+  // met de stad voordat hun effect meetelt (issue "Weg naar saloon").
   if (effect.type === "onrust-verlichting" && effect.waarde) {
-    return `Vermindert de onrust op deze streek met ${effect.waarde}.`;
+    return `Vermindert, zodra wegverbonden, de onrust op deze streek met ${effect.waarde}.`;
   }
   if (effect.type === "courthouse") {
-    return "Vereist een toegewezen Rechter om effect te hebben — zet dan de onrust op deze streek én de 2 streken direct erboven blijvend op 0, zolang bemand.";
+    return "Vereist een toegewezen Rechter en een wegverbinding met de stad om effect te hebben — zet dan de onrust op deze streek én de 2 streken direct erboven blijvend op 0, zolang bemand.";
   }
   if (effect.type === "rechter") {
     return "Wijs deze Rechter toe aan een Courthouse om onrust op die streek en de 2 streken direct erboven te onderdrukken.";

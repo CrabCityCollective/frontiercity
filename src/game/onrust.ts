@@ -23,6 +23,7 @@
 
 import { metActieveStad } from "./stad";
 import { GameState, Rechter, Streek } from "./types";
+import { isTileVerbondenMetStad } from "./wegen";
 
 // Vanaf het (drempel+1)e improvement op een streek ontstaat onrust (issue
 // #450: "de onrust pas bij 4 gebouwen ipv 3" — oorspronkelijk gaf het 4e
@@ -57,19 +58,34 @@ function telOnrustVerhogendeImprovements(streek: Streek): number {
   ).length;
 }
 
-function heeftActieveSaloon(streek: Streek): boolean {
-  return streek.tiles.some((tile) => tile.status === "actief" && tile.improvement?.id === "saloon");
+// Net als `vindWerkendeWachttorenTile` (indringersEnDieren.ts) en
+// `heeftWerkendeLegerkampOpStreek` (militair.ts) telt een niet-wegverbonden
+// Saloon/Courthouse wel als gebouwd, maar (nog) niet als werkend (issue "Weg
+// naar saloon": beide misten deze check, terwijl elk ander niet-productie
+// land-improvement 'm al had).
+function heeftActieveSaloon(streken: Streek[], streek: Streek): boolean {
+  return streek.tiles.some(
+    (tile) =>
+      tile.status === "actief" &&
+      tile.improvement?.id === "saloon" &&
+      isTileVerbondenMetStad(streken, streek.hoogte, tile.positieInStreek)
+  );
 }
 
-function vindCourthouseTile(streek: Streek) {
-  return streek.tiles.find((tile) => tile.status === "actief" && tile.improvement?.id === "courthouse");
+function vindCourthouseTile(streken: Streek[], streek: Streek) {
+  return streek.tiles.find(
+    (tile) =>
+      tile.status === "actief" &&
+      tile.improvement?.id === "courthouse" &&
+      isTileVerbondenMetStad(streken, streek.hoogte, tile.positieInStreek)
+  );
 }
 
-// Of `streek` een actief, door een Rechter bemand Courthouse draagt (zelfde
-// bemand/onbemand-onderscheid als `isWachttorenBemand`,
+// Of `streek` een actief, wegverbonden, door een Rechter bemand Courthouse
+// draagt (zelfde bemand/onbemand-onderscheid als `isWachttorenBemand`,
 // indringersEnDieren.ts).
-function heeftBemandCourthouse(rechters: Rechter[], streek: Streek): boolean {
-  const tile = vindCourthouseTile(streek);
+function heeftBemandCourthouse(streken: Streek[], rechters: Rechter[], streek: Streek): boolean {
+  const tile = vindCourthouseTile(streken, streek);
   if (!tile) return false;
   return rechters.some(
     (rechter) => rechter.courthouse?.hoogte === streek.hoogte && rechter.courthouse?.positieInStreek === tile.positieInStreek
@@ -95,13 +111,13 @@ function beschermdeHoogtenDoorCourthouse(courthouseStreekHoogte: number): number
 export function onrustOpStreek(streken: Streek[], rechters: Rechter[], streek: Streek): number {
   const beschermd = streken.some(
     (andere) =>
-      heeftBemandCourthouse(rechters, andere) && beschermdeHoogtenDoorCourthouse(andere.hoogte).includes(streek.hoogte)
+      heeftBemandCourthouse(streken, rechters, andere) && beschermdeHoogtenDoorCourthouse(andere.hoogte).includes(streek.hoogte)
   );
   if (beschermd) return 0;
 
   const aantal = telOnrustVerhogendeImprovements(streek);
   let onrust = Math.max(0, aantal - ONRUST_DREMPEL);
-  if (heeftActieveSaloon(streek)) onrust = Math.max(0, onrust - SALOON_ONRUST_VERMINDERING);
+  if (heeftActieveSaloon(streken, streek)) onrust = Math.max(0, onrust - SALOON_ONRUST_VERMINDERING);
   return onrust;
 }
 

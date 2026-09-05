@@ -132,7 +132,7 @@ const BASE_LEMMAS: EncyclopedieLemma[] = [
     titel: "Onrust",
     categorie: "Streken",
     tekst:
-      "Ontstaat zodra een streek meer dan vier gebouwen draagt — elk gebouw daarna verhoogt de onrust met 1 en verlaagt de productie van alle landverbeteringen op die streek. Gebouwen die volledig uitgeput zijn (ghost towns) tellen niet meer mee, dus onrust op oudere streken zakt vanzelf terug naarmate ze uitputten. Een Saloon verlaagt de onrust op zijn eigen streek met 1; een bemand Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven blijvend op 0.",
+      "Ontstaat zodra een streek meer dan vier gebouwen draagt — elk gebouw daarna verhoogt de onrust met 1 en verlaagt de productie van alle landverbeteringen op die streek. Gebouwen die volledig uitgeput zijn (ghost towns) tellen niet meer mee, dus onrust op oudere streken zakt vanzelf terug naarmate ze uitputten. Een wegverbonden Saloon verlaagt de onrust op zijn eigen streek met 1; een bemand, wegverbonden Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven blijvend op 0.",
   },
   // Grondstoffen
   {
@@ -207,7 +207,7 @@ const BASE_LEMMAS: EncyclopedieLemma[] = [
     titel: "Courthouse",
     categorie: "Gebouwen",
     tekst:
-      "Civiele landverbetering (Going West), duurder dan de Saloon. Bouwbaar zonder voorwaarde, maar heeft pas effect zodra een opgeleide rechter er zitting neemt — houdt dan de onrust op zijn eigen streek en de 2 streken direct erboven blijvend op 0, zolang bemand.",
+      "Civiele landverbetering (Going West), duurder dan de Saloon. Bouwbaar zonder voorwaarde, maar heeft pas effect zodra een opgeleide rechter er zitting neemt én de tile wegverbonden is — houdt dan de onrust op zijn eigen streek en de 2 streken direct erboven blijvend op 0, zolang bemand.",
   },
   {
     id: "grote-tempel",
@@ -273,7 +273,8 @@ const BASE_LEMMAS: EncyclopedieLemma[] = [
     id: "saloon",
     titel: "Saloon",
     categorie: "Gebouwen",
-    tekst: "Goedkope civiele landverbetering (Going West) die de onrust op zijn eigen streek met 1 vermindert.",
+    tekst:
+      "Goedkope civiele landverbetering (Going West) die, zodra wegverbonden, de onrust op zijn eigen streek met 1 vermindert.",
   },
   {
     id: "smederij",
