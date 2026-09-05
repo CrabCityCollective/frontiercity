@@ -22,16 +22,18 @@
 // alfabetisch te doorzoeken, maar zodra dit gaandeweg uitbreidt (zoals de
 // trigger-comment al aankondigt) wordt een platte alfabetische lijst al snel
 // een muur van tekst zonder houvast. Daarom hier een categorie-indeling
-// (Stad, Streken, Grondstoffen, Gebouwen, Eenheden & acties, Cultuur &
+// (Stad, Streken, Boons, Grondstoffen, Gebouwen, Eenheden & acties, Cultuur &
 // wetenschap, Militair) met alfabetische volgorde bínnen elke categorie, plus
 // een zoekveld in EncyclopediePaneel voor snel opzoeken ongeacht categorie —
 // het beste van beide.
+import { BOON_POOL } from "./boons";
 import { GOING_WEST_CAMPAGNE } from "./campagnes";
 import { TECH_TREE, TechNode } from "./techTree";
 
 export type EncyclopedieCategorie =
   | "Stad"
   | "Streken"
+  | "Boons"
   | "Grondstoffen"
   | "Gebouwen"
   | "Eenheden & acties"
@@ -41,6 +43,7 @@ export type EncyclopedieCategorie =
 export const ENCYCLOPEDIE_CATEGORIEEN: EncyclopedieCategorie[] = [
   "Stad",
   "Streken",
+  "Boons",
   "Grondstoffen",
   "Gebouwen",
   "Eenheden & acties",
@@ -72,6 +75,21 @@ const TECHBOOM_LEMMAS: EncyclopedieLemma[] = (Object.values(TECH_TREE) as TechNo
     ? `Technologieboom-drempel ${node.drempel}, een van de twee keuzes na ${TECH_TREE[node.ouder].tutorialNaam}. ${node.beschrijving}`
     : `Technologieboom-drempel ${node.drempel}, een van de twee startrichtingen. ${node.beschrijving}`,
 }));
+
+// Boon-lemma's (issue "Boons" — hoofdstuk in de encyclopedie): net als
+// `TECHBOOM_LEMMAS` hierboven gegenereerd uit de brondata zelf (`BOON_POOL`,
+// boons.ts) in plaats van hier los gedupliceerd, zodat een nieuwe Boon (issue
+// #428/#431 laten al zien dat de pool groeit) vanzelf ook een encyclopedie-
+// lemma krijgt. Alfabetisch op naam, zoals de rest van deze categorie buiten
+// de techboom.
+const BOON_LEMMAS: EncyclopedieLemma[] = [...BOON_POOL]
+  .sort((a, b) => a.naam.localeCompare(b.naam))
+  .map((boon) => ({
+    id: `boon-${boon.id}`,
+    titel: boon.naam,
+    categorie: "Boons",
+    tekst: boon.beschrijving,
+  }));
 
 // Alfabetisch bínnen elke categorie (zie de comment hierboven) — behalve de
 // techboom-lemma's, zie de comment bij `TECHBOOM_LEMMAS`.
@@ -134,6 +152,15 @@ const BASE_LEMMAS: EncyclopedieLemma[] = [
     tekst:
       "Ontstaat zodra een streek meer dan vier gebouwen draagt — elk gebouw daarna verhoogt de onrust met 1 en verlaagt de productie van alle landverbeteringen op die streek. Gebouwen die volledig uitgeput zijn (ghost towns) tellen niet meer mee, dus onrust op oudere streken zakt vanzelf terug naarmate ze uitputten. Een wegverbonden Saloon verlaagt de onrust op zijn eigen streek met 1; een bemand, wegverbonden Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven blijvend op 0.",
   },
+  // Boons
+  {
+    id: "boon",
+    titel: "Boon",
+    categorie: "Boons",
+    tekst:
+      "Een permanente, run-brede beloning die je krijgt bij elke stichting die de campagne niet afsluit, maar alleen als de stad die je net verlaat 'groot' was. Je trekt 'm willekeurig uit een pool, zonder terugleggen — dezelfde Boon krijg je dus nooit twee keer. Boons zijn stapelbaar (geen sloten zoals bij een relic) en blijven de rest van de run actief, ook als een latere stad instort. Niet beschikbaar in de tutorial.",
+  },
+  ...BOON_LEMMAS,
   // Grondstoffen
   {
     id: "resources",
