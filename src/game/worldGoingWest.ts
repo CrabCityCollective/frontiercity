@@ -94,11 +94,15 @@ const GOING_WEST_TERREINTYPES = [
   "kalksteenrichel",
   "droge vlakte",
   "canyonrand",
-  "mesa",
   // Streek 12 = `RIVIER_STREEK_HOOGTE` hierboven: de Ohio-rivier zelf, dus
   // deze flavornaam (i.p.v. het oorspronkelijke "zandsteenplateau") sluit aan
-  // op de daadwerkelijke tile-inhoud van deze streek.
+  // op de daadwerkelijke tile-inhoud van deze streek. Stond hier eerder één
+  // index te laat (op streek 13 i.p.v. 12) — issue "Rivier ?": daardoor
+  // heette en kleurde (`TERREIN_BASIS["rivier"]`, canvas.ts/canvasPixelArt.ts)
+  // streek 13 als rivier terwijl de daadwerkelijke rivier-vakjes op streek 12
+  // stonden.
   "rivier",
+  "mesa",
   "ravijn",
   "cottonwood-oase",
   "steppegras",
