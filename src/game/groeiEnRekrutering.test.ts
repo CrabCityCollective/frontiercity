@@ -539,16 +539,25 @@ test("kanIngenieurOpleiden vereist Going West en genoeg wetenschap", () => {
   assert.equal(kanIngenieurOpleiden(state), true);
 });
 
-test("leidIngenieurOp trekt 30 wetenschap af en voegt een Ingenieur toe, herhaalbaar, geen effect zonder genoeg wetenschap of in de tutorial", () => {
+test("leidIngenieurOp trekt meteen 30 wetenschap af maar voegt de Ingenieur pas na 1 beurt toe (issue: 'Engineer opleiden'), herhaalbaar zodra de opleiding voltooid is, geen effect zonder genoeg wetenschap, tijdens een lopende opleiding, of in de tutorial", () => {
   let state = { ...maakInitieleSpelStatus("going-west"), wetenschap: 65 };
 
   state = leidIngenieurOp(state);
-  assert.equal(state.wetenschap, 35);
-  assert.equal(state.stad.ingenieurs.length, 1);
+  assert.equal(state.wetenschap, 35, "wetenschap gaat meteen af, ongeacht de doorlooptijd");
+  assert.equal(state.stad.ingenieurs.length, 0, "nog geen Ingenieur vóór de eerstvolgende beurt");
+  assert.equal(state.stad.ingenieurInAanbouw, true);
+
+  const tijdensOpleiding = leidIngenieurOp(state);
+  assert.equal(tijdensOpleiding, state, "geen tweede opleiding terwijl er al één loopt");
+
+  state = volgendeBeurt(state);
+  assert.equal(state.stad.ingenieurs.length, 1, "Ingenieur verschijnt na exact 1 beurt");
+  assert.equal(state.stad.ingenieurInAanbouw, undefined);
 
   state = leidIngenieurOp(state);
   assert.equal(state.wetenschap, 5);
-  assert.equal(state.stad.ingenieurs.length, 2, "herhaalbaar — elke Ingenieur kost opnieuw de volle prijs");
+  state = volgendeBeurt(state);
+  assert.equal(state.stad.ingenieurs.length, 2, "herhaalbaar — elke Ingenieur kost opnieuw de volle prijs en beurt");
 
   const naOnvoldoendeWetenschap = leidIngenieurOp(state);
   assert.equal(naOnvoldoendeWetenschap, state, "geen effect zonder genoeg wetenschap");

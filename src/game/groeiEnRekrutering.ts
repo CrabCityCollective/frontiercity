@@ -714,29 +714,45 @@ export function startRechterTraining(state: GameState): GameState {
 }
 
 // Of een Ingenieur opgeleid mag worden (issue "Pop-up rivier", vervolg:
-// engineer + brug) — alleen in Going West, en alleen als er genoeg
-// wetenschap is (`INGENIEUR_KOSTEN_WETENSCHAP`). Geen andere voorwaarde
-// (geen Courthouse-achtig gebouw nodig, en herhaalbaar: elke Ingenieur kost
-// opnieuw de volle prijs) — zelfde soort losse, direct-betaalde actie als
-// `kanStuurVerkenner` (streekOntgrendeling.ts), maar stad-breed i.p.v. per
-// tegel.
+// engineer + brug) — alleen in Going West, alleen als er genoeg wetenschap
+// is (`INGENIEUR_KOSTEN_WETENSCHAP`), en niet terwijl er al een opleiding
+// loopt (issue "Engineer opleiden") — zelfde "hoogstens één tegelijk"-regel
+// als `rechterInAanbouw`/`missionarisInAanbouw` hierboven. Geen andere
+// voorwaarde (geen Courthouse-achtig gebouw nodig, en herhaalbaar zodra de
+// vorige opleiding voltooid is: elke Ingenieur kost opnieuw de volle prijs).
 export function kanIngenieurOpleiden(state: GameState): boolean {
-  return state.campagneId === "going-west" && state.wetenschap >= INGENIEUR_KOSTEN_WETENSCHAP;
+  return state.campagneId === "going-west" && state.wetenschap >= INGENIEUR_KOSTEN_WETENSCHAP && !state.stad.ingenieurInAanbouw;
 }
 
-// Leidt direct een Ingenieur op (issue "Pop-up rivier", vervolg): trekt
-// meteen `INGENIEUR_KOSTEN_WETENSCHAP` wetenschap af en voegt een vrije
-// Ingenieur toe — geen wachtrij/bouwtijd, in tegenstelling tot
-// Rechter/Missionaris hierboven. Negeert de aanroep stilzwijgend bij een
-// ongeldige aanroep, zelfde veilige-aanroep-conventie als `stuurVerkenner`.
+// Start het opleiden van een Ingenieur (issue "Pop-up rivier", vervolg;
+// herzien door "Engineer opleiden": opleiden kost nu 1 beurt bovenop de
+// wetenschap, i.p.v. instant). Trekt meteen `INGENIEUR_KOSTEN_WETENSCHAP`
+// wetenschap af — zelfde instant-kostenpatroon als voorheen, en als
+// `stuurVerkenner` (streekOntgrendeling.ts) — maar voegt de Ingenieur zelf
+// pas toe via `verwerkIngenieurTraining` hieronder, zodra de eerstvolgende
+// beurt verwerkt wordt. Negeert de aanroep stilzwijgend bij een ongeldige
+// aanroep, zelfde veilige-aanroep-conventie als `stuurVerkenner`.
 export function leidIngenieurOp(state: GameState): GameState {
   if (!kanIngenieurOpleiden(state)) return state;
 
   return {
-    ...metActieveStad(state, {
-      ...state.stad,
-      ingenieurs: [...state.stad.ingenieurs, { id: `ingenieur-${state.stad.ingenieurs.length}` }],
-    }),
+    ...metActieveStad(state, { ...state.stad, ingenieurInAanbouw: true }),
     wetenschap: state.wetenschap - INGENIEUR_KOSTEN_WETENSCHAP,
   };
+}
+
+// Verwerkt een lopende Ingenieur-opleiding (issue "Engineer opleiden"):
+// exact 1 beurt na `leidIngenieurOp` hierboven voegt dit een vrije Ingenieur
+// toe — zelfde per-beurt-orchestratie-patroon als `verwerkRechterTraining`
+// hierboven, maar zonder `investeerInBouwkosten`-wachtrij: de wetenschap is
+// al bij het starten afgerekend, er hoeft geen resource meer geïnvesteerd
+// te worden, alleen de doorlooptijd te verstrijken.
+export function verwerkIngenieurTraining(state: GameState): GameState {
+  if (!state.stad.ingenieurInAanbouw) return state;
+
+  return metActieveStad(state, {
+    ...state.stad,
+    ingenieurs: [...state.stad.ingenieurs, { id: `ingenieur-${state.stad.ingenieurs.length}` }],
+    ingenieurInAanbouw: undefined,
+  });
 }

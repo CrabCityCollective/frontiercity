@@ -107,7 +107,8 @@ export default function CivielPaneel({
     !stad.rechterInAanbouw &&
     stad.rechters.length === 0 &&
     !kanIngenieurTrainen &&
-    stad.ingenieurs.length === 0
+    stad.ingenieurs.length === 0 &&
+    !stad.ingenieurInAanbouw
   ) {
     return null;
   }
@@ -228,28 +229,33 @@ export default function CivielPaneel({
       )}
 
       {/* Ingenieur-opleiding (issue "Pop-up rivier", vervolg: engineer +
-          brug) — instant i.p.v. een wachtrij zoals Rechter hierboven; het
-          daadwerkelijk bouwen van een brug gebeurt via een klik op een
-          rivier-vakje zelf, niet via dit paneel. */}
-      {(kanIngenieurTrainen || stad.ingenieurs.length > 0) && (
+          brug; herzien door "Engineer opleiden": kost nu 1 beurt bovenop de
+          wetenschap, i.p.v. instant) — het daadwerkelijk bouwen van een brug
+          gebeurt via een klik op een rivier-vakje zelf, niet via dit
+          paneel. */}
+      {(kanIngenieurTrainen || stad.ingenieurs.length > 0 || stad.ingenieurInAanbouw) && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginTop: "0.3rem" }}>
           {stad.ingenieurs.length > 0 && (
             <span style={{ color: "var(--kleur-tekst-gedempt)" }}>Ingenieurs: {stad.ingenieurs.length}</span>
           )}
-          {kanIngenieurTrainen &&
+          {stad.ingenieurInAanbouw ? (
+            <p style={{ margin: 0 }}>Ingenieur in opleiding…</p>
+          ) : (
+            kanIngenieurTrainen &&
             (genoegWetenschapVoorIngenieur ? (
               <button
                 className="fc-knop"
                 onClick={onLeidIngenieurOp}
                 style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
               >
-                Ingenieur opleiden ({INGENIEUR_KOSTEN_WETENSCHAP} wetenschap)
+                Ingenieur opleiden ({INGENIEUR_KOSTEN_WETENSCHAP} wetenschap, 1 beurt)
               </button>
             ) : (
               <p style={{ margin: 0 }}>
                 Wetenschap: {state.wetenschap} / {INGENIEUR_KOSTEN_WETENSCHAP} voor een Ingenieur
               </p>
-            ))}
+            ))
+          )}
         </div>
       )}
     </div>

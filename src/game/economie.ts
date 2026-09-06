@@ -45,6 +45,7 @@ import { verwerkTechDrempel } from "./tech";
 import {
   verwerkCityVerbetering,
   verwerkCivielInAanbouw,
+  verwerkIngenieurTraining,
   verwerkMissionarisRecrutering,
   verwerkOpslagplaats,
   verwerkRechterTraining,
@@ -131,7 +132,8 @@ export function berekenEconomieOverzicht(state: GameState): Record<ResourceType,
   const naCityVerbetering = verwerkCityVerbetering(naSmederij);
   const naRecrutering = verwerkRecrutering(naCityVerbetering);
   const naMissionarisRecrutering = verwerkMissionarisRecrutering(naRecrutering);
-  const uitkomst = verwerkRechterTraining(naMissionarisRecrutering);
+  const naRechterTraining = verwerkRechterTraining(naMissionarisRecrutering);
+  const uitkomst = verwerkIngenieurTraining(naRechterTraining);
 
   return {
     hout: uitkomst.voorraad.hout - state.voorraad.hout,
@@ -236,7 +238,8 @@ export function volgendeBeurt(state: GameState): GameState {
   const naRecrutering = verwerkRecrutering(naCityVerbetering);
   const naMissionarisRecrutering = verwerkMissionarisRecrutering(naRecrutering);
   const naRechterTraining = verwerkRechterTraining(naMissionarisRecrutering);
-  const naIndringers = verwerkIndringers(naRechterTraining);
+  const naIngenieurTraining = verwerkIngenieurTraining(naRechterTraining);
+  const naIndringers = verwerkIndringers(naIngenieurTraining);
   const naKuddes = verwerkKuddes(naIndringers);
   // Gegarandeerde kuddes tijdens de Confrontatie (issue: "kuddes op de laatste
   // laag"): direct ná de gewone kans-gebaseerde spawn hierboven, zie
