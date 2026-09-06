@@ -2,6 +2,7 @@
 
 import { GameState } from "./types";
 import { hoogsteOntgrendeldeStreek } from "./world";
+import { terreinTypeVoorStreek } from "./worldGoingWest";
 
 // M9 (save/load, hoofdstuk 13): "Eén actieve run lokaal opslaan en hervatten".
 // Meerdere gelijktijdige saves binnen dezelfde campagne zijn expliciet buiten
@@ -47,7 +48,11 @@ export function laadSpel(campagneId?: string): GameState | null {
             metGemigreerdeOntvangenVlaggen(
               metGemigreerdSmederijActiefVeld(
                 metGemigreerdeSmederijVeld(
-                  metGemigreerdeWampanoagVelden(metGemigreerdePopupStatus(metGemigreerdeSteden(JSON.parse(ruw) as GameState)))
+                  metGemigreerdeWampanoagVelden(
+                    metGemigreerdePopupStatus(
+                      metGeherstelRivierStreekType(metGemigreerdeSteden(JSON.parse(ruw) as GameState))
+                    )
+                  )
                 )
               )
             )
@@ -58,6 +63,27 @@ export function laadSpel(campagneId?: string): GameState | null {
   } catch {
     return null;
   }
+}
+
+// Migratie voor Going West-saves van vóór de rivier/mesa-naamfix (issue
+// "Rivier ?"): `Streek.terreinType` (worldGoingWest.ts) is pure flavor die
+// nooit door de speler gewijzigd wordt, maar werd bij het aanmaken van de
+// wereld één keer vastgelegd — dus saves van vóór de fix in
+// `GOING_WEST_TERREINTYPES` bleven met de omgewisselde "rivier"/"mesa"-namen
+// op streek 12/13 zitten (en dus ook de bijbehorende blauwe kleur,
+// `TERREIN_BASIS["rivier"]` in canvas.ts/canvasPixelArt.ts), ook al toont de
+// streek-pop-up (`goingWestContent.ts`, die de naam vers herberekent) alweer
+// de juiste naam. Herberekent daarom hier `terreinType` voor elke Going
+// West-streek — puur afgeleid van `hoogte`, dus altijd veilig om te
+// overschrijven met de huidige `terreinTypeVoorStreek`. Tutorial-saves
+// (`campagneId === undefined`) kende deze bug niet en blijven ongemoeid.
+function metGeherstelRivierStreekType(state: GameState): GameState {
+  if (state.campagneId !== "going-west") return state;
+  const streken = state.streken.map((streek) => {
+    const juisteType = terreinTypeVoorStreek(streek.hoogte);
+    return streek.terreinType === juisteType ? streek : { ...streek, terreinType: juisteType };
+  });
+  return { ...state, streken };
 }
 
 // Migratie voor saves van vóór de meerdere-steden-fundering (hoofdstuk 9/13,
