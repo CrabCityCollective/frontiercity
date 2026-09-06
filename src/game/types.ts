@@ -528,11 +528,21 @@ export interface City {
     voortgang: Partial<Record<ResourceType, number>>;
   };
   // Ingenieur-eenheden (issue "Pop-up rivier", vervolg: engineer + brug) —
-  // anders dan Rechter/Missionaris geen wachtrij: opleiden kost direct
-  // `INGENIEUR_KOSTEN_WETENSCHAP` (worldGoingWest.ts) wetenschap, zelfde
-  // instant-patroon als `stuurVerkenner` (streekOntgrendeling.ts), maar dan
-  // stad-breed i.p.v. per tegel. Alleen relevant in Going West.
+  // opleiden trekt direct `INGENIEUR_KOSTEN_WETENSCHAP` (worldGoingWest.ts)
+  // wetenschap af, zelfde instant-kostenpatroon als `stuurVerkenner`
+  // (streekOntgrendeling.ts), maar dan stad-breed i.p.v. per tegel. Alleen
+  // relevant in Going West.
   ingenieurs: Ingenieur[];
+  // Lopende Ingenieur-opleiding (issue "Engineer opleiden": opleiden moet 1
+  // beurt kosten, bovenop de wetenschap) — simpele boolean-vlag i.p.v. een
+  // `voortgang`-wachtrij zoals `rechterInAanbouw` hierboven: de wetenschap
+  // wordt al bij het starten in één keer afgetrokken (`leidIngenieurOp`,
+  // groeiEnRekrutering.ts), er is geen resource die geleidelijk
+  // geïnvesteerd wordt — enkel de doorlooptijd van exact 1 beurt (verwerkt
+  // door `verwerkIngenieurTraining`, net als de andere trainingswachtrijen
+  // hierboven onderdeel van `volgendeBeurt`, economie.ts) moet nog
+  // verstrijken voordat de Ingenieur aan `ingenieurs` wordt toegevoegd.
+  ingenieurInAanbouw?: boolean;
   // Gebouwde, gelijktijdig-gecapte city improvements (hoofdstuk 3/4/11/14,
   // issue: "city improvements" Deel 1/3) — Bibliotheek, Markt, Barakken,
   // Tempel en Grote Tempel. Vervangt het nooit-gebouwde relic-slot-concept
