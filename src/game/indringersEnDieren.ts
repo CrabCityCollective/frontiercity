@@ -27,7 +27,7 @@ import {
   Tile,
   WampumAfkoopStatus,
 } from "./types";
-import { hoogsteOntgrendeldeStreek, kuddeJachtBeurtenVoorStreek, STARTKUDDE_POSITIE } from "./world";
+import { hoogsteOntgrendeldeStreek, kuddeJachtBeurtenVoorStreek, STARTKUDDE_POSITIE, zichtbareStreken } from "./world";
 import { wachttorenBeschermingsbereik } from "./techTree";
 import { INDRINGERS_STAMMEN } from "./tutorialContent";
 import { campagneConfig } from "./campagnes";
@@ -463,7 +463,11 @@ export function verwerkKuddes(state: GameState): GameState {
   if (Math.random() >= KUDDE_KANS) return state;
 
   const kandidaten: { hoogte: number; positieInStreek: number }[] = [];
-  for (const streek of state.streken) {
+  // Alleen streken die de speler ook echt nog ziet (issue "Kuddes": een
+  // eerder gestichte stad klapt haar achterliggende streken dicht, zie
+  // `zichtbareStreken`/`ondergrens` in world.ts) — een kudde op een
+  // dichtgeklapte streek is voor de speler onbereikbaar en dus zinloos.
+  for (const streek of zichtbareStreken(state.streken, state.stad.streekHoogte)) {
     if (!streek.ontgrendeld || streek.hoogte < KUDDE_MIN_STREEK) continue;
     // Streek 1 blijft gesloten voor de willekeurige trekking tot de
     // gegarandeerde eerste kudde er geweest is (issue: "genoeg hout om ook
@@ -525,7 +529,10 @@ export function verwerkConfrontatieKuddes(state: GameState): GameState {
   if (actieveKuddes >= CONFRONTATIE_KUDDE_MINIMUM) return state;
 
   const kandidaten: { hoogte: number; positieInStreek: number }[] = [];
-  for (const streek of state.streken) {
+  // Zelfde zichtbaarheidsgrens als `verwerkKuddes` hierboven (issue
+  // "Kuddes") — ook deze gegarandeerde confrontatie-kudde hoort niet op een
+  // dichtgeklapte streek achter een eerder gestichte stad te verschijnen.
+  for (const streek of zichtbareStreken(state.streken, state.stad.streekHoogte)) {
     if (!streek.ontgrendeld) continue;
     for (const tile of streek.tiles) {
       if (tile.status === "leeg" && !tile.kudde) {
