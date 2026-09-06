@@ -108,6 +108,28 @@ test("verwerkKuddes meldt een nieuwe kudde via kuddeEvent", () => {
   assert.deepEqual(tile.kudde, { beurtenResterend: 4 });
 });
 
+// Issue "Kuddes": een streek die dichtgeklapt is doordat de speler er
+// inmiddels een nieuwe stad voorbij gesticht heeft (zie `zichtbareStreken`/
+// `ondergrens`, world.ts) hoort geen nieuwe kudde meer te krijgen — de speler
+// kan zo'n streek niet meer zien, dus ook niet bejagen.
+test("verwerkKuddes plaatst geen kudde op een streek die dichtgeklapt is achter een nieuw gestichte stad", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    stad: { ...state.stad, streekHoogte: 5 },
+    streken: state.streken.map((streek) => (streek.hoogte === 4 ? { ...streek, ontgrendeld: true } : streek)),
+  };
+
+  state = metVasteRandom(0, () => volgendeBeurt(state));
+
+  assert.equal(state.kuddeEvent, undefined, "streek 4 is de enige kandidaat, maar ligt onder de ondergrens (5)");
+  const streek4 = state.streken.find((l) => l.hoogte === 4)!;
+  assert.equal(
+    streek4.tiles.some((tile) => tile.kudde !== undefined),
+    false
+  );
+});
+
 // Issue: "Eerste streek geen roofdieren", vervolgvraag: kuddes die op streek
 // ROOFDIER_MIN_STREEK of hoger verschijnen zijn groter — één jachtbeurt extra
 // als compensatie voor het roofdier-risico dat vanaf die streek geldt.
