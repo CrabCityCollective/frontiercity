@@ -142,6 +142,16 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
       "Van naburige stammen horen we verhalen over een machtige rivier, verder naar het westen. Ze noemen het de " +
       "Ohio-rivier. Het vormt een natuurlijke grens. We moeten de rivier zien te vinden, en een brug zien te " +
       "bouwen, zodat we verder het land in kunnen trekken.",
+    // Lakota-scout (issue "Lakota scout"): eenmalige narratieve aankondiging
+    // zodra `LAKOTA_SCOUT_STREEK_HOOGTE` (worldGoingWest.ts) ontgrendelt
+    // (`lakotaScoutEvent`, streekOntgrendeling.ts) — puur flavor, geen eigen
+    // mechaniek (zelfde soort eenmalige melding als `rivierAangekondigdPopup`
+    // hierboven).
+    lakotaScoutPopupTitel: "Een Lakota-scout",
+    lakotaScoutPopupTekst:
+      "Een scout van de Lakota stam komt ons tegemoet. Hij zegt dat we vrije doorgang hebben door hun gebied. " +
+      "We mogen gebruik maken van hun grond, zolang we maar geen voet zetten in de Black Hills, die voor hun " +
+      "heilig zijn.",
   },
   // Issue "Going west: indringers": de indringers-incidenten (verwerkIndringers,
   // indringersEnDieren.ts) moeten op Going West niet de generieke fictieve

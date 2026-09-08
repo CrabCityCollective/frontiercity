@@ -34,6 +34,7 @@ import {
 import {
   BRUG_KOSTEN,
   initialiseerWampanoagLaag,
+  LAKOTA_SCOUT_STREEK_HOOGTE,
   RIVIER_AANKONDIGING_STREEK_HOOGTE,
   WAMPANOAG_STREEK_HOOGTE,
 } from "./worldGoingWest";
@@ -76,6 +77,7 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
   let wampanoagLaagOntdektEvent = state.wampanoagLaagOntdektEvent;
   let stichtingskansOntdektEvent = state.stichtingskansOntdektEvent;
   let rivierAangekondigdEvent = state.rivierAangekondigdEvent;
+  let lakotaScoutEvent = state.lakotaScoutEvent;
 
   const heeftDrempelGehaald = (hoogte: number) => state.cultuur >= cultuurKostenVoorStreek(hoogte);
 
@@ -155,6 +157,14 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     if (volgendeHoogte === RIVIER_AANKONDIGING_STREEK_HOOGTE && state.campagneId === "going-west") {
       rivierAangekondigdEvent = true;
     }
+    // Lakota-scout (issue "Lakota scout"): eenmalige trigger zodra
+    // `LAKOTA_SCOUT_STREEK_HOOGTE` (worldGoingWest.ts) voor het eerst
+    // ontgrendelt — zelfde eenmalige-trigger-conventie als de
+    // rivier-aankondiging hierboven. Alleen voor Going West: puur narratief,
+    // geen eigen mechaniek.
+    if (volgendeHoogte === LAKOTA_SCOUT_STREEK_HOOGTE && state.campagneId === "going-west") {
+      lakotaScoutEvent = true;
+    }
     // Goudader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
     // gegarandeerde eerste Goudader-locatie ligt op `GOUD_ONTDEKKING_STREEK`
     // (world.ts) — deze `while`-lus loopt precies één keer door die hoogte
@@ -200,7 +210,8 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
     bezetteStreekOntdektEvent === state.bezetteStreekOntdektEvent &&
     wampanoagLaagOntdektEvent === state.wampanoagLaagOntdektEvent &&
     stichtingskansOntdektEvent === state.stichtingskansOntdektEvent &&
-    rivierAangekondigdEvent === state.rivierAangekondigdEvent
+    rivierAangekondigdEvent === state.rivierAangekondigdEvent &&
+    lakotaScoutEvent === state.lakotaScoutEvent
     ? state
     : {
         ...state,
@@ -211,6 +222,7 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
         wampanoagLaagOntdektEvent,
         stichtingskansOntdektEvent,
         rivierAangekondigdEvent,
+        lakotaScoutEvent,
       };
 }
 
@@ -247,6 +259,13 @@ export function sluitStichtingskansOntdektMelding(state: GameState): GameState {
 // hierboven.
 export function sluitRivierAangekondigdMelding(state: GameState): GameState {
   return { ...state, rivierAangekondigdEvent: undefined };
+}
+
+// Sluit de "Lakota-scout"-melding (issue "Lakota scout") — puur een
+// UI-bevestiging, zelfde patroon als `sluitRivierAangekondigdMelding`
+// hierboven.
+export function sluitLakotaScoutMelding(state: GameState): GameState {
+  return { ...state, lakotaScoutEvent: undefined };
 }
 
 // Sluit de tweede Goudader-ontdekkingsmelding (hoofdstuk 3/11/14, issue:
