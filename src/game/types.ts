@@ -1140,6 +1140,14 @@ export interface GameState {
   // 12) — de rivier-vakjes en brug-mechaniek zelf zijn een apart, later
   // issue.
   rivierAangekondigdEvent?: boolean;
+  // Lakota-scout (Going West, issue "Lakota scout"): gezet door
+  // `verwerkStreekOntgrendeling` (streekOntgrendeling.ts) zodra streek
+  // `LAKOTA_SCOUT_STREEK_HOOGTE` (worldGoingWest.ts) voor Going West
+  // ontgrendelt — zelfde eenmalige meldings-vlag-patroon als
+  // `rivierAangekondigdEvent` hierboven. Drijft de narratieve
+  // `lakotaScoutPopup`-tekst: vrije doorgang door Lakota-gebied, op
+  // voorwaarde dat de Black Hills onbetreden blijven.
+  lakotaScoutEvent?: boolean;
   // Eenmalige "ontvangen"-vlaggen voor Gereedschap en de drie
   // Wampanoag-handelswaren (issue: "Alle voorraden tonen in resource block"):
   // bepalen of `ResourceHud` het bijbehorende icoontje toont. Gezet op `true`

@@ -58,6 +58,11 @@ export const RIVIER_AANKONDIGING_STREEK_HOOGTE = 9;
 // niet gebouwd — apart, later issue.
 export const RIVIER_STREEK_HOOGTE = 12;
 
+// Streek-hoogte waarop een Lakota-scout ons tegemoet komt (issue "Lakota
+// scout"): een eenmalige, puur narratieve aankondiging — geen eigen
+// mechaniek, zelfde rol als `RIVIER_AANKONDIGING_STREEK_HOOGTE` hierboven.
+export const LAKOTA_SCOUT_STREEK_HOOGTE = 14;
+
 // Wetenschapskosten om één Ingenieur op te leiden (issue "Pop-up rivier",
 // vervolg: engineer + brug) — instant betaald, geen bouwtijd, zelfde
 // instant-wetenschap-patroon als `VERKENNING_KOSTEN_WETENSCHAP`

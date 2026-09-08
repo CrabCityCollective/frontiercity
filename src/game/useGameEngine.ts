@@ -51,6 +51,7 @@ import {
   sluitGoudOntdektMelding as sluitGoudOntdektMeldingActie,
   sluitBezetteStreekOntdektMelding as sluitBezetteStreekOntdektMeldingActie,
   sluitRivierAangekondigdMelding as sluitRivierAangekondigdMeldingActie,
+  sluitLakotaScoutMelding as sluitLakotaScoutMeldingActie,
   sluitStichtingskansOntdektMelding as sluitStichtingskansOntdektMeldingActie,
   sluitTweedeGoudOntdektMelding as sluitTweedeGoudOntdektMeldingActie,
   sluitVijandelijkHeiligdomOnthuldMelding as sluitVijandelijkHeiligdomOnthuldMeldingActie,
@@ -443,6 +444,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     setState((huidig) => sluitRivierAangekondigdMeldingActie(huidig));
   }, []);
 
+  // Lakota-scout-pop-up (issue "Lakota scout") — zelfde dunne
+  // wrapper-conventie als de overige `sluit...Melding`-acties hierboven.
+  const sluitLakotaScoutMelding = useCallback(() => {
+    setState((huidig) => sluitLakotaScoutMeldingActie(huidig));
+  }, []);
+
   return {
     state,
     volgendeBeurt,
@@ -504,5 +511,6 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
     sluitSmederijGebouwdMelding,
     sluitStichtingskansOntdektMelding,
     sluitRivierAangekondigdMelding,
+    sluitLakotaScoutMelding,
   };
 }

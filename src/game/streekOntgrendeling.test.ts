@@ -11,6 +11,7 @@ import {
   kanStuurMissionaris,
   kanStuurVerkenner,
   sluitGoudOntdektMelding,
+  sluitLakotaScoutMelding,
   sluitRivierAangekondigdMelding,
   sluitStichtingskansOntdektMelding,
   sluitTweedeGoudOntdektMelding,
@@ -19,7 +20,12 @@ import {
   VERKENNING_KOSTEN_WETENSCHAP,
   WOLOLO_INKOMEN_PER_MISSIONARIS,
 } from "./streekOntgrendeling";
-import { RIVIER_AANKONDIGING_STREEK_HOOGTE, RIVIER_STREEK_HOOGTE, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
+import {
+  LAKOTA_SCOUT_STREEK_HOOGTE,
+  RIVIER_AANKONDIGING_STREEK_HOOGTE,
+  RIVIER_STREEK_HOOGTE,
+  WAMPANOAG_STREEK_HOOGTE,
+} from "./worldGoingWest";
 import { VERKENNER, VIJANDELIJK_HEILIGDOM } from "./improvements";
 import { bereikbarePosities } from "./wegen";
 import {
@@ -181,6 +187,48 @@ test("tutorial: geen rivierAangekondigdEvent bij haar eigen streek op RIVIER_AAN
     true
   );
   assert.equal(naOntgrendeling.rivierAangekondigdEvent, undefined);
+});
+
+// Lakota-scout (issue "Lakota scout"): kondigt vrije doorgang door
+// Lakota-gebied aan zodra streek LAKOTA_SCOUT_STREEK_HOOGTE ontgrendelt —
+// zelfde eenmalige-trigger-patroon als de rivier-aankondiging hierboven.
+test("lakotaScoutEvent wordt precies één keer gezet, zodra LAKOTA_SCOUT_STREEK_HOOGTE voor het eerst ontgrendelt in Going West", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  // Zelfde Wampanoag-bypass als de rivier-aankondiging-test hierboven —
+  // zonder deze bypass stopt de ontgrendel-lus altijd eerst bij de
+  // blokkerende Wampanoag-laag.
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte === WAMPANOAG_STREEK_HOOGTE
+        ? { ...streek, wampanoagBezet: false, ontgrendeld: true }
+        : streek.hoogte < LAKOTA_SCOUT_STREEK_HOOGTE
+          ? { ...streek, ontgrendeld: true }
+          : streek
+    ),
+    cultuur: cultuurKostenVoorStreek(LAKOTA_SCOUT_STREEK_HOOGTE),
+  };
+
+  const naOntgrendeling = volgendeBeurt(state);
+  assert.equal(naOntgrendeling.streken.find((l) => l.hoogte === LAKOTA_SCOUT_STREEK_HOOGTE)!.ontgrendeld, true);
+  assert.equal(naOntgrendeling.lakotaScoutEvent, true);
+
+  const gesloten = sluitLakotaScoutMelding(naOntgrendeling);
+  assert.equal(gesloten.lakotaScoutEvent, undefined);
+
+  const nogEenBeurt = volgendeBeurt(gesloten);
+  assert.equal(nogEenBeurt.lakotaScoutEvent, undefined, "geen herhaalde melding zodra de streek al ontgrendeld is");
+});
+
+// Zelfde issue: de tutorial heeft geen Lakota-verhaallijn — de pop-up hoort
+// daar dus niet te verschijnen, ook al ligt LAKOTA_SCOUT_STREEK_HOOGTE
+// binnen het tutorial-streekbereik.
+test("tutorial: geen lakotaScoutEvent bij haar eigen streek op LAKOTA_SCOUT_STREEK_HOOGTE", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, cultuur: cultuurKostenVoorStreek(LAKOTA_SCOUT_STREEK_HOOGTE) };
+
+  const naOntgrendeling = volgendeBeurt(state);
+  assert.equal(naOntgrendeling.lakotaScoutEvent, undefined);
 });
 
 // Brug-bouwmechaniek (issue "Pop-up rivier", vervolg): een klik op een

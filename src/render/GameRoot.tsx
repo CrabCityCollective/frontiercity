@@ -203,6 +203,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     sluitSmederijGebouwdMelding,
     sluitStichtingskansOntdektMelding,
     sluitRivierAangekondigdMelding,
+    sluitLakotaScoutMelding,
   } = useGameEngine(campagneId, laadBijStart);
 
   // Actieve campagne (hoofdstuk 9/13, M20d deelstap 3): `state.campagneId` is
@@ -1921,6 +1922,53 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     !toonStichtingskansPopup &&
     Boolean(state.rivierAangekondigdEvent);
 
+  // Lakota-scout-pop-up (Going West, issue "Lakota scout"): helemaal onderaan
+  // de keten gehangen, net als de Rivier-aankondiging-pop-up hierboven
+  // (laagste prioriteit — negeert dus ook `toonRivierAangekondigdPopup`).
+  const toonLakotaScoutPopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
+    !toonStichtingsMomentPopup &&
+    !toonBoonPopup &&
+    !toonEersteContactPopup &&
+    !toonWampanoagRelatieGelegdPopup &&
+    !toonSmederijGebouwdPopup &&
+    !toonOnrustUitlegPopup &&
+    !toonStichtingskansPopup &&
+    !toonRivierAangekondigdPopup &&
+    Boolean(state.lakotaScoutEvent);
+
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -2138,6 +2186,13 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
             titel={popupContent(campagne, "rivierAangekondigdPopup")?.titel}
             tekst={popupContent(campagne, "rivierAangekondigdPopup")?.tekst}
             onSluiten={sluitRivierAangekondigdMelding}
+          />
+        )}
+        {toonLakotaScoutPopup && (
+          <GoudOntdektPopup
+            titel={popupContent(campagne, "lakotaScoutPopup")?.titel}
+            tekst={popupContent(campagne, "lakotaScoutPopup")?.tekst}
+            onSluiten={sluitLakotaScoutMelding}
           />
         )}
         {toonUitlegPopup && <UitlegPopup onDoorgaan={() => markeerUitlegGezien("opening")} />}
