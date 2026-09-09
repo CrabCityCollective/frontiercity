@@ -23,13 +23,43 @@ function maakStreek(hoogte: number, improvementen: Record<number, Improvement>):
 }
 
 // Zet `heeftWeg: true` op de opgegeven posities van `streek` — gebruikt om een
-// wegverbinding met de (hardcoded) stad-positie (`STAD_POSITIE`, hoogte 1) te
-// simuleren voor de Saloon/Courthouse-effect-tests hieronder (issue "Weg naar
-// saloon": hun effect vereist nu, net als elk ander niet-productie
-// land-improvement, `isTileVerbondenMetStad`).
+// wegverbinding met een stad-tile (zie `metStad` hieronder) te simuleren voor
+// de Saloon/Courthouse-effect-tests hieronder (issue "Weg naar saloon": hun
+// effect vereist nu, net als elk ander niet-productie land-improvement,
+// `isTileVerbondenMetStad`).
 function metWeg(streek: Streek, ...posities: number[]): Streek {
   const set = new Set(posities);
   return { ...streek, tiles: streek.tiles.map((tile) => (set.has(tile.positieInStreek) ? { ...tile, heeftWeg: true } : tile)) };
+}
+
+// Zet een stad-tile (`improvement.soort === "city"`, zie wegen.ts:
+// `wegNetwerk`, dat vanaf elke zo'n tile begint te zoeken in plaats van een
+// hardcoded coördinaat) op de opgegeven positie van `streek` — het startpunt
+// voor de Saloon/Courthouse-connectiviteitstests hieronder. Status blijft
+// bewust "leeg" (niet "actief"): een stad-tile mag hier niet meetellen als
+// onrust-veroorzakend improvement (`telOnrustVerhogendeImprovements` in
+// onrust.ts telt alleen "actief"/"in_aanbouw"-tiles), dat zou de losstaande
+// improvement-telling in deze fixtures verstoren.
+function metStad(streek: Streek, positie: number): Streek {
+  return {
+    ...streek,
+    tiles: streek.tiles.map((tile) =>
+      tile.positieInStreek === positie
+        ? {
+            ...tile,
+            improvement: {
+              id: "test-stad",
+              naam: "Stad",
+              categorie: "civiel",
+              soort: "city",
+              kosten: {},
+              bouwtijdBeurten: 0,
+              effect: { type: "stad" },
+            },
+          }
+        : tile
+    ),
+  };
 }
 
 test("onrustOpStreek is 0 zolang een streek 4 of minder improvements draagt", () => {
@@ -57,10 +87,13 @@ test("een ghost-town-tile telt niet mee voor de onrust-drempel", () => {
 test("een actieve, wegverbonden Saloon verlaagt de onrust met 1 en telt zelf niet mee als onrust-veroorzakend improvement", () => {
   // 5 gewone improvements + Saloon = 6 tiles, maar de Saloon telt niet mee
   // voor de drempel — dus nog steeds maar 5 onrust-veroorzakende improvements
-  // (onrust 1), en de Saloon trekt daar nog eens 1 vanaf. Positie 5 ligt naast
-  // de (hardcoded) stad-positie 4, dus alleen de Saloon-tile zelf heeft een
+  // (onrust 1), en de Saloon trekt daar nog eens 1 vanaf. Positie 6 (de
+  // stad-tile) ligt naast positie 5, dus alleen de Saloon-tile zelf heeft een
   // weg nodig om verbonden te zijn.
-  const streek = metWeg(maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: SALOON }), 5);
+  const streek = metStad(
+    metWeg(maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: SALOON }), 5),
+    6
+  );
   assert.equal(onrustOpStreek([streek], [], streek), 0);
 });
 
@@ -80,11 +113,13 @@ test("onrust kan door de Saloon niet onder 0 zakken", () => {
 test("een bemand, wegverbonden Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven op 0", () => {
   const drukkeStreek = (hoogte: number) =>
     maakStreek(hoogte, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: STEENGROEVE });
-  // Weg van de (hardcoded) stad-positie (hoogte 1, positie 4) recht omhoog
-  // naar en over de Courthouse-tile: (2,4) → (2,5) → (2,6).
+  // Stad-tile op positie 6 van streek 1 (het enige nog vrije vakje), recht
+  // onder de Courthouse-tile op streek 2 — de weg op streek 2 (4→5→6) sluit
+  // daar direct op aan.
+  const streek1MetStad = metStad(drukkeStreek(1), 6);
   const courthouseStreek = metWeg(maakStreek(2, { 6: COURTHOUSE }), 4, 5, 6);
   const rechters: Rechter[] = [{ id: "rechter-0", courthouse: { hoogte: 2, positieInStreek: 6 } }];
-  const streken = [drukkeStreek(1), courthouseStreek, drukkeStreek(3), drukkeStreek(4), drukkeStreek(5)];
+  const streken = [streek1MetStad, courthouseStreek, drukkeStreek(3), drukkeStreek(4), drukkeStreek(5)];
 
   assert.equal(onrustOpStreek(streken, rechters, streken[0]), 2); // eronder: buiten bereik, gewoon onrust
   assert.equal(onrustOpStreek(streken, rechters, streken[1]), 0); // eigen streek

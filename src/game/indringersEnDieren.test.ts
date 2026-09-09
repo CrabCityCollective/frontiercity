@@ -553,12 +553,17 @@ test("een streek met een actieve Goudader krijgt eerst de 'Goudader onder vuur'-
   let state = metBeschermdeStreek();
   state = {
     ...state,
+    // Positie 3, niet 4 (`STAD_POSITIE`): positie 4 is de stad-tegel zelf
+    // (`improvement.soort === "city"`, het startpunt van het wegennetwerk,
+    // zie wegen.ts) — die overschrijven zou de enige stad op de kaart
+    // wegnemen en daarmee per ongeluk ook de Wachttoren-connectiviteit
+    // hieronder breken.
     streken: state.streken.map((streek) =>
       streek.hoogte === 1
         ? {
             ...streek,
             tiles: streek.tiles.map((tile) =>
-              tile.positieInStreek === 4 ? { ...tile, status: "actief" as const, improvement: GOUDADER } : tile
+              tile.positieInStreek === 3 ? { ...tile, status: "actief" as const, improvement: GOUDADER } : tile
             ),
           }
         : streek
