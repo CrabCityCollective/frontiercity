@@ -35,6 +35,13 @@ export default function AppRoot() {
   // de bewaarde save van `actieveCampagneId` moet terughalen (Laden-knop) of
   // een verse run moet starten (campagne zelf aanklikken, bestaand gedrag).
   const [laadBijStart, setLaadBijStart] = useState(false);
+  // Debug-start (issue "Test start streek"): het gekozen streeknummer van de
+  // Going West-debug-starter op `CampagneSelectScherm`, `undefined` voor een
+  // gewone (streek-1) start of het inladen van een save. Zelfde puur-
+  // navigatie-rol als `actieveCampagneId`/`laadBijStart` hierboven — de
+  // aankomende `GameRoot`-mount leest 'm alleen bij het opzetten van een
+  // verse `useGameEngine()`-status.
+  const [debugStreekHoogte, setDebugStreekHoogte] = useState<number | undefined>(undefined);
 
   if (scherm === "titel") return <TitelScherm onStart={() => setScherm("navigatie")} />;
 
@@ -58,11 +65,19 @@ export default function AppRoot() {
         onKiesCampagne={(campagneId) => {
           setActieveCampagneId(campagneId);
           setLaadBijStart(false);
+          setDebugStreekHoogte(undefined);
           setScherm("spel");
         }}
         onLaadCampagne={(campagneId) => {
           setActieveCampagneId(campagneId);
           setLaadBijStart(true);
+          setDebugStreekHoogte(undefined);
+          setScherm("spel");
+        }}
+        onDebugStartGoingWest={(streekHoogte) => {
+          setActieveCampagneId("going-west");
+          setLaadBijStart(false);
+          setDebugStreekHoogte(streekHoogte);
           setScherm("spel");
         }}
       />
@@ -72,6 +87,7 @@ export default function AppRoot() {
     <GameRoot
       campagneId={actieveCampagneId}
       laadBijStart={laadBijStart}
+      debugStreekHoogte={debugStreekHoogte}
       onVerlaten={() => setScherm("titel")}
       onTutorialAfgerond={() => setScherm("campagne")}
     />

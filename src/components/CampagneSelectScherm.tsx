@@ -1,7 +1,8 @@
 "use client";
 
-import { ComponentType } from "react";
+import { ComponentType, useState } from "react";
 import { campagneStatistieken, heeftOpgeslagenSpel, opgeslagenSpelStreek } from "@/game/save";
+import { GOING_WEST_STREEK_AANTAL } from "@/game/worldGoingWest";
 import { GoingWestSfeerAfbeelding, TutorialSfeerAfbeelding } from "@/components/CampagneSfeerAfbeeldingen";
 
 interface Campagne {
@@ -55,11 +56,59 @@ interface CampagneSelectSchermProps {
   // alleen aangeroepen vanaf de Laden-knop hieronder, die alleen verschijnt
   // als er voor die campagne al een save bestaat.
   onLaadCampagne: (campagneId?: string) => void;
+  // Issue "Test start streek": een verse Going West-run direct starten met een
+  // gestichte stad op `streekHoogte` in plaats van op streek 1 (zie
+  // `maakDebugSpelStatusGoingWest`, initieleSpelStatus.ts) — puur een
+  // test/debug-ingang om de langere campagne te kunnen spelen zonder eerst
+  // alle tussenliggende streken te moeten doorlopen. Alleen aangeroepen vanaf
+  // de debug-starter hieronder, die alleen bij Going West verschijnt.
+  onDebugStartGoingWest: (streekHoogte: number) => void;
+}
+
+// Debug/test-starter (issue "Test start streek"): los knopje-met-invoerveld
+// per campagnekaart i.p.v. inline in de `CAMPAGNES.map` hieronder, puur omdat
+// het invoerveld eigen state nodig heeft (het gekozen streeknummer) — een
+// gewoon object in `CAMPAGNES` kan geen React-state dragen. `stopPropagation`
+// op klik/toetsenbord, zelfde reden als de Laden-knop hieronder: de
+// omringende kaart heeft zelf al een klik-handler die een verse (streek-1)
+// run start.
+function GoingWestDebugStarter({ onStart }: { onStart: (streekHoogte: number) => void }) {
+  const [streek, setStreek] = useState(9);
+
+  return (
+    <div
+      style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
+      <span style={{ fontSize: "0.8rem", color: "var(--kleur-tekst-gedempt)" }}>Test: start op streek</span>
+      <input
+        type="number"
+        min={1}
+        max={GOING_WEST_STREEK_AANTAL}
+        value={streek}
+        onChange={(event) => setStreek(Number(event.target.value))}
+        style={{ width: "3.5rem", fontSize: "0.8rem" }}
+      />
+      <button
+        type="button"
+        className="fc-knop"
+        onClick={() => onStart(Math.min(Math.max(Math.round(streek), 1), GOING_WEST_STREEK_AANTAL))}
+        style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}
+      >
+        Starten
+      </button>
+    </div>
+  );
 }
 
 // Campagne-select-scherm (issue: "font en style" — na het beginscherm kiest
 // de speler een campagne; in de MVP is alleen de tutorial speelbaar).
-export default function CampagneSelectScherm({ onKiesCampagne, onLaadCampagne }: CampagneSelectSchermProps) {
+export default function CampagneSelectScherm({
+  onKiesCampagne,
+  onLaadCampagne,
+  onDebugStartGoingWest,
+}: CampagneSelectSchermProps) {
   return (
     <div
       style={{
@@ -158,6 +207,9 @@ export default function CampagneSelectScherm({ onKiesCampagne, onLaadCampagne }:
                 >
                   Laden — streek {opgeslagenSpelStreek(campagne.id)}
                 </button>
+              )}
+              {campagne.id === "going-west" && (
+                <GoingWestDebugStarter onStart={onDebugStartGoingWest} />
               )}
               {!campagne.beschikbaar && (
                 <div

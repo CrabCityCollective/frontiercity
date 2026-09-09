@@ -7,7 +7,11 @@
 import { standaardUitlegAan } from "./save";
 import { GameState, MateriaalType } from "./types";
 import { maakInitieleWereld, STAD_POSITIE } from "./world";
-import { GOING_WEST_STARTSTAD_NAAM, maakInitieleWereldGoingWest } from "./worldGoingWest";
+import {
+  GOING_WEST_STARTSTAD_NAAM,
+  maakDebugWereldGoingWest,
+  maakInitieleWereldGoingWest,
+} from "./worldGoingWest";
 
 export const OPSLAG_CAP = 30;
 
@@ -154,5 +158,37 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
       tribuutGegevenAantal: 0,
       tribuutGegeven: { hout: 0, steen: 0, erts: 0, goud: 0 },
     },
+  };
+}
+
+// Debug-startstatus (issue "Test start streek"): laat de Going West-campagne
+// meteen beginnen met een gestichte stad op `streekHoogte` in plaats van op
+// streek 1, met een settler klaarstaand naast de stad — zodat de latere
+// campagne getest kan worden zonder eerst alle tussenliggende streken te
+// moeten spelen. Bouwt verder op `maakInitieleSpelStatus("going-west")`: alle
+// gewone Going West-startwaarden (grondstoffen, voedsel, campagne-instellingen
+// zoals `uitlegPopupsAan`) blijven gelden, alleen de stad/wereld/settler/
+// voortgangstellers wijken af. `beurt: 2` (i.p.v. 1) zodat de settler er al
+// meteen staat — dezelfde beurt waarop hij in een normale run verschijnt (zie
+// `economie.ts`) — en de campagne-openingspop-up (die alleen op beurt 1
+// toont, GameRoot.tsx) niet in de weg zit. Uitsluitend bedoeld als
+// test/debug-ingang vanaf `CampagneSelectScherm`, geen onderdeel van de
+// normale spelflow.
+export function maakDebugSpelStatusGoingWest(streekHoogte: number): GameState {
+  const basis = maakInitieleSpelStatus("going-west");
+  const stad: GameState["stad"] = {
+    ...basis.stad,
+    streekHoogte,
+    positieInStreek: STAD_POSITIE,
+  };
+
+  return {
+    ...basis,
+    stad,
+    steden: [stad],
+    streken: maakDebugWereldGoingWest(streekHoogte),
+    settler: { hoogte: streekHoogte, positieInStreek: STAD_POSITIE },
+    beurt: 2,
+    laatstBevestigdeStreek: streekHoogte,
   };
 }

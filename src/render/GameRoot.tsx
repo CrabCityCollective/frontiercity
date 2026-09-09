@@ -121,6 +121,13 @@ interface GameRootProps {
   // plaats van de campagne zelf. Gaat, net als `campagneId` hierboven,
   // uitsluitend naar `useGameEngine()` voor de initiële status.
   laadBijStart?: boolean;
+  // Debug-start (issue "Test start streek"): het streeknummer gekozen via de
+  // Going West-debug-starter op `CampagneSelectScherm` — laat de run beginnen
+  // met een gestichte stad op die streek in plaats van op streek 1 (zie
+  // `maakDebugSpelStatusGoingWest`, initieleSpelStatus.ts). Gaat, net als
+  // `campagneId`/`laadBijStart` hierboven, uitsluitend naar `useGameEngine()`
+  // voor de initiële status.
+  debugStreekHoogte?: number;
   // Terug naar het startscherm (issue: "spel verlaten, waarmee je weer naar
   // het start scherm gaat") — navigatie zelf blijft bij AppRoot, GameRoot
   // roept dit alleen aan.
@@ -142,7 +149,13 @@ interface GameRootProps {
 // grondstoffenbalk als vaste footer eronder — die scrolt dus nooit mee weg en
 // de stad staat meteen in beeld zonder te scrollen (issue: sticky
 // grondstoffenbalk onderaan, stad direct zichtbaar).
-export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutorialAfgerond }: GameRootProps) {
+export default function GameRoot({
+  campagneId,
+  laadBijStart,
+  debugStreekHoogte,
+  onVerlaten,
+  onTutorialAfgerond,
+}: GameRootProps) {
   const {
     state,
     volgendeBeurt,
@@ -204,7 +217,7 @@ export default function GameRoot({ campagneId, laadBijStart, onVerlaten, onTutor
     sluitStichtingskansOntdektMelding,
     sluitRivierAangekondigdMelding,
     sluitLakotaScoutMelding,
-  } = useGameEngine(campagneId, laadBijStart);
+  } = useGameEngine(campagneId, laadBijStart, debugStreekHoogte);
 
   // Actieve campagne (hoofdstuk 9/13, M20d deelstap 3): `state.campagneId` is
   // nu de door `CampagneSelectScherm`/AppRoot gekozen campagne (zie de
