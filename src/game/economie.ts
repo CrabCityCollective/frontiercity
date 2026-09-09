@@ -69,7 +69,7 @@ import { verwerkOudeHandelsrouteBoon } from "./boons";
 // worden ook door een submodule geïmporteerd die zelf weer door déze
 // orchestrator wordt aangeroepen; zonder deze knip zou dat een circulaire
 // afhankelijkheid met economie.ts vormen.
-export { OPSLAG_CAP, maakInitieleSpelStatus } from "./initieleSpelStatus";
+export { OPSLAG_CAP, maakDebugSpelStatusGoingWest, maakInitieleSpelStatus } from "./initieleSpelStatus";
 export { CITY_IMPROVEMENT_CAP, cityImprovementCap } from "./improvements";
 
 // Zet de per-run uitleg-pop-ups-instelling (issue: "een setting waarmee je

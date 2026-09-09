@@ -15,6 +15,7 @@ import {
   beurtMagAutomatischDoorgaan,
   bevestigStichtingsMomentPopup as bevestigStichtingsMomentPopupActie,
   bevestigStreekPopup as bevestigStreekPopupActie,
+  maakDebugSpelStatusGoingWest,
   maakInitieleSpelStatus,
   markeerUitlegGezien as markeerUitlegGezienActie,
   volgendeBeurt as volgendeBeurtActie,
@@ -120,10 +121,19 @@ function metAutomatischeVolgendeBeurt(state: GameState): GameState {
 // (`useState`-initializer) — valt terug op een verse status als er (toch)
 // niets opgeslagen bleek, zodat de knop nooit op een kapotte/lege save vast
 // blijft zitten.
-export function useGameEngine(campagneId?: string, laadBijStart?: boolean) {
+// `debugStreekHoogte` (issue "Test start streek"): alleen relevant voor
+// `campagneId === "going-west"` en alleen gelezen bij een verse start (nooit
+// samen met `laadBijStart`) — start de run dan meteen met een gestichte stad
+// op deze streek i.p.v. op streek 1 (`maakDebugSpelStatusGoingWest`,
+// initieleSpelStatus.ts), zodat de latere campagne getest kan worden zonder
+// eerst alle tussenliggende streken te moeten spelen.
+export function useGameEngine(campagneId?: string, laadBijStart?: boolean, debugStreekHoogte?: number) {
   const [state, setState] = useState(() => {
     const opgeslagenStatus = laadBijStart ? laadSpel(campagneId) : null;
-    return opgeslagenStatus ?? maakInitieleSpelStatus(campagneId);
+    if (opgeslagenStatus) return opgeslagenStatus;
+    if (campagneId === "going-west" && debugStreekHoogte)
+      return maakDebugSpelStatusGoingWest(debugStreekHoogte);
+    return maakInitieleSpelStatus(campagneId);
   });
 
   // Autosave (issue #306): bewaart de status bij elke wijziging, onder de

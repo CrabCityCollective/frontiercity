@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { maakInitieleSpelStatus } from "./initieleSpelStatus";
+import { maakDebugSpelStatusGoingWest, maakInitieleSpelStatus } from "./initieleSpelStatus";
 import { GOING_WEST_STREEK_AANTAL, GOING_WEST_STARTSTAD_NAAM } from "./worldGoingWest";
-import { TUTORIAL_STREEK_AANTAL } from "./world";
+import { TUTORIAL_STREEK_AANTAL, hoogsteOntgrendeldeStreek } from "./world";
 
 // M20d deelstap 1 (hoofdstuk 9/13/15): `maakInitieleSpelStatus()` bouwt nog
 // altijd de tutorial-start zonder argument (backwards-compatibel met
@@ -43,4 +43,29 @@ test("maakInitieleSpelStatus() start de tutorial met uitlegPopupsAan op true", (
 test('maakInitieleSpelStatus("going-west") start met uitlegPopupsAan op false', () => {
   const state = maakInitieleSpelStatus("going-west");
   assert.equal(state.uitlegPopupsAan, false);
+});
+
+// Issue "Test start streek": debug/test-ingang om Going West op een latere
+// streek te kunnen beginnen (bijv. om de campagne verderop te testen zonder
+// eerst alle tussenliggende streken te moeten spelen).
+test("maakDebugSpelStatusGoingWest(9) zet de stad + settler op streek 9, met de streken erna nog gewoon vergrendeld", () => {
+  const state = maakDebugSpelStatusGoingWest(9);
+  assert.equal(state.campagneId, "going-west");
+  assert.equal(state.stad.naam, GOING_WEST_STARTSTAD_NAAM);
+  assert.equal(state.stad.streekHoogte, 9);
+  assert.equal(state.steden.length, 1);
+  assert.equal(state.steden[0], state.stad);
+  assert.equal(state.streken.length, GOING_WEST_STREEK_AANTAL);
+  assert.equal(hoogsteOntgrendeldeStreek(state.streken), 9);
+  assert.deepEqual(state.settler, { hoogte: 9, positieInStreek: state.stad.positieInStreek });
+  assert.equal(state.streken[8].tiles[state.stad.positieInStreek].improvement?.soort, "city");
+  assert.equal(state.streken[9].ontgrendeld, false);
+});
+
+test("maakDebugSpelStatusGoingWest geeft dezelfde startgrondstoffen/-voedsel als een gewone Going West-start", () => {
+  const gewoon = maakInitieleSpelStatus("going-west");
+  const debug = maakDebugSpelStatusGoingWest(9);
+  assert.deepEqual(debug.voorraad, gewoon.voorraad);
+  assert.equal(debug.voedsel, gewoon.voedsel);
+  assert.equal(debug.uitlegPopupsAan, gewoon.uitlegPopupsAan);
 });

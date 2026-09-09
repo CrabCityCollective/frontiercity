@@ -392,14 +392,17 @@ function maakLegeTiles(hoogte: number): Tile[] {
   }));
 }
 
-// Zelfde tile-opzet als `maakStartStreek` in world.ts.
+// Zelfde tile-opzet als `maakStartStreek` in world.ts. Geparametriseerd op
+// `hoogte` (in plaats van vast op 1) zodat `maakDebugWereldGoingWest`
+// hieronder 'm kan hergebruiken om de stad ook op een latere streek neer te
+// zetten.
 export const GOING_WEST_STARTSTAD_NAAM = "Plymouth";
 
-function maakStartStreek(): Streek {
-  const tiles = maakLegeTiles(1);
+function maakStadStreek(hoogte: number): Streek {
+  const tiles = maakLegeTiles(hoogte);
   tiles[STAD_POSITIE] = {
     positieInStreek: STAD_POSITIE,
-    terrein: terreinVoorTile(1, STAD_POSITIE),
+    terrein: terreinVoorTile(hoogte, STAD_POSITIE),
     status: "actief",
     heeftWeg: true,
     improvement: {
@@ -413,12 +416,16 @@ function maakStartStreek(): Streek {
     },
   };
   return {
-    hoogte: 1,
+    hoogte,
     ontgrendeld: true,
     tiles,
-    terreinType: terreinTypeVoorStreek(1),
-    dreigingsniveau: dreigingsniveauVoorStreek(1),
+    terreinType: terreinTypeVoorStreek(hoogte),
+    dreigingsniveau: dreigingsniveauVoorStreek(hoogte),
   };
+}
+
+function maakStartStreek(): Streek {
+  return maakStadStreek(1);
 }
 
 function maakVergrendeldeStreek(hoogte: number): Streek {
@@ -439,4 +446,23 @@ export function maakInitieleWereldGoingWest(): Streek[] {
   return Array.from({ length: GOING_WEST_STREEK_AANTAL }, (_, i) =>
     i === 0 ? maakStartStreek() : maakVergrendeldeStreek(i + 1)
   );
+}
+
+// Debugwereld (issue "Test start streek"): dezelfde vaste Going West-kaart,
+// maar met de stad direct op `streekHoogte` in plaats van op streek 1 — de
+// streken ervoor tellen als al ontgrendeld (en klappen dus dicht, zie
+// `zichtbareStreken` in world.ts, dat alles onder `stad.streekHoogte`
+// wegfiltert), de streken erna blijven gewoon vergrendeld zoals bij een
+// normale start. Uitsluitend bedoeld om de latere campagne te kunnen testen
+// zonder eerst alle tussenliggende streken te moeten spelen (geen onderdeel
+// van de normale spelflow) — zie `maakDebugSpelStatusGoingWest` in
+// initieleSpelStatus.ts voor de bijbehorende spelstatus.
+export function maakDebugWereldGoingWest(streekHoogte: number): Streek[] {
+  const doel = Math.min(Math.max(Math.round(streekHoogte), 1), GOING_WEST_STREEK_AANTAL);
+  return Array.from({ length: GOING_WEST_STREEK_AANTAL }, (_, i) => {
+    const hoogte = i + 1;
+    if (hoogte === doel) return maakStadStreek(hoogte);
+    if (hoogte < doel) return { ...maakVergrendeldeStreek(hoogte), ontgrendeld: true };
+    return maakVergrendeldeStreek(hoogte);
+  });
 }

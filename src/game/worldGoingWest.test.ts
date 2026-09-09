@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { vindStichtingskansGaten } from "./stad";
-import { GOING_WEST_STREEK_AANTAL, RIVIER_STREEK_HOOGTE, maakInitieleWereldGoingWest } from "./worldGoingWest";
+import {
+  GOING_WEST_STREEK_AANTAL,
+  RIVIER_STREEK_HOOGTE,
+  maakDebugWereldGoingWest,
+  maakInitieleWereldGoingWest,
+} from "./worldGoingWest";
 import {
   CIVIEL_LAND_IMPROVEMENTS,
   CULTUREEL_LAND_IMPROVEMENTS,
@@ -136,5 +141,31 @@ test("M20c: gegarandeerdeStichtingskansHoogten() heeft op elke bereikbare sticht
     gaten,
     [],
     `de kaart laat het herhalende drie-stichtingsmomenten-patroon niet overal zien: ${JSON.stringify(gaten)}`
+  );
+});
+
+test("maakDebugWereldGoingWest zet de stad op de gekozen streek, met alle streken ervoor al ontgrendeld en alle streken erna vergrendeld", () => {
+  const streken = maakDebugWereldGoingWest(9);
+
+  assert.equal(streken.length, GOING_WEST_STREEK_AANTAL);
+  for (const streek of streken) {
+    if (streek.hoogte < 9) {
+      assert.equal(streek.ontgrendeld, true, `streek ${streek.hoogte} hoort al ontgrendeld te zijn`);
+      assert.equal(streek.tiles[4].status, "leeg", `streek ${streek.hoogte} hoort geen stad te dragen`);
+    } else if (streek.hoogte === 9) {
+      assert.equal(streek.ontgrendeld, true);
+      assert.equal(streek.tiles[4].status, "actief");
+      assert.equal(streek.tiles[4].improvement?.soort, "city");
+    } else {
+      assert.equal(streek.ontgrendeld, false, `streek ${streek.hoogte} hoort nog vergrendeld te zijn`);
+    }
+  }
+});
+
+test("maakDebugWereldGoingWest klemt een streeknummer buiten bereik naar een geldige streek", () => {
+  assert.equal(maakDebugWereldGoingWest(0).find((s) => s.tiles[4].status === "actief")?.hoogte, 1);
+  assert.equal(
+    maakDebugWereldGoingWest(1000).find((s) => s.tiles[4].status === "actief")?.hoogte,
+    GOING_WEST_STREEK_AANTAL
   );
 });
