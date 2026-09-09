@@ -110,12 +110,17 @@ const GOING_WEST_TERREINTYPES = [
   "mesa",
   "ravijn",
   "cottonwood-oase",
-  "steppegras",
-  "rotsformaties",
-  "voorgebergte",
-  "dennenwoud",
-  "granietrichel",
-  "bergpas",
+  // Streek 16 t/m 21 = de Black Hills (issue "Black Hills"): een eigen,
+  // herkenbare tussenstop met een vaste tile-opzet (zie
+  // `GOING_WEST_TILE_TERREIN` hieronder) — donkerder/droger van kleur dan de
+  // omliggende streken (`TERREIN_BASIS` in canvas.ts). Elke naam bevat
+  // bewust "Black Hills", met een beschrijvende toevoeging voor variatie.
+  "Black Hills - zuidflank",
+  "Black Hills-ravijn",
+  "hart van de Black Hills",
+  "Black Hills - noordflank",
+  "Black Hills-kam",
+  "Black Hills - achterland",
   "alpenweide",
   "sneeuwgrens",
   "gletsjerrand",
@@ -145,7 +150,10 @@ export function terreinTypeVoorStreek(hoogte: number): string {
 // bewust minstens één vakje van elk van `bos`, `heuvel`/`berg` en `vlak` aan
 // (zelfde mix-conventie als de tutorial), terwijl de verhouding duidelijk
 // verschuift met de hoogte: vlakke prairie (streek 1-9) → canyons/mesa's
-// (10-18) → hooggebergte (19-27) → afdaling naar de kust (28-35).
+// (10-18) → hooggebergte (19-27) → afdaling naar de kust (28-35). Streek
+// 16-21 (de Black Hills, issue "Black Hills") onderbreken deze doorlopende
+// opbouw met hun eigen vaste sjabloon, zie de toelichting bij die streken
+// hieronder.
 // Streek 1-4 (opdracht-wampanoag-opening.md, de openingsfase) kregen
 // oorspronkelijk vrijwel dezelfde krappe mix als de tutorial —
 // op elke streek maar één heuvel-vakje en (voor streek 1) helemaal geen
@@ -193,12 +201,24 @@ const GOING_WEST_TILE_TERREIN: Record<number, TerreinType[]> = {
   13: ["vlak", "heuvel", "berg", "heuvel", "bos", "heuvel", "vlak", "berg", "heuvel"],
   14: ["berg", "heuvel", "vlak", "berg", "heuvel", "bos", "heuvel", "vlak", "berg"],
   15: ["heuvel", "berg", "heuvel", "vlak", "bos", "heuvel", "berg", "heuvel", "vlak"],
-  16: ["berg", "vlak", "heuvel", "berg", "bos", "heuvel", "vlak", "berg", "heuvel"],
-  17: ["heuvel", "berg", "heuvel", "bos", "heuvel", "vlak", "berg", "heuvel", "berg"],
-  18: ["berg", "heuvel", "berg", "heuvel", "bos", "heuvel", "berg", "vlak", "heuvel"],
-  19: ["berg", "berg", "heuvel", "bos", "vlak", "berg", "heuvel", "berg", "berg"],
-  20: ["berg", "vlak", "berg", "berg", "vlak", "heuvel", "berg", "bos", "berg"],
-  21: ["heuvel", "berg", "berg", "bos", "berg", "heuvel", "berg", "vlak", "berg"],
+  // Streek 16-21 (Black Hills, issue "Black Hills"): een vast sjabloon in
+  // plaats van de doorlopende canyon/hooggebergte-opbouw hierboven/hieronder —
+  // altijd een berg in het midden (positie 4 = `STAD_POSITIE`) met een heuvel
+  // aan weerszijden (positie 3/5), en de randen (0-2/6-8) variërend
+  // vlak/bos zodat het geheel niet te symmetrisch aanvoelt. Streek 19 en 21
+  // wijken bewust af van de vaste heuvel-aan-weerszijden-regel (één heuvel
+  // méér resp. één minder) voor een natuurlijker gevoel, zoals gevraagd in de
+  // issue; streek 19 positie 2 blijft `heuvel` vanwege de bestaande
+  // goud-vondst daar (`GOING_WEST_GOUD` hieronder, vereist heuvel/berg), en
+  // streek 16/20 positie 1 blijft `vlak` vanwege de bestaande
+  // vers-water-vondst daar (`GOING_WEST_VERS_WATER` hieronder, conventie:
+  // vers water op een `vlak`-vakje).
+  16: ["vlak", "vlak", "bos", "heuvel", "berg", "heuvel", "vlak", "bos", "vlak"],
+  17: ["bos", "vlak", "heuvel", "heuvel", "berg", "heuvel", "bos", "vlak", "bos"],
+  18: ["vlak", "bos", "vlak", "heuvel", "berg", "heuvel", "bos", "vlak", "bos"],
+  19: ["bos", "vlak", "heuvel", "heuvel", "berg", "vlak", "bos", "vlak", "bos"],
+  20: ["bos", "vlak", "vlak", "heuvel", "berg", "heuvel", "bos", "vlak", "bos"],
+  21: ["vlak", "bos", "vlak", "heuvel", "berg", "heuvel", "bos", "heuvel", "vlak"],
   22: ["berg", "berg", "heuvel", "berg", "vlak", "berg", "bos", "berg", "heuvel"],
   23: ["berg", "heuvel", "berg", "vlak", "berg", "bos", "berg", "berg", "heuvel"],
   24: ["heuvel", "berg", "berg", "berg", "bos", "berg", "heuvel", "vlak", "berg"],

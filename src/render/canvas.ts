@@ -105,6 +105,17 @@ const TERREIN_BASIS: Record<string, string> = {
   // "Rivier mooier") dan de oorspronkelijke blauwgrijze tint — de golfdetails
   // in `tekenTerreinHint` hieronder rusten hier bovenop.
   rivier: "#1c4f75",
+  // Streek 16-21 (de Black Hills, issue "Black Hills", worldGoingWest.ts):
+  // duidelijk donkerder en droger dan de omliggende streken — geen groen,
+  // vooral donker bruin/zwartig (vandaar de naam). Kleine onderlinge
+  // variatie per streek, allemaal ruim donkerder dan de bruine
+  // default hierboven en dan de canyon/hooggebergte-namen ervoor/erna.
+  "Black Hills - zuidflank": "#3c3125",
+  "Black Hills-ravijn": "#372c22",
+  "hart van de Black Hills": "#332820",
+  "Black Hills - noordflank": "#3a2f24",
+  "Black Hills-kam": "#352a20",
+  "Black Hills - achterland": "#3e3327",
 };
 
 export function terreinBasisKleur(terreinType: string): string {
