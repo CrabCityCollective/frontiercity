@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { maakDebugSpelStatusGoingWest, maakInitieleSpelStatus } from "./initieleSpelStatus";
 import { GOING_WEST_STREEK_AANTAL, GOING_WEST_STARTSTAD_NAAM } from "./worldGoingWest";
-import { TUTORIAL_STREEK_AANTAL, hoogsteOntgrendeldeStreek } from "./world";
+import { TUTORIAL_STREEK_AANTAL, cultuurKostenVoorStreek, hoogsteOntgrendeldeStreek } from "./world";
+import { wetenschapKostenVoorDrempel } from "./techTree";
 
 // M20d deelstap 1 (hoofdstuk 9/13/15): `maakInitieleSpelStatus()` bouwt nog
 // altijd de tutorial-start zonder argument (backwards-compatibel met
@@ -68,4 +69,23 @@ test("maakDebugSpelStatusGoingWest geeft dezelfde startgrondstoffen/-voedsel als
   assert.deepEqual(debug.voorraad, gewoon.voorraad);
   assert.equal(debug.voedsel, gewoon.voedsel);
   assert.equal(debug.uitlegPopupsAan, gewoon.uitlegPopupsAan);
+});
+
+// Issue "Genoeg cultuur voor test run": zonder dit bleven cultuur/wetenschap
+// op 0 staan bij een debug-start, waardoor het ontgrendelen van de
+// eerstvolgende streek vanaf nul moest — net zo lang als een volledige
+// normale run tot die hoogte, in plaats van alleen het gebruikelijke restje
+// tot de volgende drempel.
+test("maakDebugSpelStatusGoingWest(9) start met cultuur/wetenschap op het niveau van streek 9", () => {
+  const debug = maakDebugSpelStatusGoingWest(9);
+  assert.equal(debug.cultuur, cultuurKostenVoorStreek(9));
+  assert.equal(debug.wetenschap, wetenschapKostenVoorDrempel(3));
+});
+
+test("maakDebugSpelStatusGoingWest schaalt de cultuur mee met de opgegeven streekhoogte", () => {
+  const laag = maakDebugSpelStatusGoingWest(2);
+  const hoog = maakDebugSpelStatusGoingWest(20);
+  assert.equal(laag.cultuur, cultuurKostenVoorStreek(2));
+  assert.equal(hoog.cultuur, cultuurKostenVoorStreek(20));
+  assert.ok(hoog.cultuur > laag.cultuur);
 });

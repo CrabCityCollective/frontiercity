@@ -6,12 +6,13 @@
 
 import { standaardUitlegAan } from "./save";
 import { GameState, MateriaalType } from "./types";
-import { maakInitieleWereld, STAD_POSITIE } from "./world";
+import { cultuurKostenVoorStreek, maakInitieleWereld, STAD_POSITIE } from "./world";
 import {
   GOING_WEST_STARTSTAD_NAAM,
   maakDebugWereldGoingWest,
   maakInitieleWereldGoingWest,
 } from "./worldGoingWest";
+import { wetenschapKostenVoorDrempel } from "./techTree";
 
 export const OPSLAG_CAP = 30;
 
@@ -174,6 +175,24 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
 // toont, GameRoot.tsx) niet in de weg zit. Uitsluitend bedoeld als
 // test/debug-ingang vanaf `CampagneSelectScherm`, geen onderdeel van de
 // normale spelflow.
+//
+// Cultuur/wetenschap (issue "Genoeg cultuur voor test run"): zonder dit bleef
+// de speler bij een debug-start op 0 steken, terwijl `streekHoogte` al
+// vergrendelde streken erboven laat zien — de eerstvolgende streek-
+// ontgrendeling (cultuur, streekOntgrendeling.ts) zou dan vanaf nul de volle
+// `cultuurKostenVoorStreek(streekHoogte + 1)` moeten opbouwen in plaats van
+// alleen het verschil met de vorige drempel, net zo lang duren als een
+// volledige normale run tot die hoogte. `cultuur: cultuurKostenVoorStreek(streekHoogte)`
+// zet de teller op precies de drempel die deze streek ontgrendelde, zodat
+// alleen het gebruikelijke restje cultuur tot de volgende streek nog
+// opgebouwd hoeft te worden. `wetenschap` kent geen vergelijkbare
+// per-streek-formule (het drijft de techboom en Verkenning, niet de
+// streek-frontier, zie tech.ts) — de volledige techboom is maar 3 drempels
+// met een vaste top van `wetenschapKostenVoorDrempel(3)`, en is in een
+// normale run allang voltooid ruim vóór de streekhoogtes waar deze
+// debug-ingang voor bedoeld is (hoofdstuk 14-doorrekening in techTree.ts).
+// Meteen op die top starten is dus zowel eenvoudig als representatief, i.p.v.
+// een eigen (ongefundeerde) streek-naar-wetenschap-curve te verzinnen.
 export function maakDebugSpelStatusGoingWest(streekHoogte: number): GameState {
   const basis = maakInitieleSpelStatus("going-west");
   const stad: GameState["stad"] = {
@@ -190,5 +209,7 @@ export function maakDebugSpelStatusGoingWest(streekHoogte: number): GameState {
     settler: { hoogte: streekHoogte, positieInStreek: STAD_POSITIE },
     beurt: 2,
     laatstBevestigdeStreek: streekHoogte,
+    cultuur: cultuurKostenVoorStreek(streekHoogte),
+    wetenschap: wetenschapKostenVoorDrempel(3),
   };
 }
