@@ -9,7 +9,7 @@
 // "achteruit" bewegen dus in hoogte, "links" en "rechts" in `positieInStreek`.
 
 import { Streek, Settler } from "./types";
-import { BAND_WIDTH_TILES, hoogsteOntgrendeldeStreek, STAD_POSITIE } from "./world";
+import { BAND_WIDTH_TILES, hoogsteOntgrendeldeStreek } from "./world";
 
 export type SettlerRichting = "vooruit" | "achteruit" | "links" | "rechts";
 
@@ -96,20 +96,44 @@ function buurPosities(positie: Settler): Settler[] {
   return buren;
 }
 
-// Of dit vakje "doorgang" biedt aan het wegennetwerk: de stad zelf (het
-// beginpunt), een vakje met een aangelegde weg, of — sinds de brug-
-// bouwmechaniek, zie `heeftWegOp` hieronder — een brug-vakje.
+// Of dit vakje "doorgang" biedt aan het wegennetwerk: een stad-vakje (elk van
+// de beginpunten hieronder), een vakje met een aangelegde weg, of — sinds de
+// brug-bouwmechaniek, zie `heeftWegOp` hieronder — een brug-vakje.
 function biedtDoorgang(streken: Streek[], positie: Settler): boolean {
-  if (positie.hoogte === 1 && positie.positieInStreek === STAD_POSITIE) return true;
+  if (isStadTile(streken, positie.hoogte, positie.positieInStreek)) return true;
   return heeftWegOp(streken, positie.hoogte, positie.positieInStreek);
 }
 
-// Alle vakjes die via een aaneengesloten keten van wegen (of de stad zelf) te
+function isStadTile(streken: Streek[], hoogte: number, positieInStreek: number): boolean {
+  const streek = streken.find((l) => l.hoogte === hoogte);
+  return streek?.tiles[positieInStreek]?.improvement?.soort === "city";
+}
+
+// Alle stad-vakjes op de kaart — het startpunt van het wegennetwerk hieronder.
+// Niet hardcoded op streek 1/`STAD_POSITIE`: zowel de "Test start streek"-
+// debugwereld (die de (enige) stad direct op een latere streek zet, zie
+// `maakDebugWereldGoingWest`) als het herhalende stichtingspatroon (een
+// tweede stad verderop, hoofdstuk 9/M18) zetten een stad ergens anders dan
+// die hardcoded coördinaat — een netwerk dat daar niet vanaf start ziet elke
+// weg rond die stad ten onrechte als "niet verbonden".
+function stadTiles(streken: Streek[]): Settler[] {
+  const steden: Settler[] = [];
+  for (const streek of streken) {
+    streek.tiles.forEach((tile, positieInStreek) => {
+      if (tile.improvement?.soort === "city") {
+        steden.push({ hoogte: streek.hoogte, positieInStreek });
+      }
+    });
+  }
+  return steden;
+}
+
+// Alle vakjes die via een aaneengesloten keten van wegen (of een stad zelf) te
 // bereiken zijn — het wegennetwerk (hoofdstuk 16).
 function wegNetwerk(streken: Streek[]): Set<string> {
-  const start: Settler = { hoogte: 1, positieInStreek: STAD_POSITIE };
-  const bezocht = new Set<string>([tileSleutel(start.hoogte, start.positieInStreek)]);
-  const stapel: Settler[] = [start];
+  const starts = stadTiles(streken);
+  const bezocht = new Set<string>(starts.map((start) => tileSleutel(start.hoogte, start.positieInStreek)));
+  const stapel: Settler[] = [...starts];
 
   while (stapel.length > 0) {
     const huidig = stapel.pop()!;

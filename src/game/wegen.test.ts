@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { bereikbarePosities, isTileVerbondenMetStad, magSettlerNaar } from "./wegen";
 import { verplaatsSettlerNaar } from "./acties";
-import { maakInitieleSpelStatus } from "./economie";
+import { maakInitieleSpelStatus, maakDebugSpelStatusGoingWest } from "./economie";
 import { GameState } from "./types";
 import { metWegCorridorNaarStreek } from "./testHelpers";
 import { RIVIER_STREEK_HOOGTE } from "./worldGoingWest";
@@ -153,5 +153,29 @@ test("isTileVerbondenMetStad: een brug op een rivier-vakje telt vanzelf al als w
     isTileVerbondenMetStad(state.streken, RIVIER_STREEK_HOOGTE + 1, 4),
     true,
     "de brug zelf telt al als weg — geen los aangelegde weg nodig op het brug-vakje"
+  );
+});
+
+// Regressie (issue: "Vreemd: boerderij niet verbonden"): met de "Test start
+// streek"-debugwereld staat de (enige) stad niet op streek 1 maar op de
+// gekozen streek (hier 9) — een wegennetwerk dat altijd hardcoded bij streek
+// 1 begint te zoeken vindt die stad dan nooit, en ziet elk land improvement
+// eromheen ten onrechte als "niet verbonden", ook met een weg ernaartoe.
+test("isTileVerbondenMetStad: op de debugwereld (stad niet op streek 1) telt een weg naast de stad toch als verbonden", () => {
+  const state = maakDebugSpelStatusGoingWest(9);
+
+  const naastDeStad = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte === 9
+        ? { ...streek, tiles: streek.tiles.map((t) => (t.positieInStreek === 5 ? { ...t, heeftWeg: true } : t)) }
+        : streek
+    ),
+  };
+
+  assert.equal(
+    isTileVerbondenMetStad(naastDeStad.streken, 9, 5),
+    true,
+    "de stad staat op streek 9, niet streek 1 — het netwerk moet daar toch vanaf zoeken"
   );
 });
