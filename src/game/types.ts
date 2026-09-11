@@ -1018,8 +1018,7 @@ export interface GameState {
   // `wampumAfkoopStatusVoorStam` in indringersEnDieren.ts) — geen aparte
   // "leeg"-state nodig. Alleen daadwerkelijk bruikbaar ná het Wampanoag-
   // verbond (`heeftWampanoagVerbond`, wampanoag.ts), zie
-  // `kanIndringersAfkopenMetWampum` in indringersEnDieren.ts. Oudere saves
-  // kennen dit veld nog niet, zie `metGemigreerdeWampumAfkoopVeld` in save.ts.
+  // `kanIndringersAfkopenMetWampum` in indringersEnDieren.ts.
   wampumAfkoopPerStam: Record<string, WampumAfkoopStatus>;
   // Bij welke campagne deze run hoort (hoofdstuk 9/13/15, M20d deelstap 1) —
   // `CampaignConfig.id` (campagnes.ts), of `undefined` voor de tutorial (die
@@ -1038,8 +1037,7 @@ export interface GameState {
   // `GameState`, niet op `City` (zoals `Relic` hierboven, een per-stad concept
   // dat nooit is uitgebouwd) — overleeft daardoor een latere stad-
   // ineenstorting, zolang de run zelf doorgaat (issue #414, vraag 2). Generiek
-  // voor elke campagne behalve de tutorial (issue #414, vraag 3). Oudere
-  // saves kennen dit veld nog niet, zie `metGemigreerdeBoonsVeld` in save.ts.
+  // voor elke campagne behalve de tutorial (issue #414, vraag 3).
   boons: string[];
   // Toegekende, nog niet weggeklikte Boon (issue #414, vraag 4: pop-up direct
   // ná `StichtingsMomentPopup`) — zelfde meldings-vlag-patroon als
@@ -1053,8 +1051,7 @@ export interface GameState {
   // elke (her)mount — een save laden toonde daardoor alle uitleg-pop-ups
   // opnieuw, ook de allang geziene. Door dit in `GameState` zelf bij te
   // houden overleeft de "al gezien"-status het opslaan/laden, net als
-  // `uitlegPopupsAan` hierboven. Oudere saves kennen dit veld nog niet, zie
-  // `metGemigreerdeSpelStatus` in save.ts.
+  // `uitlegPopupsAan` hierboven.
   gezieneEenmaligeUitleg: EenmaligeUitlegKey[];
   // Hoogste streek waarvoor de speler de streek-pop-up (StreekPopup) al heeft
   // weggeklikt — zelfde reden als `gezieneEenmaligeUitleg` hierboven: stond
@@ -1074,9 +1071,7 @@ export interface GameState {
   // telling als `voedsel`/`cultuur`/`wetenschap`, geen onderlinge of
   // gedeelde-opslag-cap-koppeling. Blijven op 0 staan (en blijven ongebruikt)
   // buiten de Going West-campagne; nog door geen enkele productie- of
-  // handelsstap gevuld — dat volgt in een latere M21-stap. Oudere saves
-  // kennen deze velden nog niet, zie `metGemigreerdeWampanoagVelden` in
-  // save.ts.
+  // handelsstap gevuld — dat volgt in een latere M21-stap.
   bevervellen: number;
   mais: number;
   wampum: number;
@@ -1158,8 +1153,7 @@ export interface GameState {
   // vlaggen zou de HUD een grondstof weer verbergen zodra de voorraad terug
   // op 0 zakt (`gereedschap` is verhandelbaar, kan dus weer leeglopen), wat de
   // opdracht expliciet niet wil ("als het daarna op 0 komt, blijft de
-  // resource er wel bij staan"). Oudere saves kennen deze velden nog niet, zie
-  // `metGemigreerdeOntvangenVlaggen` in save.ts.
+  // resource er wel bij staan").
   gereedschapOntvangen: boolean;
   bevervellenOntvangen: boolean;
   maisOntvangen: boolean;
