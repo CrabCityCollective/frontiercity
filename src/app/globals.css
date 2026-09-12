@@ -60,6 +60,19 @@ main {
   height: 100dvh;
   display: block;
   overflow: hidden;
+  /* Maximale breedte voor het spel op computer/tablet (issue: "sommige
+     onderdelen te breed" op grote schermen) — de tegel-band zelf is al
+     beperkt (zie GameCanvas: BAND_WIDTH_TILES * TILE_SIZE = 576px), maar de
+     volle-breedte balken (ResourceHud, HoofdMenu, beurt-blok) en schermen
+     (TitelScherm e.a.) hadden nog geen grens en trokken op brede vensters
+     helemaal open. `transform` hieronder is geen visueel effect maar geeft
+     `main` een CSS-containing-block voor `position: fixed`-overlays (bijna
+     alle pop-ups en volledig-schermige schermen gebruiken `inset: 0`) zodat
+     ook die binnen deze breedte blijven i.p.v. de volle browserbreedte te
+     bedekken. */
+  max-width: 720px;
+  margin: 0 auto;
+  transform: translateZ(0);
 }
 
 /* Schermvullende kolom (zie GameRoot): scrollend speelveld erboven, de
