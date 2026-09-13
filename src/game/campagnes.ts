@@ -187,10 +187,30 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
   ],
   // Issue "Nieuwe stad Cincinnati" / "Going west" (#444): de eerste gestichte
   // Going West-stad (na de startstad Plymouth) heet Providence, de tweede
-  // Cincinnati. Verdere stadsnamen staan hier nog niet uitgewerkt (vallen
-  // terug op de generieke `GESTICHTE_STAD_NAMEN`-lijst, acties.ts) totdat er
-  // een vervolg-issue is voor de rest van de reeks.
-  stadNamen: ["Providence", "Cincinnati"],
+  // Cincinnati. Issue "Steden going west" (#532) vulde de reeks aan met de
+  // route westwaarts richting de Pacifische kust — ruim genoeg voor elke
+  // tussentijdse stichting uit het herhalende drie-stichtingsmomenten-patroon
+  // (`gegarandeerdeStichtingskansHoogten`, stad.ts); een naam die niet meer
+  // nodig is, wordt simpelweg niet gebruikt (`nieuweStadNaam`, acties.ts).
+  stadNamen: [
+    "Providence",
+    "Cincinnati",
+    "St. Louis",
+    "Oklahoma",
+    "Omaha",
+    "Colorado Springs",
+    "Salt Lake City",
+    "Denver",
+    "Twin Falls",
+    "Sacramento",
+    "Boise",
+    "Portland",
+    "Reno",
+  ],
+  // Issue "Steden going west" (#532): de allerlaatste, verplichte stichting
+  // ligt aan het einde van de kaart, aan de Pacifische kust (hoofdstuk 1/9) —
+  // die heet altijd San Francisco, nooit een naam uit `stadNamen` hierboven.
+  laatsteStadNaam: "San Francisco",
 };
 
 // Alle bestaande, niet-tutorial `CampaignConfig`-instanties, gesleuteld op

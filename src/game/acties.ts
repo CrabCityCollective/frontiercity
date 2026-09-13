@@ -296,11 +296,16 @@ export const GESTICHTE_STAD_NAMEN = ["Vuurbron", "Asvallei"];
 
 // Campagne-bewust: valt terug op `GESTICHTE_STAD_NAMEN` hierboven zolang de
 // campagne geen eigen `stadNamen` heeft (of die lijst op is) — zelfde
-// terugval-patroon als `improvementNaam()`/`techNaam()` (campagnes.ts).
-function nieuweStadNaam(aantalStedenVoorStichting: number, campagneId?: string): string {
-  const campagneNamen = campagneConfig(campagneId)?.stadNamen;
+// terugval-patroon als `improvementNaam()`/`techNaam()` (campagnes.ts). De
+// allerlaatste, verplichte stichting (`isAfsluitendeStichting`) krijgt voorrang
+// vanuit `CampaignConfig.laatsteStadNaam` (issue "Steden going west", #532) —
+// die ligt altijd aan de oceaan en slaat dus bewust de volgende naam uit
+// `stadNamen` over.
+function nieuweStadNaam(aantalStedenVoorStichting: number, isAfsluitendeStichting: boolean, campagneId?: string): string {
+  const campagne = campagneConfig(campagneId);
+  if (isAfsluitendeStichting && campagne?.laatsteStadNaam) return campagne.laatsteStadNaam;
   return (
-    campagneNamen?.[aantalStedenVoorStichting - 1] ??
+    campagne?.stadNamen?.[aantalStedenVoorStichting - 1] ??
     GESTICHTE_STAD_NAMEN[aantalStedenVoorStichting - 1] ??
     `Nieuwe stad ${aantalStedenVoorStichting}`
   );
@@ -360,7 +365,13 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
   if (!kanStichten(state, slot) || !heeftGenoegVoorStichten(state)) return state;
 
   const { hoogte, positieInStreek } = leesSettler(state, slot)!;
-  const naam = nieuweStadNaam(state.steden.length, state.campagneId);
+  // Laatste streek van de wereld = de verplichte, campagne-afsluitende
+  // stichting (hoofdstuk 1/9) — hier al bepaald (i.p.v. pas verderop, zie
+  // `isAfsluitendeStichting` hieronder) omdat `nieuweStadNaam` deze nodig
+  // heeft om de vaste `laatsteStadNaam` (Going West: San Francisco) te
+  // kunnen kiezen.
+  const isAfsluitendeStichting = hoogte === state.streken.length;
+  const naam = nieuweStadNaam(state.steden.length, isAfsluitendeStichting, state.campagneId);
   const streken = state.streken.map((streek) => {
     if (streek.hoogte !== hoogte) return streek;
     const tiles = streek.tiles.map((tile, index) => {
@@ -397,10 +408,10 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
     heeftSmederij: false,
     smederijActief: true,
   };
-  // Laatste streek van de wereld = de verplichte, campagne-afsluitende
-  // stichting (hoofdstuk 1/9) — elke andere stichting is een tussentijdse
-  // kans uit het herhalende patroon en laat de run doorlopen.
-  const isAfsluitendeStichting = hoogte === state.streken.length;
+  // `isAfsluitendeStichting` hierboven bepaalt of dit de verplichte,
+  // campagne-afsluitende stichting is (hoofdstuk 1/9) — elke andere
+  // stichting is een tussentijdse kans uit het herhalende patroon en laat de
+  // run doorlopen.
   // Boon-systeem (issue #411/#414, boons.ts): getrokken vóórdat `state.stad`
   // hieronder door `nieuweStad` vervangen wordt — `komtInAanmerkingVoorBoon`
   // beoordeelt dus nog de zojuist verlaten stad, niet de net gestichte.

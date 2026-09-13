@@ -673,6 +673,13 @@ export interface CampaignConfig {
   // `nieuweStadNaam` (acties.ts) terug op de generieke tutorial-namenlijst
   // (`GESTICHTE_STAD_NAMEN`).
   stadNamen?: string[];
+  // Vaste naam voor de allerlaatste, verplichte stichting aan het einde van de
+  // campagnewereld (`isAfsluitendeStichting`, acties.ts) — issue "Steden going
+  // west": deze stichting ligt altijd aan de oceaan en krijgt daarom een eigen
+  // vaste naam in plaats van de volgende naam uit `stadNamen` hierboven.
+  // Ontbreekt dit veld, dan valt de afsluitende stichting gewoon terug op
+  // `stadNamen`/`GESTICHTE_STAD_NAMEN` zoals elke andere stichting.
+  laatsteStadNaam?: string;
 }
 
 // Gedeelde-opslag-grondstoffen (hoofdstuk 5): hout, steen, erts, goud delen
