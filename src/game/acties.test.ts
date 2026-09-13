@@ -13,6 +13,7 @@ import {
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { GameState } from "./types";
 import { HOUTKAP, metSettlerOpKuddeVakje, metVasteRandom } from "./testHelpers";
+import { GOING_WEST_STREEK_AANTAL } from "./worldGoingWest";
 
 test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbruikt daarna de settler", () => {
   let state = maakInitieleSpelStatus();
@@ -177,6 +178,30 @@ test("stichtStad geeft de tweede Going West-stad de naam Cincinnati (issue #444 
   assert.equal(naTweedeStichting.steden.length, 3);
   assert.equal(naTweedeStichting.steden[2].naam, "Cincinnati");
   assert.deepEqual(naTweedeStichting.stad, naTweedeStichting.steden[2]);
+});
+
+test("stichtStad geeft de afsluitende Going West-stad altijd de naam San Francisco, ook als er nog namen in stadNamen over waren (issue #532 'Steden going west')", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  // De laatste streek van de Going West-wereld (GOING_WEST_STREEK_AANTAL,
+  // worldGoingWest.ts) draagt al een vers-water-vakje op positie 8
+  // (GOING_WEST_VERS_WATER) — geen handmatige tile-aanpassing nodig zoals in
+  // de voorgaande twee tests.
+  state = {
+    ...state,
+    settler: { hoogte: GOING_WEST_STREEK_AANTAL, positieInStreek: 8 },
+    streken: state.streken.map((streek) =>
+      streek.hoogte === GOING_WEST_STREEK_AANTAL ? { ...streek, ontgrendeld: true } : streek
+    ),
+    voorraad: { ...state.voorraad, hout: STICHTING_KOSTEN.hout, steen: STICHTING_KOSTEN.steen, erts: STICHTING_KOSTEN.erts },
+    voedsel: STICHTING_KOSTEN.voedsel,
+  };
+  assert.equal(kanStichten(state), true);
+
+  const naStichten = stichtStad(state);
+  assert.equal(naStichten.stadGesticht, true, "de laatste streek van de wereld is de afsluitende stichting");
+  assert.equal(naStichten.steden.length, 2);
+  assert.equal(naStichten.steden[1].naam, "San Francisco");
+  assert.deepEqual(naStichten.stad, naStichten.steden[1]);
 });
 
 test("kanStichten is false op een vakje zonder vers water, of als het vakje al bebouwd is", () => {
