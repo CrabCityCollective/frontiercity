@@ -366,6 +366,35 @@ test("een uitgeputte Goudader (ghost town) telt niet meer mee voor het extra ind
   );
 });
 
+// Issue "Indringers": zelfde soort dichtgeklapte-streek-uitsluiting als
+// `verwerkKuddes` (zie `metOntgrendeldeStreek3`-buurtest hierboven en de
+// "Kuddes"-test verderop in dit bestand) — een streek die achter een eerder
+// gestichte stad (of, zoals gemeld, een debug-teststart op een latere
+// streekhoogte) dichtgeklapt is, kan de speler niet meer zien of bebouwen. Zo'n
+// streek kan dus ook nooit meer een Wachttoren krijgen en hoort niet meer mee
+// te doen in de indringers-trekking — anders zou de speler tribuut moeten
+// betalen voor een streek die hij onmogelijk nog kan verdedigen.
+test("verwerkIndringers loot geen streek die dichtgeklapt is achter een latere stad (issue: Indringers)", () => {
+  let state = maakInitieleSpelStatus();
+  state = {
+    ...state,
+    stad: { ...state.stad, streekHoogte: 5 },
+    streken: metOntgrendeldeStreek3(state.streken),
+  };
+
+  // Kans-check (0) dwingt een incident af. Zonder de uitsluiting zou de
+  // streek-trekking (0) op streek 1 uitkomen (de enige kandidaat, want streek
+  // 3 heeft alleen een Wachttoren) — maar streek 1 en 3 liggen allebei onder de
+  // ondergrens (5) van de nieuwe stad en zijn dus dichtgeklapt.
+  state = metRandomReeks([0, 0, 0], () => volgendeBeurt(state));
+
+  assert.equal(
+    state.indringersEvent,
+    undefined,
+    "streek 1 en 3 zijn dichtgeklapt achter de stad op streekhoogte 5, dus geen enkele kandidaat blijft over"
+  );
+});
+
 // Issue "Going west: indringers": Going West mag geen generieke fictieve
 // tutorial-stamnamen tonen bij een indringers-incident, maar alleen namen uit
 // de eigen Wampanoag-pool (`CampaignConfig.indringersStamNamen`, campagnes.ts).
