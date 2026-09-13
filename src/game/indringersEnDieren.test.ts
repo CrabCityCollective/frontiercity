@@ -4,12 +4,12 @@ import { jaag, verplaatsSettlerNaar } from "./acties";
 import { GOING_WEST_CAMPAGNE } from "./campagnes";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { startNieuweSettler } from "./groeiEnRekrutering";
-import { bevestigGoudOnderVuur, geefTribuut } from "./indringersEnDieren";
+import { bevestigGoudOnderVuur, geefTribuut, verwerkKuddes } from "./indringersEnDieren";
 import { startBouw } from "./infrastructuurEnBouw";
 import { GOUDADER } from "./improvements";
 import { GameState } from "./types";
 import { KUDDE_GROTE_JACHT_BEURTEN, ROOFDIER_MIN_STREEK } from "./world";
-import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
+import { RIVIER_STREEK_HOOGTE, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 import {
   metBezetteStreekInBeeld,
   metSettlerOpKuddeVakje,
@@ -127,6 +127,31 @@ test("verwerkKuddes plaatst geen kudde op een streek die dichtgeklapt is achter 
   assert.equal(
     streek4.tiles.some((tile) => tile.kudde !== undefined),
     false
+  );
+});
+
+// Issue "Kuddes niet in de rivier": de Ohio-rivier-streek (`RIVIER_STREEK_HOOGTE`,
+// worldGoingWest.ts) bestaat volledig uit rivier-vakjes met `status: "leeg"`
+// (net als elk gewoon land-vakje) — zonder de terrein-uitzondering in
+// `verwerkKuddes` zou een gunstige worp hier alsnog een onbereikbare kudde
+// midden in het water neerzetten.
+test("verwerkKuddes plaatst nooit een kudde op een rivier-vakje", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = {
+    ...state,
+    streken: state.streken.map((streek) =>
+      streek.hoogte === RIVIER_STREEK_HOOGTE ? { ...streek, ontgrendeld: true } : streek
+    ),
+  };
+
+  state = metVasteRandom(0, () => verwerkKuddes(state));
+
+  assert.equal(state.kuddeEvent, undefined, "de rivier-streek is de enige kandidaat, dus er mag geen kudde verschijnen");
+  const rivierStreek = state.streken.find((l) => l.hoogte === RIVIER_STREEK_HOOGTE)!;
+  assert.equal(
+    rivierStreek.tiles.some((tile) => tile.kudde !== undefined),
+    false,
+    "geen enkel rivier-vakje mag een kudde krijgen"
   );
 });
 

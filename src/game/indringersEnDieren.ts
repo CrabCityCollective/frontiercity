@@ -487,7 +487,10 @@ export function verwerkKuddes(state: GameState): GameState {
     // streek 1 kunnen neerzetten, nog vóór de speler de Steengroeve heeft.
     if (streek.hoogte === 1 && !state.eersteKuddeVerschenen) continue;
     for (const tile of streek.tiles) {
-      if (tile.status === "leeg" && !tile.kudde) {
+      // Rivier-vakjes (worldGoingWest.ts) zijn onbebouwbaar water, geen
+      // jachtterrein (issue "Kuddes niet in de rivier") — anders spawnt een
+      // kudde op streek 12 midden in de Ohio-rivier, onbereikbaar zonder brug.
+      if (tile.status === "leeg" && tile.terrein !== "rivier" && !tile.kudde) {
         kandidaten.push({ hoogte: streek.hoogte, positieInStreek: tile.positieInStreek });
       }
     }
@@ -545,7 +548,9 @@ export function verwerkConfrontatieKuddes(state: GameState): GameState {
   for (const streek of zichtbareStreken(state.streken, state.stad.streekHoogte)) {
     if (!streek.ontgrendeld) continue;
     for (const tile of streek.tiles) {
-      if (tile.status === "leeg" && !tile.kudde) {
+      // Zelfde rivier-uitzondering als `verwerkKuddes` hierboven (issue
+      // "Kuddes niet in de rivier").
+      if (tile.status === "leeg" && tile.terrein !== "rivier" && !tile.kudde) {
         kandidaten.push({ hoogte: streek.hoogte, positieInStreek: tile.positieInStreek });
       }
     }
