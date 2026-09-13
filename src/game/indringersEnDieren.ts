@@ -327,6 +327,16 @@ function verwerkWachttorenOverrompeling(
 // aankondiging (`goudOnderVuur`/fase "goud-onder-vuur"), los van de
 // uitkomst — ook bij de gewone tribuut-afhandeling. Rolt geen nieuwe
 // gebeurtenis zolang een vorige melding nog open staat.
+// Net als `verwerkKuddes`/`verwerkConfrontatieKuddes` hieronder (issue
+// "Kuddes"): een eerder gestichte stad klapt haar achterliggende streken
+// dicht (`zichtbareStreken`/`ondergrens` in world.ts) — zulke streken zijn
+// voor de speler onbereikbaar en dus onbebouwbaar, dus kan er nooit meer een
+// Wachttoren neergezet worden om ze alsnog te beschermen. Zonder deze
+// uitsluiting zou de trekking hierboven zulke streken alsnog kunnen raken,
+// wat tegen de kern-onderbouwing van "Wachttoren bouwbaar op elke
+// ontgrendelde streek" (hoofdstuk 11) ingaat: dreiging moet door goed spel
+// te vermijden zijn, en dat kan hier per definitie niet meer (issue
+// "Indringers").
 export function verwerkIndringers(state: GameState): GameState {
   if (state.indringersEvent) return state;
   if (hoogsteOntgrendeldeStreek(state.streken) < INDRINGERS_MIN_STREEK) return state;
@@ -348,7 +358,7 @@ export function verwerkIndringers(state: GameState): GameState {
   const campagne = campagneConfig(state.campagneId);
   const naVerbond = heeftWampanoagVerbond(state) && campagne?.indringersUitgeslotenTotHoogteNaVerbond !== undefined;
 
-  const ontgrendeldeStreken = state.streken.filter(
+  const ontgrendeldeStreken = zichtbareStreken(state.streken, state.stad.streekHoogte).filter(
     (streek) =>
       streek.ontgrendeld &&
       !isAlleenWachttorenStreek(streek) &&
