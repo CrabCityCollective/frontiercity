@@ -347,21 +347,32 @@ export function maakInitieleWereld(): Streek[] {
   );
 }
 
-// Sentinel-hoogte voor de klikbare oceaan-rij ná streek TUTORIAL_STREEK_AANTAL
-// (issue: "laatste oceaan ook visueel") — net als hoogte 0 voor de startoceaan
-// (zie GameCanvas: `bepaalAangeklikteTile`) geen echte `Streek`, puur een
-// aparte, altijd-eind-van-de-band positie voor de tile-info-pop-up.
-export const EINDE_OCEAAN_HOOGTE = TUTORIAL_STREEK_AANTAL + 1;
+// Sentinel-hoogte voor de klikbare oceaan-rij ná de laatste streek van de
+// actieve campagnekaart (issue: "laatste oceaan ook visueel") — net als hoogte
+// 0 voor de startoceaan (zie GameCanvas: `bepaalAangeklikteTile`) geen echte
+// `Streek`, puur een aparte, altijd-eind-van-de-band positie voor de
+// tile-info-pop-up. `alleStreken` is de volledige, niet-zichtbaarheids-
+// gefilterde streken-lijst (`GameState.streken`) — de lengte daarvan is het
+// werkelijke aantal streken van de actieve campagne (14 voor de tutorial, 35
+// voor Going West), niet de vaste tutorial-constante `TUTORIAL_STREEK_AANTAL`
+// (issue: "Oceaan op streek 14?" — zonder deze parameter verscheen de
+// afsluitende oceaan altijd al bij streek 14, ook op de veel langere Going
+// West-kaart).
+export function eindeOceaanHoogte(alleStreken: Streek[]): number {
+  return alleStreken.length + 1;
+}
 
-// Of de afsluitende oceaan-rij bóven streek TUTORIAL_STREEK_AANTAL getekend moet
-// worden (hoofdstuk 2/10: "de oceaan aan de overkant" als einddoel van de
-// tocht) — pas zodra die laatste streek daadwerkelijk ontgrendeld/speelbaar is,
-// net zoals de startoceaan onderaan er al vanaf het begin staat omdat streek 1
-// vanaf het begin ontgrendeld is. Vóór die tijd blijft de kaart gewoon in
-// mist eindigen (zie `zichtbareStreken` hieronder) — de tocht is dan nog niet
-// voltooid.
-export function eindeOceaanZichtbaar(streken: Streek[]): boolean {
-  return streken.some((streek) => streek.hoogte === TUTORIAL_STREEK_AANTAL && streek.ontgrendeld);
+// Of de afsluitende oceaan-rij bóven de laatste streek van de actieve
+// campagnekaart getekend moet worden (hoofdstuk 2/10: "de oceaan aan de
+// overkant" als einddoel van de tocht) — pas zodra die laatste streek
+// daadwerkelijk ontgrendeld/speelbaar is, net zoals de startoceaan onderaan er
+// al vanaf het begin staat omdat streek 1 vanaf het begin ontgrendeld is.
+// Vóór die tijd blijft de kaart gewoon in mist eindigen (zie `zichtbareStreken`
+// hieronder) — de tocht is dan nog niet voltooid. `alleStreken`: zie
+// `eindeOceaanHoogte` hierboven voor waarom dit niet de tutorial-constante is.
+export function eindeOceaanZichtbaar(streken: Streek[], alleStreken: Streek[]): boolean {
+  const laatsteStreekHoogte = alleStreken.length;
+  return streken.some((streek) => streek.hoogte === laatsteStreekHoogte && streek.ontgrendeld);
 }
 
 // Of de startoceaan-rij (hoofdstuk 2: streek 1 begint aan een oceaan) onder de
@@ -370,7 +381,7 @@ export function eindeOceaanZichtbaar(streken: Streek[]): boolean {
 // gesticht wordt en de oudere streken dichtklappen (zie `zichtbareStreken`
 // hieronder, `ondergrens`), is streek 1 niet langer de onderste zichtbare
 // streek en hoort de losse oceaan-rij er ook niet meer onder te staan — net zo
-// min een echte `Streek` als `EINDE_OCEAAN_HOOGTE` hierboven.
+// min een echte `Streek` als de sentinel-hoogte van `eindeOceaanHoogte` hierboven.
 export function startOceaanZichtbaar(streken: Streek[]): boolean {
   return streken.some((streek) => streek.hoogte === 1);
 }

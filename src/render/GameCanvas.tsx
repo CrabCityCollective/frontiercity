@@ -5,7 +5,7 @@ import { GrafischeStijl } from "@/game/save";
 import { City, Streek, Settler } from "@/game/types";
 import {
   BAND_WIDTH_TILES,
-  EINDE_OCEAAN_HOOGTE,
+  eindeOceaanHoogte,
   eindeOceaanZichtbaar,
   startOceaanZichtbaar,
 } from "@/game/world";
@@ -81,8 +81,8 @@ interface GameCanvasProps {
 // maar wel een geldig, klikbaar doel (zie GameRoot: oceaan-tile-info).
 // `heeftEindeOceaan` (issue: "laatste oceaan ook visueel") schuift alle rijen
 // één tegel naar beneden voor de afsluitende oceaan-rij bóven de laatste streek
-// — die rij mapt naar sentinel-hoogte `EINDE_OCEAAN_HOOGTE`, net zo min een
-// echte `Streek` als hoogte 0.
+// — die rij mapt naar sentinel-hoogte `eindeOceaanHoogteWaarde` (`eindeOceaanHoogte`,
+// world.ts), net zo min een echte `Streek` als hoogte 0.
 // `maxHoogte` is de hoogte van de bovenste zichtbare streek (niet meer per se
 // gelijk aan `streken.length` sinds issue "Nieuwe stad Cincinnati": zodra de
 // onderste zichtbare streek niet langer hoogte 1 is, klopt "aantal zichtbare
@@ -95,7 +95,8 @@ function bepaalAangeklikteTile(
   aantalStreken: number,
   maxHoogte: number,
   heeftStartOceaan: boolean,
-  heeftEindeOceaan: boolean
+  heeftEindeOceaan: boolean,
+  eindeOceaanHoogteWaarde: number
 ): { hoogte: number; positieInStreek: number } | null {
   const rect = canvas.getBoundingClientRect();
   const schaalX = canvas.width / rect.width;
@@ -113,7 +114,7 @@ function bepaalAangeklikteTile(
 
   const topRijen = heeftEindeOceaan ? 1 : 0;
   if (ruweRij < topRijen) {
-    return { hoogte: EINDE_OCEAAN_HOOGTE, positieInStreek };
+    return { hoogte: eindeOceaanHoogteWaarde, positieInStreek };
   }
 
   const rijIndex = ruweRij - topRijen;
@@ -145,8 +146,9 @@ export default function GameCanvas({
   onTileClick,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const heeftEindeOceaan = eindeOceaanZichtbaar(streken);
+  const heeftEindeOceaan = eindeOceaanZichtbaar(streken, alleStreken);
   const heeftStartOceaan = startOceaanZichtbaar(streken);
+  const eindeOceaanHoogteWaarde = eindeOceaanHoogte(alleStreken);
   // Hoogte van de bovenste zichtbare streek — sinds issue "Nieuwe stad
   // Cincinnati" niet meer per se gelijk aan `streken.length` (zie
   // `bepaalAangeklikteTile` hierboven). `streken` staat oplopend op hoogte
@@ -201,7 +203,15 @@ export default function GameCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const tile = bepaalAangeklikteTile(canvas, event, streken.length, maxHoogte, heeftStartOceaan, heeftEindeOceaan);
+    const tile = bepaalAangeklikteTile(
+      canvas,
+      event,
+      streken.length,
+      maxHoogte,
+      heeftStartOceaan,
+      heeftEindeOceaan,
+      eindeOceaanHoogteWaarde
+    );
     if (tile) onTileClick(tile.hoogte, tile.positieInStreek);
   }
 

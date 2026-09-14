@@ -100,9 +100,9 @@ import { berekenHistorieStatistieken } from "@/game/uitputtingEnVerval";
 import { useGameEngine } from "@/game/useGameEngine";
 import { aantalAangelegdeWegen, bereikbarePosities } from "@/game/wegen";
 import {
-  EINDE_OCEAAN_HOOGTE,
   ROOFDIER_MIN_STREEK,
   VOEDSEL_DREMPEL_GROEI,
+  eindeOceaanHoogte,
   hoogsteOntgrendeldeStreek,
   zichtbareStreken,
 } from "@/game/world";
@@ -519,15 +519,21 @@ export default function GameRoot({
     ? state.streken.find((streek) => streek.hoogte === geselecteerdeTile.hoogte)
     : undefined;
 
+  // Sentinel-hoogte van de afsluitende oceaan-rij bóven de laatste streek van
+  // de actieve campagnekaart — `state.streken.length` (14 voor de tutorial,
+  // 35 voor Going West), niet de vaste tutorial-constante (zie
+  // `eindeOceaanHoogte` in world.ts, issue "Oceaan op streek 14?").
+  const eindeOceaanHoogteWaarde = eindeOceaanHoogte(state.streken);
+
   // De ruwe tile achter de aangeklikte tile-info (hoofdstuk 5/14, issue:
   // "toevoeging Goud" Deel 2) — `tileInfo` hierboven is alleen tekst, dit
   // geeft de "versnel met goud"-knop toegang tot de echte bouwvoortgang.
-  // Hoogte 0 en EINDE_OCEAAN_HOOGTE zijn de twee oceaan-rijen (geen echte
-  // `Streek`, zie `tileInfo` hieronder).
+  // Hoogte 0 en `eindeOceaanHoogteWaarde` zijn de twee oceaan-rijen (geen
+  // echte `Streek`, zie `tileInfo` hieronder).
   const geselecteerdeTileVoorRush =
     geselecteerdeTile &&
     geselecteerdeTile.hoogte !== 0 &&
-    geselecteerdeTile.hoogte !== EINDE_OCEAAN_HOOGTE &&
+    geselecteerdeTile.hoogte !== eindeOceaanHoogteWaarde &&
     geselecteerdeStreek
       ? geselecteerdeStreek.tiles[geselecteerdeTile.positieInStreek]
       : undefined;
@@ -627,14 +633,14 @@ export default function GameRoot({
     if (el) el.scrollTop = el.scrollHeight;
   }, [zichtbareStrekenState.length]);
 
-  // Hoogte 0 is de klikbare oceaan-rij onder streek 1, EINDE_OCEAAN_HOOGTE de
-  // afsluitende oceaan-rij bóven de laatste streek (issue: "laatste oceaan ook
-  // visueel") — beide geen echte `Streek` (zie GameCanvas: `bepaalAangeklikteTile`)
-  // — puur sfeer-tekst, nooit bebouwbaar.
+  // Hoogte 0 is de klikbare oceaan-rij onder streek 1, `eindeOceaanHoogteWaarde`
+  // de afsluitende oceaan-rij bóven de laatste streek (issue: "laatste oceaan
+  // ook visueel") — beide geen echte `Streek` (zie GameCanvas:
+  // `bepaalAangeklikteTile`) — puur sfeer-tekst, nooit bebouwbaar.
   const tileInfo =
     geselecteerdeTile?.hoogte === 0
       ? beschrijfOceaanTile()
-      : geselecteerdeTile?.hoogte === EINDE_OCEAAN_HOOGTE
+      : geselecteerdeTile?.hoogte === eindeOceaanHoogteWaarde
         ? beschrijfEindeOceaanTile()
         : geselecteerdeTile && geselecteerdeStreek
           ? beschrijfTile(

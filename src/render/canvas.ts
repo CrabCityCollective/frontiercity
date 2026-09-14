@@ -2362,7 +2362,7 @@ export function tekenWereld(
   // visueel") — schuift alle rijen hieronder één tegel naar beneden zodra hij
   // getoond wordt, net zoals de startoceaan een vaste extra rij onderaan is
   // zolang streek 1 nog zichtbaar is (`startOceaanZichtbaar`).
-  const topOffset = eindeOceaanZichtbaar(streken) ? tileSize : 0;
+  const topOffset = eindeOceaanZichtbaar(streken, alleStreken) ? tileSize : 0;
 
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#100d0a";
@@ -2482,7 +2482,7 @@ export function tekenWereld(
   // aan de overkant (hoofdstuk 2/10), pas getekend zodra de laatste streek
   // ontgrendeld is (zie `eindeOceaanZichtbaar` in world.ts). Klikbaar via
   // dezelfde tile-geometrie (GameCanvas: `bepaalAangeklikteTile`, sentinel-
-  // hoogte `EINDE_OCEAAN_HOOGTE`).
+  // hoogte `eindeOceaanHoogte(alleStreken)`).
   if (topOffset > 0) {
     for (let col = 0; col < BAND_WIDTH_TILES; col++) {
       const x = col * tileSize;
