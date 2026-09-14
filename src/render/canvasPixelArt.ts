@@ -1346,7 +1346,7 @@ export function tekenWereldPixelArt(
   const maxHoogte = totaalStreken > 0 ? streken[totaalStreken - 1].hoogte : 0;
   // Afsluitende oceaan-rij bóven de laatste streek (issue: "laatste oceaan ook
   // visueel") — zie canvas.ts voor de volledige toelichting.
-  const topOffset = eindeOceaanZichtbaar(streken) ? tileSize : 0;
+  const topOffset = eindeOceaanZichtbaar(streken, alleStreken) ? tileSize : 0;
 
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#100d0a";
