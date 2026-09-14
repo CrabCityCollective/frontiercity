@@ -472,8 +472,7 @@ export default function GameRoot({
   // Welke settler op dit moment via de kaart op canvas-klikken reageert
   // (issue #236): met twee settlers tegelijk moet de speler kunnen kiezen
   // welke er beweegt — zie de kies-knop per kaart in SettlerPaneel. Blijft
-  // "primair" zolang er geen tweede settler is, en negeert simpelweg elke
-  // canvas-klik als de geselecteerde settler net niet (meer) bestaat.
+  // "primair" zolang er geen tweede settler is.
   const [settlerSelectie, setSettlerSelectie] = useState<SettlerSlot>("primair");
   // Tutorial-voltooid-pop-up (issue: "pop-up met summary wat je geleerd
   // hebt"): sinds het stichten het tutorial-einddoel is (vervangt "bereik
@@ -703,9 +702,24 @@ export default function GameRoot({
   // via de kies-knop per kaart in SettlerPaneel) — niet automatisch "beide",
   // want elke settler doet hoogstens 1 actie per beurt, onafhankelijk van de
   // ander.
-  const geselecteerdeSettler = settlerSelectie === "primair" ? state.settler : state.tweedeSettler;
+  // Stichten laat de settler van dat slot verdwijnen (issue: "Tweede settler
+  // kan niet bewegen" — na het stichten van een stad met de primaire settler
+  // bleef `settlerSelectie` op "primair" staan, terwijl `state.settler`
+  // inmiddels undefined is, waardoor de overgebleven tweede settler niet meer
+  // aanklikbaar/beweegbaar was). Valt daarom terug op het andere slot zodra
+  // het gekozen slot geen settler (meer) heeft.
+  const effectieveSettlerSelectie: SettlerSlot =
+    (settlerSelectie === "primair" ? state.settler : state.tweedeSettler)
+      ? settlerSelectie
+      : settlerSelectie === "primair"
+        ? "tweede"
+        : "primair";
+  const geselecteerdeSettler =
+    effectieveSettlerSelectie === "primair" ? state.settler : state.tweedeSettler;
   const geselecteerdeSettlerActieGedaan =
-    settlerSelectie === "primair" ? state.settlerActieGedaanDitBeurt : state.tweedeSettlerActieGedaanDitBeurt;
+    effectieveSettlerSelectie === "primair"
+      ? state.settlerActieGedaanDitBeurt
+      : state.tweedeSettlerActieGedaanDitBeurt;
   const settlerKanBewegen =
     Boolean(geselecteerdeSettler) && !geselecteerdeSettlerActieGedaan && !plaatsingsImprovement;
   const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.streken, geselecteerdeSettler!) : [];
@@ -726,7 +740,7 @@ export default function GameRoot({
       (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
     );
     if (settlerKanBewegen && isSettlerDoel) {
-      verplaatsSettlerNaar(hoogte, positieInStreek, settlerSelectie);
+      verplaatsSettlerNaar(hoogte, positieInStreek, effectieveSettlerSelectie);
       return;
     }
 
@@ -2028,7 +2042,7 @@ export default function GameRoot({
         />
         <SettlerPaneel
           state={state}
-          settlerSelectie={settlerSelectie}
+          settlerSelectie={effectieveSettlerSelectie}
           onKiesSettler={setSettlerSelectie}
           onLegWegAan={legWegAan}
           onJaag={jaag}
