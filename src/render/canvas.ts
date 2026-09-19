@@ -1473,6 +1473,44 @@ function tekenCourthouse(ctx: CanvasRenderingContext2D, x: number, y: number, si
   }
 }
 
+// Ranch (issue "Ranch", Going West-exclusief): een houten omheining
+// (corral) i.p.v. de Boerderij's ploegvoren — onderscheidt het silhouet
+// meteen van een Boerderij, ook zonder tile-info-pop-up. Grazende
+// vee-stipjes binnen de omheining i.p.v. de Boerderij's gewasrijen.
+function tekenRanch(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = y + size * 0.86;
+  tekenContactschaduw(ctx, x + size * 0.5, baseY, size * 0.74);
+
+  ctx.strokeStyle = "#6b4a28";
+  ctx.lineWidth = Math.max(1.4, size * 0.045);
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.1, baseY - size * 0.34);
+  ctx.lineTo(x + size * 0.9, baseY - size * 0.34);
+  ctx.moveTo(x + size * 0.1, baseY - size * 0.18);
+  ctx.lineTo(x + size * 0.9, baseY - size * 0.18);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#4a3218";
+  ctx.lineWidth = Math.max(1.2, size * 0.035);
+  for (let i = 0; i <= 5; i++) {
+    const px = x + size * (0.1 + i * 0.16);
+    ctx.beginPath();
+    ctx.moveTo(px, baseY - size * 0.42);
+    ctx.lineTo(px, baseY - size * 0.04);
+    ctx.stroke();
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const gx = x + size * (0.22 + rng() * 0.56);
+    const gy = y + size * (0.5 + rng() * 0.2);
+    ctx.fillStyle = "#3a2c20";
+    ctx.beginPath();
+    ctx.ellipse(gx, gy, size * 0.07, size * 0.045, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (
@@ -1505,6 +1543,7 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   "wampanoag-tentje": (ctx, x, y, size) => tekenWampanoagTentje(ctx, x, y, size),
   saloon: (ctx, x, y, size) => tekenSaloon(ctx, x, y, size),
   courthouse: (ctx, x, y, size, seed, bemand) => tekenCourthouse(ctx, x, y, size, bemand),
+  ranch: (ctx, x, y, size, seed) => tekenRanch(ctx, x, y, size, seed),
 };
 
 function tekenLandImprovement(

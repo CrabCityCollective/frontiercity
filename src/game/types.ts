@@ -142,8 +142,9 @@ export interface Improvement {
   // `undefined`/`false` = de normale frontier-only regel geldt.
   bouwbaarBuitenFrontier?: boolean;
   // Alleen beschikbaar in de bouw-opties nadat deze tech gekozen is (hoofdstuk
-  // 3/9, Deel 2 van "tech tree toevoegen"): momenteel alleen de Voorraadkuil,
-  // ontgrendeld door "aardewerk". `undefined` = altijd beschikbaar (los van
+  // 3/9, Deel 2 van "tech tree toevoegen"): de Voorraadkuil, ontgrendeld door
+  // "aardewerk", en (issue "Ranch", Going West-exclusief) de Ranch,
+  // ontgrendeld door "veeteelt". `undefined` = altijd beschikbaar (los van
   // de technologie-boom), zoals bijna elke andere improvement.
   vereisteTech?: TechId;
   // Alleen beschikbaar in de bouw-opties zodra deze streekhoogte ontgrendeld is

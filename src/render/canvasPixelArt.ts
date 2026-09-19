@@ -772,6 +772,27 @@ function tekenCourthousePixel(ctx: CanvasRenderingContext2D, bemand: boolean): v
   }
 }
 
+// Ranch (issue "Ranch", Going West-exclusief) — pixel-art variant van
+// `tekenRanch` in canvas.ts: dezelfde houten omheining met grazend vee
+// i.p.v. de Boerderij's ploegvoren, blokkerig opgebouwd op het 16x16
+// pixel-grid.
+function tekenRanchPixel(ctx: CanvasRenderingContext2D, seed: number): void {
+  const rng = maakSeededRandom(seed);
+  const baseY = 14;
+  schaduw(ctx, 8, baseY + 1, 9);
+
+  for (const px of [3, 6, 9, 12]) {
+    vlijn(ctx, px, baseY - 5, baseY, "#4a3218");
+  }
+  hlijn(ctx, 3, 12, baseY - 5, "#6b4a28");
+  hlijn(ctx, 3, 12, baseY - 2, "#6b4a28");
+
+  for (let i = 0; i < 3; i++) {
+    const gx = 4 + Math.floor(rng() * 8);
+    p(ctx, gx, baseY - 1, "#2a1c10");
+  }
+}
+
 const LAND_IMPROVEMENT_TEKENAARS: Record<
   string,
   (ctx: CanvasRenderingContext2D, seed: number, bemand: boolean, tegelSet?: string) => void
@@ -796,6 +817,7 @@ const LAND_IMPROVEMENT_TEKENAARS: Record<
   "wampanoag-tentje": (ctx) => tekenWampanoagTentjePixel(ctx),
   saloon: (ctx) => tekenSaloonPixel(ctx),
   courthouse: (ctx, seed, bemand) => tekenCourthousePixel(ctx, bemand),
+  ranch: (ctx, seed) => tekenRanchPixel(ctx, seed),
 };
 
 function tekenLandImprovementPixel(
