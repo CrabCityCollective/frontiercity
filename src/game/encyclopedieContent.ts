@@ -297,6 +297,13 @@ const BASE_LEMMAS: EncyclopedieLemma[] = [
       "Economische stadsverbetering die de gedeelde opslag-cap verhoogt. Herhaalbaar: elke voltooide Opslagplaats telt opnieuw mee.",
   },
   {
+    id: "ranch",
+    titel: "Ranch",
+    categorie: "Gebouwen",
+    tekst:
+      "Economische landverbetering (Going West), alleen te bouwen op een vakje met een wilde kudde. Levert meer voedsel per beurt dan een Boerderij, maar raakt ook sneller uitgeput. Ontgrendeld door de technologie Veeteelt.",
+  },
+  {
     id: "saloon",
     titel: "Saloon",
     categorie: "Gebouwen",

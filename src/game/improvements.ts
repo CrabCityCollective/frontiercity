@@ -164,14 +164,21 @@ export function terreinEisenBeschrijving(improvement: Improvement): string | und
 }
 
 // Of `improvement` op dit specifieke vakje geplaatst mag worden: de gewone
-// terrein-eis hierboven, plus — alleen voor de Goudader (issue: "toevoeging
-// Goud" Deel 1) — de aanvullende goudader-vondst-eis (`tile.goud`, zie
-// world.ts). Een gewone Mijn mag op elk heuvel/bergvakje, maar een Goudader
-// alleen op de schaarse vakjes die daadwerkelijk een goudader hebben — het
-// enige improvement met een vakje-specifieke eis bovenop het terreintype.
+// terrein-eis hierboven, plus twee vakje-specifieke eisen bovenop het
+// terreintype:
+// - Goudader (issue: "toevoeging Goud" Deel 1): alleen op de schaarse
+//   vakjes die daadwerkelijk een goudader hebben (`tile.goud`, zie
+//   world.ts) — een gewone Mijn mag op elk heuvel/bergvakje.
+// - Ranch (issue "Ranch", Going West-exclusief): alleen op een vakje met
+//   een actieve wilde kudde (`tile.kudde`, hoofdstuk 16/17) — vandaar geen
+//   `terreinEisen` op de Ranch zelf, dat zou de kudde-eis alleen maar
+//   verdubbelen. `startBouw` (infrastructuurEnBouw.ts) wist `tile.kudde`
+//   sowieso zodra er gebouwd wordt (elk improvement jaagt een kudde weg),
+//   dus de Ranch "vangt" de kudde op het moment van bouwen.
 export function improvementPastOpTile(improvement: Improvement, tile: Tile): boolean {
   if (!improvementPastOpTerrein(improvement, tile.terrein)) return false;
   if (improvement.id === "goudmijn") return Boolean(tile.goud);
+  if (improvement.id === "ranch") return Boolean(tile.kudde);
   return true;
 }
 
@@ -258,6 +265,42 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     // er al een tweede voedselbron staat vóórdat een bemande Wachttoren extra
     // voedsel gaat kosten.
     minStreek: 2,
+  },
+  // Ranch (issue "Ranch", Going West-exclusief, `vereisteCampagneId`): een
+  // tweede voedselbron naast de Boerderij, maar met een omgekeerd profiel —
+  // hoger per-beurt-rendement, korter houdbaar (issue: "gaat iets minder
+  // lang mee dan een boerderij, maar geeft wel iets meer voedsel per
+  // beurt"). Geen `terreinEisen` (in tegenstelling tot de Boerderij, die
+  // alleen op vlakke grond mag): de echte plaatsingsbeperking is de
+  // wilde-kudde-eis in `improvementPastOpTile` hierboven ("bouwen op een
+  // wilde kudde") — schaarser dan "vlakke grond", dus in de praktijk minder
+  // vaak inzetbaar dan een Boerderij, ondanks het hogere rendement.
+  // Kosten/bouwtijd (MVP-richtwaarde, tunebaar): zelfde bouwtijd als de
+  // Boerderij, iets duurder (steen erbij) om het hogere rendement/de
+  // kortere levensduur niet gratis te maken.
+  //
+  // `vereisteTech: "veeteelt"` (techTree.ts, A2a — letterlijk "veeteelt"):
+  // ontgrendelt de Ranch zodra gekozen. De tutorial-Boerderij-technologieboom
+  // blijft ongewijzigd voor elke campagne (hoofdstuk 11: tech-effecten zijn
+  // bewust campagne-onafhankelijk, alleen de naam/flavor wisselt per
+  // campagne, zie `techNaam()`) — de Ranch komt er dus als extra
+  // keuze-opvolger bovenop, niet als vervanging van Veeteelt's bestaande
+  // "Wachttoren kost geen voedsel"-effect. Zie de PR-omschrijving voor de
+  // afweging: het letterlijk "verwijderen" van een bestaande tech uit de
+  // boom (zoals het issue voorstelt) zou de tech-tree-topologie per
+  // campagne laten verschillen — een grotere, aparte architectuurstap die
+  // nog niet is opgepakt.
+  {
+    id: "ranch",
+    naam: "Ranch",
+    categorie: "economisch",
+    soort: "land",
+    kosten: { hout: 4, steen: 2 },
+    bouwtijdBeurten: 2,
+    effect: { type: "productie", resource: "voedsel", waarde: 7 },
+    uitputtingBeurten: 14,
+    vereisteTech: "veeteelt",
+    vereisteCampagneId: "going-west",
   },
   // Ontgrendeld door de "aardewerk"-tech (drempel 2, techTree.ts; issue: "tech
   // tree toevoegen" Deel 2 — "A1. Aardewerk: nieuw goedkoop land improvement:
