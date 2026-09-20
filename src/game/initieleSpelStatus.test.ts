@@ -63,12 +63,22 @@ test("maakDebugSpelStatusGoingWest(9) zet de stad + settler op streek 9, met de 
   assert.equal(state.streken[9].ontgrendeld, false);
 });
 
-test("maakDebugSpelStatusGoingWest geeft dezelfde startgrondstoffen/-voedsel als een gewone Going West-start", () => {
+test("maakDebugSpelStatusGoingWest geeft dezelfde startgrondstoffen/-voedsel als een gewone Going West-start, op goud na", () => {
   const gewoon = maakInitieleSpelStatus("going-west");
   const debug = maakDebugSpelStatusGoingWest(9);
-  assert.deepEqual(debug.voorraad, gewoon.voorraad);
+  assert.deepEqual(debug.voorraad, { ...gewoon.voorraad, goud: 30 });
   assert.equal(debug.voedsel, gewoon.voedsel);
   assert.equal(debug.uitlegPopupsAan, gewoon.uitlegPopupsAan);
+});
+
+// Issue "20 goud start voorraad" (verhoogd naar 30): een debug-start op een
+// latere streek moet meteen goud op voorraad hebben om te kunnen testen
+// (o.a. rush-bouwen), terwijl een normale start ongewijzigd op 0 blijft.
+test("maakDebugSpelStatusGoingWest start met 30 goud, een gewone start met 0", () => {
+  const gewoon = maakInitieleSpelStatus("going-west");
+  const debug = maakDebugSpelStatusGoingWest(9);
+  assert.equal(gewoon.voorraad.goud, 0);
+  assert.equal(debug.voorraad.goud, 30);
 });
 
 // Issue "Genoeg cultuur voor test run": zonder dit bleven cultuur/wetenschap
