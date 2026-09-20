@@ -193,6 +193,16 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
 // debug-ingang voor bedoeld is (hoofdstuk 14-doorrekening in techTree.ts).
 // Meteen op die top starten is dus zowel eenvoudig als representatief, i.p.v.
 // een eigen (ongefundeerde) streek-naar-wetenschap-curve te verzinnen.
+// Startgoud voor de debug-ingang (issue "20 goud start voorraad", verhoogd
+// naar 30): een normale start heeft `STARTVOORRAAD.goud: 0` (goud komt pas
+// via de economie op gang), maar een debug-start op een latere streek wil je
+// juist meteen kunnen "lekker" spelen — o.a. rush-bouwen uitproberen
+// (hoofdstuk 5: 5 goud per weggekochte beurt) — zonder eerst alle
+// tussenliggende streken te moeten spelen om aan goud te komen. Uitsluitend
+// hier toegepast, niet in `STARTVOORRAAD`: de normale spelstart (tutorial en
+// een echte Going West-run) moet z'n bestaande balans behouden.
+const DEBUG_START_GOUD = 30;
+
 export function maakDebugSpelStatusGoingWest(streekHoogte: number): GameState {
   const basis = maakInitieleSpelStatus("going-west");
   const stad: GameState["stad"] = {
@@ -206,6 +216,7 @@ export function maakDebugSpelStatusGoingWest(streekHoogte: number): GameState {
     stad,
     steden: [stad],
     streken: maakDebugWereldGoingWest(streekHoogte),
+    voorraad: { ...basis.voorraad, goud: DEBUG_START_GOUD },
     settler: { hoogte: streekHoogte, positieInStreek: STAD_POSITIE },
     beurt: 2,
     laatstBevestigdeStreek: streekHoogte,
