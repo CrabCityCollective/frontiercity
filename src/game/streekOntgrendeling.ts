@@ -19,7 +19,7 @@ import {
   VIJANDELIJK_HEILIGDOM,
   VIJANDELIJKE_WACHTTOREN,
 } from "./improvements";
-import { GameState, Settler, Tile } from "./types";
+import { GameState, Settler, Streek, Tile } from "./types";
 import {
   GOUD_ONTDEKKING_STREEK,
   GOUD_ONTDEKKING_STREEK_2,
@@ -58,6 +58,178 @@ export const BELEGERINGSDREMPEL = 30;
 // confrontatie tweaken").
 export const WOLOLO_INKOMEN_PER_MISSIONARIS = 5;
 
+// Eén stap van de streek-ontgrendeling: verwerkt precies één streek
+// (`hoogte`), ofwel door hem normaal te ontgrendelen (met alle eenmalige
+// ontdekkings-triggers die daarbij horen) ofwel — voor de twee bevroren
+// speciale gevallen — door de streek "in beeld" te laten komen zonder hem al
+// ontgrendeld te maken. Losgetrokken uit de `while`-lus van
+// `verwerkStreekOntgrendeling` hieronder (issue #539, "Baanbreker"-Boon) zodat
+// `ontdekStreekViaBaanbreker` verderop in dit bestand exact diezelfde
+// per-streek-effecten (inclusief de Bezette-Streek-/Wampanoag-bevriezing en de
+// eenmalige ontdekkings-events) kan hergebruiken wanneer de speler een streek
+// via de settler ontdekt in plaats van via de cultuurdrempel — anders zou een
+// via Baanbreker overgeslagen streek deze eenmalige triggers (Goudader,
+// stichtingskans, rivier-aankondiging, Lakota-scout, de gegarandeerde
+// roofdier-kudde) nooit meer krijgen, ook niet later als de cultuur er alsnog
+// overheen groeit (`hoogsteOntgrendeldeStreek` telt die streek dan al mee als
+// ontgrendeld, dus de cultuur-`while`-lus begint er voorbij).
+// `stop: true` betekent: deze streek is bevroren (of was dat al) — de
+// aanroepende `while`-lus moet hier stoppen, net als de oorspronkelijke
+// `break` hieronder deed.
+function ontgrendelEenStreek(
+  state: GameState,
+  streken: Streek[],
+  hoogte: number
+): {
+  streken: Streek[];
+  goudOntdektEvent?: boolean;
+  tweedeGoudOntdektEvent?: boolean;
+  bezetteStreekOntdektEvent?: boolean;
+  wampanoagLaagOntdektEvent?: boolean;
+  stichtingskansOntdektEvent?: boolean;
+  rivierAangekondigdEvent?: boolean;
+  lakotaScoutEvent?: boolean;
+  stop: boolean;
+} {
+  const huidigeStreek = streken.find((streek) => streek.hoogte === hoogte)!;
+
+  // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
+  // verkenner", Deel 2): in plaats van normaal te ontgrendelen, komt deze
+  // streek "in beeld" — dezelfde soort trigger als de gegarandeerde
+  // Goudader-vondst hieronder. De streek blijft `ontgrendeld: false` (dus de
+  // frontier blijft op de streek eronder staan) tot alle vijandelijke
+  // Heiligdommen vernietigd zijn (`verwerkBelegering` hieronder in de
+  // `volgendeBeurt`-pijplijn) — de aanroeper stopt hier dus altijd, zowel de
+  // eerste keer (initialisatie) als op elke latere beurt zolang de streek nog
+  // bezet is. Tutorial-only (issue "Stam van de mammoet niet in campaigns"):
+  // net als de Wampanoag-laag hieronder toevallig dezelfde hoogte kan raken
+  // in een andere campagne, kan een niet-tutorial-campagne toevallig dezelfde
+  // hoogte als `BEZETTE_STREEK_HOOGTE` (13) hebben — zonder deze
+  // `campagneId`-check zou De Stam van de Mammoet daar dan per ongeluk ook
+  // opduiken, terwijl dat mechanisme (net als de Wampanoag-laag voor Going
+  // West) uitsluitend tutorial-scripting is (zie `BEZETTE_STREEK_HOOGTE`,
+  // world.ts).
+  if (isBezetteStreekHoogte(hoogte) && state.campagneId === undefined) {
+    if (huidigeStreek.bezet) return { streken, stop: true };
+    return {
+      streken: streken.map((streek) => (streek.hoogte === hoogte ? initialiseerBezetteStreek(streek) : streek)),
+      bezetteStreekOntdektEvent: true,
+      stop: true,
+    };
+  }
+
+  // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md §5;
+  // blokkerend gemaakt door issue "Wampanoag streek blokkerend"): zelfde
+  // bevriezings-patroon als de Bezette Streek hierboven — de streek komt "in
+  // beeld" met alle negen vakjes verhuld (`initialiseerWampanoagLaag`,
+  // worldGoingWest.ts) en blijft `ontgrendeld: false` (dus geen
+  // frontier-voortgang, geen verdere cultuur-gedreven streek-ontgrendeling)
+  // tot de drie handelsvakjes onthuld zijn (`verwerkWampanoagVerkenningInGang`,
+  // wampanoag.ts, dat op dat moment ook `ontgrendeld: true` zet). Een eigen
+  // `Streek.wampanoagBezet`-vlag i.p.v. `Streek.bezet` hergebruiken: die
+  // laatste wordt hieronder door `verwerkBelegering` opgelost aan de hand van
+  // vijandelijke Heiligdom-/Wachttoren-inhoud, die een Wampanoag-streek niet
+  // heeft. De `campagneId`-check is nodig omdat de tutorial toevallig ook een
+  // streek met dezelfde hoogte heeft (ontgrendeld via de gewone
+  // cultuurdrempel) — zonder deze check zou die tutorial-streek hier per
+  // ongeluk ook bevroren worden.
+  if (hoogte === WAMPANOAG_STREEK_HOOGTE && state.campagneId === "going-west") {
+    if (huidigeStreek.wampanoagBezet) return { streken, stop: true };
+    return {
+      streken: streken.map((streek) =>
+        streek.hoogte === WAMPANOAG_STREEK_HOOGTE ? initialiseerWampanoagLaag(streek) : streek
+      ),
+      wampanoagLaagOntdektEvent: true,
+      stop: true,
+    };
+  }
+
+  let nieuweStreken = streken.map((streek) => (streek.hoogte === hoogte ? { ...streek, ontgrendeld: true } : streek));
+  let goudOntdektEvent: boolean | undefined;
+  let tweedeGoudOntdektEvent: boolean | undefined;
+  let stichtingskansOntdektEvent: boolean | undefined;
+  let rivierAangekondigdEvent: boolean | undefined;
+  let lakotaScoutEvent: boolean | undefined;
+
+  // Nieuwe stichtingskans ontdekt (Going West, issue #459): een net
+  // ontgrendelde streek met een vers-water-vakje is één van de drie
+  // gegarandeerde stichtingskansen uit het herhalende
+  // drie-stichtingsmomenten-patroon (hoofdstuk 9 Deel 2,
+  // `gegarandeerdeStichtingskansHoogten()` in stad.ts) — de speler kan hier
+  // met de settler een nieuwe stad stichten, maar kan ook wachten tot de
+  // huidige stad "groot" is voor de Boon-beloning (boons.ts). Alleen voor
+  // Going West: de tutorial heeft precies één vers-water-vakje en kent geen
+  // herhalend patroon of Boon-systeem (zelfde `campagneId`-check als de
+  // Wampanoag-laag hierboven).
+  if (state.campagneId === "going-west" && huidigeStreek.tiles.some((tile) => tile.versWater)) {
+    stichtingskansOntdektEvent = true;
+  }
+  // Rivier-aankondiging (issue "Pop-up rivier"): eenmalige trigger zodra
+  // `RIVIER_AANKONDIGING_STREEK_HOOGTE` (worldGoingWest.ts) voor het eerst
+  // ontgrendelt — zelfde eenmalige-trigger-conventie als de
+  // Goudader-ontdekkingen hieronder. Alleen voor Going West: de tutorial
+  // heeft toevallig ook een streek met deze hoogte, maar kent geen rivier.
+  if (hoogte === RIVIER_AANKONDIGING_STREEK_HOOGTE && state.campagneId === "going-west") {
+    rivierAangekondigdEvent = true;
+  }
+  // Lakota-scout (issue "Lakota scout"): eenmalige trigger zodra
+  // `LAKOTA_SCOUT_STREEK_HOOGTE` (worldGoingWest.ts) voor het eerst
+  // ontgrendelt — zelfde eenmalige-trigger-conventie als de
+  // rivier-aankondiging hierboven. Alleen voor Going West: puur narratief,
+  // geen eigen mechaniek.
+  if (hoogte === LAKOTA_SCOUT_STREEK_HOOGTE && state.campagneId === "going-west") {
+    lakotaScoutEvent = true;
+  }
+  // Goudader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
+  // gegarandeerde eerste Goudader-locatie ligt op `GOUD_ONTDEKKING_STREEK`
+  // (world.ts) — deze functie draait precies één keer door die hoogte heen op
+  // het moment dat hij ontgrendelt, dus dit triggert vanzelf maar één keer
+  // per run, net als de streek-ontgrendeling zelf.
+  if (hoogte === GOUD_ONTDEKKING_STREEK) {
+    goudOntdektEvent = true;
+  }
+  // Tweede Goudader-ontdekking (hoofdstuk 3/11/14, issue: "Goudader sowieso
+  // op streek 12"): zelfde eenmalige trigger als hierboven, maar op
+  // `GOUD_ONTDEKKING_STREEK_2` — de softlock-preventie vlak vóór de Bezette
+  // Streek.
+  if (hoogte === GOUD_ONTDEKKING_STREEK_2) {
+    tweedeGoudOntdektEvent = true;
+  }
+  // Gegarandeerde kudde op de roofdier-introductiestreek (hoofdstuk 14/17,
+  // issue: "Eerste streek geen roofdieren", vervolgvraag): zodra
+  // `ROOFDIER_MIN_STREEK` voor het eerst ontgrendelt, staat er meteen een
+  // kudde op `ROOFDIER_STREEK_KUDDE_POSITIE` — de speler hoeft niet op de
+  // gewone, willekeurige `verwerkKuddes`-trekking te wachten om het net
+  // uitgelegde roofdier-risico ook meteen in de praktijk te kunnen ervaren.
+  // Zelfde eenmalige trigger als de Goudader-ontdekkingen hierboven: deze
+  // functie draait precies één keer door deze hoogte heen op het moment van
+  // ontgrendelen.
+  if (hoogte === ROOFDIER_MIN_STREEK) {
+    nieuweStreken = nieuweStreken.map((streek) =>
+      streek.hoogte !== ROOFDIER_MIN_STREEK
+        ? streek
+        : {
+            ...streek,
+            tiles: streek.tiles.map((tile, index) =>
+              index === ROOFDIER_STREEK_KUDDE_POSITIE
+                ? { ...tile, kudde: { beurtenResterend: kuddeJachtBeurtenVoorStreek(ROOFDIER_MIN_STREEK) } }
+                : tile
+            ),
+          }
+    );
+  }
+
+  return {
+    streken: nieuweStreken,
+    goudOntdektEvent,
+    tweedeGoudOntdektEvent,
+    stichtingskansOntdektEvent,
+    rivierAangekondigdEvent,
+    lakotaScoutEvent,
+    stop: false,
+  };
+}
+
 // Ontgrendelt de eerstvolgende vergrendelde streek zodra de cumulatieve
 // cultuur de drempel haalt (M5, hoofdstuk 2/5) — geldt ongewijzigd voor elke
 // campagne, inclusief de Going West-openingsfase (issue "Weer gewoon cultuur
@@ -82,127 +254,16 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
   const heeftDrempelGehaald = (hoogte: number) => state.cultuur >= cultuurKostenVoorStreek(hoogte);
 
   while (volgendeHoogte <= streken.length && heeftDrempelGehaald(volgendeHoogte)) {
-    const huidigeStreek = streken.find((streek) => streek.hoogte === volgendeHoogte)!;
-
-    // Bezette Streek (hoofdstuk 6, issue: "De Bezette Streek, missionaris en
-    // verkenner", Deel 2): in plaats van normaal te ontgrendelen, komt deze
-    // streek "in beeld" — dezelfde soort trigger als de gegarandeerde
-    // Goudader-vondst hieronder. De streek blijft `ontgrendeld: false` (dus
-    // de frontier blijft op de streek eronder staan) tot alle vijandelijke
-    // Heiligdommen vernietigd zijn (`verwerkBelegering` hieronder in de
-    // `volgendeBeurt`-pijplijn) — de `while`-lus stopt hier dus altijd,
-    // zowel de eerste keer (initialisatie) als op elke latere beurt zolang
-    // de streek nog bezet is. Tutorial-only (issue "Stam van de mammoet niet
-    // in campaigns"): net als de Wampanoag-laag hieronder toevallig dezelfde
-    // hoogte kan raken in een andere campagne, kan een niet-tutorial-campagne
-    // toevallig dezelfde hoogte als `BEZETTE_STREEK_HOOGTE` (13) hebben —
-    // zonder deze `campagneId`-check zou De Stam van de Mammoet daar dan per
-    // ongeluk ook opduiken, terwijl dat mechanisme (net als de Wampanoag-laag
-    // voor Going West) uitsluitend tutorial-scripting is (zie `BEZETTE_STREEK_HOOGTE`,
-    // world.ts).
-    if (isBezetteStreekHoogte(volgendeHoogte) && state.campagneId === undefined) {
-      if (!huidigeStreek.bezet) {
-        streken = streken.map((streek) => (streek.hoogte === volgendeHoogte ? initialiseerBezetteStreek(streek) : streek));
-        bezetteStreekOntdektEvent = true;
-      }
-      break;
-    }
-
-    // Wampanoag-laag (Going West, M21e, opdracht-wampanoag-opening.md §5;
-    // blokkerend gemaakt door issue "Wampanoag streek blokkerend"): zelfde
-    // bevriezings-patroon als de Bezette Streek hierboven — de streek komt
-    // "in beeld" met alle negen vakjes verhuld (`initialiseerWampanoagLaag`,
-    // worldGoingWest.ts) en blijft `ontgrendeld: false` (dus geen
-    // frontier-voortgang, geen verdere cultuur-gedreven streek-ontgrendeling)
-    // tot de drie handelsvakjes onthuld zijn (`verwerkWampanoagVerkenningInGang`,
-    // wampanoag.ts, dat op dat moment ook `ontgrendeld: true` zet). Een eigen
-    // `Streek.wampanoagBezet`-vlag i.p.v. `Streek.bezet` hergebruiken: die
-    // laatste wordt hieronder door `verwerkBelegering` opgelost aan de hand
-    // van vijandelijke Heiligdom-/Wachttoren-inhoud, die een Wampanoag-streek
-    // niet heeft. De `campagneId`-check is nodig omdat de tutorial toevallig
-    // ook een streek met dezelfde hoogte heeft (ontgrendeld via de gewone
-    // cultuurdrempel) — zonder deze check zou die tutorial-streek hier per
-    // ongeluk ook bevroren worden.
-    if (volgendeHoogte === WAMPANOAG_STREEK_HOOGTE && state.campagneId === "going-west") {
-      if (!huidigeStreek.wampanoagBezet) {
-        streken = streken.map((streek) =>
-          streek.hoogte === WAMPANOAG_STREEK_HOOGTE ? initialiseerWampanoagLaag(streek) : streek
-        );
-        wampanoagLaagOntdektEvent = true;
-      }
-      break;
-    }
-
-    streken = streken.map((streek) =>
-      streek.hoogte === volgendeHoogte ? { ...streek, ontgrendeld: true } : streek
-    );
-    // Nieuwe stichtingskans ontdekt (Going West, issue #459): een net
-    // ontgrendelde streek met een vers-water-vakje is één van de drie
-    // gegarandeerde stichtingskansen uit het herhalende
-    // drie-stichtingsmomenten-patroon (hoofdstuk 9 Deel 2,
-    // `gegarandeerdeStichtingskansHoogten()` in stad.ts) — de speler kan hier
-    // met de settler een nieuwe stad stichten, maar kan ook wachten tot de
-    // huidige stad "groot" is voor de Boon-beloning (boons.ts). Alleen voor
-    // Going West: de tutorial heeft precies één vers-water-vakje en kent geen
-    // herhalend patroon of Boon-systeem (zelfde `campagneId`-check als de
-    // Wampanoag-laag hierboven).
-    if (state.campagneId === "going-west" && huidigeStreek.tiles.some((tile) => tile.versWater)) {
-      stichtingskansOntdektEvent = true;
-    }
-    // Rivier-aankondiging (issue "Pop-up rivier"): eenmalige trigger zodra
-    // `RIVIER_AANKONDIGING_STREEK_HOOGTE` (worldGoingWest.ts) voor het eerst
-    // ontgrendelt — zelfde eenmalige-trigger-conventie als de
-    // Goudader-ontdekkingen hieronder. Alleen voor Going West: de tutorial
-    // heeft toevallig ook een streek met deze hoogte, maar kent geen rivier.
-    if (volgendeHoogte === RIVIER_AANKONDIGING_STREEK_HOOGTE && state.campagneId === "going-west") {
-      rivierAangekondigdEvent = true;
-    }
-    // Lakota-scout (issue "Lakota scout"): eenmalige trigger zodra
-    // `LAKOTA_SCOUT_STREEK_HOOGTE` (worldGoingWest.ts) voor het eerst
-    // ontgrendelt — zelfde eenmalige-trigger-conventie als de
-    // rivier-aankondiging hierboven. Alleen voor Going West: puur narratief,
-    // geen eigen mechaniek.
-    if (volgendeHoogte === LAKOTA_SCOUT_STREEK_HOOGTE && state.campagneId === "going-west") {
-      lakotaScoutEvent = true;
-    }
-    // Goudader-ontdekking (hoofdstuk 3/14, issue: "toevoeging Goud"): de
-    // gegarandeerde eerste Goudader-locatie ligt op `GOUD_ONTDEKKING_STREEK`
-    // (world.ts) — deze `while`-lus loopt precies één keer door die hoogte
-    // heen op het moment dat hij ontgrendelt, dus dit triggert vanzelf maar
-    // één keer per run, net als de streek-ontgrendeling zelf.
-    if (volgendeHoogte === GOUD_ONTDEKKING_STREEK) {
-      goudOntdektEvent = true;
-    }
-    // Tweede Goudader-ontdekking (hoofdstuk 3/11/14, issue: "Goudader
-    // sowieso op streek 12"): zelfde eenmalige trigger als hierboven, maar op
-    // `GOUD_ONTDEKKING_STREEK_2` — de softlock-preventie vlak vóór de Bezette
-    // Streek.
-    if (volgendeHoogte === GOUD_ONTDEKKING_STREEK_2) {
-      tweedeGoudOntdektEvent = true;
-    }
-    // Gegarandeerde kudde op de roofdier-introductiestreek (hoofdstuk 14/17,
-    // issue: "Eerste streek geen roofdieren", vervolgvraag): zodra
-    // `ROOFDIER_MIN_STREEK` voor het eerst ontgrendelt, staat er meteen een
-    // kudde op `ROOFDIER_STREEK_KUDDE_POSITIE` — de speler hoeft niet op de
-    // gewone, willekeurige `verwerkKuddes`-trekking te wachten om het net
-    // uitgelegde roofdier-risico ook meteen in de praktijk te kunnen
-    // ervaren. Zelfde eenmalige trigger als de Goudader-ontdekkingen
-    // hierboven: deze `while`-lus loopt precies één keer door deze hoogte
-    // heen op het moment van ontgrendelen.
-    if (volgendeHoogte === ROOFDIER_MIN_STREEK) {
-      streken = streken.map((streek) =>
-        streek.hoogte !== ROOFDIER_MIN_STREEK
-          ? streek
-          : {
-              ...streek,
-              tiles: streek.tiles.map((tile, index) =>
-                index === ROOFDIER_STREEK_KUDDE_POSITIE
-                  ? { ...tile, kudde: { beurtenResterend: kuddeJachtBeurtenVoorStreek(ROOFDIER_MIN_STREEK) } }
-                  : tile
-              ),
-            }
-      );
-    }
+    const stap = ontgrendelEenStreek(state, streken, volgendeHoogte);
+    streken = stap.streken;
+    if (stap.goudOntdektEvent) goudOntdektEvent = true;
+    if (stap.tweedeGoudOntdektEvent) tweedeGoudOntdektEvent = true;
+    if (stap.bezetteStreekOntdektEvent) bezetteStreekOntdektEvent = true;
+    if (stap.wampanoagLaagOntdektEvent) wampanoagLaagOntdektEvent = true;
+    if (stap.stichtingskansOntdektEvent) stichtingskansOntdektEvent = true;
+    if (stap.rivierAangekondigdEvent) rivierAangekondigdEvent = true;
+    if (stap.lakotaScoutEvent) lakotaScoutEvent = true;
+    if (stap.stop) break;
     volgendeHoogte += 1;
   }
 
@@ -224,6 +285,51 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
         rivierAangekondigdEvent,
         lakotaScoutEvent,
       };
+}
+
+// "Baanbreker"-Boon (issue #539, boons.ts): of de settler de nog vergrendelde
+// streek `hoogte` mag ontdekken. De twee bevroren speciale gevallen hierboven
+// (Bezette Streek, Wampanoag-laag) hebben hun eigen, verplichte
+// oplossingsroute (Verkenning/Belegering/Confrontatie resp. de
+// Wampanoag-handelsopening) — die blijven daarom uitgesloten, ook met de
+// Boon: de settler mag er simpelweg niet in lopen (zie `magSettlerNaar`,
+// wegen.ts, dat deze functie gebruikt om de bereikbare vakjes te bepalen),
+// dus `ontdekStreekViaBaanbreker` hieronder komt er in de praktijk nooit aan
+// toe.
+export function magBaanbrekerNaarStreek(state: GameState, hoogte: number): boolean {
+  if (isBezetteStreekHoogte(hoogte) && state.campagneId === undefined) return false;
+  if (hoogte === WAMPANOAG_STREEK_HOOGTE && state.campagneId === "going-west") return false;
+  return true;
+}
+
+// Ontdekt streek `hoogte` via de "Baanbreker"-Boon (issue #539) — aangeroepen
+// vanuit `verplaatsSettlerNaar` (acties.ts) zodra de settler daadwerkelijk
+// een stap in die streek zet. Hergebruikt `ontgrendelEenStreek` hierboven
+// zodat deze streek exact dezelfde eenmalige ontdekkings-events krijgt als
+// een normale, cultuur-gedreven ontgrendeling (Goudader, stichtingskans,
+// rivier-aankondiging, Lakota-scout, de gegarandeerde roofdier-kudde) — de
+// cultuur-`while`-lus in `verwerkStreekOntgrendeling` zou deze streek anders
+// nooit meer via die weg langslopen, zodra de cultuur er later toch overheen
+// groeit (`hoogsteOntgrendeldeStreek` telt hem dan al mee). Negeert de
+// aanroep stilzwijgend als de streek al ontgrendeld is (niets te ontdekken)
+// of — verdedigend, `magSettlerNaar` moet dit al hebben tegengehouden — een
+// van de twee bevroren speciale gevallen is.
+export function ontdekStreekViaBaanbreker(state: GameState, hoogte: number): GameState {
+  const streek = state.streken.find((l) => l.hoogte === hoogte);
+  if (!streek || streek.ontgrendeld || !magBaanbrekerNaarStreek(state, hoogte)) return state;
+
+  const stap = ontgrendelEenStreek(state, state.streken, hoogte);
+  if (stap.stop) return state;
+
+  return {
+    ...state,
+    streken: stap.streken,
+    goudOntdektEvent: stap.goudOntdektEvent ?? state.goudOntdektEvent,
+    tweedeGoudOntdektEvent: stap.tweedeGoudOntdektEvent ?? state.tweedeGoudOntdektEvent,
+    stichtingskansOntdektEvent: stap.stichtingskansOntdektEvent ?? state.stichtingskansOntdektEvent,
+    rivierAangekondigdEvent: stap.rivierAangekondigdEvent ?? state.rivierAangekondigdEvent,
+    lakotaScoutEvent: stap.lakotaScoutEvent ?? state.lakotaScoutEvent,
+  };
 }
 
 // Sluit de "Bezette Streek ontdekt"-melding (Deel 2) — puur een

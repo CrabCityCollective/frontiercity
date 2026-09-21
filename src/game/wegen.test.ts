@@ -156,6 +156,42 @@ test("isTileVerbondenMetStad: een brug op een rivier-vakje telt vanzelf al als w
   );
 });
 
+// "Baanbreker"-Boon (issue #539, boons.ts): de enige uitzondering op "de
+// settler blijft binnen al ontgrendeld gebied" — met `magBaanbreken` mag hij
+// precies één streek verder dan de frontier, maar geen streek verder dan dat.
+test("magSettlerNaar: met magBaanbreken mag de settler exact één streek voorbij de frontier, geen twee", () => {
+  const state = maakInitieleSpelStatus();
+
+  assert.equal(
+    magSettlerNaar(state.streken, { hoogte: 2, positieInStreek: 4 }),
+    false,
+    "zonder magBaanbreken blijft streek 2 (nog vergrendeld) onbereikbaar"
+  );
+  assert.equal(
+    magSettlerNaar(state.streken, { hoogte: 2, positieInStreek: 4 }, true),
+    true,
+    "met magBaanbreken mag de settler de eerstvolgende vergrendelde streek in"
+  );
+  assert.equal(
+    magSettlerNaar(state.streken, { hoogte: 3, positieInStreek: 4 }, true),
+    false,
+    "twee streken voorbij de frontier blijft ook met magBaanbreken onbereikbaar"
+  );
+});
+
+test("bereikbarePosities: met magBaanbreken staat de vooruitkijk-streek erbij tussen de bereikbare vakjes", () => {
+  const state = maakInitieleSpelStatus();
+
+  const zonderBaanbreken = bereikbarePosities(state.streken, { hoogte: 1, positieInStreek: 4 });
+  assert.ok(!zonderBaanbreken.some((p) => p.hoogte === 2), "zonder de Boon blijft streek 2 onbereikbaar");
+
+  const metBaanbreken = bereikbarePosities(state.streken, { hoogte: 1, positieInStreek: 4 }, true);
+  assert.ok(
+    metBaanbreken.some((p) => p.hoogte === 2 && p.positieInStreek === 4),
+    "met de Boon is het buurvakje op streek 2 erbij"
+  );
+});
+
 // Regressie (issue: "Vreemd: boerderij niet verbonden"): met de "Test start
 // streek"-debugwereld staat de (enige) stad niet op streek 1 maar op de
 // gekozen streek (hier 9) — een wegennetwerk dat altijd hardcoded bij streek

@@ -42,7 +42,24 @@
 // (`verwerkZegeningenVanHetMoederlandBoon`) — nu van een gewone,
 // opslag-cap-gebonden grondstof (hout/steen/erts) of voedsel, in plaats van
 // wampum.
+//
+// Vierde Boon, "Baanbreker" (issue #539): anders dan de drie hierboven geen
+// terugkerende of eenmalige grondstofopbrengst, maar een blijvende
+// uitzondering op de kernregel "de settler blijft binnen al ontgrendeld
+// gebied" (hoofdstuk 16, wegen.ts: `magSettlerNaar`) — met deze Boon mag de
+// settler ook de eerstvolgende, nog vergrendelde streek (de vooruitkijk-
+// streek, hoofdstuk 2) in lopen. Elk vakje waar de settler zo overheen loopt,
+// telt vanaf dan gewoon als ontdekt/begaanbaar — geen aparte tijdelijke staat
+// of terugkeer-eis (issue-discussie #539: "geen risico, de vakjes zijn
+// gewoon ontdekt"). Het mechanisme zelf leeft in wegen.ts (`magSettlerNaar`)
+// en streekOntgrendeling.ts (`magBaanbrekerNaarStreek`/
+// `ontdekStreekViaBaanbreker`), aangeroepen vanuit `verplaatsSettlerNaar`
+// (acties.ts); hier alleen de pool-vermelding, zelfde generieke
+// niet-Going-West-exclusieve regel als de andere Boons hierboven
+// (`komtInAanmerkingVoorBoon`).
 import { GameState, MateriaalType, MoederlandId } from "./types";
+
+export const BAANBREKER_BOON_ID = "baanbreker";
 
 export interface Boon {
   id: string;
@@ -83,6 +100,12 @@ export const BOON_POOL: Boon[] = [
     id: "zegeningen-van-het-moederland",
     naam: "Zegeningen van het Moederland",
     beschrijving: `Kies bij toekenning een moederland. Daarna levert dat elke ${ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN} beurten ${ZEGENINGEN_VAN_HET_MOEDERLAND_LADING} van een vaste grondstof: Ierland voedsel, Duitsland hout, Engeland erts, Italië steen.`,
+  },
+  {
+    id: BAANBREKER_BOON_ID,
+    naam: "Baanbreker",
+    beschrijving:
+      "Je settler mag de eerstvolgende, nog vergrendelde streek in lopen. Elk vakje waar hij zo overheen loopt is vanaf dan gewoon ontdekt en begaanbaar — geen risico, geen terugkeer-eis.",
   },
 ];
 
@@ -172,6 +195,15 @@ export function pasBoonEffectToe(state: GameState, boonId: string): GameState {
   // opbrengst zelf loopt pas daarna via `verwerkZegeningenVanHetMoederlandBoon`.
   if (boonId === "zegeningen-van-het-moederland") {
     return { ...state, moederlandKeuzeEvent: true };
+  }
+  // "Baanbreker" (issue #539) heeft geen effect bij toekenning zelf — anders
+  // dan de drie hierboven zit het mechanisme niet in dit bestand, maar in de
+  // settler-bewegingsregels (`magSettlerNaar`, wegen.ts) en de
+  // streek-ontgrendeling (`ontdekStreekViaBaanbreker`, streekOntgrendeling.ts):
+  // die controleren allebei zelf op `state.boons.includes(BAANBREKER_BOON_ID)`,
+  // dus er is hier niets vast te leggen bij toekenning.
+  if (boonId === BAANBREKER_BOON_ID) {
+    return state;
   }
   return state;
 }

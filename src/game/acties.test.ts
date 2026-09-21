@@ -13,7 +13,7 @@ import {
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { GameState } from "./types";
 import { HOUTKAP, metSettlerOpKuddeVakje, metVasteRandom } from "./testHelpers";
-import { GOING_WEST_STREEK_AANTAL } from "./worldGoingWest";
+import { GOING_WEST_STREEK_AANTAL, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 
 test("stichtStad vereist een geschikte locatie én genoeg grondstoffen, en verbruikt daarna de settler", () => {
   let state = maakInitieleSpelStatus();
@@ -370,4 +370,52 @@ test("hakHout doet niets op een uitgeputte (ghost_town) Houtkap-tile, ook al bli
 
   assert.equal(naHakken, metUitgeputteHoutkap, "geen verandering: een verlaten vakje levert geen gratis hout meer");
   assert.equal(naHakken.settlerActieGedaanDitBeurt, false);
+});
+
+// "Baanbreker"-Boon (issue #539, boons.ts): de enige uitzondering op "de
+// settler blijft binnen al ontgrendeld gebied" (hoofdstuk 16) — met de Boon
+// mag de settler de eerstvolgende, nog vergrendelde streek in lopen, en
+// ontdekt die streek daarmee permanent (geen risico, geen terugkeer-eis).
+test("verplaatsSettlerNaar: met de Baanbreker-Boon mag de settler de vergrendelde streek erna in, en ontdekt 'm daarmee", () => {
+  const state: GameState = {
+    ...maakInitieleSpelStatus(),
+    boons: ["baanbreker"],
+    settler: { hoogte: 1, positieInStreek: 4 },
+  };
+
+  const zonderBoon = { ...state, boons: [] };
+  assert.equal(
+    verplaatsSettlerNaar(zonderBoon, 2, 4),
+    zonderBoon,
+    "zonder de Boon blijft de vergrendelde streek erna onbereikbaar"
+  );
+
+  const naVerplaatsing = verplaatsSettlerNaar(state, 2, 4);
+  assert.deepEqual(naVerplaatsing.settler, { hoogte: 2, positieInStreek: 4 }, "de settler staat nu op streek 2");
+  assert.equal(
+    naVerplaatsing.streken.find((l) => l.hoogte === 2)!.ontgrendeld,
+    true,
+    "streek 2 is meteen permanent ontdekt/ontgrendeld, niet alleen tijdelijk begaanbaar"
+  );
+  assert.equal(naVerplaatsing.settlerActieGedaanDitBeurt, true, "verbruikt de gewone settler-actie, net als een normale stap");
+
+  // Eenmaal ontdekt is streek 2 daarna gewoon normaal ontgrendeld gebied: een
+  // volgende beurt kan de settler er zonder de Boon ook nog gewoon staan/naar
+  // terug bewegen.
+  const volgende = volgendeBeurt(naVerplaatsing);
+  assert.equal(volgende.streken.find((l) => l.hoogte === 2)!.ontgrendeld, true);
+});
+
+test("verplaatsSettlerNaar: de Baanbreker-Boon mag niet voorbij de Bezette Streek/Wampanoag-laag lopen — die blijven bevroren", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = {
+    ...state,
+    boons: ["baanbreker"],
+    settler: { hoogte: WAMPANOAG_STREEK_HOOGTE - 1, positieInStreek: 4 },
+    streken: state.streken.map((l) => (l.hoogte === WAMPANOAG_STREEK_HOOGTE - 1 ? { ...l, ontgrendeld: true } : l)),
+  };
+
+  const naPoging = verplaatsSettlerNaar(state, WAMPANOAG_STREEK_HOOGTE, 4);
+
+  assert.equal(naPoging, state, "de Wampanoag-laag blijft bevroren, ook met de Baanbreker-Boon");
 });
