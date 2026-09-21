@@ -10,6 +10,7 @@ import {
   stichtStad,
   verplaatsSettlerNaar,
 } from "./acties";
+import { TRAIL_BLAZER_BOON_ID } from "./boons";
 import { maakInitieleSpelStatus, volgendeBeurt } from "./economie";
 import { GameState } from "./types";
 import { HOUTKAP, metSettlerOpKuddeVakje, metVasteRandom } from "./testHelpers";
@@ -372,14 +373,17 @@ test("hakHout doet niets op een uitgeputte (ghost_town) Houtkap-tile, ook al bli
   assert.equal(naHakken.settlerActieGedaanDitBeurt, false);
 });
 
-// "Baanbreker"-Boon (issue #539, boons.ts): de enige uitzondering op "de
+// "Trail Blazer"-Boon (issue #539, boons.ts): de enige uitzondering op "de
 // settler blijft binnen al ontgrendeld gebied" (hoofdstuk 16) — met de Boon
-// mag de settler de eerstvolgende, nog vergrendelde streek in lopen, en
-// ontdekt die streek daarmee permanent (geen risico, geen terugkeer-eis).
-test("verplaatsSettlerNaar: met de Baanbreker-Boon mag de settler de vergrendelde streek erna in, en ontdekt 'm daarmee", () => {
+// en minstens 1 trailblazer-punt mag de settler een individueel, nog niet
+// ontdekt vakje in lopen; dat vakje blijft daarna begaanbaar, maar de streek
+// zelf blijft vergrendeld (geen streek-brede ontgrendeling, geen van de
+// eenmalige streek-ontdekkingsevents).
+test("verplaatsSettlerNaar: met de Trail Blazer-Boon en punten mag de settler een vakje van de vergrendelde streek erna in, en ontdekt alleen dat vakje", () => {
   const state: GameState = {
     ...maakInitieleSpelStatus(),
-    boons: ["baanbreker"],
+    boons: [TRAIL_BLAZER_BOON_ID],
+    trailblazerPunten: 5,
     settler: { hoogte: 1, positieInStreek: 4 },
   };
 
@@ -390,32 +394,45 @@ test("verplaatsSettlerNaar: met de Baanbreker-Boon mag de settler de vergrendeld
     "zonder de Boon blijft de vergrendelde streek erna onbereikbaar"
   );
 
+  const zonderPunten = { ...state, trailblazerPunten: 0 };
+  assert.equal(
+    verplaatsSettlerNaar(zonderPunten, 2, 4),
+    zonderPunten,
+    "met de Boon maar zonder punten blijft de vergrendelde streek erna ook onbereikbaar"
+  );
+
   const naVerplaatsing = verplaatsSettlerNaar(state, 2, 4);
-  assert.deepEqual(naVerplaatsing.settler, { hoogte: 2, positieInStreek: 4 }, "de settler staat nu op streek 2");
+  assert.deepEqual(naVerplaatsing.settler, { hoogte: 2, positieInStreek: 4 }, "de settler staat nu op vakje 4 van streek 2");
+  assert.equal(
+    naVerplaatsing.streken.find((l) => l.hoogte === 2)!.tiles[4].trailOntdekt,
+    true,
+    "alleen dit ene vakje is ontdekt"
+  );
   assert.equal(
     naVerplaatsing.streken.find((l) => l.hoogte === 2)!.ontgrendeld,
-    true,
-    "streek 2 is meteen permanent ontdekt/ontgrendeld, niet alleen tijdelijk begaanbaar"
+    false,
+    "de streek zelf blijft vergrendeld — geen streek-brede ontgrendeling, de huidige streek-logica blijft ongewijzigd"
   );
+  assert.equal(naVerplaatsing.trailblazerPunten, 4, "1 trailblazer-punt besteed");
   assert.equal(naVerplaatsing.settlerActieGedaanDitBeurt, true, "verbruikt de gewone settler-actie, net als een normale stap");
 
-  // Eenmaal ontdekt is streek 2 daarna gewoon normaal ontgrendeld gebied: een
-  // volgende beurt kan de settler er zonder de Boon ook nog gewoon staan/naar
-  // terug bewegen.
-  const volgende = volgendeBeurt(naVerplaatsing);
-  assert.equal(volgende.streken.find((l) => l.hoogte === 2)!.ontgrendeld, true);
+  // Eenmaal ontdekt blijft dit ene vakje begaanbaar, ook een beurt later en
+  // ook zonder nog punten over — "zo komt ie ook weer terug".
+  const volgende = { ...volgendeBeurt(naVerplaatsing), trailblazerPunten: 0 };
+  assert.deepEqual(verplaatsSettlerNaar(volgende, 1, 4).settler, { hoogte: 1, positieInStreek: 4 });
 });
 
-test("verplaatsSettlerNaar: de Baanbreker-Boon mag niet voorbij de Bezette Streek/Wampanoag-laag lopen — die blijven bevroren", () => {
+test("verplaatsSettlerNaar: de Trail Blazer-Boon mag niet voorbij de Bezette Streek/Wampanoag-laag lopen — die blijven bevroren", () => {
   let state = maakInitieleSpelStatus("going-west");
   state = {
     ...state,
-    boons: ["baanbreker"],
+    boons: [TRAIL_BLAZER_BOON_ID],
+    trailblazerPunten: 5,
     settler: { hoogte: WAMPANOAG_STREEK_HOOGTE - 1, positieInStreek: 4 },
     streken: state.streken.map((l) => (l.hoogte === WAMPANOAG_STREEK_HOOGTE - 1 ? { ...l, ontgrendeld: true } : l)),
   };
 
   const naPoging = verplaatsSettlerNaar(state, WAMPANOAG_STREEK_HOOGTE, 4);
 
-  assert.equal(naPoging, state, "de Wampanoag-laag blijft bevroren, ook met de Baanbreker-Boon");
+  assert.equal(naPoging, state, "de Wampanoag-laag blijft bevroren, ook met de Trail Blazer-Boon");
 });

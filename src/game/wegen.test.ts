@@ -1,11 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bereikbarePosities, isTileVerbondenMetStad, magSettlerNaar } from "./wegen";
+import { bereikbarePosities, isTileVerbondenMetStad, magSettlerNaar, ontdekVakjeViaTrailBlazer } from "./wegen";
 import { verplaatsSettlerNaar } from "./acties";
+import { TRAIL_BLAZER_BOON_ID } from "./boons";
 import { maakInitieleSpelStatus, maakDebugSpelStatusGoingWest } from "./economie";
 import { GameState } from "./types";
 import { metWegCorridorNaarStreek } from "./testHelpers";
-import { RIVIER_STREEK_HOOGTE } from "./worldGoingWest";
+import { BEZETTE_STREEK_HOOGTE } from "./world";
+import { RIVIER_STREEK_HOOGTE, WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
 
 // Ontgrendelt een streek zonder de rest van de wereldstatus aan te raken —
 // gedeelde opzet voor de tests hieronder (de settler mag alleen naar
@@ -156,10 +158,14 @@ test("isTileVerbondenMetStad: een brug op een rivier-vakje telt vanzelf al als w
   );
 });
 
-// "Baanbreker"-Boon (issue #539, boons.ts): de enige uitzondering op "de
+// "Trail Blazer"-Boon (issue #539, boons.ts): de enige uitzondering op "de
 // settler blijft binnen al ontgrendeld gebied" — met `magBaanbreken` mag hij
-// precies één streek verder dan de frontier, maar geen streek verder dan dat.
-test("magSettlerNaar: met magBaanbreken mag de settler exact één streek voorbij de frontier, geen twee", () => {
+// een individueel, nog niet ontdekt vakje in, ongeacht hoe ver dat van de
+// frontier ligt. Hoe ver de settler in de praktijk per beurt kán komen wordt
+// niet door `magSettlerNaar` zelf begrensd, maar door `bereikbarePosities`
+// (die alleen buurvakjes van de huidige positie oplevert) en de
+// trailblazer-punten (`ontdekVakjeViaTrailBlazer` hieronder).
+test("magSettlerNaar: met magBaanbreken mag de settler een nog niet ontdekt vakje in, ook voorbij de vooruitkijk-streek", () => {
   const state = maakInitieleSpelStatus();
 
   assert.equal(
@@ -174,8 +180,41 @@ test("magSettlerNaar: met magBaanbreken mag de settler exact één streek voorbi
   );
   assert.equal(
     magSettlerNaar(state.streken, { hoogte: 3, positieInStreek: 4 }, true),
+    true,
+    "ook een streek verder mag, magSettlerNaar begrenst dat zelf niet meer"
+  );
+});
+
+test("magSettlerNaar: een al eerder ontdekt vakje blijft begaanbaar, ook zonder magBaanbreken", () => {
+  const state = maakInitieleSpelStatus();
+  const metOntdektVakje = {
+    ...state,
+    streken: state.streken.map((l) =>
+      l.hoogte === 2 ? { ...l, tiles: l.tiles.map((t) => (t.positieInStreek === 4 ? { ...t, trailOntdekt: true } : t)) } : l
+    ),
+  };
+
+  assert.equal(magSettlerNaar(metOntdektVakje.streken, { hoogte: 2, positieInStreek: 4 }), true);
+});
+
+test("magSettlerNaar: de Bezette Streek en de Wampanoag-laag blijven uitgesloten, ook met magBaanbreken", () => {
+  const tutorial = maakInitieleSpelStatus();
+  const goingWest = maakInitieleSpelStatus("going-west");
+
+  assert.equal(
+    magSettlerNaar(tutorial.streken, { hoogte: BEZETTE_STREEK_HOOGTE, positieInStreek: 4 }, true, tutorial.campagneId),
     false,
-    "twee streken voorbij de frontier blijft ook met magBaanbreken onbereikbaar"
+    "tutorial: Bezette Streek blijft onbereikbaar, ook met de Boon"
+  );
+  assert.equal(
+    magSettlerNaar(
+      goingWest.streken,
+      { hoogte: WAMPANOAG_STREEK_HOOGTE, positieInStreek: 4 },
+      true,
+      goingWest.campagneId
+    ),
+    false,
+    "Going West: Wampanoag-laag blijft onbereikbaar, ook met de Boon"
   );
 });
 
@@ -189,6 +228,66 @@ test("bereikbarePosities: met magBaanbreken staat de vooruitkijk-streek erbij tu
   assert.ok(
     metBaanbreken.some((p) => p.hoogte === 2 && p.positieInStreek === 4),
     "met de Boon is het buurvakje op streek 2 erbij"
+  );
+});
+
+// "Trail Blazer"-puntenbesteding (issue #539, boons.ts): `ontdekVakjeViaTrailBlazer`.
+test("ontdekVakjeViaTrailBlazer: markeert het vakje en trekt 1 punt af", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, boons: [TRAIL_BLAZER_BOON_ID], trailblazerPunten: 5 };
+
+  const naOntdekking = ontdekVakjeViaTrailBlazer(state, 2, 4);
+
+  assert.equal(
+    naOntdekking.streken.find((l) => l.hoogte === 2)!.tiles[4].trailOntdekt,
+    true,
+    "het vakje is nu individueel ontdekt"
+  );
+  assert.equal(
+    naOntdekking.streken.find((l) => l.hoogte === 2)!.ontgrendeld,
+    false,
+    "de streek zelf blijft ongewijzigd vergrendeld — geen streek-brede ontgrendeling"
+  );
+  assert.equal(naOntdekking.trailblazerPunten, 4, "1 punt besteed");
+});
+
+test("ontdekVakjeViaTrailBlazer: no-op zonder punten meer over", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, boons: [TRAIL_BLAZER_BOON_ID], trailblazerPunten: 0 };
+
+  assert.equal(ontdekVakjeViaTrailBlazer(state, 2, 4), state, "geen punten meer, dus geen ontdekking");
+});
+
+test("ontdekVakjeViaTrailBlazer: no-op als het vakje al ontgrendeld of al ontdekt is", () => {
+  let state = maakInitieleSpelStatus();
+  state = { ...state, boons: [TRAIL_BLAZER_BOON_ID], trailblazerPunten: 5 };
+  const alOntgrendeld = { ...state, streken: state.streken.map((l) => (l.hoogte === 2 ? { ...l, ontgrendeld: true } : l)) };
+
+  assert.equal(ontdekVakjeViaTrailBlazer(alOntgrendeld, 2, 4), alOntgrendeld, "niets te ontdekken, dus dezelfde state terug");
+
+  const naEersteOntdekking = ontdekVakjeViaTrailBlazer(state, 2, 4);
+  assert.equal(
+    ontdekVakjeViaTrailBlazer(naEersteOntdekking, 2, 4),
+    naEersteOntdekking,
+    "al ontdekt — geen tweede punt besteed aan hetzelfde vakje"
+  );
+});
+
+test("ontdekVakjeViaTrailBlazer: no-op op de Bezette Streek en de Wampanoag-laag (die blijven bevroren)", () => {
+  let tutorial = maakInitieleSpelStatus();
+  tutorial = { ...tutorial, boons: [TRAIL_BLAZER_BOON_ID], trailblazerPunten: 5 };
+  let goingWest = maakInitieleSpelStatus("going-west");
+  goingWest = { ...goingWest, boons: [TRAIL_BLAZER_BOON_ID], trailblazerPunten: 5 };
+
+  assert.equal(
+    ontdekVakjeViaTrailBlazer(tutorial, BEZETTE_STREEK_HOOGTE, 4),
+    tutorial,
+    "de Bezette Streek blijft bevroren, ook met Trail Blazer"
+  );
+  assert.equal(
+    ontdekVakjeViaTrailBlazer(goingWest, WAMPANOAG_STREEK_HOOGTE, 4),
+    goingWest,
+    "de Wampanoag-laag blijft bevroren, ook met Trail Blazer"
   );
 });
 

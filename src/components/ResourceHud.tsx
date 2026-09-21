@@ -1,5 +1,6 @@
 "use client";
 
+import { TRAIL_BLAZER_BOON_ID } from "@/game/boons";
 import { MATERIAAL_LABELS } from "@/game/improvements";
 import { wetenschapKostenVoorDrempel } from "@/game/techTree";
 import { GameState, MateriaalType, TechDrempel } from "@/game/types";
@@ -80,6 +81,14 @@ export default function ResourceHud({ state }: ResourceHudProps) {
           {state.wampumOntvangen && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
               <ResourceIcoon type="wampum" /> {state.wampum}
+            </span>
+          )}
+          {/* "Trail Blazer"-Boon (issue #539, boons.ts): alleen zichtbaar
+              zodra de speler de Boon bezit — zonder de Boon zijn de punten
+              altijd 0 en dus niet relevant. */}
+          {state.boons.includes(TRAIL_BLAZER_BOON_ID) && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+              <ResourceIcoon type="trailblazerPunten" /> {state.trailblazerPunten}
             </span>
           )}
         </div>

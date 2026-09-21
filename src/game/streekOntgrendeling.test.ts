@@ -10,8 +10,6 @@ import {
   kanBrugBouwen,
   kanStuurMissionaris,
   kanStuurVerkenner,
-  magBaanbrekerNaarStreek,
-  ontdekStreekViaBaanbreker,
   sluitGoudOntdektMelding,
   sluitLakotaScoutMelding,
   sluitRivierAangekondigdMelding,
@@ -633,59 +631,6 @@ test("tutorial: streek-ontgrendeling blijft op cultuur lopen, ongeacht wetenscha
   assert.equal(volgendeBeurt(state).streken.find((l) => l.hoogte === 2)!.ontgrendeld, true);
 });
 
-// "Baanbreker"-Boon (issue #539, boons.ts): de twee bevroren speciale
-// gevallen (Bezette Streek, Wampanoag-laag) blijven uitsluitend via hun eigen
-// verhaallijn oplosbaar — Baanbreker mag daar niet aan voorbijlopen.
-test("magBaanbrekerNaarStreek: de Bezette Streek en de Wampanoag-laag blijven uitgesloten, elke andere streek mag", () => {
-  const tutorial = maakInitieleSpelStatus();
-  const goingWest = maakInitieleSpelStatus("going-west");
-
-  assert.equal(magBaanbrekerNaarStreek(tutorial, BEZETTE_STREEK_HOOGTE), false, "tutorial: Bezette Streek uitgesloten");
-  assert.equal(magBaanbrekerNaarStreek(tutorial, 2), true, "tutorial: een gewone streek mag wel");
-  assert.equal(
-    magBaanbrekerNaarStreek(goingWest, WAMPANOAG_STREEK_HOOGTE),
-    false,
-    "Going West: Wampanoag-laag uitgesloten"
-  );
-  assert.equal(magBaanbrekerNaarStreek(goingWest, 2), true, "Going West: een gewone streek mag wel");
-});
-
-test("ontdekStreekViaBaanbreker: ontgrendelt de streek en triggert dezelfde eenmalige events als de normale ontgrendeling", () => {
-  const state = maakInitieleSpelStatus();
-
-  const naOntdekking = ontdekStreekViaBaanbreker(state, GOUD_ONTDEKKING_STREEK);
-
-  assert.equal(
-    naOntdekking.streken.find((l) => l.hoogte === GOUD_ONTDEKKING_STREEK)!.ontgrendeld,
-    true,
-    "de streek is ontgrendeld"
-  );
-  assert.equal(
-    naOntdekking.goudOntdektEvent,
-    true,
-    "de Goudader-ontdekkingsmelding triggert ook via Baanbreker, niet alleen via de cultuurdrempel"
-  );
-});
-
-test("ontdekStreekViaBaanbreker: no-op als de streek al ontgrendeld is", () => {
-  const state = maakInitieleSpelStatus();
-  const alOntgrendeld = { ...state, streken: state.streken.map((l) => (l.hoogte === 2 ? { ...l, ontgrendeld: true } : l)) };
-
-  assert.equal(ontdekStreekViaBaanbreker(alOntgrendeld, 2), alOntgrendeld, "niets te ontdekken, dus dezelfde state terug");
-});
-
-test("ontdekStreekViaBaanbreker: no-op op de Bezette Streek en de Wampanoag-laag (die blijven bevroren)", () => {
-  const tutorial = maakInitieleSpelStatus();
-  const goingWest = maakInitieleSpelStatus("going-west");
-
-  assert.equal(
-    ontdekStreekViaBaanbreker(tutorial, BEZETTE_STREEK_HOOGTE),
-    tutorial,
-    "de Bezette Streek blijft bevroren, ook met Baanbreker"
-  );
-  assert.equal(
-    ontdekStreekViaBaanbreker(goingWest, WAMPANOAG_STREEK_HOOGTE),
-    goingWest,
-    "de Wampanoag-laag blijft bevroren, ook met Baanbreker"
-  );
-});
+// De "Trail Blazer"-Boon (issue #539, boons.ts) leeft sinds de puntenvorm-
+// herziening niet meer in dit bestand — zie wegen.test.ts
+// (`magSettlerNaar`/`ontdekVakjeViaTrailBlazer`).

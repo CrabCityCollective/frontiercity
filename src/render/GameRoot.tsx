@@ -46,7 +46,7 @@ import VoedselWaarschuwingPopup from "@/components/VoedselWaarschuwingPopup";
 import WachttorenOveralUitlegPopup from "@/components/WachttorenOveralUitlegPopup";
 import WampanoagPaneel from "@/components/WampanoagPaneel";
 import { SettlerSlot } from "@/game/acties";
-import { boonMetId } from "@/game/boons";
+import { boonMetId, TRAIL_BLAZER_BOON_ID } from "@/game/boons";
 import { campagneConfig, popupContent, streekContentVoorCampagne } from "@/game/campagnes";
 import { beurtMagAutomatischDoorgaan } from "@/game/economie";
 import { improvementNaam, improvementPastOpTerrein, terreinEisenBeschrijving } from "@/game/improvements";
@@ -741,7 +741,14 @@ export default function GameRoot({
       : state.tweedeSettlerActieGedaanDitBeurt;
   const settlerKanBewegen =
     Boolean(geselecteerdeSettler) && !geselecteerdeSettlerActieGedaan && !plaatsingsImprovement;
-  const settlerBereikbarePosities = settlerKanBewegen ? bereikbarePosities(state.streken, geselecteerdeSettler!) : [];
+  // "Trail Blazer"-Boon (issue #539, boons.ts): dezelfde `magBaanbreken`-regel
+  // als `verplaatsSettlerNaar` (acties.ts) — anders lichten vakjes die de
+  // settler dankzij deze Boon wél zou mogen betreden hier niet op als
+  // klikbaar.
+  const magBaanbreken = state.boons.includes(TRAIL_BLAZER_BOON_ID) && state.trailblazerPunten > 0;
+  const settlerBereikbarePosities = settlerKanBewegen
+    ? bereikbarePosities(state.streken, geselecteerdeSettler!, magBaanbreken, state.campagneId)
+    : [];
 
   // Nog verhulde vakjes van de actieve Bezette Streek (issue: "Bezette streek
   // scherm") — puur een highlight op de canvas, geen losse kies-modus meer:

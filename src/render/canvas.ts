@@ -2454,6 +2454,18 @@ export function tekenWereld(
             tekenVersWaterMarkering(ctx, x, y, tileSize, tileSeed(col, streek.hoogte, 2));
           }
         }
+      } else if (!streek.ontgrendeld && streek.tiles[col].trailOntdekt) {
+        // "Trail Blazer"-Boon (issue #539, boons.ts): een individueel vakje
+        // dat de settler al ontdekt heeft, los van de streek-brede
+        // fog-of-war hieronder — de streek zelf blijft `ontgrendeld: false`
+        // (dus geen bouwmarkering, zie `isPlaatsingsDoelStreek` verderop),
+        // maar dit ene vakje wordt al net zo getekend als een normaal
+        // ontgrendeld vakje.
+        const verbonden = isTileVerbondenMetStad(alleStreken, streek.hoogte, col);
+        tekenActieveTile(ctx, x, y, tileSize, streek.tiles[col], streek.terreinType, stad, col, streek.hoogte, verbonden, alleStreken, heeftOnrust, tegelSet);
+        if (streek.tiles[col].versWater) {
+          tekenVersWaterMarkering(ctx, x, y, tileSize, tileSeed(col, streek.hoogte, 2));
+        }
       } else if (!streek.ontgrendeld && !vooruitkijk) {
         tekenFogTile(ctx, x, y, tileSize, tileSeed(col, streek.hoogte));
       } else if (!streek.ontgrendeld && vooruitkijk) {

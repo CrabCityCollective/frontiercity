@@ -419,11 +419,23 @@ const ZICHTBARE_MIST_STREKEN_BOVEN_VOORUITKIJK = 2;
 // hernummering nodig), dus de rij-geometrie in canvas.ts/canvasPixelArt.ts
 // hoeft alleen nog de hoogste zichtbare hoogte te kennen i.p.v. aan te nemen
 // dat de laagste zichtbare hoogte altijd 1 is.
+// "Trail Blazer"-Boon (issue #539, boons.ts): de settler kan met genoeg
+// gespaarde punten verder komen dan de gewone mist-buffer hierboven toelaat
+// (`magSettlerNaar`/`ontdekVakjeViaTrailBlazer`, wegen.ts) — zonder deze
+// uitbreiding zou de canvas een deel van zo'n reeds ontdekte trail simpelweg
+// niet meer tekenen, ook al is het vakje al lang begaanbaar.
+function hoogsteStreekMetTrailOntdekking(streken: Streek[]): number {
+  return streken.reduce(
+    (max, streek) => (streek.tiles.some((tile) => tile.trailOntdekt) ? Math.max(max, streek.hoogte) : max),
+    0
+  );
+}
+
 export function zichtbareStreken(streken: Streek[], ondergrens: number = 1): Streek[] {
   const frontier = hoogsteOntgrendeldeStreek(streken);
   const maxHoogte = Math.min(
     streken.length,
-    frontier + 1 + ZICHTBARE_MIST_STREKEN_BOVEN_VOORUITKIJK
+    Math.max(frontier + 1 + ZICHTBARE_MIST_STREKEN_BOVEN_VOORUITKIJK, hoogsteStreekMetTrailOntdekking(streken))
   );
   return streken.filter((streek) => streek.hoogte >= ondergrens && streek.hoogte <= maxHoogte);
 }

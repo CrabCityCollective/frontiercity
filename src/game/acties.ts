@@ -12,8 +12,8 @@
 // `leesSettler`/`leesActieGedaan`/`metSettlerUpdate` hieronder voor de
 // gedeelde lees/schrijf-indirectie.
 import { campagneConfig } from "./campagnes";
-import { BAANBREKER_BOON_ID, komtInAanmerkingVoorBoon, pasBoonEffectToe, trekBoon } from "./boons";
-import { bereikbarePosities } from "./wegen";
+import { TRAIL_BLAZER_BOON_ID, komtInAanmerkingVoorBoon, pasBoonEffectToe, trekBoon } from "./boons";
+import { bereikbarePosities, ontdekVakjeViaTrailBlazer } from "./wegen";
 import {
   jachtVoedselBonus,
   roofdierKansFactor,
@@ -21,8 +21,7 @@ import {
   settlerWegaanlegGratis,
 } from "./techTree";
 import { City, GameState, RoofdierEvent, Settler } from "./types";
-import { isGeschiktVoorStichten, hoogsteOntgrendeldeStreek, ROOFDIER_MIN_STREEK } from "./world";
-import { magBaanbrekerNaarStreek, ontdekStreekViaBaanbreker } from "./streekOntgrendeling";
+import { isGeschiktVoorStichten, ROOFDIER_MIN_STREEK } from "./world";
 
 export type SettlerSlot = "primair" | "tweede";
 
@@ -117,25 +116,23 @@ export function verplaatsSettlerNaar(
   const settler = leesSettler(state, slot);
   if (!settler || leesActieGedaan(state, slot)) return state;
 
-  // "Baanbreker"-Boon (issue #539, boons.ts): mag de settler ook de
-  // eerstvolgende, nog vergrendelde streek in? Alleen relevant met de Boon én
-  // als die streek niet een van de twee bevroren speciale gevallen is
-  // (`magBaanbrekerNaarStreek`, streekOntgrendeling.ts) — anders blijft de
-  // gewone grens (`hoogsteOntgrendeldeStreek`) gelden.
-  const magBaanbreken =
-    state.boons.includes(BAANBREKER_BOON_ID) &&
-    magBaanbrekerNaarStreek(state, hoogsteOntgrendeldeStreek(state.streken) + 1);
+  // "Trail Blazer"-Boon (issue #539, boons.ts): mag de settler ook een nog
+  // niet ontdekt vakje in lopen? Alleen relevant met de Boon én zolang er nog
+  // trailblazer-punten over zijn — de per-streek uitzonderingen (Bezette
+  // Streek, Wampanoag-laag) en het "al eerder ontdekt dus altijd toegankelijk"
+  // geval zitten in `magSettlerNaar` zelf (wegen.ts).
+  const magBaanbreken = state.boons.includes(TRAIL_BLAZER_BOON_ID) && state.trailblazerPunten > 0;
 
-  const magErheen = bereikbarePosities(state.streken, settler, magBaanbreken).some(
+  const magErheen = bereikbarePosities(state.streken, settler, magBaanbreken, state.campagneId).some(
     (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
   );
   if (!magErheen) return state;
 
-  // Zet de streek meteen op ontgrendeld als deze stap 'm voor het eerst
-  // binnenkomt (Baanbreker) — no-op als de streek al ontgrendeld was (de
-  // gewone, niet-Baanbreker-verplaatsing hierboven), zie
-  // `ontdekStreekViaBaanbreker`.
-  const stateNaOntdekking = ontdekStreekViaBaanbreker(state, hoogte);
+  // Ontdekt het vakje en trekt er een trailblazer-punt van af als dit de
+  // eerste keer is dat de settler hier komt (Trail Blazer) — no-op als het
+  // vakje al ontgrendeld/ontdekt was (de gewone verplaatsing hierboven), zie
+  // `ontdekVakjeViaTrailBlazer`.
+  const stateNaOntdekking = ontdekVakjeViaTrailBlazer(state, hoogte, positieInStreek);
 
   // "B1b. Handkar" (hoofdstuk 3/9, techTree.ts): verplaatsen kost dan geen
   // aparte settler-actie meer, dus de speler kan deze beurt nog een andere

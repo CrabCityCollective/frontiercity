@@ -63,16 +63,8 @@ export const WOLOLO_INKOMEN_PER_MISSIONARIS = 5;
 // ontdekkings-triggers die daarbij horen) ofwel — voor de twee bevroren
 // speciale gevallen — door de streek "in beeld" te laten komen zonder hem al
 // ontgrendeld te maken. Losgetrokken uit de `while`-lus van
-// `verwerkStreekOntgrendeling` hieronder (issue #539, "Baanbreker"-Boon) zodat
-// `ontdekStreekViaBaanbreker` verderop in dit bestand exact diezelfde
-// per-streek-effecten (inclusief de Bezette-Streek-/Wampanoag-bevriezing en de
-// eenmalige ontdekkings-events) kan hergebruiken wanneer de speler een streek
-// via de settler ontdekt in plaats van via de cultuurdrempel — anders zou een
-// via Baanbreker overgeslagen streek deze eenmalige triggers (Goudader,
-// stichtingskans, rivier-aankondiging, Lakota-scout, de gegarandeerde
-// roofdier-kudde) nooit meer krijgen, ook niet later als de cultuur er alsnog
-// overheen groeit (`hoogsteOntgrendeldeStreek` telt die streek dan al mee als
-// ontgrendeld, dus de cultuur-`while`-lus begint er voorbij).
+// `verwerkStreekOntgrendeling` hieronder, puur om die lus zelf overzichtelijk
+// te houden — de enige aanroeper.
 // `stop: true` betekent: deze streek is bevroren (of was dat al) — de
 // aanroepende `while`-lus moet hier stoppen, net als de oorspronkelijke
 // `break` hieronder deed.
@@ -285,51 +277,6 @@ export function verwerkStreekOntgrendeling(state: GameState): GameState {
         rivierAangekondigdEvent,
         lakotaScoutEvent,
       };
-}
-
-// "Baanbreker"-Boon (issue #539, boons.ts): of de settler de nog vergrendelde
-// streek `hoogte` mag ontdekken. De twee bevroren speciale gevallen hierboven
-// (Bezette Streek, Wampanoag-laag) hebben hun eigen, verplichte
-// oplossingsroute (Verkenning/Belegering/Confrontatie resp. de
-// Wampanoag-handelsopening) — die blijven daarom uitgesloten, ook met de
-// Boon: de settler mag er simpelweg niet in lopen (zie `magSettlerNaar`,
-// wegen.ts, dat deze functie gebruikt om de bereikbare vakjes te bepalen),
-// dus `ontdekStreekViaBaanbreker` hieronder komt er in de praktijk nooit aan
-// toe.
-export function magBaanbrekerNaarStreek(state: GameState, hoogte: number): boolean {
-  if (isBezetteStreekHoogte(hoogte) && state.campagneId === undefined) return false;
-  if (hoogte === WAMPANOAG_STREEK_HOOGTE && state.campagneId === "going-west") return false;
-  return true;
-}
-
-// Ontdekt streek `hoogte` via de "Baanbreker"-Boon (issue #539) — aangeroepen
-// vanuit `verplaatsSettlerNaar` (acties.ts) zodra de settler daadwerkelijk
-// een stap in die streek zet. Hergebruikt `ontgrendelEenStreek` hierboven
-// zodat deze streek exact dezelfde eenmalige ontdekkings-events krijgt als
-// een normale, cultuur-gedreven ontgrendeling (Goudader, stichtingskans,
-// rivier-aankondiging, Lakota-scout, de gegarandeerde roofdier-kudde) — de
-// cultuur-`while`-lus in `verwerkStreekOntgrendeling` zou deze streek anders
-// nooit meer via die weg langslopen, zodra de cultuur er later toch overheen
-// groeit (`hoogsteOntgrendeldeStreek` telt hem dan al mee). Negeert de
-// aanroep stilzwijgend als de streek al ontgrendeld is (niets te ontdekken)
-// of — verdedigend, `magSettlerNaar` moet dit al hebben tegengehouden — een
-// van de twee bevroren speciale gevallen is.
-export function ontdekStreekViaBaanbreker(state: GameState, hoogte: number): GameState {
-  const streek = state.streken.find((l) => l.hoogte === hoogte);
-  if (!streek || streek.ontgrendeld || !magBaanbrekerNaarStreek(state, hoogte)) return state;
-
-  const stap = ontgrendelEenStreek(state, state.streken, hoogte);
-  if (stap.stop) return state;
-
-  return {
-    ...state,
-    streken: stap.streken,
-    goudOntdektEvent: stap.goudOntdektEvent ?? state.goudOntdektEvent,
-    tweedeGoudOntdektEvent: stap.tweedeGoudOntdektEvent ?? state.tweedeGoudOntdektEvent,
-    stichtingskansOntdektEvent: stap.stichtingskansOntdektEvent ?? state.stichtingskansOntdektEvent,
-    rivierAangekondigdEvent: stap.rivierAangekondigdEvent ?? state.rivierAangekondigdEvent,
-    lakotaScoutEvent: stap.lakotaScoutEvent ?? state.lakotaScoutEvent,
-  };
 }
 
 // Sluit de "Bezette Streek ontdekt"-melding (Deel 2) — puur een

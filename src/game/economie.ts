@@ -60,7 +60,7 @@ import {
   verwerkKuddes,
   verwerkRoofdieren,
 } from "./indringersEnDieren";
-import { verwerkOudeHandelsrouteBoon, verwerkZegeningenVanHetMoederlandBoon } from "./boons";
+import { verwerkOudeHandelsrouteBoon, verwerkTrailBlazerPunten, verwerkZegeningenVanHetMoederlandBoon } from "./boons";
 
 // Opslag-cap, startstatus en de city-improvement-cap staan inhoudelijk in
 // eigen modules (initieleSpelStatus.ts resp. improvements.ts) in plaats van
@@ -254,7 +254,13 @@ export function volgendeBeurt(state: GameState): GameState {
   // (issue #540) levert op dezelfde manier een terugkerende opbrengst, alleen
   // van een andere grondstof (afhankelijk van de gekozen moederland) en met
   // een ander interval — vandaar los, ná Oude Handelsroute, aangeroepen.
-  const naBoonEffecten = verwerkZegeningenVanHetMoederlandBoon(verwerkOudeHandelsrouteBoon(naRoofdieren, nieuweBeurt), nieuweBeurt);
+  // Trail Blazer (issue #539) levert op dezelfde manier, elk eigen interval,
+  // trailblazer-punten op i.p.v. een grondstof — vandaar los, als laatste,
+  // aangeroepen.
+  const naBoonEffecten = verwerkTrailBlazerPunten(
+    verwerkZegeningenVanHetMoederlandBoon(verwerkOudeHandelsrouteBoon(naRoofdieren, nieuweBeurt), nieuweBeurt),
+    nieuweBeurt
+  );
 
   // De settler verschijnt bij de stad zodra beurt 2 begint (hoofdstuk 16) —
   // en blijft daarna gewoon staan waar de speler 'm laatst neerzette. Niet
