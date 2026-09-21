@@ -32,7 +32,17 @@
 // zelf noemt dat een latere campagne het gewoon een andere naam mag geven
 // (net als `techNamen`/`improvementNamen`, CampaignConfig in types.ts) zonder
 // dat dit bestand daarvoor hoeft te wijzigen.
-import { GameState } from "./types";
+//
+// Derde Boon, "Zegeningen van het Moederland" (issue #540): anders dan de
+// twee hierboven heeft deze geen vast effect bij toekenning — de speler kiest
+// eerst een moederland uit `MOEDERLANDEN` hieronder (`pasBoonEffectToe` zet
+// alleen `moederlandKeuzeEvent`, `kiesMoederland` legt de keuze vast, zelfde
+// blokkerende-keuze-vorm als `kiesTech` in tech.ts). Daarna levert die keuze,
+// net als Oude Handelsroute, een terugkerende opbrengst per interval
+// (`verwerkZegeningenVanHetMoederlandBoon`) — nu van een gewone,
+// opslag-cap-gebonden grondstof (hout/steen/erts) of voedsel, in plaats van
+// wampum.
+import { GameState, MateriaalType, MoederlandId } from "./types";
 
 export interface Boon {
   id: string;
@@ -51,6 +61,13 @@ export const VOORRAADSCHUUR_OPSLAG_BONUS = 15;
 // de Boon 1 wampum op, zie `verwerkOudeHandelsrouteBoon` onderaan dit bestand.
 export const OUDE_HANDELSROUTE_INTERVAL_BEURTEN = 5;
 
+// Interval en ladinggrootte van "Zegeningen van het Moederland" (issue #540):
+// elke zoveel beurten levert de Boon een lading van de grondstof die bij het
+// gekozen moederland hoort, zie `MOEDERLANDEN` en
+// `verwerkZegeningenVanHetMoederlandBoon` hieronder.
+export const ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN = 10;
+export const ZEGENINGEN_VAN_HET_MOEDERLAND_LADING = 5;
+
 export const BOON_POOL: Boon[] = [
   {
     id: "voorraadschuur-van-de-voorvaderen",
@@ -62,7 +79,33 @@ export const BOON_POOL: Boon[] = [
     naam: "Oude Handelsroute",
     beschrijving: `Elke ${OUDE_HANDELSROUTE_INTERVAL_BEURTEN} beurten +1 wampum — hiermee kun je indringers tijdelijk afkopen.`,
   },
+  {
+    id: "zegeningen-van-het-moederland",
+    naam: "Zegeningen van het Moederland",
+    beschrijving: `Kies bij toekenning een moederland. Daarna levert dat elke ${ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN} beurten ${ZEGENINGEN_VAN_HET_MOEDERLAND_LADING} van een vaste grondstof: Ierland voedsel, Duitsland hout, Engeland erts, Italië steen.`,
+  },
 ];
+
+// Moederland-opties van "Zegeningen van het Moederland" (issue #540): de
+// speler kiest er bij toekenning één (`kiesMoederland` hieronder), en krijgt
+// daarna elke `ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN` beurten een
+// lading van de bijbehorende grondstof (`verwerkZegeningenVanHetMoederlandBoon`).
+export interface Moederland {
+  id: MoederlandId;
+  naam: string;
+  grondstof: MateriaalType | "voedsel";
+}
+
+export const MOEDERLANDEN: Moederland[] = [
+  { id: "ierland", naam: "Ierland", grondstof: "voedsel" },
+  { id: "duitsland", naam: "Duitsland", grondstof: "hout" },
+  { id: "engeland", naam: "Engeland", grondstof: "erts" },
+  { id: "italie", naam: "Italië", grondstof: "steen" },
+];
+
+export function moederlandMetId(id: MoederlandId): Moederland | undefined {
+  return MOEDERLANDEN.find((moederland) => moederland.id === id);
+}
 
 // Of de stad die de speler net verlaat (`state.stad`, gelezen vóórdat
 // `stichtStad` haar vervangt door de nieuwe stad) kans geeft op een Boon:
@@ -122,7 +165,23 @@ export function pasBoonEffectToe(state: GameState, boonId: string): GameState {
   if (boonId === "oude-handelsroute") {
     return { ...state, wampumOntvangen: true };
   }
+  // "Zegeningen van het Moederland" (issue #540) heeft, anders dan de twee
+  // hierboven, geen zelfstandig effect bij toekenning — de speler moet eerst
+  // een moederland kiezen. `moederlandKeuzeEvent` opent die blokkerende
+  // pop-up (`kiesMoederland` hieronder legt de keuze vast); de terugkerende
+  // opbrengst zelf loopt pas daarna via `verwerkZegeningenVanHetMoederlandBoon`.
+  if (boonId === "zegeningen-van-het-moederland") {
+    return { ...state, moederlandKeuzeEvent: true };
+  }
   return state;
+}
+
+// Legt de moederland-keuze van "Zegeningen van het Moederland" vast (issue
+// #540) — zelfde blokkerende-keuze-conventie als `kiesTech` (tech.ts):
+// negeert een ongeldige aanroep (geen openstaande keuze).
+export function kiesMoederland(state: GameState, moederlandId: MoederlandId): GameState {
+  if (!state.moederlandKeuzeEvent) return state;
+  return { ...state, gekozenMoederland: moederlandId, moederlandKeuzeEvent: undefined };
 }
 
 // Terugkerende opbrengst van "Oude Handelsroute" (issue #431): +1 wampum
@@ -135,4 +194,36 @@ export function verwerkOudeHandelsrouteBoon(state: GameState, nieuweBeurt: numbe
   if (!state.boons.includes("oude-handelsroute")) return state;
   if (nieuweBeurt % OUDE_HANDELSROUTE_INTERVAL_BEURTEN !== 0) return state;
   return { ...state, wampum: state.wampum + 1 };
+}
+
+// Terugkerende opbrengst van "Zegeningen van het Moederland" (issue #540):
+// elke `ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN` beurten een lading
+// van de grondstof die bij het gekozen moederland hoort — zelfde
+// interval-conventie en aanroeppunt (`volgendeBeurt`, economie.ts, met de
+// zojuist opgehoogde `nieuweBeurt`) als `verwerkOudeHandelsrouteBoon`
+// hierboven. Zonder een gekozen moederland (de keuze-pop-up staat nog open)
+// gebeurt er niets — dat kan hoogstens de beurt waarin de Boon is toegekend
+// voorkomen, want de keuze-pop-up laat de speler niet verder spelen zonder te
+// kiezen. Voedsel heeft geen gedeelde opslag-cap (zie `MateriaalType` hierboven
+// in dit bestand); hout/steen/erts wel, dus die kappen aan `state.opslagCap`,
+// zelfde patroon als elders in dit bestand (`pasBoonEffectToe` hierboven).
+export function verwerkZegeningenVanHetMoederlandBoon(state: GameState, nieuweBeurt: number): GameState {
+  if (!state.boons.includes("zegeningen-van-het-moederland")) return state;
+  if (nieuweBeurt % ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN !== 0) return state;
+  const moederland = state.gekozenMoederland && moederlandMetId(state.gekozenMoederland);
+  if (!moederland) return state;
+
+  if (moederland.grondstof === "voedsel") {
+    return { ...state, voedsel: state.voedsel + ZEGENINGEN_VAN_HET_MOEDERLAND_LADING };
+  }
+  return {
+    ...state,
+    voorraad: {
+      ...state.voorraad,
+      [moederland.grondstof]: Math.min(
+        state.opslagCap,
+        state.voorraad[moederland.grondstof] + ZEGENINGEN_VAN_HET_MOEDERLAND_LADING
+      ),
+    },
+  };
 }

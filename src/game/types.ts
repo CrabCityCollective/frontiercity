@@ -688,6 +688,11 @@ export interface CampaignConfig {
 // onderdeel van deze gedeelde pool (aparte voorraad resp. drempel-tellers).
 export type MateriaalType = "hout" | "steen" | "erts" | "goud";
 
+// Moederland-opties van de "Zegeningen van het Moederland"-Boon (issue #540,
+// boons.ts) — zie `MOEDERLANDEN` in boons.ts voor de bijbehorende namen en
+// welke grondstof elk moederland levert.
+export type MoederlandId = "ierland" | "duitsland" | "engeland" | "italie";
+
 // Indringers & tribuut (hoofdstuk 6): elke beurt is er, zodra streek 2
 // ontgrendeld is, een kans dat er ergens een incident plaatsvindt — de
 // getroffen streek wordt geloot uit alle ontgrendelde streken (ook beschermde).
@@ -1052,6 +1057,18 @@ export interface GameState {
   // `goudOntdektEvent` hierboven. `undefined` zolang er geen (onopgeloste)
   // melding is.
   boonToegekendEvent?: string;
+  // "Zegeningen van het Moederland"-Boon (issue #540, boons.ts): anders dan de
+  // andere Boons hierboven heeft deze geen vast effect bij toekenning — de
+  // speler moet eerst een moederland kiezen (`kiesMoederland`, boons.ts).
+  // Zelfde blokkerende-keuze-patroon als `techKeuzeEvent` hieronder (geen
+  // sluit-knop): de pop-up blijft openstaan tot er gekozen is.
+  moederlandKeuzeEvent?: boolean;
+  // De door de speler gekozen moederland (`kiesMoederland`, boons.ts) —
+  // bepaalt welke grondstof `verwerkZegeningenVanHetMoederlandBoon` elke
+  // `ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN` beurten levert. Blijft
+  // `undefined` zolang de keuze nog openstaat of de speler deze Boon nooit
+  // heeft gekregen.
+  gekozenMoederland?: MoederlandId;
   // Welke van de eenmalige uitleg-pop-ups (openings-uitleg, settler, voedsel-
   // balans, boerderij-klaar, enz. — zie GameRoot.tsx) de speler in déze run al
   // heeft weggeklikt (issue: "Bij laden niet alle pop-ups tonen"). Stond
