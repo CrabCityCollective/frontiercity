@@ -7,13 +7,14 @@ import { ResourceType } from "@/game/types";
 // voorraden tonen in resource block"). Daarom hier een eigen, kleine
 // uitbreiding op `ResourceType` i.p.v. dat type zelf te verbreden: `KostenIcons`
 // en de kosten-records elders blijven bewust beperkt tot echte `ResourceType`s.
-export type HudResourceType = ResourceType | "gereedschap" | "bevervellen" | "mais" | "wampum";
+export type HudResourceType = ResourceType | "gereedschap" | "bevervellen" | "mais" | "wampum" | "trailblazerPunten";
 
-const EXTRA_RESOURCE_LABELS: Record<"gereedschap" | "bevervellen" | "mais" | "wampum", string> = {
+const EXTRA_RESOURCE_LABELS: Record<"gereedschap" | "bevervellen" | "mais" | "wampum" | "trailblazerPunten", string> = {
   gereedschap: "Gereedschap",
   bevervellen: "Bevervellen",
   mais: "Maïs",
   wampum: "Wampum",
+  trailblazerPunten: "Trailblazer-punten",
 };
 
 const HUD_RESOURCE_LABELS: Record<HudResourceType, string> = { ...RESOURCE_LABELS, ...EXTRA_RESOURCE_LABELS };
@@ -177,6 +178,19 @@ const PIXEL_ICONEN: Record<HudResourceType, PixelIconSpec> = {
       "........",
     ],
     palette: { A: "#6a4a8a", B: "#e8e0d0" },
+  },
+  trailblazerPunten: {
+    grid: [
+      "........",
+      "..A..B..",
+      "..A..B..",
+      "........",
+      "..B..A..",
+      "..B..A..",
+      "........",
+      "........",
+    ],
+    palette: { A: "#8a6a3a", B: "#c9a06a" },
   },
 };
 

@@ -43,23 +43,54 @@
 // opslag-cap-gebonden grondstof (hout/steen/erts) of voedsel, in plaats van
 // wampum.
 //
-// Vierde Boon, "Baanbreker" (issue #539): anders dan de drie hierboven geen
-// terugkerende of eenmalige grondstofopbrengst, maar een blijvende
+// Vierde Boon, "Trail Blazer" (issue #539, herzien in dezelfde issue naar de
+// huidige puntenvorm): anders dan de drie hierboven geen terugkerende of
+// eenmalige grondstofopbrengst, maar een blijvende, puntengedreven
 // uitzondering op de kernregel "de settler blijft binnen al ontgrendeld
-// gebied" (hoofdstuk 16, wegen.ts: `magSettlerNaar`) — met deze Boon mag de
-// settler ook de eerstvolgende, nog vergrendelde streek (de vooruitkijk-
-// streek, hoofdstuk 2) in lopen. Elk vakje waar de settler zo overheen loopt,
-// telt vanaf dan gewoon als ontdekt/begaanbaar — geen aparte tijdelijke staat
-// of terugkeer-eis (issue-discussie #539: "geen risico, de vakjes zijn
-// gewoon ontdekt"). Het mechanisme zelf leeft in wegen.ts (`magSettlerNaar`)
-// en streekOntgrendeling.ts (`magBaanbrekerNaarStreek`/
-// `ontdekStreekViaBaanbreker`), aangeroepen vanuit `verplaatsSettlerNaar`
-// (acties.ts); hier alleen de pool-vermelding, zelfde generieke
-// niet-Going-West-exclusieve regel als de andere Boons hierboven
+// gebied" (hoofdstuk 16, wegen.ts: `magSettlerNaar`). Zolang de speler deze
+// Boon heeft, mag de settler ook individuele vakjes buiten al ontgrendeld
+// gebied in lopen — elk zo'n vakje kost 1 trailblazer-punt
+// (`TRAIL_BLAZER_PUNTEN_KOSTEN_PER_VAKJE`) en blijft daarna blijvend
+// begaanbaar (`Tile.trailOntdekt`, types.ts). De speler krijgt elke
+// `TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN` beurten `TRAIL_BLAZER_PUNTEN_PER_INTERVAL`
+// nieuwe punten (`verwerkTrailBlazerPunten` onderaan dit bestand) — die
+// puntenrem voorkomt dat de speler in één beurt de hele kaart verkent
+// (issue-discussie #539, expliciet de reden voor de puntenvorm i.p.v. de
+// eerdere, ongelimiteerde "hele volgende streek in"-versie).
+//
+// Nadrukkelijk anders dan de normale, cultuur-gedreven streek-ontgrendeling
+// (`verwerkStreekOntgrendeling`, streekOntgrendeling.ts): een via Trail
+// Blazer ontdekt vakje maakt de streek zelf niet ontgrendeld en triggert geen
+// van de eenmalige streek-ontdekkingsevents (Goudader, stichtingskans,
+// rivier-aankondiging, Lakota-scout, de gegarandeerde roofdier-kudde) — "de
+// trailblazer ontdekt individuele vakjes en geen streken, de huidige
+// streek-logica blijft ongewijzigd" (issue-discussie #539). Zolang
+// `Streek.ontgrendeld` op zo'n streek `false` blijft, blokkeert `startBouw`
+// (infrastructuurEnBouw.ts) er automatisch elke land improvement — alleen
+// een weg aanleggen (`legWegAan`, acties.ts, die nooit op `ontgrendeld`
+// controleert) blijft er wel mogelijk, op verzoek in dezelfde issue-discussie.
+// Het bewegingsmechanisme zelf leeft in wegen.ts (`magSettlerNaar`/
+// `ontdekVakjeViaTrailBlazer`), aangeroepen vanuit `verplaatsSettlerNaar`
+// (acties.ts); hier alleen de pool-vermelding en de punten-accrual, zelfde
+// generieke niet-Going-West-exclusieve regel als de andere Boons hierboven
 // (`komtInAanmerkingVoorBoon`).
 import { GameState, MateriaalType, MoederlandId } from "./types";
 
-export const BAANBREKER_BOON_ID = "baanbreker";
+export const TRAIL_BLAZER_BOON_ID = "trail-blazer";
+
+// Puntenritme van "Trail Blazer" (issue #539): elke zoveel beurten een vaste
+// hoeveelheid nieuwe punten, zelfde interval-conventie als
+// `OUDE_HANDELSROUTE_INTERVAL_BEURTEN`/`ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN`
+// hieronder — bewuste MVP-richtwaarden, expliciet door de opdrachtgever
+// aangeleverd.
+export const TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN = 20;
+export const TRAIL_BLAZER_PUNTEN_PER_INTERVAL = 5;
+// Kosten om één individueel vakje buiten al ontgrendeld gebied te ontdekken
+// (`ontdekVakjeViaTrailBlazer`, wegen.ts) — vast op 1 punt per vakje, zodat
+// het interval hierboven direct het maximale aantal nieuw te ontdekken
+// vakjes per venster van `TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN` beurten
+// bepaalt.
+export const TRAIL_BLAZER_PUNTEN_KOSTEN_PER_VAKJE = 1;
 
 export interface Boon {
   id: string;
@@ -102,10 +133,9 @@ export const BOON_POOL: Boon[] = [
     beschrijving: `Kies bij toekenning een moederland. Daarna levert dat elke ${ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN} beurten ${ZEGENINGEN_VAN_HET_MOEDERLAND_LADING} van een vaste grondstof: Ierland voedsel, Duitsland hout, Engeland erts, Italië steen.`,
   },
   {
-    id: BAANBREKER_BOON_ID,
-    naam: "Baanbreker",
-    beschrijving:
-      "Je settler mag de eerstvolgende, nog vergrendelde streek in lopen. Elk vakje waar hij zo overheen loopt is vanaf dan gewoon ontdekt en begaanbaar — geen risico, geen terugkeer-eis.",
+    id: TRAIL_BLAZER_BOON_ID,
+    naam: "Trail Blazer",
+    beschrijving: `Elke ${TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN} beurten ${TRAIL_BLAZER_PUNTEN_PER_INTERVAL} trailblazer-punten. Met een punt mag je settler een los vakje buiten al ontgrendeld gebied in lopen en ontdekken — geen hele streek, en niet bebouwbaar met improvements, maar je mag er wel een weg op aanleggen.`,
   },
 ];
 
@@ -196,13 +226,14 @@ export function pasBoonEffectToe(state: GameState, boonId: string): GameState {
   if (boonId === "zegeningen-van-het-moederland") {
     return { ...state, moederlandKeuzeEvent: true };
   }
-  // "Baanbreker" (issue #539) heeft geen effect bij toekenning zelf — anders
-  // dan de drie hierboven zit het mechanisme niet in dit bestand, maar in de
-  // settler-bewegingsregels (`magSettlerNaar`, wegen.ts) en de
-  // streek-ontgrendeling (`ontdekStreekViaBaanbreker`, streekOntgrendeling.ts):
-  // die controleren allebei zelf op `state.boons.includes(BAANBREKER_BOON_ID)`,
-  // dus er is hier niets vast te leggen bij toekenning.
-  if (boonId === BAANBREKER_BOON_ID) {
+  // "Trail Blazer" (issue #539) heeft geen effect bij toekenning zelf —
+  // anders dan de drie hierboven zit het mechanisme niet in dit bestand, maar
+  // in de settler-bewegingsregels (`magSettlerNaar`/`ontdekVakjeViaTrailBlazer`,
+  // wegen.ts), die zelf op `state.boons.includes(TRAIL_BLAZER_BOON_ID)`
+  // controleren. De eerste punten komen pas bij de eerstvolgende
+  // `TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN`-drempel (`verwerkTrailBlazerPunten`
+  // hieronder), dus er is hier niets vast te leggen bij toekenning.
+  if (boonId === TRAIL_BLAZER_BOON_ID) {
     return state;
   }
   return state;
@@ -258,4 +289,18 @@ export function verwerkZegeningenVanHetMoederlandBoon(state: GameState, nieuweBe
       ),
     },
   };
+}
+
+// Puntenritme van "Trail Blazer" (issue #539): elke
+// `TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN` beurten `TRAIL_BLAZER_PUNTEN_PER_INTERVAL`
+// nieuwe punten erbij — zelfde interval-conventie en aanroeppunt
+// (`volgendeBeurt`, economie.ts, met de zojuist opgehoogde `nieuweBeurt`) als
+// `verwerkOudeHandelsrouteBoon`/`verwerkZegeningenVanHetMoederlandBoon`
+// hierboven. Punten stapelen gewoon op als de speler ze niet meteen
+// gebruikt — geen cap, geen "verval" — het interval zelf is al de rem op hoe
+// snel er ontdekt kan worden (zie de toelichting bovenaan dit bestand).
+export function verwerkTrailBlazerPunten(state: GameState, nieuweBeurt: number): GameState {
+  if (!state.boons.includes(TRAIL_BLAZER_BOON_ID)) return state;
+  if (nieuweBeurt % TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN !== 0) return state;
+  return { ...state, trailblazerPunten: state.trailblazerPunten + TRAIL_BLAZER_PUNTEN_PER_INTERVAL };
 }

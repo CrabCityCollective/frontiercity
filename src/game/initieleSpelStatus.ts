@@ -120,6 +120,9 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     // Boon-systeem (issue #411/#414): begint leeg bij elke nieuwe run, zie
     // types.ts.
     boons: [],
+    // "Trail Blazer"-Boon (issue #539): begint op 0, ook al heeft de speler de
+    // Boon nog niet — zie types.ts.
+    trailblazerPunten: 0,
     bouwKeuzeGedaanDitBeurt: false,
     bouwPopupAfgehandeldTellerPerStreek: {},
     settlerActieGedaanDitBeurt: false,

@@ -8,8 +8,27 @@
 // render/canvas.ts: `rijIndex = totaalStreken - streek.hoogte`) — "vooruit" en
 // "achteruit" bewegen dus in hoogte, "links" en "rechts" in `positieInStreek`.
 
-import { Streek, Settler } from "./types";
-import { BAND_WIDTH_TILES, hoogsteOntgrendeldeStreek } from "./world";
+import { GameState, Streek, Settler } from "./types";
+import { BAND_WIDTH_TILES, isBezetteStreekHoogte } from "./world";
+import { WAMPANOAG_STREEK_HOOGTE } from "./worldGoingWest";
+import { TRAIL_BLAZER_PUNTEN_KOSTEN_PER_VAKJE } from "./boons";
+
+// Of `hoogte` één van de twee bevroren speciale streken is (Bezette Streek,
+// tutorial-only; Wampanoag-laag, Going-West-only) — die lossen uitsluitend
+// via hun eigen verhaallijn op (Verkenning/Belegering resp. de
+// Wampanoag-handelsopening), ook met de "Trail Blazer"-Boon (issue #539).
+// Bewust op de vaste hoogte/`campagneId` gebaseerd, niet op `Streek.bezet`/
+// `wampanoagBezet` zelf: die vlaggen worden pas gezet zodra de normale,
+// cultuur-gedreven ontgrendeling die streek voor het eerst bereikt
+// (`ontgrendelEenStreek`, streekOntgrendeling.ts) — een settler die met
+// gespaarde trailblazer-punten ver vóór de frontier uit loopt, zou een nog
+// niet geïnitialiseerde Bezette Streek/Wampanoag-laag anders gewoon voorbij
+// kunnen lopen.
+function isBevrorenSpecialeStreekHoogte(hoogte: number, campagneId?: string): boolean {
+  if (isBezetteStreekHoogte(hoogte) && campagneId === undefined) return true;
+  if (hoogte === WAMPANOAG_STREEK_HOOGTE && campagneId === "going-west") return true;
+  return false;
+}
 
 export type SettlerRichting = "vooruit" | "achteruit" | "links" | "rechts";
 
@@ -34,23 +53,70 @@ export function volgendePositie(settler: Settler, richting: SettlerRichting): Se
 // zolang er geen brug op staat — "een rivier vakje mag niet begaanbaar zijn
 // voor settlers zonder een brug".
 //
-// `magBaanbreken` (issue #539, "Baanbreker"-Boon, boons.ts): met deze Boon
-// mag de settler ook de eerstvolgende, nog vergrendelde streek in — de enige
-// uitzondering op "binnen al ontgrendeld gebied" hierboven. De aanroeper
-// (`verplaatsSettlerNaar`, acties.ts) bepaalt dit vooraf (o.a. of de speler de
-// Boon heeft én of deze specifieke streek niet een van de twee bevroren
-// speciale gevallen is, zie `magBaanbrekerNaarStreek` in
-// streekOntgrendeling.ts) — hier alleen de kale grensverruiming van precies
-// één streek verder, net zoals `hoogsteOntgrendeldeStreek` de normale grens
-// al bepaalt.
-export function magSettlerNaar(streken: Streek[], positie: Settler, magBaanbreken = false): boolean {
+// `magBaanbreken` (issue #539, "Trail Blazer"-Boon, boons.ts): met deze Boon
+// (en minstens 1 trailblazer-punt) mag de settler ook individuele vakjes
+// buiten al ontgrendeld gebied in — de enige uitzondering op "binnen al
+// ontgrendeld gebied" hierboven. Een vakje dat al eerder zo ontdekt is
+// (`Tile.trailOntdekt`, `ontdekVakjeViaTrailBlazer` hieronder) blijft
+// daarna sowieso begaanbaar, ook zonder punten meer over — alleen een nog
+// nooit bezocht vakje kost een punt. De twee bevroren speciale streken
+// (Bezette Streek, Wampanoag-laag) blijven altijd uitgesloten, ook met de
+// Boon: die lossen uitsluitend via hun eigen verhaallijn (Verkenning/
+// Belegering resp. de Wampanoag-handelsopening) op. De aanroeper
+// (`verplaatsSettlerNaar`, acties.ts) bepaalt `magBaanbreken` vooraf (Boon
+// bezeten + nog punten over) — hier alleen de per-tegel-toegangsregel.
+export function magSettlerNaar(
+  streken: Streek[],
+  positie: Settler,
+  magBaanbreken = false,
+  campagneId?: string
+): boolean {
   if (positie.positieInStreek < 0 || positie.positieInStreek >= BAND_WIDTH_TILES) return false;
-  const maxHoogte = hoogsteOntgrendeldeStreek(streken) + (magBaanbreken ? 1 : 0);
-  if (positie.hoogte < 1 || positie.hoogte > maxHoogte) return false;
+  if (positie.hoogte < 1) return false;
   const streek = streken.find((l) => l.hoogte === positie.hoogte);
-  const tile = streek?.tiles[positie.positieInStreek];
+  if (!streek) return false;
+  const tile = streek.tiles[positie.positieInStreek];
   if (tile?.terrein === "rivier" && !tile.brug) return false;
-  return true;
+  if (streek.ontgrendeld) return true;
+  if (tile?.trailOntdekt) return true;
+  return magBaanbreken && !isBevrorenSpecialeStreekHoogte(positie.hoogte, campagneId);
+}
+
+// Ontdekt vakje `positieInStreek` van streek `hoogte` via de "Trail
+// Blazer"-Boon (issue #539) — aangeroepen vanuit `verplaatsSettlerNaar`
+// (acties.ts) zodra de settler daadwerkelijk een stap zet op een vakje dat
+// nog niet ontgrendeld/ontdekt was. Anders dan de eerdere, ongelimiteerde
+// "hele volgende streek in"-opzet van deze Boon (zie git-historie)
+// ontgrendelt dit nooit de streek zelf en triggert het geen van de
+// eenmalige streek-ontdekkingsevents (Goudader, stichtingskans, enz. —
+// `verwerkStreekOntgrendeling`, streekOntgrendeling.ts): "de trailblazer
+// ontdekt individuele vakjes en geen streken, de huidige streek-logica
+// blijft ongewijzigd" (issue-discussie #539). Kost 1 trailblazer-punt
+// (`TRAIL_BLAZER_PUNTEN_KOSTEN_PER_VAKJE`, boons.ts). Negeert de aanroep
+// stilzwijgend bij een ongeldige aanroep (geen punten meer, vakje bestaat
+// niet, is al ontgrendeld/ontdekt, of ligt op een van de twee bevroren
+// speciale streken) — zelfde veilige-aanroep-conventie als elders in dit
+// bestand.
+export function ontdekVakjeViaTrailBlazer(state: GameState, hoogte: number, positieInStreek: number): GameState {
+  if (state.trailblazerPunten < TRAIL_BLAZER_PUNTEN_KOSTEN_PER_VAKJE) return state;
+  if (isBevrorenSpecialeStreekHoogte(hoogte, state.campagneId)) return state;
+  const streek = state.streken.find((l) => l.hoogte === hoogte);
+  const tile = streek?.tiles[positieInStreek];
+  if (!streek || !tile || streek.ontgrendeld || tile.trailOntdekt) {
+    return state;
+  }
+
+  const streken = state.streken.map((l) =>
+    l.hoogte !== hoogte
+      ? l
+      : { ...l, tiles: l.tiles.map((t, index) => (index === positieInStreek ? { ...t, trailOntdekt: true } : t)) }
+  );
+
+  return {
+    ...state,
+    streken,
+    trailblazerPunten: state.trailblazerPunten - TRAIL_BLAZER_PUNTEN_KOSTEN_PER_VAKJE,
+  };
 }
 
 const ALLE_RICHTINGEN: SettlerRichting[] = ["vooruit", "achteruit", "links", "rechts"];
@@ -64,19 +130,20 @@ function tweedeStapOverWeg(
   streken: Streek[],
   settler: Settler,
   richting: SettlerRichting,
-  magBaanbreken: boolean
+  magBaanbreken: boolean,
+  campagneId?: string
 ): Settler | undefined {
   if (!heeftWegOp(streken, settler.hoogte, settler.positieInStreek)) return undefined;
   const eersteStap = volgendePositie(settler, richting);
   if (
-    !magSettlerNaar(streken, eersteStap, magBaanbreken) ||
+    !magSettlerNaar(streken, eersteStap, magBaanbreken, campagneId) ||
     !heeftWegOp(streken, eersteStap.hoogte, eersteStap.positieInStreek)
   ) {
     return undefined;
   }
   const tweedeStap = volgendePositie(eersteStap, richting);
   if (
-    !magSettlerNaar(streken, tweedeStap, magBaanbreken) ||
+    !magSettlerNaar(streken, tweedeStap, magBaanbreken, campagneId) ||
     !heeftWegOp(streken, tweedeStap.hoogte, tweedeStap.positieInStreek)
   ) {
     return undefined;
@@ -90,12 +157,17 @@ function tweedeStapOverWeg(
 // zo'n vakje als geldige zet te herkennen (zie economie.ts:
 // `verplaatsSettlerNaar`). Bevat naast de gewone buurvakjes ook de vakjes
 // twee stappen verderop als de volledige route daar over een weg loopt.
-export function bereikbarePosities(streken: Streek[], settler: Settler, magBaanbreken = false): Settler[] {
+export function bereikbarePosities(
+  streken: Streek[],
+  settler: Settler,
+  magBaanbreken = false,
+  campagneId?: string
+): Settler[] {
   const eenStap = ALLE_RICHTINGEN.map((richting) => volgendePositie(settler, richting)).filter((positie) =>
-    magSettlerNaar(streken, positie, magBaanbreken)
+    magSettlerNaar(streken, positie, magBaanbreken, campagneId)
   );
   const tweeStappenOverWeg = ALLE_RICHTINGEN.map((richting) =>
-    tweedeStapOverWeg(streken, settler, richting, magBaanbreken)
+    tweedeStapOverWeg(streken, settler, richting, magBaanbreken, campagneId)
   ).filter((positie): positie is Settler => positie !== undefined);
   return [...eenStap, ...tweeStappenOverWeg];
 }

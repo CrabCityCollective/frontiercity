@@ -4,6 +4,9 @@ import {
   BOON_POOL,
   MOEDERLANDEN,
   OUDE_HANDELSROUTE_INTERVAL_BEURTEN,
+  TRAIL_BLAZER_BOON_ID,
+  TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN,
+  TRAIL_BLAZER_PUNTEN_PER_INTERVAL,
   VOORRAADSCHUUR_OPSLAG_BONUS,
   ZEGENINGEN_VAN_HET_MOEDERLAND_INTERVAL_BEURTEN,
   ZEGENINGEN_VAN_HET_MOEDERLAND_LADING,
@@ -13,6 +16,7 @@ import {
   pasBoonEffectToe,
   trekBoon,
   verwerkOudeHandelsrouteBoon,
+  verwerkTrailBlazerPunten,
   verwerkZegeningenVanHetMoederlandBoon,
 } from "./boons";
 import { stichtStad, STICHTING_KOSTEN } from "./acties";
@@ -163,8 +167,9 @@ test("stichtStad kent een Boon toe bij een tussentijdse Going West-stichting van
   };
   const naVierdeStichten = metVasteRandom(0, () => stichtStad(vierdeState));
   assert.equal(naVierdeStichten.boons.length, 4, "de vierde, nog niet bezeten Boon uit de pool wordt toegekend");
-  assert.equal(naVierdeStichten.boons[3], "baanbreker");
-  assert.equal(naVierdeStichten.opslagCap, naDerdeStichten.opslagCap, "Baanbreker heeft geen eigen opslagcap-effect");
+  assert.equal(naVierdeStichten.boons[3], "trail-blazer");
+  assert.equal(naVierdeStichten.opslagCap, naDerdeStichten.opslagCap, "Trail Blazer heeft geen eigen opslagcap-effect");
+  assert.equal(naVierdeStichten.trailblazerPunten, 0, "Trail Blazer heeft geen effect bij toekenning — punten komen pas bij het eerstvolgende interval");
 
   // Nu zijn alle vier de Boons uit de pool bezet: een vijfde tussentijdse
   // stichting levert geen nieuwe Boon meer op (issue #414, vraag 1: trekking
@@ -273,6 +278,29 @@ test("verwerkOudeHandelsrouteBoon geeft alleen wampum op een interval-beurt, en 
   const zonderBoon = maakInitieleSpelStatus("going-west");
   const naZonderBoon = verwerkOudeHandelsrouteBoon(zonderBoon, OUDE_HANDELSROUTE_INTERVAL_BEURTEN);
   assert.equal(naZonderBoon.wampum, zonderBoon.wampum, "zonder de Boon geen wampum, ook niet op een interval-beurt");
+});
+
+test("verwerkTrailBlazerPunten geeft alleen punten op een interval-beurt, stapelt door, en alleen aan een speler die de Boon bezit (issue #539)", () => {
+  let state = maakInitieleSpelStatus("going-west");
+  state = { ...state, boons: [TRAIL_BLAZER_BOON_ID] };
+
+  const nietOpInterval = verwerkTrailBlazerPunten(state, TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN - 1);
+  assert.equal(nietOpInterval.trailblazerPunten, 0, "geen punten vóór het interval");
+
+  const opInterval = verwerkTrailBlazerPunten(state, TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN);
+  assert.equal(opInterval.trailblazerPunten, TRAIL_BLAZER_PUNTEN_PER_INTERVAL, "punten erbij op elk veelvoud van het interval");
+
+  const metOngebruiktePunten = { ...state, trailblazerPunten: TRAIL_BLAZER_PUNTEN_PER_INTERVAL };
+  const opTweedeInterval = verwerkTrailBlazerPunten(metOngebruiktePunten, TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN * 2);
+  assert.equal(
+    opTweedeInterval.trailblazerPunten,
+    TRAIL_BLAZER_PUNTEN_PER_INTERVAL * 2,
+    "niet-opgebruikte punten stapelen gewoon door, geen cap"
+  );
+
+  const zonderBoon = maakInitieleSpelStatus("going-west");
+  const naZonderBoon = verwerkTrailBlazerPunten(zonderBoon, TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN);
+  assert.equal(naZonderBoon.trailblazerPunten, 0, "zonder de Boon geen punten, ook niet op een interval-beurt");
 });
 
 test("pasBoonEffectToe opent bij Zegeningen van het Moederland een moederland-keuze in plaats van een meteen-effect (issue #540)", () => {

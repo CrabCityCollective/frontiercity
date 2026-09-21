@@ -315,6 +315,18 @@ export interface Tile {
   // hebben, hij fungeert al als weg" (issue), dus geen aparte
   // `heeftWeg`-aanleg nodig op een brug-vakje.
   brug?: boolean;
+  // "Trail Blazer"-Boon (issue #539, boons.ts): een eigen, per-tegel
+  // ontdekking los van de gewone streek-brede fog-of-war (`Streek.ontgrendeld`)
+  // — anders dan de Bezette-Streek-/Wampanoag-verhullingslagen hierboven
+  // ontgrendelt dit nooit de streek zelf ("de trailblazer ontdekt individuele
+  // vakjes en geen streken. De huidige streek logica blijft ongewijzigd",
+  // issue-discussie #539). `true` betekent: de settler heeft hier ooit een
+  // trailblazer-punt aan besteed (`ontdekVakjeViaTrailBlazer`, wegen.ts) — het
+  // vakje blijft daarna blijvend begaanbaar/zichtbaar en een weg mag erop
+  // aangelegd worden, maar zolang `Streek.ontgrendeld` op deze streek `false`
+  // blijft, mag er geen land improvement op gebouwd worden (`startBouw`,
+  // infrastructuurEnBouw.ts, filtert al op `streek.ontgrendeld`).
+  trailOntdekt?: boolean;
 }
 
 // Positie van de settler-eenheid (M10, hoofdstuk 16). Bestaat pas vanaf beurt
@@ -1069,6 +1081,16 @@ export interface GameState {
   // `undefined` zolang de keuze nog openstaat of de speler deze Boon nooit
   // heeft gekregen.
   gekozenMoederland?: MoederlandId;
+  // "Trail Blazer"-Boon (issue #539, boons.ts): een eigen puntenvoorraad,
+  // los van elke gedeelde-opslag-grondstof (zelfde soort losse telling als
+  // `wampum` hierboven) — elke `TRAIL_BLAZER_PUNTEN_INTERVAL_BEURTEN` beurten
+  // +`TRAIL_BLAZER_PUNTEN_PER_INTERVAL` (`verwerkTrailBlazerPunten`, boons.ts),
+  // en elk vakje dat de settler buiten al ontgrendeld gebied ontdekt kost er
+  // `TRAIL_BLAZER_PUNTEN_KOSTEN_PER_VAKJE` van (`ontdekVakjeViaTrailBlazer`,
+  // wegen.ts) — dat is de rem die voorkomt dat de speler in één keer de hele
+  // kaart verkent. Blijft op 0 staan (en blijft ongebruikt) zolang de speler
+  // deze Boon niet heeft.
+  trailblazerPunten: number;
   // Welke van de eenmalige uitleg-pop-ups (openings-uitleg, settler, voedsel-
   // balans, boerderij-klaar, enz. — zie GameRoot.tsx) de speler in déze run al
   // heeft weggeklikt (issue: "Bij laden niet alle pop-ups tonen"). Stond
