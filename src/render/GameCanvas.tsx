@@ -2,7 +2,7 @@
 
 import { MouseEvent, useEffect, useRef } from "react";
 import { GrafischeStijl } from "@/game/save";
-import { City, Streek, Settler } from "@/game/types";
+import { City, Streek, Settler, Improvement } from "@/game/types";
 import {
   BAND_WIDTH_TILES,
   eindeOceaanHoogte,
@@ -71,6 +71,12 @@ interface GameCanvasProps {
   // `tekenOnrustIndicatorPixel`) op Going West, zelfde `campagneId`-check als
   // productie.ts/tileInfo.ts: onrust bestaat niet in de tutorial.
   campagneId?: string;
+  // Improvement dat de speler op dit moment aan het plaatsen is (issue:
+  // "Ranch alleen op kudde") — zolang dit gezet is, markeert de canvas
+  // alleen de lege vakjes waar dit specifieke improvement ook daadwerkelijk
+  // neergezet mag worden (terrein-eis + vakje-specifieke eisen zoals
+  // Goudader/Ranch), niet elk leeg vakje.
+  plaatsingsImprovement?: Improvement;
   onTileClick: (hoogte: number, positieInStreek: number) => void;
 }
 
@@ -143,6 +149,7 @@ export default function GameCanvas({
   stijl,
   tegelSet,
   campagneId,
+  plaatsingsImprovement,
   onTileClick,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -182,7 +189,8 @@ export default function GameCanvas({
       verkenningBereikbarePosities,
       tweedeSettler,
       tegelSet,
-      campagneId
+      campagneId,
+      plaatsingsImprovement
     );
   }, [
     streken,
@@ -197,6 +205,7 @@ export default function GameCanvas({
     stijl,
     tegelSet,
     campagneId,
+    plaatsingsImprovement,
   ]);
 
   function handleClick(event: MouseEvent<HTMLCanvasElement>) {
