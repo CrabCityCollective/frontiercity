@@ -9,7 +9,7 @@ import {
   stichtStad as stichtStadActie,
   verplaatsSettlerNaar as verplaatsSettlerNaarActie,
 } from "./acties";
-import { sluitBoonMelding as sluitBoonMeldingActie } from "./boons";
+import { kiesMoederland as kiesMoederlandActie, sluitBoonMelding as sluitBoonMeldingActie } from "./boons";
 import { versnelBouwMetGoud as versnelBouwMetGoudActie } from "./bouwwachtrij";
 import {
   beurtMagAutomatischDoorgaan,
@@ -81,7 +81,7 @@ import { bemanCourthouse as bemanCourthouseActie, haalRechterTerug as haalRechte
 import { laadSpel, saveSpel, verwijderSpel } from "./save";
 import { kiesTech as kiesTechActie } from "./tech";
 import { bevestigIneenstorting as bevestigIneenstortingActie } from "./uitputtingEnVerval";
-import { EenmaligeUitlegKey, GameState, Improvement, TechId, WampanoagHandelKeuze } from "./types";
+import { EenmaligeUitlegKey, GameState, Improvement, MoederlandId, TechId, WampanoagHandelKeuze } from "./types";
 
 // Ketent een `volgendeBeurt` vast aan het resultaat van een settler-actie of
 // bouwkeuze zodra er niets meer te doen valt deze beurt (issue: "beurt
@@ -365,6 +365,12 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean, debug
     setState((huidig) => kiesTechActie(huidig, techId));
   }, []);
 
+  // "Zegeningen van het Moederland"-Boon (issue #540) — zelfde dunne
+  // wrapper-conventie als `kiesTech` hierboven.
+  const kiesMoederland = useCallback((moederlandId: MoederlandId) => {
+    setState((huidig) => kiesMoederlandActie(huidig, moederlandId));
+  }, []);
+
   // Bezette Streek, Missionaris & Verkenner (hoofdstuk 6, issue: "De Bezette
   // Streek, missionaris en verkenner", herzien door "Bezette streek scherm")
   // — zelfde dunne wrapper-conventie als hierboven.
@@ -506,6 +512,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean, debug
     bevestigStichtingsMomentPopup,
     sluitBoonMelding,
     kiesTech,
+    kiesMoederland,
     stuurVerkenner,
     stuurVerkennerWampanoag,
     stelWampanoagHandel,

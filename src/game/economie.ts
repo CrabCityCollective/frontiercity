@@ -60,7 +60,7 @@ import {
   verwerkKuddes,
   verwerkRoofdieren,
 } from "./indringersEnDieren";
-import { verwerkOudeHandelsrouteBoon } from "./boons";
+import { verwerkOudeHandelsrouteBoon, verwerkZegeningenVanHetMoederlandBoon } from "./boons";
 
 // Opslag-cap, startstatus en de city-improvement-cap staan inhoudelijk in
 // eigen modules (initieleSpelStatus.ts resp. improvements.ts) in plaats van
@@ -250,8 +250,11 @@ export function volgendeBeurt(state: GameState): GameState {
   // Oude Handelsroute-Boon (issue #431): +1 wampum elke paar beurten, los van
   // alle kans-gebaseerde stappen hierboven — mag dus net zo goed vlak vóór de
   // beurtteller-ophoging draaien, met `nieuweBeurt` als peildatum (zie
-  // `verwerkOudeHandelsrouteBoon`, boons.ts).
-  const naBoonEffecten = verwerkOudeHandelsrouteBoon(naRoofdieren, nieuweBeurt);
+  // `verwerkOudeHandelsrouteBoon`, boons.ts). Zegeningen van het Moederland
+  // (issue #540) levert op dezelfde manier een terugkerende opbrengst, alleen
+  // van een andere grondstof (afhankelijk van de gekozen moederland) en met
+  // een ander interval — vandaar los, ná Oude Handelsroute, aangeroepen.
+  const naBoonEffecten = verwerkZegeningenVanHetMoederlandBoon(verwerkOudeHandelsrouteBoon(naRoofdieren, nieuweBeurt), nieuweBeurt);
 
   // De settler verschijnt bij de stad zodra beurt 2 begint (hoofdstuk 16) —
   // en blijft daarna gewoon staan waar de speler 'm laatst neerzette. Niet

@@ -15,6 +15,7 @@ import IndringersPopup from "@/components/IndringersPopup";
 import IneenstortingScherm from "@/components/IneenstortingScherm";
 import IntroScherm from "@/components/IntroScherm";
 import KuddePopup from "@/components/KuddePopup";
+import MoederlandKeuzePopup from "@/components/MoederlandKeuzePopup";
 import StreekIntroPaneel from "@/components/StreekIntroPaneel";
 import StreekPopup from "@/components/StreekPopup";
 import OceaanUitlegPopup from "@/components/OceaanUitlegPopup";
@@ -201,6 +202,7 @@ export default function GameRoot({
     bevestigStichtingsMomentPopup,
     sluitBoonMelding,
     kiesTech,
+    kiesMoederland,
     stuurVerkenner,
     stuurVerkennerWampanoag,
     stelWampanoagHandel,
@@ -2002,6 +2004,58 @@ export default function GameRoot({
     !toonRivierAangekondigdPopup &&
     Boolean(state.lakotaScoutEvent);
 
+  // Moederland-keuze-pop-up van "Zegeningen van het Moederland" (issue #540):
+  // helemaal onderaan de keten gehangen, net als de Lakota-scout-pop-up
+  // hierboven (laagste prioriteit — negeert dus ook `toonLakotaScoutPopup`,
+  // en dus ook `toonBoonPopup` zelf: de speler ziet eerst de gewone
+  // Boon-toekenningsmelding, en pas ná het wegklikken daarvan deze keuze).
+  // Anders dan alle andere pop-ups in deze keten geen wegklikbare melding,
+  // maar een blokkerende keuze — zelfde vorm als `toonTechKeuzePopup`.
+  const toonMoederlandKeuzePopup =
+    !toonStreekPopup &&
+    !toonUitlegPopup &&
+    !toonSettlerUitlegPopup &&
+    !toonVoedselWaarschuwingPopup &&
+    !toonVijandAanDeHorizonPopup &&
+    !toonGoddelijkeRaadgevingPopup &&
+    !toonRoofdierIntroPopup &&
+    !toonBoerderijKlaarUitlegPopup &&
+    !toonStrijdersOpleidenPopup &&
+    !toonBezetteStreekOntdektPopup &&
+    !toonOceaanUitlegPopup &&
+    !toonStadUpgradeUitlegPopup &&
+    !toonIndringersPopup &&
+    !toonKuddePopup &&
+    !toonRoofdierPopup &&
+    !toonGoudOntdektPopup &&
+    !toonTweedeGoudOntdektPopup &&
+    !toonTechKeuzePopup &&
+    !toonVijandelijkHeiligdomOnthuldPopup &&
+    !toonVijandelijkHeiligdomVeroverdPopup &&
+    !toonWachttorenOveralUitlegPopup &&
+    !toonVoedselBalansUitlegPopup &&
+    !toonSettlerActiesUitlegPopup &&
+    !toonBeurtensysteemUitlegPopup &&
+    !toonStadsverbeteringenUitlegPopup &&
+    !toonTweedeSettlerUitlegPopup &&
+    !toonHeiligdomUitlegPopup &&
+    !toonNietBouwenUitlegPopup &&
+    !toonBoerderijStreekUitlegPopup &&
+    !toonHoutkapStreekUitlegPopup &&
+    !toonSettlerWegSnelheidUitlegPopup &&
+    !toonTutorialVoltooidPopup &&
+    !toonStadGestichtPopup &&
+    !toonStichtingsMomentPopup &&
+    !toonBoonPopup &&
+    !toonEersteContactPopup &&
+    !toonWampanoagRelatieGelegdPopup &&
+    !toonSmederijGebouwdPopup &&
+    !toonOnrustUitlegPopup &&
+    !toonStichtingskansPopup &&
+    !toonRivierAangekondigdPopup &&
+    !toonLakotaScoutPopup &&
+    Boolean(state.moederlandKeuzeEvent);
+
   // Intro- en ineenstortingsscherm zijn volledig blokkerende overlays (issue:
   // "intro en game over scherm") — alle hooks hierboven blijven onvoorwaardelijk
   // aangeroepen, alleen de uiteindelijke JSX wisselt.
@@ -2170,6 +2224,7 @@ export default function GameRoot({
             onKiesTech={kiesTech}
           />
         )}
+        {toonMoederlandKeuzePopup && <MoederlandKeuzePopup onKiesMoederland={kiesMoederland} />}
         {toonCampagneOpeningPopup && (
           <GoudOntdektPopup
             titel={popupContent(campagne, "campagneOpeningPopup")?.titel}
