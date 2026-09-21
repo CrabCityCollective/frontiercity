@@ -15,9 +15,9 @@
 // welke stijl actief is.
 
 import { isWachttorenBemand } from "@/game/indringersEnDieren";
-import { isBebouwbaarLeeg } from "@/game/improvements";
+import { isBebouwbaarLeeg, improvementPastOpTile } from "@/game/improvements";
 import { isCourthouseBemand, onrustOpStreek } from "@/game/onrust";
-import { City, Streek, Settler, Tile } from "@/game/types";
+import { City, Streek, Settler, Tile, Improvement } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import {
   BAND_WIDTH_TILES,
@@ -1359,7 +1359,10 @@ export function tekenWereldPixelArt(
   tegelSet?: string,
   // Zie canvas.ts (`tekenWereld`) voor de volledige toelichting — gaat de
   // onrust-indicator (`tekenOnrustIndicatorPixel` hierboven) op Going West.
-  campagneId?: string
+  campagneId?: string,
+  // Zie canvas.ts (`tekenWereld`) voor de volledige toelichting — issue
+  // "Ranch alleen op kudde".
+  plaatsingsImprovement?: Improvement
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
@@ -1435,7 +1438,11 @@ export function tekenWereldPixelArt(
       const isPlaatsingsDoelStreek = plaatsingsAlleStreken
         ? streek.ontgrendeld
         : streek.hoogte === plaatsingsStreekHoogte;
-      if (isPlaatsingsDoelStreek && isBebouwbaarLeeg(streek.tiles[col])) {
+      if (
+        isPlaatsingsDoelStreek &&
+        isBebouwbaarLeeg(streek.tiles[col]) &&
+        (!plaatsingsImprovement || improvementPastOpTile(plaatsingsImprovement, streek.tiles[col]))
+      ) {
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
       }
 

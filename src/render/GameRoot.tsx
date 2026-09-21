@@ -690,11 +690,22 @@ export default function GameRoot({
     !terreinMismatch &&
     !doelTileVoorPlaatsing.goud;
 
+  // Kudde-eis (Going West, issue "Ranch alleen op kudde"): zelfde patroon als
+  // `goudMismatch` hierboven — een leeg vakje zonder actieve wilde kudde
+  // (`tile.kudde`, zie world.ts) is geen geldig plaatsingsdoel voor de Ranch,
+  // ook al voldoet het aan de (afwezige) terrein-eis van de Ranch zelf.
+  const kuddeMismatch =
+    plaatsingsImprovement?.id === "ranch" &&
+    doelTileVoorPlaatsing?.status === "leeg" &&
+    !terreinMismatch &&
+    !doelTileVoorPlaatsing.kudde;
+
   const isGeldigPlaatsingsDoel =
     plaatsingsImprovement !== null &&
     doelTileVoorPlaatsing?.status === "leeg" &&
     !terreinMismatch &&
-    !goudMismatch;
+    !goudMismatch &&
+    !kuddeMismatch;
 
   // Settler actief zodra de beurt begint (issue: "de settler unit is actief
   // als je aan je beurt begint, de tegels waar je heen kunt lichten op, door
@@ -2044,6 +2055,7 @@ export default function GameRoot({
           stijl={stijl}
           tegelSet={campagne?.tegelSet}
           campagneId={state.campagneId}
+          plaatsingsImprovement={plaatsingsImprovement ?? undefined}
           onTileClick={handleTileClick}
         />
         <SettlerPaneel
@@ -2411,7 +2423,9 @@ export default function GameRoot({
                 : `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — vereist ${terreinEisenBeschrijving(plaatsingsImprovement!)}.`
               : goudMismatch
                 ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — hier is geen goudader gevonden.`
-                : undefined
+                : kuddeMismatch
+                  ? `${improvementNaam(plaatsingsImprovement!, campagne)} kan hier niet gebouwd worden — hier is geen kudde gevonden.`
+                  : undefined
           }
           rushVraag={
             geselecteerdeTile &&

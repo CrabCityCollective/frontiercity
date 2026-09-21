@@ -9,9 +9,9 @@
 // van platte kleurvlakken.
 
 import { isWachttorenBemand } from "@/game/indringersEnDieren";
-import { isBebouwbaarLeeg } from "@/game/improvements";
+import { isBebouwbaarLeeg, improvementPastOpTile } from "@/game/improvements";
 import { isCourthouseBemand, onrustOpStreek } from "@/game/onrust";
-import { City, Streek, Settler, TerreinType, Tile } from "@/game/types";
+import { City, Streek, Settler, TerreinType, Tile, Improvement } from "@/game/types";
 import { isTileVerbondenMetStad, wegVerbindingen, WegVerbindingen } from "@/game/wegen";
 import {
   BAND_WIDTH_TILES,
@@ -2388,7 +2388,14 @@ export function tekenWereld(
   // onrust-indicator (`tekenOnrustIndicator` hierboven) te gaten op Going
   // West, zelfde `campagneId`-check als productie.ts/tileInfo.ts: onrust
   // bestaat niet in de tutorial, dus daar blijft deze indicator altijd uit.
-  campagneId?: string
+  campagneId?: string,
+  // Improvement dat de speler op dit moment aan het plaatsen is (issue:
+  // "Ranch alleen op kudde" — zonder dit lichtten alle lege vakjes op,
+  // ongeacht of de Ranch (of eender welk terrein-/vakje-specifiek
+  // improvement) er daadwerkelijk neergezet mag worden). `undefined` zolang
+  // er niks geplaatst wordt, dan blijft de markering vallen op de gewone
+  // `isBebouwbaarLeeg`-check hieronder.
+  plaatsingsImprovement?: Improvement
 ): void {
   const tileSize = width / BAND_WIDTH_TILES;
   const totaalStreken = streken.length;
@@ -2467,7 +2474,11 @@ export function tekenWereld(
       const isPlaatsingsDoelStreek = plaatsingsAlleStreken
         ? streek.ontgrendeld
         : streek.hoogte === plaatsingsStreekHoogte;
-      if (isPlaatsingsDoelStreek && isBebouwbaarLeeg(streek.tiles[col])) {
+      if (
+        isPlaatsingsDoelStreek &&
+        isBebouwbaarLeeg(streek.tiles[col]) &&
+        (!plaatsingsImprovement || improvementPastOpTile(plaatsingsImprovement, streek.tiles[col]))
+      ) {
         tekenBeschikbaarMarkering(ctx, x, y, tileSize);
       }
 
