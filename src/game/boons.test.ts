@@ -141,9 +141,10 @@ test("stichtStad kent een Boon toe bij een tussentijdse Going West-stichting van
   );
   assert.equal(naDerdeStichten.opslagCap, naTweedeStichten.opslagCap, "Zegeningen van het Moederland heeft geen eigen opslagcap-effect");
 
-  // Nu zijn alle drie de Boons uit de pool bezet: een vierde tussentijdse
-  // stichting levert geen nieuwe Boon meer op (issue #414, vraag 1: trekking
-  // zonder terugleggen, ook met de uitgebreide pool).
+  // Drie Boons zijn nu bezet: een vierde tussentijdse stichting trekt de
+  // laatst overgebleven Boon uit de pool (issue #539 breidde de pool uit naar
+  // vier leden — vóór #539 was de pool hier al uitgeput, zie de vijfde
+  // stichting hieronder voor dat geval).
   let vierdeState = metActieveStad(naDerdeStichten, { ...naDerdeStichten.stad, grootte: "groot" });
   vierdeState = {
     ...vierdeState,
@@ -161,8 +162,32 @@ test("stichtStad kent een Boon toe bij een tussentijdse Going West-stichting van
     voedsel: STICHTING_KOSTEN.voedsel,
   };
   const naVierdeStichten = metVasteRandom(0, () => stichtStad(vierdeState));
-  assert.equal(naVierdeStichten.boons.length, 3, "geen vierde Boon: de pool is nu uitgeput");
-  assert.equal(naVierdeStichten.opslagCap, naDerdeStichten.opslagCap, "geen extra opslagcap-bonus zonder een nieuw getrokken Boon");
+  assert.equal(naVierdeStichten.boons.length, 4, "de vierde, nog niet bezeten Boon uit de pool wordt toegekend");
+  assert.equal(naVierdeStichten.boons[3], "baanbreker");
+  assert.equal(naVierdeStichten.opslagCap, naDerdeStichten.opslagCap, "Baanbreker heeft geen eigen opslagcap-effect");
+
+  // Nu zijn alle vier de Boons uit de pool bezet: een vijfde tussentijdse
+  // stichting levert geen nieuwe Boon meer op (issue #414, vraag 1: trekking
+  // zonder terugleggen, ook met de uitgebreide pool).
+  let vijfdeState = metActieveStad(naVierdeStichten, { ...naVierdeStichten.stad, grootte: "groot" });
+  vijfdeState = {
+    ...vijfdeState,
+    settler: { hoogte: 35, positieInStreek: 5 },
+    streken: vijfdeState.streken.map((streek) =>
+      streek.hoogte === 35
+        ? {
+            ...streek,
+            ontgrendeld: true,
+            tiles: streek.tiles.map((tile) => (tile.positieInStreek === 5 ? { ...tile, versWater: true } : tile)),
+          }
+        : streek
+    ),
+    voorraad: { ...vijfdeState.voorraad, hout: STICHTING_KOSTEN.hout, steen: STICHTING_KOSTEN.steen, erts: STICHTING_KOSTEN.erts },
+    voedsel: STICHTING_KOSTEN.voedsel,
+  };
+  const naVijfdeStichten = metVasteRandom(0, () => stichtStad(vijfdeState));
+  assert.equal(naVijfdeStichten.boons.length, 4, "geen vijfde Boon: de pool is nu uitgeput");
+  assert.equal(naVijfdeStichten.opslagCap, naVierdeStichten.opslagCap, "geen extra opslagcap-bonus zonder een nieuw getrokken Boon");
 });
 
 test("stichtStad kent geen Boon toe bij de afsluitende stichting, in de tutorial, of vanuit een niet-grote stad", () => {

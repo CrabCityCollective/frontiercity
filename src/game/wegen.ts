@@ -33,9 +33,20 @@ export function volgendePositie(settler: Settler, richting: SettlerRichting): Se
 // "Pop-up rivier", vervolg: brug-bouwmechaniek) is bovendien onbegaanbaar
 // zolang er geen brug op staat — "een rivier vakje mag niet begaanbaar zijn
 // voor settlers zonder een brug".
-export function magSettlerNaar(streken: Streek[], positie: Settler): boolean {
+//
+// `magBaanbreken` (issue #539, "Baanbreker"-Boon, boons.ts): met deze Boon
+// mag de settler ook de eerstvolgende, nog vergrendelde streek in — de enige
+// uitzondering op "binnen al ontgrendeld gebied" hierboven. De aanroeper
+// (`verplaatsSettlerNaar`, acties.ts) bepaalt dit vooraf (o.a. of de speler de
+// Boon heeft én of deze specifieke streek niet een van de twee bevroren
+// speciale gevallen is, zie `magBaanbrekerNaarStreek` in
+// streekOntgrendeling.ts) — hier alleen de kale grensverruiming van precies
+// één streek verder, net zoals `hoogsteOntgrendeldeStreek` de normale grens
+// al bepaalt.
+export function magSettlerNaar(streken: Streek[], positie: Settler, magBaanbreken = false): boolean {
   if (positie.positieInStreek < 0 || positie.positieInStreek >= BAND_WIDTH_TILES) return false;
-  if (positie.hoogte < 1 || positie.hoogte > hoogsteOntgrendeldeStreek(streken)) return false;
+  const maxHoogte = hoogsteOntgrendeldeStreek(streken) + (magBaanbreken ? 1 : 0);
+  if (positie.hoogte < 1 || positie.hoogte > maxHoogte) return false;
   const streek = streken.find((l) => l.hoogte === positie.hoogte);
   const tile = streek?.tiles[positie.positieInStreek];
   if (tile?.terrein === "rivier" && !tile.brug) return false;
@@ -49,14 +60,25 @@ const ALLE_RICHTINGEN: SettlerRichting[] = ["vooruit", "achteruit", "links", "re
 // staat, én beide stappen ernaartoe — al een weg heeft. Dat maakt vooral de
 // terugreis over een eerder aangelegde weg sneller; zonder weg (of met een
 // weg die halverwege ophoudt) blijft het bij de gewone ene stap hierboven.
-function tweedeStapOverWeg(streken: Streek[], settler: Settler, richting: SettlerRichting): Settler | undefined {
+function tweedeStapOverWeg(
+  streken: Streek[],
+  settler: Settler,
+  richting: SettlerRichting,
+  magBaanbreken: boolean
+): Settler | undefined {
   if (!heeftWegOp(streken, settler.hoogte, settler.positieInStreek)) return undefined;
   const eersteStap = volgendePositie(settler, richting);
-  if (!magSettlerNaar(streken, eersteStap) || !heeftWegOp(streken, eersteStap.hoogte, eersteStap.positieInStreek)) {
+  if (
+    !magSettlerNaar(streken, eersteStap, magBaanbreken) ||
+    !heeftWegOp(streken, eersteStap.hoogte, eersteStap.positieInStreek)
+  ) {
     return undefined;
   }
   const tweedeStap = volgendePositie(eersteStap, richting);
-  if (!magSettlerNaar(streken, tweedeStap) || !heeftWegOp(streken, tweedeStap.hoogte, tweedeStap.positieInStreek)) {
+  if (
+    !magSettlerNaar(streken, tweedeStap, magBaanbreken) ||
+    !heeftWegOp(streken, tweedeStap.hoogte, tweedeStap.positieInStreek)
+  ) {
     return undefined;
   }
   return tweedeStap;
@@ -68,13 +90,13 @@ function tweedeStapOverWeg(streken: Streek[], settler: Settler, richting: Settle
 // zo'n vakje als geldige zet te herkennen (zie economie.ts:
 // `verplaatsSettlerNaar`). Bevat naast de gewone buurvakjes ook de vakjes
 // twee stappen verderop als de volledige route daar over een weg loopt.
-export function bereikbarePosities(streken: Streek[], settler: Settler): Settler[] {
+export function bereikbarePosities(streken: Streek[], settler: Settler, magBaanbreken = false): Settler[] {
   const eenStap = ALLE_RICHTINGEN.map((richting) => volgendePositie(settler, richting)).filter((positie) =>
-    magSettlerNaar(streken, positie)
+    magSettlerNaar(streken, positie, magBaanbreken)
   );
-  const tweeStappenOverWeg = ALLE_RICHTINGEN.map((richting) => tweedeStapOverWeg(streken, settler, richting)).filter(
-    (positie): positie is Settler => positie !== undefined
-  );
+  const tweeStappenOverWeg = ALLE_RICHTINGEN.map((richting) =>
+    tweedeStapOverWeg(streken, settler, richting, magBaanbreken)
+  ).filter((positie): positie is Settler => positie !== undefined);
   return [...eenStap, ...tweeStappenOverWeg];
 }
 

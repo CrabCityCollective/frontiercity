@@ -12,7 +12,7 @@
 // `leesSettler`/`leesActieGedaan`/`metSettlerUpdate` hieronder voor de
 // gedeelde lees/schrijf-indirectie.
 import { campagneConfig } from "./campagnes";
-import { komtInAanmerkingVoorBoon, pasBoonEffectToe, trekBoon } from "./boons";
+import { BAANBREKER_BOON_ID, komtInAanmerkingVoorBoon, pasBoonEffectToe, trekBoon } from "./boons";
 import { bereikbarePosities } from "./wegen";
 import {
   jachtVoedselBonus,
@@ -21,7 +21,8 @@ import {
   settlerWegaanlegGratis,
 } from "./techTree";
 import { City, GameState, RoofdierEvent, Settler } from "./types";
-import { isGeschiktVoorStichten, ROOFDIER_MIN_STREEK } from "./world";
+import { isGeschiktVoorStichten, hoogsteOntgrendeldeStreek, ROOFDIER_MIN_STREEK } from "./world";
+import { magBaanbrekerNaarStreek, ontdekStreekViaBaanbreker } from "./streekOntgrendeling";
 
 export type SettlerSlot = "primair" | "tweede";
 
@@ -116,10 +117,25 @@ export function verplaatsSettlerNaar(
   const settler = leesSettler(state, slot);
   if (!settler || leesActieGedaan(state, slot)) return state;
 
-  const magErheen = bereikbarePosities(state.streken, settler).some(
+  // "Baanbreker"-Boon (issue #539, boons.ts): mag de settler ook de
+  // eerstvolgende, nog vergrendelde streek in? Alleen relevant met de Boon én
+  // als die streek niet een van de twee bevroren speciale gevallen is
+  // (`magBaanbrekerNaarStreek`, streekOntgrendeling.ts) — anders blijft de
+  // gewone grens (`hoogsteOntgrendeldeStreek`) gelden.
+  const magBaanbreken =
+    state.boons.includes(BAANBREKER_BOON_ID) &&
+    magBaanbrekerNaarStreek(state, hoogsteOntgrendeldeStreek(state.streken) + 1);
+
+  const magErheen = bereikbarePosities(state.streken, settler, magBaanbreken).some(
     (positie) => positie.hoogte === hoogte && positie.positieInStreek === positieInStreek
   );
   if (!magErheen) return state;
+
+  // Zet de streek meteen op ontgrendeld als deze stap 'm voor het eerst
+  // binnenkomt (Baanbreker) — no-op als de streek al ontgrendeld was (de
+  // gewone, niet-Baanbreker-verplaatsing hierboven), zie
+  // `ontdekStreekViaBaanbreker`.
+  const stateNaOntdekking = ontdekStreekViaBaanbreker(state, hoogte);
 
   // "B1b. Handkar" (hoofdstuk 3/9, techTree.ts): verplaatsen kost dan geen
   // aparte settler-actie meer, dus de speler kan deze beurt nog een andere
@@ -132,7 +148,7 @@ export function verplaatsSettlerNaar(
   const gratisAlGebruikt = leesGratisBewogen(state, slot);
   const kostGeenActie = settlerBeweegtGratis(state.technologieen) && !gratisAlGebruikt;
   return {
-    ...state,
+    ...stateNaOntdekking,
     ...metSettlerUpdate(state, slot, { hoogte, positieInStreek }, kostGeenActie ? leesActieGedaan(state, slot) : true),
     ...metGratisBewogenUpdate(state, slot, kostGeenActie ? true : gratisAlGebruikt),
   };
