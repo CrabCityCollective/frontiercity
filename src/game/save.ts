@@ -260,4 +260,9 @@ export function zetGrafischeStijl(stijl: GrafischeStijl): void {
   } catch {
     // Zie hierboven bij saveSpel: bewust genegeerd.
   }
+  // Laat losse UI-icoontjes (StadsverbeteringIcoon) meeveranderen zonder dat de
+  // stijl door elke popup heen als prop gesleept hoeft te worden.
+  window.dispatchEvent(new Event(GRAFISCHE_STIJL_EVENT));
 }
+
+export const GRAFISCHE_STIJL_EVENT = "frontier-city:grafische-stijl-gewijzigd";

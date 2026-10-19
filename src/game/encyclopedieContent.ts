@@ -585,10 +585,18 @@ const GEBOUW_KOSTEN_BRON: Record<string, Partial<Record<ResourceType, number>>> 
 
 // Icoontjes (issue "Encyclopedie mooier"): sleutel is de lemma-id (Going
 // West-verwijslemma's erven het icoon van hun basislemma, net als de kosten).
-// Alleen dingen die in het spel zelf een tegel/icoon hebben: stadsgebouwen
-// (aquaduct, markt, ...) staan in het spel alleen als tekst, dus krijgen hier
-// bewust geen verzonnen icoon.
+// De stadsverbeteringen (aquaduct, markt, ...) hebben sinds issue "Icoontjes
+// city improvements" een eigen icoon (StadsverbeteringIcoon, pixel art én
+// getekend), ook in het Stadsverbeteringen-paneel.
 const LEMMA_ICOON: Record<string, EncyclopedieIcoonSleutel> = {
+  aquaduct: "aquaduct",
+  barakken: "barakken",
+  bibliotheek: "bibliotheek",
+  "grote-tempel": "grote-tempel",
+  markt: "markt",
+  opslagplaats: "opslagplaats",
+  smederij: "smederij",
+  tempel: "tempel",
   erts: "erts",
   hout: "hout",
   steen: "steen",

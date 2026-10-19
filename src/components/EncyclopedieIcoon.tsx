@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { HudResourceType, IcoonSvg } from "@/components/ResourceIcoon";
 import { tekenEncyclopedieTile } from "@/render/canvas";
+import { isStadsverbeteringIcoonSleutel, StadsverbeteringIcoon, StadsverbeteringIcoonSleutel } from "./StadsverbeteringIcoon";
 
 // Icoontjes voor de encyclopedie (issue "Encyclopedie mooier"). De encyclopedie
 // is een naslagwerk: een icoon moet exact hetzelfde zijn als in het spel. Daarom
@@ -27,7 +28,7 @@ const TEGEL_SLEUTELS = [
 ] as const;
 
 export type TegelIcoonSleutel = (typeof TEGEL_SLEUTELS)[number];
-export type EncyclopedieIcoonSleutel = TegelIcoonSleutel | HudResourceType;
+export type EncyclopedieIcoonSleutel = TegelIcoonSleutel | HudResourceType | StadsverbeteringIcoonSleutel;
 
 function isTegelSleutel(sleutel: EncyclopedieIcoonSleutel): sleutel is TegelIcoonSleutel {
   return (TEGEL_SLEUTELS as readonly string[]).includes(sleutel);
@@ -83,6 +84,9 @@ export function EncyclopedieIcoon({
   tegelSet?: string;
   grootte?: number;
 }) {
+  if (isStadsverbeteringIcoonSleutel(sleutel)) {
+    return <StadsverbeteringIcoon sleutel={sleutel} grootte={grootte} />;
+  }
   if (!isTegelSleutel(sleutel)) {
     return (
       <span aria-hidden="true" style={{ display: "inline-flex", lineHeight: 0, flexShrink: 0 }}>

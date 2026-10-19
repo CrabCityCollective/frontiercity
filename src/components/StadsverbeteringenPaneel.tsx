@@ -7,6 +7,13 @@ import { frontierAfstand, stadEffectiviteit, stadVervalZone, StadVervalZone } fr
 import { GameState, Improvement } from "@/game/types";
 import ResourceIcoon, { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
+import { isStadsverbeteringIcoonSleutel, StadsverbeteringIcoon } from "./StadsverbeteringIcoon";
+
+// Icoontje naast een stadsverbetering (issue "Icoontjes city improvements"):
+// pixel art of getekend, volgens de grafische-stijl-instelling.
+function iconVoor(id: string) {
+  return isStadsverbeteringIcoonSleutel(id) ? <StadsverbeteringIcoon sleutel={id} /> : null;
+}
 
 interface StadsverbeteringenPaneelProps {
   state: GameState;
@@ -132,10 +139,17 @@ export default function StadsverbeteringenPaneel({
           const gebouwd = stad.cityImprovements.some((ci) => ci.id === improvement.id);
           if (gebouwd) {
             return (
-              <span key={improvement.id} className="fc-knop" style={{ opacity: 0.7 }}>
-                {improvementNaam(improvement, campagne)} (gebouwd)
-                <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
-                  {effectBeschrijving(improvement)}
+              <span
+                key={improvement.id}
+                className="fc-knop"
+                style={{ opacity: 0.7, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                {iconVoor(improvement.id)}
+                <span>
+                  {improvementNaam(improvement, campagne)} (gebouwd)
+                  <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                    {effectBeschrijving(improvement)}
+                  </span>
                 </span>
               </span>
             );
@@ -153,21 +167,25 @@ export default function StadsverbeteringenPaneel({
               className="fc-knop"
               disabled={!kanBouwen}
               onClick={() => onStartCityVerbetering(improvement)}
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", textAlign: "left" }}
             >
-              {improvementNaam(improvement, campagne)} (<KostenIcons kosten={improvement.kosten} />, {improvement.bouwtijdBeurten} beurten)
-              <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
-                {effectBeschrijving(improvement)}
-              </span>
-              {improvement.stadsgrootteEis && (
+              {iconVoor(improvement.id)}
+              <span>
+                {improvementNaam(improvement, campagne)} (<KostenIcons kosten={improvement.kosten} />, {improvement.bouwtijdBeurten} beurten)
                 <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
-                  Vereist stadsgrootte: {improvement.stadsgrootteEis}
+                  {effectBeschrijving(improvement)}
                 </span>
-              )}
-              {capVol && grootteEisVervuld && !inAanbouw && (
-                <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-gevaar)" }}>
-                  Sloten vol
-                </span>
-              )}
+                {improvement.stadsgrootteEis && (
+                  <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-tekst-gedempt)" }}>
+                    Vereist stadsgrootte: {improvement.stadsgrootteEis}
+                  </span>
+                )}
+                {capVol && grootteEisVervuld && !inAanbouw && (
+                  <span style={{ display: "block", fontSize: "0.75rem", color: "var(--kleur-gevaar)" }}>
+                    Sloten vol
+                  </span>
+                )}
+              </span>
             </button>
           );
         })}
