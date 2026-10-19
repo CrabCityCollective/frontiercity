@@ -39,10 +39,6 @@ export const ONRUST_DREMPEL = 4;
 // van het design-document).
 export const ONRUST_PRODUCTIE_MULTIPLIER = 0.5;
 
-// Statische verlaging door een actieve Saloon (issue, sectie 2: "vermindert
-// onrust op de eigen streek met 1 ... zolang de Saloon blijft staan").
-export const SALOON_ONRUST_VERMINDERING = 1;
-
 const ONRUST_UITGESLOTEN_IMPROVEMENT_IDS = new Set(["saloon", "courthouse"]);
 
 // Telt de improvements die meetellen voor de onrust-drempel op `streek`:
@@ -109,20 +105,18 @@ function beschermdeHoogtenDoorCourthouse(courthouseStreekHoogte: number): number
 // Onrust op `streek` — 0 zolang een bemand Courthouse op deze streek of op
 // een van de `COURTHOUSE_BEREIK_OMHOOG` streken direct eronder deze streek
 // beschermt (issues "Courthouse streken" en "Courthouse beter"), anders het
-// aantal onrust-veroorzakende improvements voorbij `ONRUST_DREMPEL`,
-// verminderd met `SALOON_ONRUST_VERMINDERING` zolang er een actieve Saloon
-// op deze streek staat.
+// aantal onrust-veroorzakende improvements voorbij `ONRUST_DREMPEL` — en
+// ook 0 zolang er een actieve, wegverbonden Saloon op deze streek staat
+// (issue "Saloon beter": de Saloon haalt de onrust helemaal weg, niet met 1).
 export function onrustOpStreek(streken: Streek[], rechters: Rechter[], streek: Streek): number {
   const beschermd = streken.some(
     (andere) =>
       heeftBemandCourthouse(streken, rechters, andere) && beschermdeHoogtenDoorCourthouse(andere.hoogte).includes(streek.hoogte)
   );
   if (beschermd) return 0;
+  if (heeftActieveSaloon(streken, streek)) return 0;
 
-  const aantal = telOnrustVerhogendeImprovements(streek);
-  let onrust = Math.max(0, aantal - ONRUST_DREMPEL);
-  if (heeftActieveSaloon(streken, streek)) onrust = Math.max(0, onrust - SALOON_ONRUST_VERMINDERING);
-  return onrust;
+  return Math.max(0, telOnrustVerhogendeImprovements(streek) - ONRUST_DREMPEL);
 }
 
 // Productie-multiplier voor een gegeven onrust-waarde: 1 zonder onrust,

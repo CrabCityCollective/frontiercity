@@ -129,8 +129,8 @@ export function effectBeschrijving(improvement: Improvement, opFrontier = true):
   // van de generieke gevallen hierboven. Beide vereisen, net als elk ander
   // niet-productie land-improvement (Wachttoren/Legerkamp), een wegverbinding
   // met de stad voordat hun effect meetelt (issue "Weg naar saloon").
-  if (effect.type === "onrust-verlichting" && effect.waarde) {
-    return `Vermindert, zodra wegverbonden, de onrust op deze streek met ${effect.waarde}.`;
+  if (effect.type === "onrust-verlichting") {
+    return "Haalt, zodra wegverbonden, de onrust op deze streek helemaal weg.";
   }
   if (effect.type === "courthouse") {
     return "Vereist een toegewezen Rechter en een wegverbinding met de stad om effect te hebben — zet dan de onrust op deze streek én de 7 streken direct erboven blijvend op 0, zolang bemand.";
@@ -704,9 +704,9 @@ export const WAMPANOAG_TENTJE: Improvement = {
 // direct beschikbaar" — voorheen stonden ze pas vanaf streek 8 beschikbaar,
 // terwijl onrust al veel eerder kan ontstaan op een drukke vroege streek).
 //
-// Saloon: goedkoop, geen terrein-/andere eis — vermindert de onrust op de
-// eigen streek met 1 zolang hij actief staat (onrust.ts:
-// `SALOON_ONRUST_VERMINDERING`). Telt zelf niet mee als een van de
+// Saloon: goedkoop, geen terrein-/andere eis — haalt de onrust op de eigen
+// streek helemaal weg zolang hij actief en wegverbonden staat (issue "Saloon
+// beter"; zie `onrustOpStreek` in onrust.ts). Telt zelf niet mee als een van de
 // onrust-veroorzakende improvements op zijn streek (issue-comment: "de
 // saloon moet niet zelf meetellen bij onrust") — zie `ONRUST_UITGESLOTEN_IDS`
 // in onrust.ts.
@@ -717,7 +717,7 @@ export const SALOON: Improvement = {
   soort: "land",
   kosten: { hout: 4, steen: 2 },
   bouwtijdBeurten: 1,
-  effect: { type: "onrust-verlichting", waarde: 1 },
+  effect: { type: "onrust-verlichting" },
   vereisteCampagneId: "going-west",
 };
 
