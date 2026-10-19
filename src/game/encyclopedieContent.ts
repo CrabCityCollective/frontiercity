@@ -585,6 +585,9 @@ const GEBOUW_KOSTEN_BRON: Record<string, Partial<Record<ResourceType, number>>> 
 
 // Icoontjes (issue "Encyclopedie mooier"): sleutel is de lemma-id (Going
 // West-verwijslemma's erven het icoon van hun basislemma, net als de kosten).
+// Alleen dingen die in het spel zelf een tegel/icoon hebben: stadsgebouwen
+// (aquaduct, markt, ...) staan in het spel alleen als tekst, dus krijgen hier
+// bewust geen verzonnen icoon.
 const LEMMA_ICOON: Record<string, EncyclopedieIcoonSleutel> = {
   erts: "erts",
   hout: "hout",
@@ -592,26 +595,16 @@ const LEMMA_ICOON: Record<string, EncyclopedieIcoonSleutel> = {
   cultuur: "cultuur",
   wetenschap: "wetenschap",
   "goud-mijn": "goudmijn",
-  aquaduct: "aquaduct",
-  barakken: "barakken",
-  bibliotheek: "bibliotheek",
   boerderij: "boerderij",
   courthouse: "courthouse",
-  "grote-tempel": "tempel",
-  "grote-woonwijk": "grotewoonwijk",
   heiligdom: "heiligdom",
   "hout-kap": "houtkap",
-  markt: "markt",
   mijn: "mijn",
-  offeraltaar: "offeraltaar",
-  opslagplaats: "opslagplaats",
+  offeraltaar: "offer-altaar",
   ranch: "ranch",
   saloon: "saloon",
-  smederij: "smederij",
   steengroeve: "steengroeve",
   sterrencirkel: "sterrencirkel",
-  tempel: "tempel",
-  woonwijk: "woonwijk",
   legerkamp: "legerkamp",
   wachttoren: "wachttoren",
   roofdieren: "roofdier",

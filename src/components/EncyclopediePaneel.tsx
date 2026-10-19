@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { EncyclopedieIcoon, IcoonRij } from "@/components/EncyclopedieIcoon";
 import { KostenIcons } from "@/components/ResourceIcoon";
+import { GOING_WEST_CAMPAGNE } from "@/game/campagnes";
 import { ENCYCLOPEDIE_CATEGORIEEN, ENCYCLOPEDIE_LEMMAS } from "@/game/encyclopedieContent";
 
 interface EncyclopediePaneelProps {
@@ -90,7 +91,12 @@ export default function EncyclopediePaneel({ onSluiten }: EncyclopediePaneelProp
                   {lemmasInCategorie.map((lemma) => (
                     <div key={lemma.id}>
                       <strong style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                        {lemma.icoon && <EncyclopedieIcoon sleutel={lemma.icoon} />}
+                        {lemma.icoon && (
+                          <EncyclopedieIcoon
+                            sleutel={lemma.icoon}
+                            tegelSet={lemma.id.startsWith("going-west-") ? GOING_WEST_CAMPAGNE.tegelSet : undefined}
+                          />
+                        )}
                         {lemma.titel}
                       </strong>
                       <span style={{ color: "var(--kleur-tekst-gedempt)" }}>{lemma.tekst}</span>
