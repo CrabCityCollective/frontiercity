@@ -1,6 +1,7 @@
 "use client";
 
-import { SMEDERIJ, SMEDERIJ_GEREEDSCHAP_OPBRENGST } from "@/game/improvements";
+import { useState } from "react";
+import { SMEDERIJ,SMEDERIJ_GEREEDSCHAP_OPBRENGST } from "@/game/improvements";
 import { GameState } from "@/game/types";
 import { KostenIcons } from "./ResourceIcoon";
 import RushMetGoudKnop from "./RushMetGoudKnop";
@@ -9,20 +10,21 @@ interface SmederijPaneelProps {
   state: GameState;
   onStartSmederij: () => void;
   onVersnelSmederij: () => void;
-  onZetSmederijActief: (actief: boolean) => void;
+  onZetSmederijOpdracht: (aantal: number) => void;
 }
 
 // Smederij (Going West, M21d, opdracht-wampanoag-opening.md §3): economische
 // city improvement, buiten de city-improvement-cap — zelfde uitzondering als
 // OpslagplaatsPaneel. Anders dan Opslagplaats niet herhaalbaar: eenmaal
 // gebouwd toont dit paneel alleen nog de lopende conversie-status (inclusief
-// de actief/inactief-toggle, issue: "Smederij inactief zetten"). Anders dan
+// het invoerveld voor het aantal te maken gereedschap, issue: "Smederij"). Anders dan
 // OpslagplaatsPaneel niet campagne-onafhankelijk zichtbaar: de
 // erts→gereedschap-conversie hoort bij Going West, dus dit paneel (en de
 // bijbehorende `startSmederij`-gate, groeiEnRekrutering.ts) blijft in de
 // tutorial verborgen (issue: "Smederij niet in tutorial").
-export default function SmederijPaneel({ state, onStartSmederij, onVersnelSmederij, onZetSmederijActief }: SmederijPaneelProps) {
-  const { smederijInAanbouw, heeftSmederij, smederijActief } = state.stad;
+export default function SmederijPaneel({ state, onStartSmederij, onVersnelSmederij, onZetSmederijOpdracht }: SmederijPaneelProps) {
+  const { smederijInAanbouw, heeftSmederij, smederijOpdracht } = state.stad;
+  const [invoer, setInvoer] = useState("");
   const ertsKosten = SMEDERIJ.effect.waarde ?? 0;
 
   if (state.campagneId !== "going-west") return null;
@@ -46,18 +48,32 @@ export default function SmederijPaneel({ state, onStartSmederij, onVersnelSmeder
       {heeftSmederij ? (
         <>
           <span style={{ color: "var(--kleur-tekst-gedempt)", fontSize: "0.8rem" }}>
-            {smederijActief
-              ? `Actief — zet elke beurt ${ertsKosten} erts om in ${SMEDERIJ_GEREEDSCHAP_OPBRENGST} gereedschap (indien voorradig).`
-              : "Inactief — zet geen erts meer om, tot je 'm weer inschakelt."}{" "}
+            {smederijOpdracht > 0
+              ? `Bezig — nog ${smederijOpdracht} gereedschap te maken (${ertsKosten} erts per gereedschap, indien voorradig). Daarna gaat de Smederij vanzelf uit.`
+              : "Uit — voer hieronder in hoeveel gereedschap er gemaakt moet worden."}{" "}
             Gereedschap in voorraad: {state.gereedschap}.
           </span>
-          <button
-            className="fc-knop"
-            onClick={() => onZetSmederijActief(!smederijActief)}
-            style={{ padding: "0.35rem 0.75rem", alignSelf: "flex-start" }}
-          >
-            {smederijActief ? "Zet inactief" : "Zet actief"}
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={invoer}
+              onChange={(e) => setInvoer(e.target.value)}
+              aria-label="Aantal te maken gereedschap"
+              style={{ width: "5rem", padding: "0.3rem" }}
+            />
+            <button
+              className="fc-knop"
+              onClick={() => {
+                onZetSmederijOpdracht(Number(invoer));
+                setInvoer("");
+              }}
+              style={{ padding: "0.35rem 0.75rem" }}
+            >
+              Maak gereedschap
+            </button>
+          </div>
         </>
       ) : smederijInAanbouw ? (
         <>

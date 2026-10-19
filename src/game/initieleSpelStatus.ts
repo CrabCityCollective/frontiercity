@@ -81,7 +81,7 @@ export function maakInitieleSpelStatus(campagneId?: string): GameState {
     ingenieurs: [],
     cityImprovements: [],
     heeftSmederij: false,
-    smederijActief: true,
+    smederijOpdracht: 0,
   };
 
   return {

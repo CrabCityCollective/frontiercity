@@ -37,7 +37,7 @@ import {
   versnelCivielMetGoud as versnelCivielMetGoudActie,
   versnelOpslagplaatsMetGoud as versnelOpslagplaatsMetGoudActie,
   versnelSmederijMetGoud as versnelSmederijMetGoudActie,
-  zetSmederijActief as zetSmederijActiefActie,
+  zetSmederijOpdracht as zetSmederijOpdrachtActie,
 } from "./groeiEnRekrutering";
 import {
   bevestigGoudOnderVuur as bevestigGoudOnderVuurActie,
@@ -302,10 +302,10 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean, debug
     setState((huidig) => versnelSmederijMetGoudActie(huidig));
   }, []);
 
-  // Smederij actief/inactief toggelen (issue: "Smederij inactief zetten") —
-  // zelfde dunne wrapper-conventie als hierboven.
-  const zetSmederijActief = useCallback((actief: boolean) => {
-    setState((huidig) => zetSmederijActiefActie(huidig, actief));
+  // Smederij-opdracht instellen (issue: "Smederij") — zelfde dunne
+  // wrapper-conventie als hierboven.
+  const zetSmederijOpdracht = useCallback((aantal: number) => {
+    setState((huidig) => zetSmederijOpdrachtActie(huidig, aantal));
   }, []);
 
   const geefTribuut = useCallback(() => {
@@ -495,7 +495,7 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean, debug
     versnelCivielMetGoud,
     versnelOpslagplaatsMetGoud,
     versnelSmederijMetGoud,
-    zetSmederijActief,
+    zetSmederijOpdracht,
     geefTribuut,
     koopIndringersAfMetWampum,
     bemanWachttoren,

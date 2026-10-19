@@ -17,7 +17,7 @@ interface StadMenuPopupProps {
   onStartOpslagplaats: () => void;
   onStartSmederij: () => void;
   onVersnelSmederij: () => void;
-  onZetSmederijActief: (actief: boolean) => void;
+  onZetSmederijOpdracht: (aantal: number) => void;
   onStartCityVerbetering: (improvement: Improvement) => void;
   onVersnelCityVerbetering: () => void;
   onStartRecrutering: () => void;
@@ -47,7 +47,7 @@ export default function StadMenuPopup({
   onStartOpslagplaats,
   onStartSmederij,
   onVersnelSmederij,
-  onZetSmederijActief,
+  onZetSmederijOpdracht,
   onStartCityVerbetering,
   onVersnelCityVerbetering,
   onStartRecrutering,
@@ -117,7 +117,7 @@ export default function StadMenuPopup({
           state={state}
           onStartSmederij={onStartSmederij}
           onVersnelSmederij={onVersnelSmederij}
-          onZetSmederijActief={onZetSmederijActief}
+          onZetSmederijOpdracht={onZetSmederijOpdracht}
         />
         <StadsverbeteringenPaneel
           state={state}
