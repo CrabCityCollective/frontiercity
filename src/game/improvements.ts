@@ -253,7 +253,7 @@ export const ECONOMISCH_LAND_IMPROVEMENTS: Improvement[] = [
     soort: "land",
     kosten: { hout: 4 },
     bouwtijdBeurten: 2,
-    effect: { type: "productie", resource: "voedsel", waarde: 5 },
+    effect: { type: "productie", resource: "voedsel", waarde: 4 },
     uitputtingBeurten: 18,
     // Alleen op vlakke grond (issue: "boerderij kun je juist niet op bergen
     // en bossen zetten, alleen op vlakke grond").
