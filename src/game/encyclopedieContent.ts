@@ -28,7 +28,26 @@
 // het beste van beide.
 import { BOON_POOL } from "./boons";
 import { GOING_WEST_CAMPAGNE } from "./campagnes";
+import {
+  AQUADUCT,
+  BARAKKEN,
+  BIBLIOTHEEK,
+  COURTHOUSE,
+  CULTUREEL_LAND_IMPROVEMENTS,
+  ECONOMISCH_LAND_IMPROVEMENTS,
+  GROTE_TEMPEL,
+  GROTE_WOONWIJK,
+  MARKT,
+  MILITAIR_LAND_IMPROVEMENTS,
+  OPSLAGPLAATS,
+  SALOON,
+  SMEDERIJ,
+  STERRENCIRKEL,
+  TEMPEL,
+  WOONWIJK,
+} from "./improvements";
 import { TECH_TREE, TechNode } from "./techTree";
+import { Improvement, ResourceType } from "./types";
 
 export type EncyclopedieCategorie =
   | "Stad"
@@ -56,6 +75,11 @@ export interface EncyclopedieLemma {
   titel: string;
   categorie: EncyclopedieCategorie;
   tekst: string;
+  // Bouwkosten (issue "Encyclopedie": "de bouw kosten (ook met de icoontjes
+  // erbij) ... van de gebouwen"): alleen gezet bij gebouw-lemma's, en
+  // afgeleid uit `Improvement.kosten` zelf (zie `GEBOUW_KOSTEN_BRON`) zodat
+  // ze niet los gedupliceerd hoeven te worden.
+  kosten?: Partial<Record<ResourceType, number>>;
 }
 
 // Techboom-lemma's (issue: "Techtree toevoegen aan encyclopedie") worden
@@ -515,4 +539,46 @@ const GOING_WEST_NAAM_LEMMAS: EncyclopedieLemma[] = GOING_WEST_GEBOUW_NAAM_BRON.
   ];
 });
 
-export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [...BASE_LEMMAS, ...GOING_WEST_NAAM_LEMMAS];
+// Bouwkosten per gebouw-lemma: sleutel is de lemma-id, waarde de kosten van
+// het bijbehorende improvement. De Going West-verwijslemma's erven de kosten
+// van hun basislemma (zelfde gebouw, andere naam).
+const ALLE_LAND_IMPROVEMENTS: Improvement[] = [
+  ...ECONOMISCH_LAND_IMPROVEMENTS,
+  ...CULTUREEL_LAND_IMPROVEMENTS,
+  STERRENCIRKEL,
+  ...MILITAIR_LAND_IMPROVEMENTS,
+  SALOON,
+  COURTHOUSE,
+];
+const landKosten = (id: string) => ALLE_LAND_IMPROVEMENTS.find((i) => i.id === id)!.kosten;
+
+const GEBOUW_KOSTEN_BRON: Record<string, Partial<Record<ResourceType, number>>> = {
+  "goud-mijn": landKosten("goudmijn"),
+  "hout-kap": landKosten("houtkap"),
+  steengroeve: landKosten("steengroeve"),
+  mijn: landKosten("mijn"),
+  boerderij: landKosten("boerderij"),
+  ranch: landKosten("ranch"),
+  heiligdom: landKosten("heiligdom"),
+  offeraltaar: landKosten("offer-altaar"),
+  sterrencirkel: landKosten("sterrencirkel"),
+  wachttoren: landKosten("wachttoren"),
+  legerkamp: landKosten("legerkamp"),
+  saloon: landKosten("saloon"),
+  courthouse: landKosten("courthouse"),
+  aquaduct: AQUADUCT.kosten,
+  barakken: BARAKKEN.kosten,
+  bibliotheek: BIBLIOTHEEK.kosten,
+  "grote-tempel": GROTE_TEMPEL.kosten,
+  "grote-woonwijk": GROTE_WOONWIJK.kosten,
+  markt: MARKT.kosten,
+  opslagplaats: OPSLAGPLAATS.kosten,
+  smederij: SMEDERIJ.kosten,
+  tempel: TEMPEL.kosten,
+  woonwijk: WOONWIJK.kosten,
+};
+
+export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [...BASE_LEMMAS, ...GOING_WEST_NAAM_LEMMAS].map((lemma) => {
+  const kosten = GEBOUW_KOSTEN_BRON[lemma.id] ?? GEBOUW_KOSTEN_BRON[lemma.id.replace(/^going-west-/, "")];
+  return kosten ? { ...lemma, kosten } : lemma;
+});
