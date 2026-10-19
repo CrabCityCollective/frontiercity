@@ -110,7 +110,7 @@ test("onrust kan door de Saloon niet onder 0 zakken", () => {
   assert.equal(onrustOpStreek([streek], [], streek), 0);
 });
 
-test("een bemand, wegverbonden Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven op 0", () => {
+test("een bemand, wegverbonden Courthouse houdt de onrust op zijn eigen streek en de 7 streken direct erboven op 0", () => {
   const drukkeStreek = (hoogte: number) =>
     maakStreek(hoogte, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: STEENGROEVE });
   // Stad-tile op positie 6 van streek 1 (het enige nog vrije vakje), recht
@@ -119,13 +119,14 @@ test("een bemand, wegverbonden Courthouse houdt de onrust op zijn eigen streek e
   const streek1MetStad = metStad(drukkeStreek(1), 6);
   const courthouseStreek = metWeg(maakStreek(2, { 6: COURTHOUSE }), 4, 5, 6);
   const rechters: Rechter[] = [{ id: "rechter-0", courthouse: { hoogte: 2, positieInStreek: 6 } }];
-  const streken = [streek1MetStad, courthouseStreek, drukkeStreek(3), drukkeStreek(4), drukkeStreek(5)];
+  const streken = [streek1MetStad, courthouseStreek, ...[3, 4, 5, 6, 7, 8, 9, 10].map(drukkeStreek)];
 
   assert.equal(onrustOpStreek(streken, rechters, streken[0]), 2); // eronder: buiten bereik, gewoon onrust
   assert.equal(onrustOpStreek(streken, rechters, streken[1]), 0); // eigen streek
   assert.equal(onrustOpStreek(streken, rechters, streken[2]), 0); // 1 erboven
   assert.equal(onrustOpStreek(streken, rechters, streken[3]), 0); // 2 erboven
-  assert.equal(onrustOpStreek(streken, rechters, streken[4]), 2); // 3 erboven: buiten bereik, gewoon onrust
+  assert.equal(onrustOpStreek(streken, rechters, streken[8]), 0); // 7 erboven: net binnen bereik
+  assert.equal(onrustOpStreek(streken, rechters, streken[9]), 2); // 8 erboven: buiten bereik, gewoon onrust
 });
 
 test("een bemand maar niet-wegverbonden Courthouse onderdrukt geen onrust", () => {
