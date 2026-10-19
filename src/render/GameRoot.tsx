@@ -185,7 +185,7 @@ export default function GameRoot({
     versnelCivielMetGoud,
     versnelOpslagplaatsMetGoud,
     versnelSmederijMetGoud,
-    zetSmederijActief,
+    zetSmederijOpdracht,
     geefTribuut,
     koopIndringersAfMetWampum,
     bemanWachttoren,
@@ -2171,7 +2171,7 @@ export default function GameRoot({
             onStartOpslagplaats={startOpslagplaats}
             onStartSmederij={startSmederij}
             onVersnelSmederij={versnelSmederijMetGoud}
-            onZetSmederijActief={zetSmederijActief}
+            onZetSmederijOpdracht={zetSmederijOpdracht}
             onStartCityVerbetering={startCityVerbetering}
             onVersnelCityVerbetering={versnelCityVerbeteringMetGoud}
             onStartRecrutering={startRecrutering}

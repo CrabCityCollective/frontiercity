@@ -441,7 +441,7 @@ test("berekenAchterliggendeProductie telt de na-afstandsverval city-improvement-
 
 test("een Smederij zet elke beurt 2 erts om in 1 gereedschap, zolang er genoeg erts voorradig is (Going West, M21d)", () => {
   let state = maakInitieleSpelStatus();
-  state = metActieveStad(state, { ...state.stad, heeftSmederij: true });
+  state = metActieveStad(state, { ...state.stad, heeftSmederij: true, smederijOpdracht: 10 });
   state = { ...state, voorraad: { ...state.voorraad, erts: 5 } };
 
   state = volgendeBeurt(state);
@@ -457,7 +457,7 @@ test("een Smederij zet elke beurt 2 erts om in 1 gereedschap, zolang er genoeg e
 
 test("de erts→gereedschap-conversie slaat een beurt over zonder genoeg erts, en de erts-voorraad wordt nooit negatief", () => {
   let state = maakInitieleSpelStatus();
-  state = metActieveStad(state, { ...state.stad, heeftSmederij: true });
+  state = metActieveStad(state, { ...state.stad, heeftSmederij: true, smederijOpdracht: 10 });
   state = { ...state, voorraad: { ...state.voorraad, erts: 1 } };
 
   state = volgendeBeurt(state);
@@ -476,21 +476,37 @@ test("zonder Smederij vindt er nooit een erts→gereedschap-conversie plaats", (
   assert.equal(state.voorraad.erts, 10);
 });
 
-test("een inactief gezette Smederij zet geen erts meer om (issue: 'Smederij inactief zetten')", () => {
+test("een Smederij zonder opdracht zet geen erts om (issue: 'Smederij')", () => {
   let state = maakInitieleSpelStatus();
-  state = metActieveStad(state, { ...state.stad, heeftSmederij: true, smederijActief: false });
+  state = metActieveStad(state, { ...state.stad, heeftSmederij: true, smederijOpdracht: 0 });
   state = { ...state, voorraad: { ...state.voorraad, erts: 5 } };
 
   state = volgendeBeurt(state);
 
-  assert.equal(state.gereedschap, 0, "geen conversie zolang de Smederij inactief staat");
+  assert.equal(state.gereedschap, 0, "geen conversie zonder opdracht");
   assert.equal(state.voorraad.erts, 5, "erts blijft ongemoeid");
+});
+
+test("een Smederij stopt vanzelf zodra het opgegeven aantal gereedschap gemaakt is (issue: 'Smederij')", () => {
+  let state = maakInitieleSpelStatus();
+  state = metActieveStad(state, { ...state.stad, heeftSmederij: true, smederijOpdracht: 2 });
+  state = { ...state, voorraad: { ...state.voorraad, erts: 10 } };
+
+  state = volgendeBeurt(state);
+  assert.equal(state.stad.smederijOpdracht, 1);
+  state = volgendeBeurt(state);
+  assert.equal(state.stad.smederijOpdracht, 0);
+  state = volgendeBeurt(state);
+
+  assert.equal(state.gereedschap, 2, "precies 2 gereedschap gemaakt");
+  assert.equal(state.voorraad.erts, 6, "na de opdracht blijft de erts ongemoeid");
+  assert.equal(state.steden[state.steden.length - 1].smederijOpdracht, 0);
 });
 
 test("Smederij-conversie is niet gevoelig voor het afstandsverval van een tweede stad (bewuste keuze, opdracht-wampanoag-opening.md §3)", () => {
   let state = maakInitieleSpelStatus();
   const eersteStad = { ...state.stad, streekHoogte: 0 };
-  const actieveStad = { ...state.stad, naam: "Nieuwe stad", heeftSmederij: true, streekHoogte: 0 };
+  const actieveStad = { ...state.stad, naam: "Nieuwe stad", heeftSmederij: true, smederijOpdracht: 10, streekHoogte: 0 };
   state = {
     ...state,
     steden: [eersteStad, actieveStad],

@@ -419,7 +419,7 @@ export function stichtStad(state: GameState, slot: SettlerSlot = "primair"): Gam
     ingenieurs: [],
     cityImprovements: [],
     heeftSmederij: false,
-    smederijActief: true,
+    smederijOpdracht: 0,
   };
   // `isAfsluitendeStichting` hierboven bepaalt of dit de verplichte,
   // campagne-afsluitende stichting is (hoofdstuk 1/9) — elke andere

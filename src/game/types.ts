@@ -593,16 +593,12 @@ export interface City {
   // openingsfase gewoon staan (opdracht-wampanoag-opening.md §3: "blijft
   // nuttig voor latere campagne-lagen").
   heeftSmederij: boolean;
-  // Of de voltooide Smederij momenteel meedraait (issue: "Smederij inactief
-  // zetten") — losstaand van `heeftSmederij` hierboven, dat alleen bijhoudt
-  // of het gebouw er staat. Standaard `true` zodra de Smederij klaar is
-  // (`verwerkSmederij`/`versnelSmederijMetGoud`, groeiEnRekrutering.ts), de
-  // speler kan 'm via `zetSmederijActief` pauzeren/hervatten om de lopende
-  // erts-consumptie stil te leggen zonder het gebouw kwijt te raken (zelfde
-  // instant-omkeerbare toggle-conventie als de Wampanoag-handelskeuze en
-  // Wachttoren-bemanning). Betekenisloos zolang `heeftSmederij` nog `false`
-  // is; blijft dan gewoon op de standaardwaarde staan.
-  smederijActief: boolean;
+  // Hoeveel gereedschap de voltooide Smederij nog moet maken (issue:
+  // "Smederij"): vervangt de eerdere aan/uit-knop. De speler voert een aantal
+  // in via `zetSmederijOpdracht` (groeiEnRekrutering.ts); `verwerkProductie`
+  // telt het af per gemaakt gereedschap, en bij 0 staat de Smederij vanzelf
+  // stil. Standaard 0; betekenisloos zolang `heeftSmederij` nog `false` is.
+  smederijOpdracht: number;
 }
 
 // Uitkomst van een militaire confrontatie (M7, hoofdstuk 6): een vergelijking

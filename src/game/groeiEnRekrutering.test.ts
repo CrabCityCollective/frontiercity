@@ -19,7 +19,7 @@ import {
   versnelCivielMetGoud,
   versnelOpslagplaatsMetGoud,
   versnelSmederijMetGoud,
-  zetSmederijActief,
+  zetSmederijOpdracht,
 } from "./groeiEnRekrutering";
 import { heeftOfferAltaar } from "./streekOntgrendeling";
 import { metActieveStad } from "./stad";
@@ -165,21 +165,24 @@ test("versnelSmederijMetGoud ontgrendelt cultureelOntgrendeld en zet het smederi
   assert.equal(naVersnellen.smederijGebouwdEvent, true);
 });
 
-// Issue "Smederij inactief zetten": een voltooide Smederij mag gepauzeerd en
-// weer hervat worden zonder het gebouw zelf kwijt te raken.
-test("zetSmederijActief pauzeert/hervat een voltooide Smederij, en heeft geen effect zolang er nog geen Smederij staat", () => {
+// Issue "Smederij": geen aan/uit-knop meer, maar een in te voeren aantal te
+// maken gereedschap.
+test("zetSmederijOpdracht stelt het aantal te maken gereedschap in, en heeft geen effect zolang er nog geen Smederij staat", () => {
   let state = maakInitieleSpelStatus("going-west");
-  assert.equal(state.stad.smederijActief, true, "standaard actief, ook al staat er nog geen Smederij");
+  assert.equal(state.stad.smederijOpdracht, 0, "standaard uit");
 
-  const zonderSmederij = zetSmederijActief(state, false);
+  const zonderSmederij = zetSmederijOpdracht(state, 5);
   assert.equal(zonderSmederij, state, "geen effect zolang heeftSmederij nog false is");
 
   state = { ...state, stad: { ...state.stad, heeftSmederij: true } };
-  state = zetSmederijActief(state, false);
-  assert.equal(state.stad.smederijActief, false);
+  state = zetSmederijOpdracht(state, 5);
+  assert.equal(state.stad.smederijOpdracht, 5);
 
-  state = zetSmederijActief(state, true);
-  assert.equal(state.stad.smederijActief, true);
+  state = zetSmederijOpdracht(state, -3);
+  assert.equal(state.stad.smederijOpdracht, 0, "negatieve invoer wordt 0");
+
+  state = zetSmederijOpdracht(state, 2.7);
+  assert.equal(state.stad.smederijOpdracht, 2, "naar beneden afgerond");
 });
 
 test("versnelCivielMetGoud heeft geen effect op een Nieuwe settler in aanbouw ('soort: unit', buiten bereik van rush-bouwen)", () => {

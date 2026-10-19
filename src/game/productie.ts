@@ -20,7 +20,7 @@ import { hoogsteOntgrendeldeStreek } from "./world";
 import { isTileVerbondenMetStad } from "./wegen";
 import { isMateriaalType } from "./materiaal";
 import { telBemandeWachttorens } from "./militair";
-import { stadEffectiviteit } from "./stad";
+import { metActieveStad, stadEffectiviteit } from "./stad";
 import { onrustOpStreek, onrustProductieMultiplier } from "./onrust";
 import { SMEDERIJ, SMEDERIJ_GEREEDSCHAP_OPBRENGST } from "./improvements";
 
@@ -454,22 +454,27 @@ export function verwerkProductie(state: GameState): GameState {
   // hierboven (een ander effect-type), en bewust zonder het afstandsverval/
   // `stadEffectiviteit` van de overige city improvements: de conversie trekt
   // rechtstreeks uit de lokale erts-voorraad van de actieve stad, geen
-  // productie op een land-vakje. `smederijActief` (issue: "Smederij inactief
-  // zetten") legt de conversie stil zonder het gebouw zelf kwijt te raken —
-  // zolang de speler 'm pauzeert, blijft de erts-voorraad ongemoeid.
+  // productie op een land-vakje. `smederijOpdracht` (issue: "Smederij") is het
+  // aantal nog te maken gereedschap: de conversie loopt alleen zolang dat > 0
+  // is en telt per gemaakt gereedschap af, dus bij 0 staat de Smederij vanzelf
+  // uit en blijft de erts-voorraad ongemoeid.
   let gereedschap = state.gereedschap;
   // "Ontvangen"-vlag voor de ResourceHud (issue: "Alle voorraden tonen in
   // resource block") — pas op `true` gezet zodra hier daadwerkelijk
   // gereedschap bij komt, blijft daarna permanent staan (types.ts).
   let gereedschapOntvangen = state.gereedschapOntvangen;
   const ertsKosten = SMEDERIJ.effect.waarde ?? 0;
-  if (state.stad.heeftSmederij && state.stad.smederijActief && voorraad.erts >= ertsKosten) {
+  let smederijOpdracht = state.stad.smederijOpdracht;
+  if (state.stad.heeftSmederij && smederijOpdracht > 0 && voorraad.erts >= ertsKosten) {
     voorraad.erts -= ertsKosten;
+    smederijOpdracht -= 1;
     gereedschap += SMEDERIJ_GEREEDSCHAP_OPBRENGST;
     gereedschapOntvangen = true;
   }
 
-  return { ...state, voorraad, voedsel, cultuur, wetenschap, gereedschap, gereedschapOntvangen };
+  const nieuweState = { ...state, voorraad, voedsel, cultuur, wetenschap, gereedschap, gereedschapOntvangen };
+  if (smederijOpdracht === state.stad.smederijOpdracht) return nieuweState;
+  return metActieveStad(nieuweState, { ...state.stad, smederijOpdracht });
 }
 
 // Of er al een actieve, wegverbonden boerderij meeproduceert (issue: "uitleg

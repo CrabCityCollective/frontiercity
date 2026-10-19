@@ -623,7 +623,7 @@ export function verwerkSmederij(state: GameState): GameState {
         ...state.stad,
         smederijInAanbouw: undefined,
         heeftSmederij: true,
-        smederijActief: true,
+        smederijOpdracht: 0,
       }),
       voorraad,
     });
@@ -652,7 +652,7 @@ export function versnelSmederijMetGoud(state: GameState): GameState {
         ...state.stad,
         smederijInAanbouw: undefined,
         heeftSmederij: true,
-        smederijActief: true,
+        smederijOpdracht: 0,
       }),
       voorraad,
     });
@@ -664,16 +664,16 @@ export function versnelSmederijMetGoud(state: GameState): GameState {
   };
 }
 
-// Pauzeert/hervat de erts→gereedschap-conversie van een voltooide Smederij
-// (issue: "Smederij inactief zetten") — instant en omkeerbaar, zelfde
-// interactiepatroon als de Wampanoag-handelskeuze (`stelWampanoagHandelIn`,
-// wampanoag.ts) en Wachttoren-bemanning: geen kosten, geen wachttijd, direct
-// effect op de eerstvolgende `verwerkProductie` (productie.ts). Negeert de
-// aanroep stilzwijgend zolang er nog geen voltooide Smederij staat — zelfde
+// Stelt in hoeveel gereedschap de voltooide Smederij nog moet maken (issue:
+// "Smederij"): vervangt de aan/uit-knop. `verwerkProductie` (productie.ts)
+// telt de opdracht af en zet de Smederij daarmee vanzelf uit bij 0. Het aantal
+// wordt naar beneden afgerond en op 0 begrensd; de aanroep wordt stilzwijgend
+// genegeerd zolang er nog geen voltooide Smederij staat — zelfde
 // veilige-aanroep-conventie als de andere acties hierboven.
-export function zetSmederijActief(state: GameState, actief: boolean): GameState {
+export function zetSmederijOpdracht(state: GameState, aantal: number): GameState {
   if (!state.stad.heeftSmederij) return state;
-  return metActieveStad(state, { ...state.stad, smederijActief: actief });
+  const opdracht = Number.isFinite(aantal) ? Math.max(0, Math.floor(aantal)) : 0;
+  return metActieveStad(state, { ...state.stad, smederijOpdracht: opdracht });
 }
 
 // Start het rekruteren van een Soldaat (M7), als er niet al een rekrutering
