@@ -84,10 +84,10 @@ test("een ghost-town-tile telt niet mee voor de onrust-drempel", () => {
   assert.equal(onrustOpStreek([metGhostTown], [], metGhostTown), 0);
 });
 
-test("een actieve, wegverbonden Saloon verlaagt de onrust met 1 en telt zelf niet mee als onrust-veroorzakend improvement", () => {
+test("een actieve, wegverbonden Saloon haalt de onrust helemaal weg en telt zelf niet mee als onrust-veroorzakend improvement", () => {
   // 5 gewone improvements + Saloon = 6 tiles, maar de Saloon telt niet mee
   // voor de drempel — dus nog steeds maar 5 onrust-veroorzakende improvements
-  // (onrust 1), en de Saloon trekt daar nog eens 1 vanaf. Positie 6 (de
+  // (onrust 1), die de Saloon helemaal wegneemt. Positie 6 (de
   // stad-tile) ligt naast positie 5, dus alleen de Saloon-tile zelf heeft een
   // weg nodig om verbonden te zijn.
   const streek = metStad(
@@ -100,7 +100,7 @@ test("een actieve, wegverbonden Saloon verlaagt de onrust met 1 en telt zelf nie
 test("een actieve maar niet-wegverbonden Saloon vermindert de onrust niet", () => {
   // Zelfde opstelling als hierboven, maar zonder de weg op positie 5 — de
   // Saloon telt nog steeds niet mee als onrust-veroorzaker (dat blijft altijd
-  // zo), maar haar -1-effect blijft uit zolang ze niet wegverbonden is.
+  // zo), maar haar effect blijft uit zolang ze niet wegverbonden is.
   const streek = maakStreek(1, { 0: HOUTKAP, 1: MIJN, 2: STEENGROEVE, 3: HOUTKAP, 4: MIJN, 5: SALOON });
   assert.equal(onrustOpStreek([streek], [], streek), 1);
 });
