@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { GrafischeStijl } from "@/game/save";
+import { GrafischeStijl, heeftHandmatigeSlot } from "@/game/save";
 import SpelInstellingenPopup from "./SpelInstellingenPopup";
 
 interface HoofdMenuProps {
@@ -35,6 +35,12 @@ interface HoofdMenuProps {
   // menu tijdens het spelen zelf, zodat je weer terug kan naar de game"):
   // zelfde plek/patroon als "Historie"/"Techboom"/"Economie" hierboven.
   onToonEncyclopedie: () => void;
+  // Handmatige save-slot (issue: "Aparte save"): één slot los van de
+  // autosave, om later vanaf een gekozen punt opnieuw te kunnen beginnen.
+  // Beide geven `false` terug als het niet lukte (schrijffout / geen slot).
+  campagneId?: string;
+  onSlaHandmatigOp: () => boolean;
+  onLaadHandmatig: () => boolean;
 }
 
 // Zwevend menu-icoontje rechtsboven (issue: "niet automatisch opslaan, maar
@@ -53,9 +59,16 @@ export default function HoofdMenu({
   onToonTechboom,
   onToonEconomie,
   onToonEncyclopedie,
+  campagneId,
+  onSlaHandmatigOp,
+  onLaadHandmatig,
 }: HoofdMenuProps) {
   const [open, setOpen] = useState(false);
   const [toonInstellingen, setToonInstellingen] = useState(false);
+  const [saveMelding, setSaveMelding] = useState<string | null>(null);
+  // Alleen bij het openen van het menu opnieuw bepaald (de render volgt op
+  // `open`/`saveMelding`), zodat "Laden" pas actief wordt na een eerste save.
+  const heeftSlot = heeftHandmatigeSlot(campagneId);
 
   return (
     <div style={{ position: "fixed", top: "0.75rem", right: "0.75rem", zIndex: 50 }}>
@@ -122,6 +135,30 @@ export default function HoofdMenu({
           >
             Encyclopedie
           </button>
+          <button
+            className="fc-knop"
+            onClick={() => setSaveMelding(onSlaHandmatigOp() ? "Opgeslagen in het save-slot." : "Opslaan mislukt.")}
+            style={{ padding: "0.35rem 0.75rem" }}
+          >
+            Opslaan in slot
+          </button>
+          <button
+            className="fc-knop"
+            disabled={!heeftSlot}
+            onClick={() => {
+              if (!window.confirm("De huidige run terugzetten naar het save-slot? Voortgang sinds die save gaat verloren.")) return;
+              if (onLaadHandmatig()) {
+                setSaveMelding(null);
+                setOpen(false);
+              } else {
+                setSaveMelding("Geen save-slot gevonden.");
+              }
+            }}
+            style={{ padding: "0.35rem 0.75rem" }}
+          >
+            Laden uit slot
+          </button>
+          {saveMelding && <div style={{ fontSize: "0.8rem", color: "var(--kleur-tekst-gedempt)" }}>{saveMelding}</div>}
           <button
             className="fc-knop"
             onClick={() => {
