@@ -86,6 +86,46 @@ export function opgeslagenSpelStreek(campagneId?: string): number | null {
   return hoogsteOntgrendeldeStreek(opgeslagenStatus.streken);
 }
 
+// Handmatige save-slot (issue: "Aparte save" — "1 aparte save slot die los
+// staat van de auto save ... later vanaf een bepaald punt opnieuw kunnen
+// beginnen"). Eén slot per campagne, met een eigen sleutel naast de
+// autosave-sleutel: de autosave blijft bij elke wijziging overschreven worden
+// (en verdwijnt bij een ineenstorting), terwijl dit slot alleen verandert als
+// de speler zelf opnieuw opslaat. Bewust géén slot-systeem met meerdere
+// plekken (hoofdstuk 8/13) — precies één extra slot.
+function handmatigeSaveSleutel(campagneId?: string): string {
+  return campagneId ? `frontier-city:${campagneId}-handmatige-save` : "frontier-city:tutorial-handmatige-save";
+}
+
+// Geeft `true` als het opslaan gelukt is, zodat de UI een mislukking (volle
+// opslag, privé-browsen) niet als geslaagd meldt.
+export function saveHandmatigeSlot(state: GameState): boolean {
+  try {
+    window.localStorage.setItem(handmatigeSaveSleutel(state.campagneId), JSON.stringify(state));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function laadHandmatigeSlot(campagneId?: string): GameState | null {
+  try {
+    const ruw = window.localStorage.getItem(handmatigeSaveSleutel(campagneId));
+    if (!ruw) return null;
+    return JSON.parse(ruw) as GameState;
+  } catch {
+    return null;
+  }
+}
+
+export function heeftHandmatigeSlot(campagneId?: string): boolean {
+  try {
+    return window.localStorage.getItem(handmatigeSaveSleutel(campagneId)) !== null;
+  } catch {
+    return false;
+  }
+}
+
 // Per-campagne voortgangstellers (issue: "voortgang verschillende campagnes
 // tonen" — vervangt de eerdere, tutorial-specifieke `TUTORIAL_VOLTOOID_KEY`-
 // vlag door drie tellers die voor elke campagne gelden). Eigen sleutel per

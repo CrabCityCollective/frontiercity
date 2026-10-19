@@ -78,7 +78,7 @@ import {
   haalStrijderTerug as haalStrijderTerugActie,
 } from "./militair";
 import { bemanCourthouse as bemanCourthouseActie, haalRechterTerug as haalRechterTerugActie } from "./onrust";
-import { laadSpel, saveSpel, verwijderSpel } from "./save";
+import { laadHandmatigeSlot, laadSpel, saveHandmatigeSlot, saveSpel, verwijderSpel } from "./save";
 import { kiesTech as kiesTechActie } from "./tech";
 import { bevestigIneenstorting as bevestigIneenstortingActie } from "./uitputtingEnVerval";
 import { EenmaligeUitlegKey, GameState, Improvement, MoederlandId, TechId, WampanoagHandelKeuze } from "./types";
@@ -335,6 +335,19 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean, debug
     setState((huidig) => haalRechterTerugActie(huidig, rechterId));
   }, []);
 
+  // Handmatige save-slot (issue: "Aparte save"), los van de autosave hierboven.
+  // Opslaan geeft `false` terug bij een mislukte schrijfactie; laden zet de
+  // lopende run terug naar het slot (en `false` als er geen slot is), waarna
+  // de autosave het teruggezette punt vanzelf als nieuwe autosave bewaart.
+  const slaHandmatigOp = useCallback((): boolean => saveHandmatigeSlot(state), [state]);
+
+  const laadHandmatig = useCallback((): boolean => {
+    const opgeslagenStatus = laadHandmatigeSlot(state.campagneId);
+    if (!opgeslagenStatus) return false;
+    setState(opgeslagenStatus);
+    return true;
+  }, [state.campagneId]);
+
   const zetUitlegPopups = useCallback((aan: boolean) => {
     setState((huidig) => zetUitlegPopupsActie(huidig, aan));
   }, []);
@@ -506,6 +519,8 @@ export function useGameEngine(campagneId?: string, laadBijStart?: boolean, debug
     startRechterTraining,
     leidIngenieurOp,
     bouwBrug,
+    slaHandmatigOp,
+    laadHandmatig,
     zetUitlegPopups,
     markeerUitlegGezien,
     bevestigStreekPopup,

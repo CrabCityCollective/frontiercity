@@ -197,6 +197,8 @@ export default function GameRoot({
     leidIngenieurOp,
     bouwBrug,
     zetUitlegPopups,
+    slaHandmatigOp,
+    laadHandmatig,
     markeerUitlegGezien,
     bevestigStreekPopup,
     bevestigStichtingsMomentPopup,
@@ -2093,6 +2095,9 @@ export default function GameRoot({
     <div className="game-viewport">
       <HoofdMenu
         onVerlaten={onVerlaten}
+        campagneId={state.campagneId}
+        onSlaHandmatigOp={slaHandmatigOp}
+        onLaadHandmatig={laadHandmatig}
         uitlegAan={uitlegAan}
         onToggleUitleg={() => zetUitlegPopups(!uitlegAan)}
         stijl={stijl}
