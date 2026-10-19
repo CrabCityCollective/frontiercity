@@ -443,7 +443,7 @@ export function verwerkProductie(state: GameState): GameState {
 
   // `Math.floor` houdt voedsel geheeltallig, net als de materiaal-voorraad
   // hierboven (issue: "Voedsel hele getallen") — zonder deze afronding kon de
-  // onrust-productiemultiplier (onrust.ts, fractioneel tussen 0.4 en 1) een
+  // onrust-productiemultiplier (onrust.ts, 0.5 bij onrust, anders 1) een
   // niet-geheel getal in `state.voedsel` laten belanden.
   voedsel = Math.max(0, Math.floor(voedsel + berekenVoedselNetto(state)));
 

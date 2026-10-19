@@ -150,7 +150,7 @@ const BASE_LEMMAS: EncyclopedieLemma[] = [
     titel: "Onrust",
     categorie: "Streken",
     tekst:
-      "Ontstaat zodra een streek meer dan vier gebouwen draagt — elk gebouw daarna verhoogt de onrust met 1 en verlaagt de productie van alle landverbeteringen op die streek. Gebouwen die volledig uitgeput zijn (ghost towns) tellen niet meer mee, dus onrust op oudere streken zakt vanzelf terug naarmate ze uitputten. Een wegverbonden Saloon verlaagt de onrust op zijn eigen streek met 1; een bemand, wegverbonden Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven blijvend op 0.",
+      "Ontstaat zodra een streek meer dan vier gebouwen draagt — elk gebouw daarna verhoogt de onrust met 1. Zodra een streek onrust heeft, is de productie van alle landverbeteringen op die streek gehalveerd (−50%), ongeacht hoe hoog de onrust is. Gebouwen die volledig uitgeput zijn (ghost towns) tellen niet meer mee, dus onrust op oudere streken zakt vanzelf terug naarmate ze uitputten. Een wegverbonden Saloon verlaagt de onrust op zijn eigen streek met 1; een bemand, wegverbonden Courthouse houdt de onrust op zijn eigen streek en de 2 streken direct erboven blijvend op 0.",
   },
   // Boons
   {
