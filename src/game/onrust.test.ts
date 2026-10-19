@@ -144,10 +144,10 @@ test("een onbemand Courthouse onderdrukt geen onrust", () => {
   assert.equal(onrustOpStreek([drukkeStreek], [], drukkeStreek), 1);
 });
 
-test("onrustProductieMultiplier daalt lineair maar zakt nooit onder het plafond", () => {
+test("onrustProductieMultiplier halveert de productie zodra er onrust is, ongeacht de hoogte", () => {
   assert.equal(onrustProductieMultiplier(0), 1);
-  assert.equal(onrustProductieMultiplier(1), 0.9);
-  assert.equal(onrustProductieMultiplier(20), 0.4);
+  assert.equal(onrustProductieMultiplier(1), 0.5);
+  assert.equal(onrustProductieMultiplier(20), 0.5);
 });
 
 // Bouwt een Going West-status met een actief, wegverbonden Courthouse op
@@ -237,7 +237,7 @@ test("onrust verlaagt productie in Going West, maar niet in de tutorial", () => 
 
   const goingWest = drukkeTiles(maakInitieleSpelStatus("going-west"));
   const naProductieGoingWest = verwerkProductie(goingWest);
-  // 5 improvements op de streek: onrust = 5 - 4 = 1 → multiplier 0.9.
+  // 5 improvements op de streek: onrust = 5 - 4 = 1 → multiplier 0.5.
   const verwachtGoingWest = Math.floor(houtkapWaarde * onrustProductieMultiplier(1)) * 3;
   assert.equal(naProductieGoingWest.voorraad.hout - goingWest.voorraad.hout, verwachtGoingWest);
   assert.ok(naProductieGoingWest.voorraad.hout - goingWest.voorraad.hout < naProductieTutorial.voorraad.hout - tutorial.voorraad.hout);

@@ -30,13 +30,14 @@ import { isTileVerbondenMetStad } from "./wegen";
 // improvement al de eerste onrust, nu pas het 5e).
 export const ONRUST_DREMPEL = 4;
 
-// Productie-penalty per onrust-punt en het plafond daarop (issue, sectie 1:
-// "percentage-gebaseerde penalty die meeschaalt met de onrust-waarde ...
-// met een plafond zodat productie niet volledig naar 0 kan zakken") — beide
-// bewuste MVP-richtwaarden, tunebaar zolang de balans nog niet vastligt
-// (hoofdstuk 13/14 van het design-document).
-export const ONRUST_PRODUCTIE_PENALTY_PER_PUNT = 0.1;
-export const ONRUST_PRODUCTIE_MULTIPLIER_MIN = 0.4;
+// Productie-multiplier zodra een streek onrust heeft (issue "Onrust heftiger":
+// "de onrust verlaagt de productie op de streek met 50 procent") — een vaste
+// halvering, ongeacht hoeveel onrust-punten er zijn. Bewust een alles-of-niets
+// grens in plaats van de eerdere lineaire 10%/punt (plafond 40%): Saloon en
+// Courthouse krijgen zo meer impact en een streek op 0 onrust houden wordt een
+// echte puzzel. Tunebaar zolang de balans nog niet vastligt (hoofdstuk 13/14
+// van het design-document).
+export const ONRUST_PRODUCTIE_MULTIPLIER = 0.5;
 
 // Statische verlaging door een actieve Saloon (issue, sectie 2: "vermindert
 // onrust op de eigen streek met 1 ... zolang de Saloon blijft staan").
@@ -121,11 +122,10 @@ export function onrustOpStreek(streken: Streek[], rechters: Rechter[], streek: S
   return onrust;
 }
 
-// Productie-multiplier voor een gegeven onrust-waarde (issue, sectie 1),
-// geclamped op `ONRUST_PRODUCTIE_MULTIPLIER_MIN` zodat productie nooit
-// volledig naar 0 zakt.
+// Productie-multiplier voor een gegeven onrust-waarde: 1 zonder onrust,
+// `ONRUST_PRODUCTIE_MULTIPLIER` (0.5) zodra er onrust is.
 export function onrustProductieMultiplier(onrust: number): number {
-  return Math.max(ONRUST_PRODUCTIE_MULTIPLIER_MIN, 1 - onrust * ONRUST_PRODUCTIE_PENALTY_PER_PUNT);
+  return onrust > 0 ? ONRUST_PRODUCTIE_MULTIPLIER : 1;
 }
 
 // Alle actieve, nog onbemande Courthouse-tiles over alle streken heen —
