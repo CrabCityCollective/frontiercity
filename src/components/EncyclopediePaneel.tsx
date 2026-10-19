@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { KostenIcons } from "@/components/ResourceIcoon";
 import { ENCYCLOPEDIE_CATEGORIEEN, ENCYCLOPEDIE_LEMMAS } from "@/game/encyclopedieContent";
 
 interface EncyclopediePaneelProps {
@@ -89,6 +90,12 @@ export default function EncyclopediePaneel({ onSluiten }: EncyclopediePaneelProp
                     <div key={lemma.id}>
                       <strong style={{ display: "block" }}>{lemma.titel}</strong>
                       <span style={{ color: "var(--kleur-tekst-gedempt)" }}>{lemma.tekst}</span>
+                      {lemma.kosten && (
+                        <div style={{ marginTop: "0.25rem" }}>
+                          <span style={{ color: "var(--kleur-tekst-gedempt)" }}>Bouwkosten: </span>
+                          <KostenIcons kosten={lemma.kosten} />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
