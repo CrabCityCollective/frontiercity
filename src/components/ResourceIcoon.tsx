@@ -27,7 +27,7 @@ const HUD_RESOURCE_LABELS: Record<HudResourceType, string> = { ...RESOURCE_LABEL
 // "functionaliteit gaat voor polish").
 type PixelGrid = string[];
 
-interface PixelIconSpec {
+export interface PixelIconSpec {
   grid: PixelGrid;
   palette: Record<string, string>;
 }
@@ -35,7 +35,7 @@ interface PixelIconSpec {
 const GRID_GROOTTE = 8;
 const CEL = 16 / GRID_GROOTTE;
 
-const PIXEL_ICONEN: Record<HudResourceType, PixelIconSpec> = {
+export const PIXEL_ICONEN: Record<HudResourceType, PixelIconSpec> = {
   hout: {
     grid: [
       "........",

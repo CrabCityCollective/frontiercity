@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { EncyclopedieIcoon, IcoonRij } from "@/components/EncyclopedieIcoon";
 import { KostenIcons } from "@/components/ResourceIcoon";
 import { ENCYCLOPEDIE_CATEGORIEEN, ENCYCLOPEDIE_LEMMAS } from "@/game/encyclopedieContent";
 
@@ -88,8 +89,16 @@ export default function EncyclopediePaneel({ onSluiten }: EncyclopediePaneelProp
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {lemmasInCategorie.map((lemma) => (
                     <div key={lemma.id}>
-                      <strong style={{ display: "block" }}>{lemma.titel}</strong>
+                      <strong style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                        {lemma.icoon && <EncyclopedieIcoon sleutel={lemma.icoon} />}
+                        {lemma.titel}
+                      </strong>
                       <span style={{ color: "var(--kleur-tekst-gedempt)" }}>{lemma.tekst}</span>
+                      {lemma.icoonRij && (
+                        <div style={{ marginTop: "0.35rem" }}>
+                          <IcoonRij items={lemma.icoonRij} />
+                        </div>
+                      )}
                       {lemma.kosten && (
                         <div style={{ marginTop: "0.25rem" }}>
                           <span style={{ color: "var(--kleur-tekst-gedempt)" }}>Bouwkosten: </span>

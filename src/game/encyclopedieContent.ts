@@ -26,6 +26,7 @@
 // wetenschap, Militair) met alfabetische volgorde bínnen elke categorie, plus
 // een zoekveld in EncyclopediePaneel voor snel opzoeken ongeacht categorie —
 // het beste van beide.
+import type { EncyclopedieIcoonSleutel, IcoonRijItem } from "@/components/EncyclopedieIcoon";
 import { BOON_POOL } from "./boons";
 import { GOING_WEST_CAMPAGNE } from "./campagnes";
 import {
@@ -80,6 +81,10 @@ export interface EncyclopedieLemma {
   // afgeleid uit `Improvement.kosten` zelf (zie `GEBOUW_KOSTEN_BRON`) zodat
   // ze niet los gedupliceerd hoeven te worden.
   kosten?: Partial<Record<ResourceType, number>>;
+  // Icoontjes (issue "Encyclopedie mooier"): één icoon naast de titel, en/of
+  // een rij icoontjes onder de tekst.
+  icoon?: EncyclopedieIcoonSleutel;
+  icoonRij?: IcoonRijItem[];
 }
 
 // Techboom-lemma's (issue: "Techtree toevoegen aan encyclopedie") worden
@@ -578,7 +583,60 @@ const GEBOUW_KOSTEN_BRON: Record<string, Partial<Record<ResourceType, number>>> 
   woonwijk: WOONWIJK.kosten,
 };
 
+// Icoontjes (issue "Encyclopedie mooier"): sleutel is de lemma-id (Going
+// West-verwijslemma's erven het icoon van hun basislemma, net als de kosten).
+const LEMMA_ICOON: Record<string, EncyclopedieIcoonSleutel> = {
+  erts: "erts",
+  hout: "hout",
+  steen: "steen",
+  cultuur: "cultuur",
+  wetenschap: "wetenschap",
+  "goud-mijn": "goudmijn",
+  aquaduct: "aquaduct",
+  barakken: "barakken",
+  bibliotheek: "bibliotheek",
+  boerderij: "boerderij",
+  courthouse: "courthouse",
+  "grote-tempel": "tempel",
+  "grote-woonwijk": "grotewoonwijk",
+  heiligdom: "heiligdom",
+  "hout-kap": "houtkap",
+  markt: "markt",
+  mijn: "mijn",
+  offeraltaar: "offeraltaar",
+  opslagplaats: "opslagplaats",
+  ranch: "ranch",
+  saloon: "saloon",
+  smederij: "smederij",
+  steengroeve: "steengroeve",
+  sterrencirkel: "sterrencirkel",
+  tempel: "tempel",
+  woonwijk: "woonwijk",
+  legerkamp: "legerkamp",
+  wachttoren: "wachttoren",
+  roofdieren: "roofdier",
+};
+
+// Rijtjes icoontjes: grondstoffen bij "Resources", en bij Onrust/Roofdieren
+// een rij gebouwen met onrust-badge, "achter elkaar zodat je ziet dat het
+// vol staat" (issue).
+const LEMMA_ICOON_RIJ: Record<string, IcoonRijItem[]> = {
+  resources: [{ icoon: "hout" }, { icoon: "steen" }, { icoon: "erts" }, { icoon: "goud" }],
+  onrust: ["boerderij", "mijn", "steengroeve", "wachttoren", "heiligdom"].map((icoon) => ({
+    icoon: icoon as EncyclopedieIcoonSleutel,
+    onrust: true,
+  })),
+  roofdieren: [
+    { icoon: "roofdier" },
+    { icoon: "roofdier" },
+    { icoon: "roofdier" },
+  ],
+};
+
 export const ENCYCLOPEDIE_LEMMAS: EncyclopedieLemma[] = [...BASE_LEMMAS, ...GOING_WEST_NAAM_LEMMAS].map((lemma) => {
-  const kosten = GEBOUW_KOSTEN_BRON[lemma.id] ?? GEBOUW_KOSTEN_BRON[lemma.id.replace(/^going-west-/, "")];
-  return kosten ? { ...lemma, kosten } : lemma;
+  const basisId = lemma.id.replace(/^going-west-/, "");
+  const kosten = GEBOUW_KOSTEN_BRON[lemma.id] ?? GEBOUW_KOSTEN_BRON[basisId];
+  const icoon = LEMMA_ICOON[basisId];
+  const icoonRij = LEMMA_ICOON_RIJ[lemma.id];
+  return { ...lemma, ...(kosten && { kosten }), ...(icoon && { icoon }), ...(icoonRij && { icoonRij }) };
 });
