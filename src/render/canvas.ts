@@ -2342,6 +2342,28 @@ function tekenActieveTile(
   }
 }
 
+// Encyclopedie-icoon (issue "Encyclopedie mooier"): tekent een enkele tegel
+// precies zoals het spel 'm op de kaart toont (zelfde ondergrond, zelfde
+// improvement-/roofdier-tekenaar, zelfde onrust-indicator), zodat een lemma
+// opzoeken in de encyclopedie altijd hetzelfde plaatje geeft als in het spel.
+export function tekenEncyclopedieTile(
+  ctx: CanvasRenderingContext2D,
+  size: number,
+  inhoud: { improvementId: string } | { roofdier: true },
+  opties: { onrust?: boolean; tegelSet?: string; terreinType?: string } = {}
+): void {
+  const seed = tileSeed(0, 0);
+  tekenTerreinOndergrond(ctx, 0, 0, size, opties.terreinType ?? "", seed);
+  if ("roofdier" in inhoud) {
+    tekenRoofdier(ctx, 0, 0, size);
+    return;
+  }
+  tekenLandImprovement(ctx, 0, 0, size, inhoud.improvementId, seed, false, opties.tegelSet);
+  if (opties.onrust) {
+    tekenOnrustIndicator(ctx, 0, 0, size);
+  }
+}
+
 // Tekent alle streken (band van 9 vakjes breed), streek 1 onderaan het canvas,
 // oplopend naar boven — zie hoofdstuk 2 ("omhoog bouwen").
 export function tekenWereld(

@@ -194,7 +194,7 @@ export const PIXEL_ICONEN: Record<HudResourceType, PixelIconSpec> = {
   },
 };
 
-function IcoonSvg({ type }: { type: HudResourceType }) {
+export function IcoonSvg({ type }: { type: HudResourceType }) {
   const { grid, palette } = PIXEL_ICONEN[type];
 
   return (
