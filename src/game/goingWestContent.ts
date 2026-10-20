@@ -17,13 +17,23 @@ function metHoofdletter(woord: string): string {
   return woord.charAt(0).toUpperCase() + woord.slice(1);
 }
 
+// Korte verhalende flavor-tekst per streek (issue #571); streken zonder eigen
+// tekst blijven "todo". De "Nieuw: todo"-regel wordt in de UI verborgen zolang
+// `mechaniek` "todo" is.
+export const GOING_WEST_FLAVOR_TEKSTEN: Record<number, string> = {
+  1: "Het schip is weg, de kust is vreemd. Verloren in een nieuwe wereld hebben we alleen elkaar — en de vraag waar we beginnen.",
+  6: "Rook boven de maisvelden. De Wampanoag kijken zwijgend toe — vreemden die hun land betreden, en misschien toch bondgenoten.",
+  12: "Een brede, trage rivier snijdt de weg af. Wie naar het westen wil, moet een manier vinden om over te steken.",
+  16: "De Black Hills rijzen donker op uit de vlakte. Heilige grond, zeggen de verhalen — wie hier doorheen trekt, doet dat met respect.",
+};
+
 export const GOING_WEST_STREEK_CONTENT: Record<number, StreekContent> = Object.fromEntries(
   Array.from({ length: GOING_WEST_STREEK_AANTAL }, (_, i) => {
     const hoogte = i + 1;
     const content: StreekContent = {
       naam: metHoofdletter(terreinTypeVoorStreek(hoogte)),
       mechaniek: "todo",
-      flavorTekst: "todo",
+      flavorTekst: GOING_WEST_FLAVOR_TEKSTEN[hoogte] ?? "todo",
     };
     return [hoogte, content];
   })
