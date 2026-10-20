@@ -77,7 +77,9 @@ export default function AppRoot() {
         onDebugStartGoingWest={(streekHoogte) => {
           setActieveCampagneId("going-west");
           setLaadBijStart(false);
-          setDebugStreekHoogte(streekHoogte);
+          // Streek 1 is gewoon de normale start (issue #569): geen debug-
+          // voorraad (goud/cultuur/wetenschap), dus dan geen debug-status.
+          setDebugStreekHoogte(streekHoogte > 1 ? streekHoogte : undefined);
           setScherm("spel");
         }}
       />
