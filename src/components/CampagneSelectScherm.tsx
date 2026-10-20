@@ -72,7 +72,15 @@ interface CampagneSelectSchermProps {
 // op klik/toetsenbord, zelfde reden als de Laden-knop hieronder: de
 // omringende kaart heeft zelf al een klik-handler die een verse (streek-1)
 // run start.
-function GoingWestDebugStarter({ onStart }: { onStart: (streekHoogte: number) => void }) {
+// Issue #569: "Normale start" begint de gewone campagne vanaf streek 1 zonder
+// debug-voorraad; streek 1 invoeren in het testveld doet hetzelfde (AppRoot.tsx).
+function GoingWestDebugStarter({
+  onStart,
+  onNormaleStart,
+}: {
+  onStart: (streekHoogte: number) => void;
+  onNormaleStart: () => void;
+}) {
   const [streek, setStreek] = useState(9);
 
   return (
@@ -90,6 +98,14 @@ function GoingWestDebugStarter({ onStart }: { onStart: (streekHoogte: number) =>
         onChange={(event) => setStreek(Number(event.target.value))}
         style={{ width: "3.5rem", fontSize: "0.8rem" }}
       />
+      <button
+        type="button"
+        className="fc-knop"
+        onClick={onNormaleStart}
+        style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}
+      >
+        Normale start
+      </button>
       <button
         type="button"
         className="fc-knop"
@@ -209,7 +225,10 @@ export default function CampagneSelectScherm({
                 </button>
               )}
               {campagne.id === "going-west" && (
-                <GoingWestDebugStarter onStart={onDebugStartGoingWest} />
+                <GoingWestDebugStarter
+                  onStart={onDebugStartGoingWest}
+                  onNormaleStart={() => onKiesCampagne(campagne.id)}
+                />
               )}
               {!campagne.beschikbaar && (
                 <div
