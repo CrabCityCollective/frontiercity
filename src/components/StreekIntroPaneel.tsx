@@ -56,7 +56,9 @@ export default function StreekIntroPaneel({ streken, campagneId }: StreekIntroPa
             van de Amerikaanse campagne (CLAUDE.md). */}
         {campagneId === GOING_WEST_CAMPAGNE.id && <KompasIcoon />}
       </div>
-      <span style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>Nieuw: {content.mechaniek}</span>
+      {content.mechaniek !== "todo" && (
+        <span style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>Nieuw: {content.mechaniek}</span>
+      )}
       {isLaatsteStreek && campagneId === undefined && <p style={{ margin: 0 }}>{AFSLUITENDE_SCENE}</p>}
     </div>
   );

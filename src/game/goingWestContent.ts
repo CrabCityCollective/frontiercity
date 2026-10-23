@@ -17,13 +17,37 @@ function metHoofdletter(woord: string): string {
   return woord.charAt(0).toUpperCase() + woord.slice(1);
 }
 
+// Korte verhalende streekteksten (issue #571) voor streek 1 t/m 16. Streek 1 =
+// verloren in de Nieuwe Wereld, 2-5 = de kust en het bos rond de Wampanoag,
+// 6 = hun maisvelden, 7-11 = de weg naar het westen, 12 = de rivier waar de
+// brug moet komen, 13-15 = de aanloop, 16 = de Black Hills. Streken zonder
+// tekst houden "todo" totdat de speler die zelf aanvult.
+const GOING_WEST_FLAVOR_TEKST: Record<number, string> = {
+  1: "Het schip is weg, de kust is vreemd. Verloren in een nieuwe wereld hebben we alleen elkaar — en de vraag waar we beginnen.",
+  2: "Zout en modder tot aan onze enkels. Dit land is niet leeg, zeggen de sporen in de klei.",
+  3: "Het cederswamp is stil en donker. Ergens tussen de stammen kijkt iemand mee.",
+  4: "Onder de eiken liggen oude paden, plat gelopen door voeten die dit bos beter kennen dan wij.",
+  5: "Vanaf de heuvelrug zien we rook stijgen. We zijn niet de eersten die hier vuur maken.",
+  6: "Rook boven de maisvelden. De Wampanoag kijken zwijgend toe — vreemden die hun land betreden, en misschien toch bondgenoten.",
+  7: "De Wampanoag leerden ons zaaien en wachten. Zonder hen was de eerste winter ook de laatste geweest.",
+  8: "Achter ons wordt het bekende kleiner. Voor ons ligt een heuvelrug die niemand van ons ooit zag.",
+  9: "Kalksteen onder onze laarzen, geruchten over een grote rivier in onze oren.",
+  10: "Het bos maakt plaats voor droog gras. Hier lijkt de wereld eindeloos, en wij heel klein.",
+  11: "Aan de rand van de canyon valt de wind weg. De diepte roept, maar we durven niet te kijken.",
+  12: "Een brede, trage rivier snijdt de weg af. Wie naar het westen wil, moet een manier vinden om over te steken.",
+  13: "Aan de overkant is het anders. Hout en steen liggen klaar; de brug was een idee, nu draagt hij ons.",
+  14: "Een ruiter op de mesa, onbeweeglijk tegen de lucht. Een Lakota-scout — hij wist al lang dat we kwamen.",
+  15: "Bij de cottonwood-oase drinken we, en horen we verhalen over donkere bergen aan de horizon.",
+  16: "De Black Hills rijzen donker op uit de vlakte. Heilige grond, zeggen de verhalen — wie hier doorheen trekt, doet dat met respect.",
+};
+
 export const GOING_WEST_STREEK_CONTENT: Record<number, StreekContent> = Object.fromEntries(
   Array.from({ length: GOING_WEST_STREEK_AANTAL }, (_, i) => {
     const hoogte = i + 1;
     const content: StreekContent = {
       naam: metHoofdletter(terreinTypeVoorStreek(hoogte)),
       mechaniek: "todo",
-      flavorTekst: "todo",
+      flavorTekst: GOING_WEST_FLAVOR_TEKST[hoogte] ?? "todo",
     };
     return [hoogte, content];
   })
