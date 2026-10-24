@@ -83,7 +83,9 @@ test("streekContentVoorCampagne geeft Going West-content voor alle 35 streken, m
   for (let hoogte = 1; hoogte <= GOING_WEST_STREEK_AANTAL; hoogte++) {
     const content = streekContentVoorCampagne(GOING_WEST_CAMPAGNE.id, hoogte);
     assert.ok(content, `streek ${hoogte} moet content hebben`);
-    assert.equal(content!.flavorTekst, "todo");
+    // Streek 1-16 hebben een verhalende tekst (issue #571), de rest nog "todo".
+    if (hoogte <= 16) assert.notEqual(content!.flavorTekst, "todo");
+    else assert.equal(content!.flavorTekst, "todo");
     assert.notEqual(content!.naam, "");
   }
   assert.equal(streekContentVoorCampagne(GOING_WEST_CAMPAGNE.id, GOING_WEST_STREEK_AANTAL + 1), undefined);

@@ -50,7 +50,9 @@ export default function StreekPopup({ hoogte, campagneId, onDoorgaan }: StreekPo
         <strong className="fc-heading" style={{ color: "var(--kleur-oker)" }}>
           Streek {hoogte} — {content.naam}
         </strong>
-        <span style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>Nieuw: {content.mechaniek}</span>
+        {content.mechaniek !== "todo" && (
+          <span style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>Nieuw: {content.mechaniek}</span>
+        )}
         <p style={{ margin: 0, whiteSpace: "pre-line", lineHeight: 1.6 }}>{content.flavorTekst}</p>
         <button className="fc-knop" onClick={onDoorgaan} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Doorgaan

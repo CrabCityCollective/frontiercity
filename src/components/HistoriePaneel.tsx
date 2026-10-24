@@ -116,9 +116,11 @@ export default function HistoriePaneel({ streken, statistieken, onSluiten }: His
               <strong>
                 Streek {hoogte} — {content.naam}
               </strong>
-              <div style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>
-                Nieuw: {content.mechaniek}
-              </div>
+              {content.mechaniek !== "todo" && (
+                <div style={{ fontStyle: "italic", color: "var(--kleur-tekst-gedempt)" }}>
+                  Nieuw: {content.mechaniek}
+                </div>
+              )}
               <p style={{ margin: "0.25rem 0 0" }}>{content.flavorTekst}</p>
             </div>
           ))}
