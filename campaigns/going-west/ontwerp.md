@@ -92,7 +92,6 @@ Zelfde herbruikbaarheidspatroon als de technologie-boom en de tegel-sets uit hoo
 |---|---|
 | Sterrencirkel | Observatorium |
 | Goudader/goudmijn | Goudmijn |
-| Wachttoren | Blokhuis |
 | Legerkamp | Fort |
 | Heiligdom | Kapel |
 | Offer Altaar | Opwekkingstent |

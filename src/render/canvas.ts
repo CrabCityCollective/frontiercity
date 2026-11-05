@@ -900,66 +900,6 @@ function tekenWachttorenTutorial(ctx: CanvasRenderingContext2D, x: number, y: nu
   }
 }
 
-// "Blokhuis" (issue: "Icoontjes going west") — eigen Going West-weergave van
-// de Wachttoren, losstaand van `tekenWachttorenTutorial` hierboven (CLAUDE.md:
-// tutorial- en Going West-content blijven gescheiden). Een gedrongen, houten
-// blokhut met een overstekende bovenverdieping (het historische frontier-
-// blokhuis-silhouet) i.p.v. de slanke uitkijktoren — zelfde `bemand`-
-// leesbaarheidspatroon (gedempte vlag/donker schietgat vs. een warme
-// vlag/lantaarngloed), zodat de functionele status net zo duidelijk blijft.
-function tekenBlokhuis(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, bemand: boolean): void {
-  const baseY = y + size * 0.86;
-  const cx = x + size * 0.5;
-  tekenContactschaduw(ctx, cx, baseY, size * 0.54);
-
-  // Onderverdieping.
-  ctx.fillStyle = "#4a3a28";
-  ctx.fillRect(x + size * 0.36, y + size * 0.42, size * 0.28, size * 0.44);
-  ctx.strokeStyle = "#241a10";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x + size * 0.36, y + size * 0.42, size * 0.28, size * 0.44);
-
-  // Overstekende bovenverdieping (breder dan de onderverdieping).
-  ctx.fillStyle = "#5a4630";
-  ctx.fillRect(x + size * 0.26, y + size * 0.22, size * 0.48, size * 0.22);
-  ctx.strokeStyle = "#241a10";
-  ctx.strokeRect(x + size * 0.26, y + size * 0.22, size * 0.48, size * 0.22);
-
-  // Plat dak.
-  ctx.fillStyle = "#33261a";
-  ctx.fillRect(x + size * 0.22, y + size * 0.16, size * 0.56, size * 0.08);
-
-  // Schietgat: gedempt als hij leeg (dus inactief) staat, warm lantaarnlicht
-  // zodra bemand.
-  ctx.fillStyle = bemand ? "#e0a858" : "#241a10";
-  ctx.fillRect(cx - size * 0.05, y + size * 0.29, size * 0.1, size * 0.05);
-
-  if (bemand) {
-    const gloed = ctx.createRadialGradient(cx, y + size * 0.31, 0, cx, y + size * 0.31, size * 0.14);
-    gloed.addColorStop(0, "rgba(224, 168, 88, 0.5)");
-    gloed.addColorStop(1, "rgba(224, 168, 88, 0)");
-    ctx.fillStyle = gloed;
-    ctx.beginPath();
-    ctx.arc(cx, y + size * 0.31, size * 0.14, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Vlaggenmast.
-  ctx.strokeStyle = "#241a10";
-  ctx.lineWidth = Math.max(1, size * 0.02);
-  ctx.beginPath();
-  ctx.moveTo(cx, y + size * 0.16);
-  ctx.lineTo(cx, y + size * 0.02);
-  ctx.stroke();
-  ctx.fillStyle = bemand ? "#c9552f" : "#78716a";
-  ctx.beginPath();
-  ctx.moveTo(cx, y + size * 0.02);
-  ctx.lineTo(cx, y + size * 0.1);
-  ctx.lineTo(cx + size * 0.1, y + size * 0.06);
-  ctx.closePath();
-  ctx.fill();
-}
-
 function tekenWachttoren(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -968,11 +908,9 @@ function tekenWachttoren(
   bemand: boolean,
   tegelSet?: string
 ): void {
-  if (tegelSet === undefined) {
-    tekenWachttorenTutorial(ctx, x, y, size, bemand);
-    return;
-  }
-  tekenBlokhuis(ctx, x, y, size, bemand);
+  // Going West toont gewoon dezelfde wachttoren als de tutorial (issue #573).
+  void tegelSet;
+  tekenWachttorenTutorial(ctx, x, y, size, bemand);
 }
 
 // Sterrencirkel (hoofdstuk 3/9, issue: "wegen en gebouwen verbeteren" — was

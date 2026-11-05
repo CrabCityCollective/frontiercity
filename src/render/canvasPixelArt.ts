@@ -303,50 +303,10 @@ function tekenWachttorenTutorialPixel(ctx: CanvasRenderingContext2D, bemand: boo
   }
 }
 
-// "Blokhuis" (issue: "Icoontjes going west") — pixel-art variant van
-// `tekenBlokhuis` in canvas.ts: eigen Going West-weergave van de Wachttoren,
-// losstaand van `tekenWachttorenTutorialPixel` hierboven. Gedrongen blokhut
-// met overstekende bovenverdieping i.p.v. de slanke uitkijktoren — zelfde
-// `bemand`-leesbaarheidspatroon (gedempt schietgat vs. warme lantaarngloed +
-// vlag).
-function tekenBlokhuisPixel(ctx: CanvasRenderingContext2D, bemand: boolean): void {
-  const baseY = 14;
-  schaduw(ctx, 8, baseY + 1, 8);
-
-  // Onderverdieping.
-  hlijn(ctx, 6, 10, baseY - 6, "#4a3a28");
-  for (let ry = baseY - 5; ry <= baseY; ry++) {
-    hlijn(ctx, 6, 10, ry, "#4a3a28");
-  }
-  ctx.strokeStyle = "#241a10";
-  ctx.strokeRect(6, baseY - 6, 4, 6);
-
-  // Overstekende bovenverdieping (breder).
-  hlijn(ctx, 4, 12, baseY - 9, "#5a4630");
-  hlijn(ctx, 4, 12, baseY - 8, "#5a4630");
-  hlijn(ctx, 4, 12, baseY - 7, "#5a4630");
-  ctx.strokeStyle = "#241a10";
-  ctx.strokeRect(4, baseY - 9, 8, 3);
-
-  // Plat dak.
-  hlijn(ctx, 3, 13, baseY - 10, "#33261a");
-
-  // Schietgat: gedempt leeg (inactief), warm lantaarnlicht bemand.
-  p(ctx, 8, baseY - 8, bemand ? "#e0a858" : "#241a10");
-
-  // Vlaggenmast.
-  vlijn(ctx, 8, 1, baseY - 10, "#241a10");
-  const vlagKleur = bemand ? "#c9552f" : "#78716a";
-  blokrij(ctx, 9, 1, 2, vlagKleur);
-  blokrij(ctx, 9, 2, 2, vlagKleur);
-}
-
 function tekenWachttorenPixel(ctx: CanvasRenderingContext2D, bemand: boolean, tegelSet?: string): void {
-  if (tegelSet === undefined) {
-    tekenWachttorenTutorialPixel(ctx, bemand);
-    return;
-  }
-  tekenBlokhuisPixel(ctx, bemand);
+  // Going West toont gewoon dezelfde wachttoren als de tutorial (issue #573).
+  void tegelSet;
+  tekenWachttorenTutorialPixel(ctx, bemand);
 }
 
 // Lopend oer-poppetje (issue: "Andere skin oer settler") — pixel-art variant

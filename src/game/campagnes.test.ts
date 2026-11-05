@@ -40,7 +40,7 @@ test("GOING_WEST_CAMPAGNE volgt de weergavenamen-tabel uit hoofdstuk 9 van het d
   // Land improvements
   assert.equal(improvementNaam(STERRENCIRKEL, GOING_WEST_CAMPAGNE), "Observatorium");
   assert.equal(improvementNaam(GOUDADER, GOING_WEST_CAMPAGNE), "Goudmijn");
-  assert.equal(improvementNaam(WACHTTOREN, GOING_WEST_CAMPAGNE), "Blokhuis");
+  assert.equal(improvementNaam(WACHTTOREN, GOING_WEST_CAMPAGNE), "Wachttoren");
   assert.equal(improvementNaam(LEGERKAMP, GOING_WEST_CAMPAGNE), "Fort");
   assert.equal(improvementNaam(HEILIGDOM, GOING_WEST_CAMPAGNE), "Kapel");
   assert.equal(improvementNaam(OFFER_ALTAAR, GOING_WEST_CAMPAGNE), "Opwekkingstent");
