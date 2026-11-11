@@ -30,7 +30,7 @@ const PATROON = [0, 1, 2, 3, 2, 3, 2, 1];
 
 type PluckSoort = "gitaar" | "banjo";
 
-function maakPluckBuffer(ctx: AudioContext, freq: number, soort: PluckSoort): AudioBuffer {
+export function maakPluckBuffer(ctx: AudioContext, freq: number, soort: PluckSoort): AudioBuffer {
   const duur = soort === "gitaar" ? 2.6 : 1.1;
   const demping = soort === "gitaar" ? 0.996 : 0.99;
   const lengte = Math.floor(ctx.sampleRate * duur);

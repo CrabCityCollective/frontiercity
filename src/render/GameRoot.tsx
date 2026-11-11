@@ -273,7 +273,6 @@ export default function GameRoot({
   const [muziekAan, setMuziekAan] = useState(true);
   useEffect(() => setMuziekAan(leesMuziekAan()), []);
   const heeftMuziek = state.campagneId === "going-west";
-  useAchtergrondMuziek(heeftMuziek && muziekAan);
   function toggleMuziek() {
     setMuziekAan(!muziekAan);
     zetMuziekAan(!muziekAan);
@@ -295,6 +294,10 @@ export default function GameRoot({
   // geen nieuwe start, dus dan slaan we het introscherm over (issue: "bij
   // laden geen intro scherm").
   const [toonIntro, setToonIntro] = useState(!laadBijStart);
+  // Muziek (issues #575/#577): menumuziek tijdens het introscherm, daarna in
+  // Going West de campagnemuziek.
+  useAchtergrondMuziek(toonIntro && muziekAan, "menu");
+  useAchtergrondMuziek(heeftMuziek && muziekAan && !toonIntro);
 
   function bevestigIntro() {
     setToonIntro(false);

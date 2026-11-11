@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { muziekAan as leesMuziekAan } from "@/game/save";
 import CampagneSelectScherm from "@/components/CampagneSelectScherm";
 import EncyclopediePaneel from "@/components/EncyclopediePaneel";
 import HoofdNavigatieScherm from "@/components/HoofdNavigatieScherm";
 import InstellingenPopup from "@/components/InstellingenPopup";
 import TitelScherm from "@/components/TitelScherm";
 import GameRoot from "./GameRoot";
+import { useAchtergrondMuziek } from "./useAchtergrondMuziek";
 
 type Scherm = "titel" | "navigatie" | "campagne" | "spel";
 
@@ -42,6 +44,12 @@ export default function AppRoot() {
   // aankomende `GameRoot`-mount leest 'm alleen bij het opzetten van een
   // verse `useGameEngine()`-status.
   const [debugStreekHoogte, setDebugStreekHoogte] = useState<number | undefined>(undefined);
+
+  // Menumuziek (issue #577): titel-, navigatie- en campagne-select-scherm.
+  // Het introscherm zit in GameRoot en start daar zijn eigen menumuziek.
+  const [muziekAan, setMuziekAan] = useState(true);
+  useEffect(() => setMuziekAan(leesMuziekAan()), []);
+  useAchtergrondMuziek(scherm !== "spel" && muziekAan, "menu");
 
   if (scherm === "titel") return <TitelScherm onStart={() => setScherm("navigatie")} />;
 
