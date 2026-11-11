@@ -14,13 +14,29 @@ export function useAchtergrondMuziek(actief: boolean, soort: "spel" | "menu" = "
   useEffect(() => {
     if (!actief) return;
     const start = soort === "menu" ? startMenuMuziek : startAchtergrondMuziek;
-    let muziek = start();
-    function opGebaar() {
-      if (!muziek) muziek = start();
+    // De AudioContext wordt pas aangemaakt als de browser audio toestaat: een
+    // context die vóór een gebaar is gemaakt blijft `suspended` en een
+    // bestaand (niet-null) resultaat zou de gebaar-listener nooit meer laten
+    // starten.
+    let muziek: { stop: () => void } | null = null;
+    const gebaren = ["pointerdown", "pointerup", "keydown", "touchend"] as const;
+    function ruimOp() {
+      for (const g of gebaren) window.removeEventListener(g, opGebaar);
     }
-    window.addEventListener("pointerdown", opGebaar);
+    function opGebaar() {
+      if (muziek) return;
+      muziek = start();
+      if (muziek) ruimOp();
+    }
+    const nav = navigator as Navigator & { userActivation?: { hasBeenActive: boolean } };
+    if (nav.userActivation?.hasBeenActive) {
+      muziek = start();
+    }
+    if (!muziek) {
+      for (const g of gebaren) window.addEventListener(g, opGebaar);
+    }
     return () => {
-      window.removeEventListener("pointerdown", opGebaar);
+      ruimOp();
       muziek?.stop();
     };
   }, [actief, soort]);
