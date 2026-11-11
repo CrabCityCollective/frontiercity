@@ -7,6 +7,9 @@ interface SpelInstellingenPopupProps {
   onToggleUitleg: () => void;
   stijl: GrafischeStijl;
   onToggleStijl: () => void;
+  // Achtergrondmuziek (issue #575) — alleen getoond in campagnes met muziek.
+  muziekAan?: boolean;
+  onToggleMuziek?: () => void;
   onSluiten: () => void;
 }
 
@@ -25,6 +28,8 @@ export default function SpelInstellingenPopup({
   onToggleUitleg,
   stijl,
   onToggleStijl,
+  muziekAan,
+  onToggleMuziek,
   onSluiten,
 }: SpelInstellingenPopupProps) {
   return (
@@ -80,6 +85,20 @@ export default function SpelInstellingenPopup({
           <input type="checkbox" checked={stijl === "pixel-art"} onChange={onToggleStijl} />
           Pixel-art grafische stijl (i.p.v. geschilderd)
         </label>
+        {onToggleMuziek && (
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              cursor: "pointer",
+            }}
+          >
+            <input type="checkbox" checked={Boolean(muziekAan)} onChange={onToggleMuziek} />
+            Achtergrondmuziek
+          </label>
+        )}
         <button className="fc-knop" onClick={onSluiten} style={{ alignSelf: "center", padding: "0.5rem 1.5rem" }}>
           Sluiten
         </button>
