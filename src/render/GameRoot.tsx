@@ -90,6 +90,8 @@ import { heeftGebouwdeMijn, heeftGeplaatsteSteengroeve, heeftWerkendeBoerderij }
 import {
   campagneStatistieken,
   grafischeStijl,
+  muziekAan as leesMuziekAan,
+  zetMuziekAan,
   registreerCampagneGestart,
   registreerCampagneUitgespeeld,
   registreerGameOverGezien,
@@ -108,6 +110,7 @@ import {
   zichtbareStreken,
 } from "@/game/world";
 import GameCanvas from "./GameCanvas";
+import { useAchtergrondMuziek } from "./useAchtergrondMuziek";
 
 interface GameRootProps {
   // Actieve campagne (M20d deelstap 3, hoofdstuk 9/13/15) — `undefined` voor
@@ -263,6 +266,17 @@ export default function GameRoot({
     const nieuweStijl = stijl === "vector" ? "pixel-art" : "vector";
     setStijl(nieuweStijl);
     zetGrafischeStijl(nieuweStijl);
+  }
+
+  // Achtergrondmuziek (issue #575): alleen tijdens Going West, niet in de
+  // tutorial; aan/uit via de instellingen.
+  const [muziekAan, setMuziekAan] = useState(true);
+  useEffect(() => setMuziekAan(leesMuziekAan()), []);
+  const heeftMuziek = state.campagneId === "going-west";
+  useAchtergrondMuziek(heeftMuziek && muziekAan);
+  function toggleMuziek() {
+    setMuziekAan(!muziekAan);
+    zetMuziekAan(!muziekAan);
   }
 
   // Stadsmenu-pop-up (issue: "city improvement menu toevoegen"): bundelt alle
@@ -2102,6 +2116,8 @@ export default function GameRoot({
         onToggleUitleg={() => zetUitlegPopups(!uitlegAan)}
         stijl={stijl}
         onToggleStijl={toggleStijl}
+        muziekAan={muziekAan}
+        onToggleMuziek={heeftMuziek ? toggleMuziek : undefined}
         onToonHistorie={() => setToonHistorie((open) => !open)}
         onToonTechboom={() => setToonTechboom((open) => !open)}
         onToonEconomie={() => setToonEconomie((open) => !open)}

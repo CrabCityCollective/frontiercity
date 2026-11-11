@@ -266,3 +266,22 @@ export function zetGrafischeStijl(stijl: GrafischeStijl): void {
 }
 
 export const GRAFISCHE_STIJL_EVENT = "frontier-city:grafische-stijl-gewijzigd";
+
+// Achtergrondmuziek aan/uit (issue #575) — globale voorkeur, standaard aan.
+const MUZIEK_KEY = "frontier-city:muziek-aan";
+
+export function muziekAan(): boolean {
+  try {
+    return window.localStorage.getItem(MUZIEK_KEY) !== "uit";
+  } catch {
+    return true;
+  }
+}
+
+export function zetMuziekAan(aan: boolean): void {
+  try {
+    window.localStorage.setItem(MUZIEK_KEY, aan ? "aan" : "uit");
+  } catch {
+    // Zie hierboven bij saveSpel: bewust genegeerd.
+  }
+}

@@ -19,6 +19,9 @@ interface HoofdMenuProps {
   // hierboven.
   stijl: GrafischeStijl;
   onToggleStijl: () => void;
+  // Achtergrondmuziek (issue #575) — optioneel: alleen Going West.
+  muziekAan?: boolean;
+  onToggleMuziek?: () => void;
   // Historie-knop (issue: "Settings uitbreiden" — "de historie van de run
   // toevoegen aan het menu, ipv dat het een zelfstandige button is"):
   // vervangt het losse spel-icoontje dat hiervoor bestond (SpelActiesMenu).
@@ -55,6 +58,8 @@ export default function HoofdMenu({
   onToggleUitleg,
   stijl,
   onToggleStijl,
+  muziekAan,
+  onToggleMuziek,
   onToonHistorie,
   onToonTechboom,
   onToonEconomie,
@@ -188,6 +193,8 @@ export default function HoofdMenu({
           onToggleUitleg={onToggleUitleg}
           stijl={stijl}
           onToggleStijl={onToggleStijl}
+          muziekAan={muziekAan}
+          onToggleMuziek={onToggleMuziek}
           onSluiten={() => setToonInstellingen(false)}
         />
       )}
