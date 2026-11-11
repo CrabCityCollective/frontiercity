@@ -14,7 +14,7 @@
 // niet de per-campagne flavor-tekst. Voor gebouwen waar de Going West-naam
 // écht afwijkt (issue "Going west gebouwen in encyclopedie") staat er wél een
 // eigen, kort lemma bij: alleen een verwijzing naar het bijbehorende
-// tutorial-lemma, zodat een speler die "Blokhuis" opzoekt ook iets vindt.
+// tutorial-lemma, zodat een speler die "Fort" opzoekt ook iets vindt.
 // Zie `GOING_WEST_NAAM_LEMMAS` onderaan dit bestand.
 //
 // Categorie-indeling (issue vraagt: "is alfabetische volgorde het

@@ -49,7 +49,6 @@ export const GOING_WEST_CAMPAGNE: CampaignConfig = {
     // Land improvements
     sterrencirkel: "Observatorium",
     goudmijn: "Goudmijn",
-    wachttoren: "Blokhuis",
     legerkamp: "Fort",
     heiligdom: "Kapel",
     "offer-altaar": "Opwekkingstent",
