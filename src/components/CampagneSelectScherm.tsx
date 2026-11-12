@@ -45,6 +45,8 @@ const CAMPAGNES: Campagne[] = [
 ];
 
 interface CampagneSelectSchermProps {
+  // Issue #581: terug naar het hoofdmenu (HoofdNavigatieScherm).
+  onTerug: () => void;
   // M20d deelstap 3: vervangt de eerdere tutorial-specifieke `onKiesTutorial`
   // — `campagneId` is `undefined` voor de tutorial, anders de
   // `CampaignConfig.id` (zie campagnes.ts), zelfde betekenis als
@@ -121,6 +123,7 @@ function GoingWestDebugStarter({
 // Campagne-select-scherm (issue: "font en style" — na het beginscherm kiest
 // de speler een campagne; in de MVP is alleen de tutorial speelbaar).
 export default function CampagneSelectScherm({
+  onTerug,
   onKiesCampagne,
   onLaadCampagne,
   onDebugStartGoingWest,
@@ -268,6 +271,10 @@ export default function CampagneSelectScherm({
           </div>
         ))}
       </div>
+
+      <button type="button" className="fc-knop" onClick={onTerug}>
+        ← Terug
+      </button>
     </div>
   );
 }
