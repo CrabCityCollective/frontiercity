@@ -9,6 +9,7 @@ import InstellingenPopup from "@/components/InstellingenPopup";
 import TitelScherm from "@/components/TitelScherm";
 import GameRoot from "./GameRoot";
 import { useAchtergrondMuziek } from "./useAchtergrondMuziek";
+import { useKlikGeluid } from "./useKlikGeluid";
 
 type Scherm = "titel" | "navigatie" | "campagne" | "spel";
 
@@ -50,6 +51,7 @@ export default function AppRoot() {
   const [muziekAan, setMuziekAan] = useState(true);
   useEffect(() => setMuziekAan(leesMuziekAan()), []);
   useAchtergrondMuziek(scherm !== "spel" && muziekAan, "menu");
+  useKlikGeluid();
 
   if (scherm === "titel") return <TitelScherm onStart={() => setScherm("navigatie")} />;
 
