@@ -70,6 +70,7 @@ export default function AppRoot() {
   if (scherm === "campagne") {
     return (
       <CampagneSelectScherm
+        onTerug={() => setScherm("navigatie")}
         onKiesCampagne={(campagneId) => {
           setActieveCampagneId(campagneId);
           setLaadBijStart(false);
