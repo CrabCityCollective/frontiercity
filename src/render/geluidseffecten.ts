@@ -9,8 +9,8 @@ import { muziekAan } from "@/game/save";
 let ctx: AudioContext | null = null;
 let ruisBuffer: AudioBuffer | null = null;
 
-function haalContext(): AudioContext | null {
-  if (typeof window === "undefined" || !muziekAan()) return null;
+function maakContext(): AudioContext | null {
+  if (typeof window === "undefined") return null;
   if (!ctx) {
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return null;
@@ -20,8 +20,33 @@ function haalContext(): AudioContext | null {
       return null;
     }
   }
-  if (ctx.state === "suspended") void ctx.resume().catch(() => undefined);
   return ctx;
+}
+
+// Maakt de context aan en hervat hem; aanroepen vanuit een gebruikersgebaar
+// (zie useKlikGeluid), zodat de browser audio toestaat voor latere effecten.
+export function ontgrendelGeluid(): void {
+  const c = maakContext();
+  if (c && c.state !== "running") void c.resume().catch(() => undefined);
+}
+
+// Voert `speel` uit zodra de context echt draait. Plannen op `currentTime`
+// van een nog gesuspendeerde context liet effecten stilvallen: de klok staat
+// dan stil en de geluiden zijn al voorbij zodra hij hervat.
+function haalContext(speel: (c: AudioContext, t: number) => void): void {
+  if (!muziekAan()) return;
+  const c = maakContext();
+  if (!c) return;
+  if (c.state === "running") {
+    speel(c, c.currentTime);
+    return;
+  }
+  c.resume().then(
+    () => {
+      if (c.state === "running") speel(c, c.currentTime);
+    },
+    () => undefined
+  );
 }
 
 function ruis(c: AudioContext): AudioBuffer {
@@ -73,53 +98,48 @@ function toon(c: AudioContext, t: number, van: number, naar: number, duur: numbe
 
 // Menu-/knopklik: kort, droog tikje.
 export function speelKlik(): void {
-  const c = haalContext();
-  if (!c) return;
-  const t = c.currentTime;
-  toon(c, t, 1400, 700, 0.04, 0.12, "triangle");
-  ruisStoot(c, t, 0.02, 3500, 1, 0.05);
+  haalContext((c, t) => {
+    toon(c, t, 1400, 700, 0.04, 0.12, "triangle");
+    ruisStoot(c, t, 0.02, 3500, 1, 0.05);
+  });
 }
 
 // Hamerslag (heel kort) bij het plaatsen/beginnen van een land improvement.
 export function speelHamer(): void {
-  const c = haalContext();
-  if (!c) return;
-  const t = c.currentTime;
-  toon(c, t, 520, 160, 0.07, 0.3, "square");
-  ruisStoot(c, t, 0.05, 2200, 0.8, 0.25);
+  haalContext((c, t) => {
+    toon(c, t, 520, 160, 0.07, 0.3, "square");
+    ruisStoot(c, t, 0.05, 2200, 0.8, 0.25);
+  });
 }
 
 // Stamp bij het aanleggen van een weg: lage dreun.
 export function speelStamp(): void {
-  const c = haalContext();
-  if (!c) return;
-  const t = c.currentTime;
-  toon(c, t, 130, 45, 0.22, 0.6, "sine");
-  ruisStoot(c, t, 0.12, 300, 0.7, 0.35, "lowpass");
+  haalContext((c, t) => {
+    toon(c, t, 130, 45, 0.22, 0.6, "sine");
+    ruisStoot(c, t, 0.12, 300, 0.7, 0.35, "lowpass");
+  });
 }
 
 // Karrengeluid bij het aanklikken van een stad: rammelende wielen op hout.
 export function speelKar(): void {
-  const c = haalContext();
-  if (!c) return;
-  const t = c.currentTime;
-  for (let i = 0; i < 6; i++) {
-    const tt = t + i * 0.085 + Math.random() * 0.015;
-    ruisStoot(c, tt, 0.07, 420 + Math.random() * 200, 2.5, 0.16);
-    toon(c, tt, 190 + Math.random() * 40, 110, 0.06, 0.1, "triangle");
-  }
-  ruisStoot(c, t, 0.55, 180, 0.5, 0.06, "lowpass");
+  haalContext((c, t) => {
+    for (let i = 0; i < 6; i++) {
+      const tt = t + i * 0.085 + Math.random() * 0.015;
+      ruisStoot(c, tt, 0.07, 420 + Math.random() * 200, 2.5, 0.16);
+      toon(c, tt, 190 + Math.random() * 40, 110, 0.06, 0.1, "triangle");
+    }
+    ruisStoot(c, t, 0.55, 180, 0.5, 0.06, "lowpass");
+  });
 }
 
 // Steenbeitel: scherpe tik-tik met metalen rinkel.
 export function speelBeitel(): void {
-  const c = haalContext();
-  if (!c) return;
-  const t = c.currentTime;
-  for (let i = 0; i < 3; i++) {
-    const tt = t + i * 0.13;
-    ruisStoot(c, tt, 0.03, 4200, 1.2, 0.22, "highpass");
-    toon(c, tt, 2600 + i * 250, 2100 + i * 200, 0.12, 0.08, "sine");
-    toon(c, tt, 900, 500, 0.04, 0.12, "square");
-  }
+  haalContext((c, t) => {
+    for (let i = 0; i < 3; i++) {
+      const tt = t + i * 0.13;
+      ruisStoot(c, tt, 0.03, 4200, 1.2, 0.22, "highpass");
+      toon(c, tt, 2600 + i * 250, 2100 + i * 200, 0.12, 0.08, "sine");
+      toon(c, tt, 900, 500, 0.04, 0.12, "square");
+    }
+  });
 }

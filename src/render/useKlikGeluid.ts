@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { speelKlik } from "./geluidseffecten";
+import { ontgrendelGeluid, speelKlik } from "./geluidseffecten";
 
 // Speelt een klikgeluid bij elke knop (hoofdmenu, ingame-menu, sluit-knoppen,
 // pop-ups) via één globale listener (issue #583).
@@ -14,7 +14,13 @@ export function useKlikGeluid(): void {
       if (!knop || (knop as HTMLButtonElement).disabled) return;
       speelKlik();
     }
+    // Ontgrendel audio bij elk echt gebaar (pointerdown telt in Chrome niet).
+    const gebaren = ["pointerup", "touchend", "keydown", "click"] as const;
+    for (const g of gebaren) window.addEventListener(g, ontgrendelGeluid, true);
     document.addEventListener("click", opKlik, true);
-    return () => document.removeEventListener("click", opKlik, true);
+    return () => {
+      for (const g of gebaren) window.removeEventListener(g, ontgrendelGeluid, true);
+      document.removeEventListener("click", opKlik, true);
+    };
   }, []);
 }
