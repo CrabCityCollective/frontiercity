@@ -19,9 +19,13 @@ export function useAchtergrondMuziek(actief: boolean, soort: "spel" | "menu" = "
     // bestaand (niet-null) resultaat zou de gebaar-listener nooit meer laten
     // starten.
     let muziek: { stop: () => void } | null = null;
-    const gebaren = ["pointerdown", "pointerup", "keydown", "touchend"] as const;
+    // Bewust géén `pointerdown`: dat telt in Chrome niet als activerend gebaar
+    // voor audio, dus een context die daar gemaakt wordt blijft `suspended`
+    // (en de listener werd daarna opgeruimd). `pointerup`/`click`/`keydown`/
+    // `touchend` activeren de pagina wel.
+    const gebaren = ["pointerup", "click", "keydown", "touchend"] as const;
     function ruimOp() {
-      for (const g of gebaren) window.removeEventListener(g, opGebaar);
+      for (const g of gebaren) window.removeEventListener(g, opGebaar, true);
     }
     function opGebaar() {
       if (muziek) return;
@@ -33,7 +37,7 @@ export function useAchtergrondMuziek(actief: boolean, soort: "spel" | "menu" = "
       muziek = start();
     }
     if (!muziek) {
-      for (const g of gebaren) window.addEventListener(g, opGebaar);
+      for (const g of gebaren) window.addEventListener(g, opGebaar, true);
     }
     return () => {
       ruimOp();
