@@ -111,6 +111,7 @@ import {
 } from "@/game/world";
 import GameCanvas from "./GameCanvas";
 import { useAchtergrondMuziek } from "./useAchtergrondMuziek";
+import { speelBeitel, speelHamer, speelKar, speelStamp } from "./geluidseffecten";
 
 interface GameRootProps {
   // Actieve campagne (M20d deelstap 3, hoofdstuk 9/13/15) — `undefined` voor
@@ -794,8 +795,21 @@ export default function GameRoot({
     // opent het stadsmenu in plaats van de gewone tile-info-pop-up.
     const streek = state.streken.find((l) => l.hoogte === hoogte);
     if (streek?.tiles[positieInStreek]?.improvement?.soort === "city") {
+      speelKar();
       setToonStadMenuPopup(true);
       return;
+    }
+
+    // Steenbeitel (issue #583): een reeds gebouwde steengroeve, mijn of
+    // goudmijn aanklikken.
+    const aangeklikt = streek?.tiles[positieInStreek];
+    if (
+      aangeklikt?.status === "actief" &&
+      (aangeklikt.improvement?.id === "steengroeve" ||
+        aangeklikt.improvement?.id === "mijn" ||
+        aangeklikt.improvement?.id === "goudmijn")
+    ) {
+      speelBeitel();
     }
 
     setToonWachttorenBemanningsKeuze(false);
@@ -806,6 +820,7 @@ export default function GameRoot({
 
   function bevestigBouw() {
     if (!plaatsingsImprovement || !geselecteerdeTile) return;
+    speelHamer();
     startBouw(geselecteerdeTile.hoogte, plaatsingsImprovement, geselecteerdeTile.positieInStreek);
     setPlaatsingsImprovement(null);
     setGeselecteerdeTile(null);
@@ -2147,7 +2162,10 @@ export default function GameRoot({
           state={state}
           settlerSelectie={effectieveSettlerSelectie}
           onKiesSettler={setSettlerSelectie}
-          onLegWegAan={legWegAan}
+          onLegWegAan={(slot) => {
+            speelStamp();
+            legWegAan(slot);
+          }}
           onJaag={jaag}
           onHakHout={hakHout}
           onOpenStichtStad={(slot) => {
